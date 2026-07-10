@@ -65,7 +65,7 @@
   const GEMS = [
     { n: 1, x: PLAT1.x + PLAT1.w / 2, y: PLAT1.y - 128 },
     { n: 2, x: 1930, y: GY - 245 },                 // riding the arc over the spring
-    { n: 3, x: FALL_X, y: GY - 245 }                // behind the falling water
+    { n: 3, x: FALL_X, y: GY - 215, r: 132 }        // low, behind the falls — the choice: gem or shelf
   ];
   const SPRITE_H = 118;
 
@@ -143,30 +143,88 @@
       wr(36, 'data'); dv.setUint32(40, n * 2, true);
       let b64 = '';
       for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
-      const el = new Audio('data:audio/wav;base64,' + btoa(b64));
-      el.volume = 0.01;
-      const p = el.play();
-      if (p && p.catch) p.catch(() => { audioUnlocked = false; });
+      // bless the ONE persistent player element — the same element every
+      // recitation reuses — so later, gesture-less plays are allowed too
+      K._blessPlayer('data:audio/wav;base64,' + btoa(b64));
     } catch (e) {}
   }
   K.unlockAudio = unlockAudio;
 
-  let currentAudio = null;
+  // ONE persistent <audio> element carries every recitation. iOS blesses the
+  // element that played inside a user gesture — reusing that same element is
+  // the only reliable way to start playback later from game events. Creating
+  // a fresh Audio() per verse works only while Safari's page-wide grace
+  // heuristic happens to be feeling generous (hence the intermittence).
+  let player = null;
+  let playToken = 0;
+  function getPlayer() {
+    if (player || typeof Audio === 'undefined') return player;
+    player = new Audio();
+    player.preload = 'auto';
+    if (player.setAttribute) player.setAttribute('playsinline', '');
+    player.addEventListener('ended', () => {
+      const cb = player._onend;
+      player._onend = null;
+      if (cb) cb();
+    });
+    player.addEventListener('error', () => {
+      // local file missing/unreachable → retry once from the remote reciter
+      if (player._fallback) {
+        const src = player._fallback;
+        player._fallback = null;
+        player.src = src;
+        const p = player.play();
+        if (p && p.catch) p.catch(() => { const cb = player._onend; player._onend = null; if (cb) cb(); });
+      } else {
+        const cb = player._onend;
+        player._onend = null;
+        if (cb) cb();
+      }
+    });
+    return player;
+  }
+  K._blessPlayer = function (silentSrc) {
+    // called from inside the first real tap: play the persistent element once
+    const a = getPlayer();
+    if (!a) return;
+    a.src = silentSrc;
+    a.volume = 1;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+  };
   function playVerse(n, onend) {
     if (S.muted || typeof Audio === 'undefined') { if (onend) setTimeout(onend, 1200); return; }
+    const a = getPlayer();
     stopAudio();
-    const tryPlay = (src, fallback) => {
-      const a = new Audio(src);
-      currentAudio = a;
-      a.addEventListener('ended', () => { if (onend) onend(); });
-      a.addEventListener('error', () => { if (fallback) fallback(); else if (onend) onend(); });
-      const p = a.play();
-      if (p && p.catch) p.catch(() => { if (fallback) fallback(); else if (onend) onend(); });
-    };
-    tryPlay(AUDIO_LOCAL + vfile(n), () => tryPlay(AUDIO_REMOTE + vfile(n), null));
+    const token = ++playToken;
+    a._onend = () => { if (token === playToken && onend) onend(); };
+    a._fallback = AUDIO_REMOTE + vfile(n);
+    a.src = AUDIO_LOCAL + vfile(n);
+    const p = a.play();
+    if (p && p.catch) {
+      p.catch(() => {
+        // NotAllowed / NotSupported on the promise: try remote once, then give up
+        if (token !== playToken) return;
+        if (a._fallback) {
+          const src = a._fallback;
+          a._fallback = null;
+          a.src = src;
+          const p2 = a.play();
+          if (p2 && p2.catch) p2.catch(() => { const cb = a._onend; a._onend = null; if (cb) cb(); });
+        } else {
+          const cb = a._onend;
+          a._onend = null;
+          if (cb) cb();
+        }
+      });
+    }
   }
   function stopAudio() {
-    if (currentAudio) { try { currentAudio.pause(); } catch (e) {} currentAudio = null; }
+    if (player) {
+      try { player.pause(); } catch (e) {}
+      player._onend = null;
+      player._fallback = null;
+    }
   }
   // gentle chime (WebAudio, optional)
   let AC = null;
@@ -275,7 +333,7 @@
     // gems
     for (const g of GEMS) {
       if (S.found.includes(g.n)) continue;
-      if (Math.hypot(S.px - g.x, (S.py - 70) - g.y) < 108) {
+      if (Math.hypot(S.px - g.x, (S.py - 70) - g.y) < (g.r || 108)) {
         S.found.push(g.n);
         // hold the ceremony until Lightling has landed — no freezing mid-air
         S.pendingCeremony = { verse: SURAH.verses[g.n - 1], gem: g };
@@ -571,51 +629,59 @@
     drawWaterfall(ctx, FALL_X, SLAB.y + 10, 64, GY + 40 - SLAB.y, t);
 
     // Lightling
-    drawHero(ctx, img, t);
+    drawHero(ctx, img, t, makeCanvas);
 
     // particles
     drawFx(ctx);
     ctx.restore();
 
-    // ---------- interface
-    if (S.mode === 'play') drawHud(ctx, W, t); // at the arch the gems live on the bench
-    if (S.ceremony && S.ceremony.phase !== 'fly') {
-      // fade in during recite, fade out through settle — one smooth arc
-      const cAlpha = S.ceremony.phase === 'settle'
-        ? Math.max(0, 1 - S.ceremony.t / 0.45)
-        : Math.min(1, S.ceremony.t / 0.4);
-      drawVerseCard(ctx, W, H, S.ceremony.verse, cAlpha);
-    }
-    if (S.mode === 'recite' && S.reciteI >= 0 && S.reciteI < 3) drawVerseCard(ctx, W, H, SURAH.verses[S.reciteI], 1);
-    if (S.mode === 'order') drawBanner(ctx, W, 'set the gems in the order of the surah', 'drag each gem to its place · tap one to hear its ayah again');
-    if (S.mode === 'open' || S.mode === 'walk') drawBanner(ctx, W, 'Al-Kawthar — whole and in order', 'walk through');
+    // ---------- interface: screen space, with a floor under its scale so
+    // HUD, cards and banners never shrink into miniatures on phones
+    ctx.restore();                                    // leave world scale
+    const uiScale = Math.max(S.scale || 1, 0.82);
+    ctx.save();
+    ctx.scale(uiScale, uiScale);
+    const UW = (S.W * (S.scale || 1)) / uiScale;
+    const UH = (S.H * (S.scale || 1)) / uiScale;
+
+    if (S.mode === 'play') drawHud(ctx, UW, t); // at the arch the gems live on the bench
+    if (S.mode === 'recite' && S.reciteI >= 0 && S.reciteI < 3) drawVerseCard(ctx, UW, UH, SURAH.verses[S.reciteI], 1);
+    if (S.mode === 'order') drawBanner(ctx, UW, 'set the gems in the order of the surah', 'drag each gem to its place · tap one to hear its ayah again');
+    if (S.mode === 'open' || S.mode === 'walk') drawBanner(ctx, UW, 'Al-Kawthar — whole and in order', 'walk through');
     if (S.ceremony) {
       const c = S.ceremony;
       const k = c.phase === 'fly' ? Math.min(1, c.t / 0.5) : c.phase === 'settle' ? Math.max(0, 1 - c.t / 0.6) : 1;
       ctx.fillStyle = 'rgba(34,53,42,' + 0.34 * k + ')';
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, UW, UH);
       // the gem held up in the hush, easing away with the veil
-      const gx = W / 2, gy = H * 0.14;
+      const gx = UW / 2, gy = UH * 0.14;
       ctx.save();
       ctx.globalAlpha = k;
       drawGem(ctx, gemImg(c.gem.n), gx, gy, 92, t, k);
       ctx.restore();
     }
+    if (S.ceremony && S.ceremony.phase !== 'fly') {
+      // fade in during recite, fade out through settle — one smooth arc
+      const cAlpha = S.ceremony.phase === 'settle'
+        ? Math.max(0, 1 - S.ceremony.t / 0.45)
+        : Math.min(1, S.ceremony.t / 0.4);
+      drawVerseCard(ctx, UW, UH, S.ceremony.verse, cAlpha);
+    }
     if (S.mode === 'walk' || S.mode === 'done') {
       const k = S.mode === 'done' ? 1 : Math.min(1, S.walkT / 2.6);
       ctx.fillStyle = 'rgba(255,246,208,' + 0.5 * k * k + ')';
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, UW, UH);
     }
-    if (S.mode === 'done') drawDone(ctx, W, H);
+    if (S.mode === 'done') drawDone(ctx, UW, UH);
 
     // grain + vignette
     const gt = grainTile(makeCanvas);
     ctx.save(); ctx.globalAlpha = 0.5;
-    for (let x = 0; x < W; x += 256) for (let y = 0; y < H; y += 256) ctx.drawImage(gt, x, y);
+    for (let x = 0; x < UW; x += 256) for (let y = 0; y < UH; y += 256) ctx.drawImage(gt, x, y);
     ctx.restore();
-    const v = ctx.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.75);
+    const v = ctx.createRadialGradient(UW / 2, UH * 0.45, Math.min(UW, UH) * 0.45, UW / 2, UH / 2, Math.max(UW, UH) * 0.75);
     v.addColorStop(0, 'rgba(30,43,34,0)'); v.addColorStop(1, 'rgba(30,43,34,0.18)');
-    ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = v; ctx.fillRect(0, 0, UW, UH);
     ctx.restore();
   };
 
@@ -1000,7 +1066,25 @@
     return LL_BASE;
   }
 
-  function drawHero(ctx, img, t) {
+  // deep-green rim silhouettes, one per frame — the painterly trick that
+  // keeps a cream character readable against cream stone and pale hills
+  let heroRims = null;
+  function makeHeroRims(mk, img) {
+    heroRims = new Map();
+    for (const key of ['llIdle', 'llWalkA', 'llWalkB', 'llJump', 'llCollect']) {
+      const im = img[key];
+      const c = mk(im.width, im.height);
+      const x = c.getContext('2d');
+      x.drawImage(im, 0, 0);
+      x.globalCompositeOperation = 'source-in';
+      x.fillStyle = '#3E5340';
+      x.fillRect(0, 0, c.width, c.height);
+      heroRims.set(im, c);
+    }
+  }
+
+  function drawHero(ctx, img, t, mk) {
+    if (!heroRims && mk) makeHeroRims(mk, img);
     const inAir = !S.grounded && !S.rescue;
     let im = img.llIdle;
     if (S.ceremony) im = img.llCollect;
@@ -1030,12 +1114,23 @@
     // mirror them relative to the other poses so they lead the right way
     const leftPainted = im === img.llWalkA || im === img.llWalkB || im === img.llJump;
     ctx.scale(leftPainted ? -S.facing : S.facing, 1);
-    if (S.ceremony || S.mode === 'done') {
-      const wg = ctx.createRadialGradient(0, -hh * 0.45, 4, 0, -hh * 0.45, hh);
-      wg.addColorStop(0, 'rgba(255,236,170,0.45)');
-      wg.addColorStop(1, 'rgba(255,236,170,0)');
-      ctx.fillStyle = wg;
-      ctx.beginPath(); ctx.arc(0, -hh * 0.45, hh, 0, Math.PI * 2); ctx.fill();
+    // the light he carries — a soft breathing warmth that separates the
+    // cream body from cream stone and pale hills (stronger in ceremonies)
+    const breathe = 0.8 + 0.2 * Math.sin(t * 1.8);
+    const glowA = (S.ceremony || S.mode === 'done') ? 0.45 : 0.24 * breathe;
+    const wg = ctx.createRadialGradient(0, -h * 0.5, 4, 0, -h * 0.5, h * 0.95);
+    wg.addColorStop(0, 'rgba(255,238,178,' + glowA + ')');
+    wg.addColorStop(0.6, 'rgba(255,238,178,' + glowA * 0.4 + ')');
+    wg.addColorStop(1, 'rgba(255,238,178,0)');
+    ctx.fillStyle = wg;
+    ctx.beginPath(); ctx.arc(0, -h * 0.5, h * 0.95, 0, Math.PI * 2); ctx.fill();
+    // deep-green rim silhouette, a soft painterly outline
+    const rim = heroRims && heroRims.get(im);
+    if (rim) {
+      const rw = w * 1.055, rh = hh * 1.055;
+      ctx.globalAlpha = 0.34;
+      ctx.drawImage(rim, -rw / 2, -h - (rh - hh) * 0.55, rw, rh);
+      ctx.globalAlpha = 1;
     }
     ctx.drawImage(im, -w / 2, -h, w, hh); // top at -h; feet land on the baseline
     ctx.restore();
