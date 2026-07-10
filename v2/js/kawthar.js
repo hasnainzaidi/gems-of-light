@@ -65,7 +65,10 @@
   const GEMS = [
     { n: 1, x: PLAT1.x + PLAT1.w / 2, y: PLAT1.y - 128 },
     { n: 2, x: 1930, y: GY - 245 },                 // riding the arc over the spring
-    { n: 3, x: FALL_X, y: GY - 215, r: 132 }        // low, behind the falls — the choice: gem or shelf
+    // centered in the air between the aqueduct and the pond; the radius is
+    // generous so any honest leap across the falls gathers it (no pixel
+    // timing, no splashing), while walking the slab above still misses it
+    { n: 3, x: FALL_X, y: GY - 140, r: 200 }
   ];
   const SPRITE_H = 118;
 
@@ -646,8 +649,8 @@
 
     if (S.mode === 'play') drawHud(ctx, UW, t); // at the arch the gems live on the bench
     if (S.mode === 'recite' && S.reciteI >= 0 && S.reciteI < 3) drawVerseCard(ctx, UW, UH, SURAH.verses[S.reciteI], 1);
-    if (S.mode === 'order') drawBanner(ctx, UW, 'set the gems in the order of the surah', 'drag each gem to its place · tap one to hear its ayah again');
-    if (S.mode === 'open' || S.mode === 'walk') drawBanner(ctx, UW, 'Al-Kawthar — whole and in order', 'walk through');
+    if (S.mode === 'order') drawBanner(ctx, UW, UH, 'set the gems in the order of the surah', 'drag each gem to its place · tap one to hear its ayah again');
+    if (S.mode === 'open' || S.mode === 'walk') drawBanner(ctx, UW, UH, 'Al-Kawthar — whole and in order', 'walk through');
     if (S.ceremony) {
       const c = S.ceremony;
       const k = c.phase === 'fly' ? Math.min(1, c.t / 0.5) : c.phase === 'settle' ? Math.max(0, 1 - c.t / 0.6) : 1;
@@ -1225,10 +1228,17 @@
     ctx.restore();
   }
 
-  function drawBanner(ctx, W, a, b) {
-    panel(ctx, W / 2 - 260, 78, 520, 60, 26);
-    text(ctx, a, W / 2, 100, 17, '800', '#3E5340');
-    text(ctx, b, W / 2, 122, 12.5, '600', '#6B7D66');
+  function drawBanner(ctx, W, H, a, b) {
+    // lives along the bottom edge, over plain masonry — never across the
+    // floating gems — and steps politely aside while a gem is being carried
+    ctx.save();
+    ctx.globalAlpha = (S.order && S.order.held) ? 0.22 : 1;
+    const bw = Math.min(560, W - 36);
+    const by = H - 92;
+    panel(ctx, W / 2 - bw / 2, by, bw, 62, 26);
+    text(ctx, a, W / 2, by + 24, 17, '800', '#3E5340');
+    text(ctx, b, W / 2, by + 46, 12.5, '600', '#6B7D66');
+    ctx.restore();
   }
 
   function drawDone(ctx, W, H) {

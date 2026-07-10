@@ -54,6 +54,20 @@
       border-color: rgba(240,200,120,0.7); }
     #btnJ svg { width: 54px; height: 54px; fill: rgba(122,98,56,0.9); }
 
+    /* ---- restart button (home-screen app only — no browser chrome there) ---- */
+    #restart { display: none; position: fixed; z-index: 25;
+      top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right));
+      height: 44px; border-radius: 22px; padding: 0 13px;
+      align-items: center; justify-content: center; gap: 8px;
+      background: rgba(46,64,50,0.42); border: 2px solid rgba(250,244,224,0.45);
+      color: #F5EDD4; font: 700 14px Nunito, system-ui;
+      -webkit-tap-highlight-color: transparent; touch-action: none; cursor: pointer; }
+    #restart svg { width: 22px; height: 22px; }
+    #restart span { display: none; }
+    #restart.confirm { background: rgba(185,138,62,0.92); border-color: rgba(250,244,224,0.9); }
+    #restart.confirm span { display: inline; }
+    body.standalone #restart { display: flex; }
+
     /* ---- gentle add-to-home-screen nudge ---- */
     #a2hs { display: none; position: fixed; z-index: 40;
       left: 50%; transform: translateX(-50%);
@@ -99,6 +113,15 @@
     <div class="padBtn" id="btnJ" aria-label="jump">
       <svg viewBox="0 0 24 24"><path d="M12 3.5 L18.5 10.5 L14.5 10.5 L14.5 20 L9.5 20 L9.5 10.5 L5.5 10.5 Z"/></svg>
     </div>
+  </div>
+
+  <div id="restart" aria-label="restart level">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#F5EDD4" stroke-width="2.1"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 12 a8 8 0 1 1 -2.6 -5.9"/>
+      <path d="M17.6 2.6 L17.6 6.4 L13.8 6.6"/>
+    </svg>
+    <span>restart?</span>
   </div>
 
   <div id="a2hs">
@@ -165,11 +188,28 @@
         }, { once: true });
       }
 
+      const standalone = navigator.standalone === true ||
+        matchMedia('(display-mode: standalone)').matches ||
+        matchMedia('(display-mode: fullscreen)').matches;
+
+      // ---- restart: installed app has no reload button, so we carry our own.
+      // First tap arms it ("restart?"), second tap within 3s reloads —
+      // one stray toddler-tap can't wipe the garden.
+      if (standalone) {
+        document.body.classList.add('standalone');
+        const rb = document.getElementById('restart');
+        let armT = null;
+        rb.addEventListener('pointerdown', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (rb.classList.contains('confirm')) { location.reload(); return; }
+          rb.classList.add('confirm');
+          clearTimeout(armT);
+          armT = setTimeout(() => rb.classList.remove('confirm'), 3000);
+        });
+      }
+
       // ---- add-to-home-screen nudge: once a week, touch devices, browser tab only
       (() => {
-        const standalone = navigator.standalone === true ||
-          matchMedia('(display-mode: standalone)').matches ||
-          matchMedia('(display-mode: fullscreen)').matches;
         if (!coarse || standalone) return;
         const KEY = 'gol.a2hs.dismissed';
         const last = +localStorage.getItem(KEY) || 0;

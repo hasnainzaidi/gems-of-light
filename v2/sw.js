@@ -1,7 +1,7 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r7'; // bumped: resilient install (fixes iPhone getting stuck on old cache)
+const CACHE = 'gems-of-light-v2-r8'; // bumped: bottom banner, gem-3 height, standalone restart button
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
