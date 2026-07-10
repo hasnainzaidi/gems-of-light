@@ -310,7 +310,12 @@
     if (S.mode === 'order') {
       const O = S.order;
       for (const g of O.gems) {
-        if (g.placed >= 0) { const s = O.sockets[g.placed]; g.x = s.x; g.y = s.y + 4; continue; }
+        if (g.placed >= 0) {
+          const s = O.sockets[g.placed];
+          g.x = s.x;
+          g.y = s.y - 6 + Math.sin(S.t * 1.3 + g.placed) * 3; // hovers where its ghost waited
+          continue;
+        }
         if (g.drift) {
           g.drift.t += dt / 0.7;
           const e = 1 - Math.pow(1 - Math.min(1, g.drift.t), 3);
@@ -320,6 +325,7 @@
           continue;
         }
         if (O.held === g && S.drag) { g.x = S.drag.x; g.y = S.drag.y; continue; }
+        g.pulseT = Math.max(0, (g.pulseT || 0) - dt * 0.45);
         g.x = g.homeX + Math.sin(S.t * 0.7 + g.ph) * 12;
         g.y = g.homeY + Math.sin(S.t * 0.9 + g.ph * 1.7) * 9;
       }
@@ -394,20 +400,36 @@
     if (S.mode !== 'order') return;
     const O = S.order;
     for (const g of O.gems) {
-      if (g.placed < 0 && !g.drift && Math.hypot(wx - g.x, wy - g.y) < 56) { O.held = g; break; }
+      if (g.placed < 0 && !g.drift && Math.hypot(wx - g.x, wy - g.y) < 60) {
+        O.held = g;
+        O.pressX = wx; O.pressY = wy;   // remember where the press began
+        break;
+      }
     }
-    // tapping a gem replays its ayah
+    // tapping an already-placed gem replays its ayah too
     if (!O.held) {
       for (const g of O.gems) {
-        if (Math.hypot(wx - g.x, wy - g.y) < 56) playVerse(g.n, null);
+        if (g.placed >= 0 && Math.hypot(wx - g.x, wy - g.y) < 60) {
+          playVerse(g.n, null);
+          spawn('sparkle', g.x, g.y - 20);
+        }
       }
     }
   };
   K.pointerUp = function (wx, wy) {
     if (S.mode !== 'order' || !S.order.held) return;
-    const g = S.order.held;
-    S.order.held = null;
-    const s = S.order.sockets.find((s2) => Math.hypot(wx - s2.x, wy - s2.y) < 60);
+    const O = S.order;
+    const g = O.held;
+    O.held = null;
+    // a tap (barely moved): recite this gem's ayah so you can tell which it is
+    if (Math.hypot(wx - O.pressX, wy - O.pressY) < 16) {
+      playVerse(g.n, null);
+      g.pulseT = 1;                      // shimmer while it speaks
+      for (let k = 0; k < 6; k++) spawn('sparkle', g.x + rnd(-26, 26), g.y + rnd(-30, 30));
+      g.drift = { t: 0, fromX: g.x, fromY: g.y };
+      return;
+    }
+    const s = O.sockets.find((s2) => Math.hypot(wx - s2.x, wy - s2.y) < 60);
     if (s) placeGem(g, s);
     else g.drift = { t: 0, fromX: g.x, fromY: g.y };
   };
@@ -528,7 +550,7 @@
     drawArch(ctx, img, t);
 
     // ordering furniture
-    if (S.mode !== 'play') drawSockets(ctx, t);
+    if (S.mode !== 'play') drawSockets(ctx, t, makeCanvas);
 
     // gems in the world
     for (const g of GEMS) {
@@ -540,7 +562,8 @@
     if (S.mode === 'order' || S.mode === 'recite' || S.mode === 'open' || S.mode === 'walk') {
       for (const g of S.order.gems) {
         const hot = S.mode === 'recite' && S.reciteI === g.placed;
-        drawGem(ctx, gemImg(g.n), g.x, g.y, g.placed >= 0 ? (hot ? 76 : 62) : 86, t, g.placed >= 0 ? 0.8 : 1.5);
+        const pk = g.pulseT || 0;
+        drawGem(ctx, gemImg(g.n), g.x, g.y, (g.placed >= 0 ? (hot ? 76 : 62) : 86) + pk * 16, t, (g.placed >= 0 ? 0.8 : 1.5) + pk);
       }
     }
 
@@ -815,9 +838,33 @@
     ctx.restore();
   }
 
-  function drawSockets(ctx, t) {
+  // cream silhouettes of each gem — the drop targets ARE the gems' shapes
+  let ghosts = null;
+  function makeGhosts(mk) {
+    ghosts = {};
+    for (const n of [1, 2, 3]) {
+      const im = S.img['gem' + n];
+      const c = mk(im.width, im.height);
+      const x = c.getContext('2d');
+      x.drawImage(im, 0, 0);
+      x.globalCompositeOperation = 'source-in';
+      x.fillStyle = '#FFF6DC';
+      x.fillRect(0, 0, c.width, c.height);
+      const d = mk(im.width, im.height);
+      const dx = d.getContext('2d');
+      dx.drawImage(im, 0, 0);
+      dx.globalCompositeOperation = 'source-in';
+      dx.fillStyle = '#46603F';
+      dx.fillRect(0, 0, d.width, d.height);
+      ghosts[n] = c;
+      ghosts['d' + n] = d;
+    }
+  }
+
+  function drawSockets(ctx, t, mk) {
     const O = S.order;
     if (!O || !S.img.platform) return;
+    if (!ghosts) makeGhosts(mk);
     // the settings bench is the painted stone shelf itself, resting on the
     // ground before the arch, its mossy top holding the three sockets
     const im = S.img.platform;
@@ -831,57 +878,45 @@
     ctx.drawImage(im, cx - w / 2, topY - 150 * sc, w, h);
     O.sockets.forEach((s, i) => {
       const placed = O.gems.some((g2) => g2.placed === i);
-      const lit = placed || S.mode !== 'order';
       const holding = !!O.held;
-      const pulse = 0.75 + 0.25 * Math.sin(t * 2.4 + i);
-      // a shallow carved stone dish set into the shelf's top
-      // rim: a ring of pale stone, sunlit on top, shadowed below
-      const rim = ctx.createLinearGradient(0, topY - 18, 0, topY + 16);
-      rim.addColorStop(0, '#F4EBCB');
-      rim.addColorStop(0.55, '#D9CBA2');
-      rim.addColorStop(1, '#A99771');
-      ctx.fillStyle = rim;
-      ctx.beginPath(); ctx.ellipse(s.x, topY, 42, 19, 0, 0, Math.PI * 2); ctx.fill();
-      // the dish hollow
-      const dish = ctx.createRadialGradient(s.x, topY - 3, 3, s.x, topY + 2, 34);
+      const pulse = 0.7 + 0.3 * Math.sin(t * 2.2 + i * 1.4);
+      const bob = Math.sin(t * 1.3 + i) * 3;
+      const gy = s.y - 6 + bob;              // where the gem will hover
+      // soft resting shadow on the moss below the hover spot
+      ctx.fillStyle = 'rgba(46,64,50,' + (placed ? 0.22 : 0.13) + ')';
+      ctx.beginPath(); ctx.ellipse(s.x, topY + 6, 26, 6, 0, 0, Math.PI * 2); ctx.fill();
       if (placed) {
-        dish.addColorStop(0, 'rgba(255,243,196,' + 0.85 * pulse + ')');
-        dish.addColorStop(0.75, 'rgba(240,200,120,0.5)');
-        dish.addColorStop(1, 'rgba(180,140,70,0.55)');
-      } else {
-        dish.addColorStop(0, '#8E7C56');
-        dish.addColorStop(0.8, '#75653F');
-        dish.addColorStop(1, '#5E5033');
-      }
-      ctx.fillStyle = dish;
-      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, 0, Math.PI * 2); ctx.fill();
-      // inner rim shadow (top) and light catch (bottom)
-      ctx.strokeStyle = 'rgba(74,62,40,0.55)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
-      ctx.strokeStyle = 'rgba(255,250,228,0.7)'; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, Math.PI * 0.12, Math.PI * 0.88); ctx.stroke();
-      // while a gem is held, every empty dish breathes gold: "put it here"
-      if (holding && !placed) {
-        ctx.strokeStyle = 'rgba(240,200,120,' + (0.45 + 0.45 * Math.sin(t * 5 + i)) + ')';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.ellipse(s.x, topY, 46 + Math.sin(t * 5 + i) * 3, 21, 0, 0, Math.PI * 2); ctx.stroke();
-      }
-      if (lit && placed) {
-        // light spilling out under a set gem
+        // light pooling under a set gem (the gem itself is drawn with the others)
         const gl = ctx.createRadialGradient(s.x, topY, 4, s.x, topY, 60);
         gl.addColorStop(0, 'rgba(255,240,190,' + 0.4 * pulse + ')');
         gl.addColorStop(1, 'rgba(255,240,190,0)');
         ctx.fillStyle = gl;
-        ctx.beginPath(); ctx.ellipse(s.x, topY, 60, 26, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s.x, topY + 2, 60, 22, 0, 0, Math.PI * 2); ctx.fill();
+        return;
       }
-      if (!placed) {
-        ctx.font = '800 19px Nunito, system-ui, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(34,28,16,0.45)';
-        ctx.fillText(String(i + 1), s.x + 1, topY + 2.5);
-        ctx.fillStyle = 'rgba(250,244,224,0.92)';
-        ctx.fillText(String(i + 1), s.x, topY + 1);
-      }
+      // the ghost: this exact gem's silhouette, waiting to be filled
+      const gh = ghosts[i + 1];
+      const hgt = 74, w = hgt * (gh.width / gh.height);
+      ctx.save();
+      // deep-green rim so the ghost reads against the pale arch,
+      // breathing harder while a gem is being dragged
+      const aura = holding ? 0.6 + 0.3 * Math.sin(t * 5 + i) : 0.5 + 0.14 * pulse;
+      ctx.globalAlpha = aura;
+      ctx.drawImage(ghosts['d' + (i + 1)], s.x - (w * 1.14) / 2, gy - (hgt * 1.14) / 2, w * 1.14, hgt * 1.14);
+      // the cream ghost itself
+      ctx.globalAlpha = holding ? 0.65 : 0.55;
+      ctx.drawImage(gh, s.x - w / 2, gy - hgt / 2, w, hgt);
+      // a whisper of the real gem's color inside, so color helps matching too
+      ctx.globalAlpha = 0.28;
+      ctx.drawImage(S.img['gem' + (i + 1)], s.x - w / 2, gy - hgt / 2, w, hgt);
+      ctx.restore();
+      // the ayah number on the shelf face beneath
+      ctx.font = '800 17px Nunito, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(34,28,16,0.4)';
+      ctx.fillText(String(i + 1), s.x + 1, topY + 21);
+      ctx.fillStyle = 'rgba(250,244,224,0.9)';
+      ctx.fillText(String(i + 1), s.x, topY + 20);
     });
   }
 

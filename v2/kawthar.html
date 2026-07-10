@@ -14,11 +14,67 @@
     #hint { position: fixed; bottom: 14px; width: 100%; text-align: center;
       font: 600 15px Nunito, system-ui; color: rgba(255,251,238,0.75); pointer-events: none;
       transition: opacity 1s; }
+
+    /* ---- rotate-your-device screen (touch devices in portrait) ---- */
+    #rotate { display: none; position: fixed; inset: 0; z-index: 30;
+      background: #2E4032; color: #F5EDD4; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px; text-align: center;
+      font: 700 20px Nunito, system-ui; }
+    #rotate svg { width: 110px; height: 110px; animation: tilt 2.2s ease-in-out infinite; }
+    @keyframes tilt {
+      0%, 20% { transform: rotate(0deg); }
+      55%, 80% { transform: rotate(-90deg); }
+      100% { transform: rotate(-90deg); }
+    }
+    @media (pointer: coarse) and (orientation: portrait) {
+      #rotate { display: flex; }
+    }
+
+    /* ---- touch controls (tablets & phones only) ---- */
+    #controls { display: none; position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+    @media (pointer: coarse) { #controls { display: block; } #hint { display: none; } }
+    .padBtn { position: fixed; pointer-events: auto; touch-action: none;
+      width: 108px; height: 108px; border-radius: 50%;
+      background: rgba(250,244,224,0.28); border: 3px solid rgba(250,244,224,0.55);
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; }
+    .padBtn:active, .padBtn.on { background: rgba(250,244,224,0.55); }
+    .padBtn svg { width: 44px; height: 44px; fill: rgba(62,83,64,0.85); }
+    #btnL { left: 22px;  bottom: 24px; }
+    #btnR { left: 150px; bottom: 24px; }
+    #btnJ { right: 26px; bottom: 24px; width: 128px; height: 128px;
+      border-color: rgba(240,200,120,0.7); }
+    #btnJ svg { width: 54px; height: 54px; fill: rgba(122,98,56,0.9); }
   </style>
 </head>
 <body>
   <canvas id="game"></canvas>
   <div id="hint">← → walk · space / tap right side to jump</div>
+
+  <div id="rotate">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="7" y="2" width="10" height="20" rx="2.4" fill="none"
+        stroke="#F5EDD4" stroke-width="1.6"/>
+      <circle cx="12" cy="19" r="1" fill="#F5EDD4"/>
+      <path d="M20.5 8.5 a8.5 8.5 0 0 0 -4.2 -4.9" fill="none"
+        stroke="#F0C878" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M20.9 4.7 L20.5 8.7 L16.6 7.8" fill="none"
+        stroke="#F0C878" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>turn your device sideways<br/><span style="font-weight:600; font-size:15px; opacity:0.75">the garden is wide, like a meadow</span></div>
+  </div>
+
+  <div id="controls">
+    <div class="padBtn" id="btnL" aria-label="walk left">
+      <svg viewBox="0 0 24 24"><path d="M15.5 4.5 L8 12 L15.5 19.5 L15.5 15.5 L11.8 12 L15.5 8.5 Z"/></svg>
+    </div>
+    <div class="padBtn" id="btnR" aria-label="walk right">
+      <svg viewBox="0 0 24 24"><path d="M8.5 4.5 L16 12 L8.5 19.5 L8.5 15.5 L12.2 12 L8.5 8.5 Z"/></svg>
+    </div>
+    <div class="padBtn" id="btnJ" aria-label="jump">
+      <svg viewBox="0 0 24 24"><path d="M12 3.5 L18.5 10.5 L14.5 10.5 L14.5 20 L9.5 20 L9.5 10.5 L5.5 10.5 Z"/></svg>
+    </div>
+  </div>
   <script src="js/kawthar.js"></script>
   <script>
     const cv = document.getElementById('game');
@@ -70,11 +126,30 @@
         S.input.left = S.input.right = S.input.jump = false;
       });
       setTimeout(() => (document.getElementById('hint').style.opacity = 0), 9000);
+
+      // big tap-target movement buttons (visible on coarse pointers via CSS)
+      const bindPad = (id, key) => {
+        const el = document.getElementById(id);
+        const on = (e) => { e.preventDefault(); S.input[key] = true; el.classList.add('on'); };
+        const off = () => { S.input[key] = false; el.classList.remove('on'); };
+        el.addEventListener('pointerdown', on);
+        for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(ev, off);
+      };
+      bindPad('btnL', 'left');
+      bindPad('btnR', 'right');
+      bindPad('btnJ', 'jump');
+      const controls = document.getElementById('controls');
+
+      const portrait = () => matchMedia('(pointer: coarse) and (orientation: portrait)').matches;
       let last = performance.now();
       const loop = (now) => {
         const dt = Math.min(0.033, (now - last) / 1000); last = now;
-        K.tick(dt);
-        K.draw(ctx, (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+        // the walking pad only belongs to the walking part of the journey
+        controls.style.display = S.mode === 'play' ? '' : 'none';
+        if (!portrait()) {                    // rest quietly behind the rotate screen
+          K.tick(dt);
+          K.draw(ctx, (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+        }
         requestAnimationFrame(loop);
       };
       requestAnimationFrame(loop);
