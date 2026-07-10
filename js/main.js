@@ -2,6 +2,7 @@
 // Boot, the render loop, and soft scene transitions.
 (function () {
   const GOL = window.GOL;
+  GOL.VERSION = 'v5'; // keep in step with CACHE in sw.js
 
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');

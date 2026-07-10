@@ -149,6 +149,9 @@
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.86, { size: 18, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
+      // tiny build/audio stamp for troubleshooting on real devices
+      const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
+      GOL.text(ctx, (GOL.VERSION || '') + ' · sound ' + st, 12, H - 14, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
       GOL.drawVignette(ctx, W, H, 0.12);
     }
   };
