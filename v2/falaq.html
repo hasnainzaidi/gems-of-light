@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Gems of Light — Al-Falaq</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="Surat Al-Falaq, end to end — walk out of the pre-dawn dark into the morning, gathering each ayah-gem along the way." />
+
+  <!-- Open Graph / link previews — same image as the root site, so the
+       iMessage/social preview matches whether someone shares the root
+       domain or this /v2 page. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.playgemsoflight.com/v2/falaq.html" />
+  <meta property="og:title" content="Gems of Light — A Quran Adventure" />
+  <meta property="og:description" content="Collect glowing gems, each one an ayah, and piece together a surah in this gentle platformer for kids." />
+  <meta property="og:image" content="https://www.playgemsoflight.com/assets/share-preview.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter/X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gems of Light — A Quran Adventure" />
+  <meta name="twitter:description" content="Collect glowing gems, each one an ayah, and piece together a surah in this gentle platformer for kids." />
+  <meta name="twitter:image" content="https://www.playgemsoflight.com/assets/share-preview.jpg" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gems of Light" />
+  <meta name="theme-color" content="#2E4032" />
+  <link rel="manifest" href="manifest-falaq.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #243626; overflow: hidden;
+      -webkit-user-select: none; user-select: none; }
+    #game { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; }
+    #hint { position: fixed; bottom: 14px; width: 100%; text-align: center;
+      font: 600 15px Nunito, system-ui; color: rgba(255,251,238,0.75); pointer-events: none;
+      transition: opacity 1s; }
+
+    /* ---- rotate-your-device screen (touch devices in portrait) ---- */
+    #rotate { display: none; position: fixed; inset: 0; z-index: 30;
+      background: #2E4032; color: #F5EDD4; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px; text-align: center;
+      font: 700 20px Nunito, system-ui; }
+    #rotate svg { width: 110px; height: 110px; animation: tilt 2.2s ease-in-out infinite; }
+    @keyframes tilt {
+      0%, 20% { transform: rotate(0deg); }
+      55%, 80% { transform: rotate(-90deg); }
+      100% { transform: rotate(-90deg); }
+    }
+    @media (pointer: coarse) and (orientation: portrait) {
+      #rotate { display: flex; }
+    }
+
+    /* ---- touch controls (tablets & phones only) ---- */
+    #controls { display: none; position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+    @media (pointer: coarse) { #controls { display: block; } #hint { display: none; } }
+    .padBtn { position: fixed; pointer-events: auto; touch-action: none;
+      width: min(108px, 24dvh); height: min(108px, 24dvh); border-radius: 50%;
+      background: rgba(250,244,224,0.28); border: 3px solid rgba(250,244,224,0.55);
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; }
+    .padBtn:active, .padBtn.on { background: rgba(250,244,224,0.55); }
+    .padBtn svg { width: 44px; height: 44px; fill: rgba(62,83,64,0.85); }
+    #btnL { left: calc(18px + env(safe-area-inset-left)); bottom: calc(18px + env(safe-area-inset-bottom)); }
+    #btnR { left: calc(18px + env(safe-area-inset-left) + min(108px, 24dvh) + 18px); bottom: calc(18px + env(safe-area-inset-bottom)); }
+    #btnJ { right: calc(20px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); width: min(128px, 28dvh); height: min(128px, 28dvh);
+      border-color: rgba(240,200,120,0.7); }
+    #btnJ svg { width: 54px; height: 54px; fill: rgba(122,98,56,0.9); }
+
+    /* ---- restart button (home-screen app only — no browser chrome there) ---- */
+    #restart { display: none; position: fixed; z-index: 25;
+      top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right));
+      height: 44px; border-radius: 22px; padding: 0 13px;
+      align-items: center; justify-content: center; gap: 8px;
+      background: rgba(46,64,50,0.42); border: 2px solid rgba(250,244,224,0.45);
+      color: #F5EDD4; font: 700 14px Nunito, system-ui;
+      -webkit-tap-highlight-color: transparent; touch-action: none; cursor: pointer; }
+    #restart svg { width: 22px; height: 22px; }
+    #restart span { display: none; }
+    #restart.confirm { background: rgba(185,138,62,0.92); border-color: rgba(250,244,224,0.9); }
+    #restart.confirm span { display: inline; }
+    body.standalone #restart { display: flex; }
+
+    /* ---- gentle add-to-home-screen nudge ---- */
+    #a2hs { display: none; position: fixed; z-index: 40;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      max-width: min(480px, 92vw);
+      background: rgba(250,244,224,0.97); color: #3E5340;
+      border: 2px solid rgba(200,155,85,0.85); border-radius: 18px;
+      padding: 12px 44px 12px 16px;
+      font: 600 14px Nunito, system-ui; line-height: 1.45;
+      box-shadow: 0 6px 22px rgba(30,43,34,0.35); }
+    #a2hs .share { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; }
+    #a2hs #a2hsClose { position: absolute; top: 6px; right: 10px;
+      font: 800 18px Nunito; color: #B98A3E; padding: 4px 6px; cursor: pointer; }
+    #a2hs #a2hsInstall { display: none; margin-top: 8px;
+      background: #3E5340; color: #F5EDD4; border: 0; border-radius: 12px;
+      font: 700 14px Nunito; padding: 8px 18px; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hint">← → walk · space / tap right side to jump</div>
+
+  <div id="rotate">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="7" y="2" width="10" height="20" rx="2.4" fill="none"
+        stroke="#F5EDD4" stroke-width="1.6"/>
+      <circle cx="12" cy="19" r="1" fill="#F5EDD4"/>
+      <path d="M3.5 8.5 a8.5 8.5 0 0 1 4.2 -4.9" fill="none"
+        stroke="#F0C878" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M3.1 4.7 L3.5 8.7 L7.4 7.8" fill="none"
+        stroke="#F0C878" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>turn your device sideways<br/><span style="font-weight:600; font-size:15px; opacity:0.75">the garden is wide, like a meadow</span></div>
+  </div>
+
+  <div id="controls">
+    <div class="padBtn" id="btnL" aria-label="walk left">
+      <svg viewBox="0 0 24 24"><path d="M15.5 4.5 L8 12 L15.5 19.5 L15.5 15.5 L11.8 12 L15.5 8.5 Z"/></svg>
+    </div>
+    <div class="padBtn" id="btnR" aria-label="walk right">
+      <svg viewBox="0 0 24 24"><path d="M8.5 4.5 L16 12 L8.5 19.5 L8.5 15.5 L12.2 12 L8.5 8.5 Z"/></svg>
+    </div>
+    <div class="padBtn" id="btnJ" aria-label="jump">
+      <svg viewBox="0 0 24 24"><path d="M12 3.5 L18.5 10.5 L14.5 10.5 L14.5 20 L9.5 20 L9.5 10.5 L5.5 10.5 Z"/></svg>
+    </div>
+  </div>
+
+  <div id="restart" aria-label="restart level">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#F5EDD4" stroke-width="2.1"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 12 a8 8 0 1 1 -2.6 -5.9"/>
+      <path d="M17.6 2.6 L17.6 6.4 L13.8 6.6"/>
+    </svg>
+    <span>restart?</span>
+  </div>
+
+  <div id="a2hs">
+    <span id="a2hsClose" aria-label="dismiss">✕</span>
+    <span id="a2hsText"></span>
+    <button id="a2hsInstall">Add it</button>
+  </div>
+  <script src="js/falaq.js"></script>
+  <script>
+    // This page can be the very first (or only) one a visitor loads, so it
+    // needs to register/refresh the service worker itself rather than
+    // relying on index.html having done it. updateViaCache:'none' makes
+    // the browser bypass HTTP cache when checking sw.js for changes — iOS
+    // otherwise holds onto a stale worker indefinitely — and reloading once
+    // a new worker takes over means an update actually reaches the screen.
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+          .then((reg) => { reg.update().catch(() => {}); })
+          .catch(() => {});
+      });
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return;
+        reloading = true;
+        location.reload();
+      });
+    }
+    const cv = document.getElementById('game');
+    const ctx = cv.getContext('2d');
+    const K = window.FALAQ;
+    const S = K.state;
+    // iOS only counts a gesture toward "audio may play" if something is
+    // actually played synchronously inside it — attach this as early and
+    // as broadly as possible, before assets even finish loading.
+    for (const ev of ['pointerdown', 'touchend', 'mousedown', 'keydown']) {
+      document.addEventListener(ev, () => K.unlockAudio(), { passive: true });
+    }
+    const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    (async () => {
+      const img = {};
+      await Promise.all(Object.entries(K.FILES).map(async ([k, f]) => (img[k] = await load(f))));
+      // optional paintings: use them if they exist, placeholders otherwise
+      await Promise.all(Object.entries(K.OPTIONAL).map(async ([k, f]) => {
+        try { img[k] = await load(f); } catch (e) { img[k] = null; }
+      }));
+      const coarse = matchMedia('(pointer: coarse)').matches;
+      const fit = () => {
+        const vw = window.visualViewport ? visualViewport.width : innerWidth;
+        const vh = window.visualViewport ? visualViewport.height : innerHeight;
+        const dpr = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
+        cv.width = vw * dpr; cv.height = vh * dpr;
+        cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        K.init(img, vw, vh);
+      };
+      fit(); addEventListener('resize', fit);
+      if (window.visualViewport) visualViewport.addEventListener('resize', fit);
+      // Android: go truly fullscreen on the first touch (iOS doesn't allow it)
+      if (coarse && document.documentElement.requestFullscreen) {
+        document.addEventListener('pointerdown', function goFull() {
+          document.documentElement.requestFullscreen().catch(() => {});
+          document.removeEventListener('pointerdown', goFull);
+        }, { once: true });
+      }
+
+      const standalone = navigator.standalone === true ||
+        matchMedia('(display-mode: standalone)').matches ||
+        matchMedia('(display-mode: fullscreen)').matches;
+
+      // ---- restart: installed app has no reload button, so we carry our own.
+      // First tap arms it ("restart?"), second tap within 3s reloads —
+      // one stray toddler-tap can't wipe the garden.
+      if (standalone) {
+        document.body.classList.add('standalone');
+        const rb = document.getElementById('restart');
+        let armT = null;
+        rb.addEventListener('pointerdown', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (rb.classList.contains('confirm')) { location.reload(); return; }
+          rb.classList.add('confirm');
+          clearTimeout(armT);
+          armT = setTimeout(() => rb.classList.remove('confirm'), 3000);
+        });
+      }
+
+      // ---- add-to-home-screen nudge: once a week, touch devices, browser tab only
+      (() => {
+        if (!coarse || standalone) return;
+        const KEY = 'gol.a2hs.dismissed';
+        const last = +localStorage.getItem(KEY) || 0;
+        if (Date.now() - last < 7 * 24 * 3600 * 1000) return;
+        const box = document.getElementById('a2hs');
+        const text = document.getElementById('a2hsText');
+        const installBtn = document.getElementById('a2hsInstall');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        let deferredPrompt = null;
+        addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          text.textContent = 'Add Gems of Light to your home screen to play fullscreen, without the browser bars.';
+          installBtn.style.display = 'inline-block';
+          box.style.display = 'block';
+        });
+        if (isIOS) {
+          text.innerHTML = 'For fullscreen play: tap ' +
+            '<svg class="share" viewBox="0 0 24 24" fill="none" stroke="#3E5340" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M12 3 v12 M8.5 6.5 L12 3 l3.5 3.5"/><rect x="5" y="10" width="14" height="11" rx="2"/></svg>' +
+            ' then <b>Add to Home Screen</b>, and open the garden from its icon.';
+          setTimeout(() => (box.style.display = 'block'), 6000);
+        }
+        installBtn.addEventListener('click', async () => {
+          if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; }
+          box.style.display = 'none';
+          localStorage.setItem(KEY, String(Date.now()));
+        });
+        document.getElementById('a2hsClose').addEventListener('click', () => {
+          box.style.display = 'none';
+          localStorage.setItem(KEY, String(Date.now()));
+        });
+      })();
+      addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.input.left = true;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.input.right = true;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.input.jump = true;
+      });
+      addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.input.left = false;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.input.right = false;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.input.jump = false;
+      });
+      const toWorld = (e) => ({ x: e.clientX / (S.scale || 1) + S.camX, y: e.clientY / (S.scale || 1) });
+      cv.addEventListener('pointerdown', (e) => {
+        if (S.mode === 'done') { location.reload(); return; }
+        if (S.mode === 'order') { const w = toWorld(e); S.drag = w; K.pointerDown(w.x, w.y); return; }
+        if (e.clientX < innerWidth * 0.18) S.input.left = true;
+        else if (e.clientX < innerWidth * 0.36) S.input.right = true;
+        else S.input.jump = true;
+      });
+      cv.addEventListener('pointermove', (e) => { if (S.mode === 'order') S.drag = toWorld(e); });
+      cv.addEventListener('pointerup', (e) => {
+        if (S.mode === 'order') { const w = toWorld(e); K.pointerUp(w.x, w.y); S.drag = null; return; }
+        S.input.left = S.input.right = S.input.jump = false;
+      });
+      setTimeout(() => (document.getElementById('hint').style.opacity = 0), 9000);
+
+      // big tap-target movement buttons (visible on coarse pointers via CSS)
+      const bindPad = (id, key) => {
+        const el = document.getElementById(id);
+        const on = (e) => { e.preventDefault(); S.input[key] = true; el.classList.add('on'); };
+        const off = () => { S.input[key] = false; el.classList.remove('on'); };
+        el.addEventListener('pointerdown', on);
+        for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) el.addEventListener(ev, off);
+      };
+      bindPad('btnL', 'left');
+      bindPad('btnR', 'right');
+      bindPad('btnJ', 'jump');
+      const controls = document.getElementById('controls');
+
+      const portrait = () => matchMedia('(pointer: coarse) and (orientation: portrait)').matches;
+      let last = performance.now();
+      const loop = (now) => {
+        const dt = Math.min(0.033, (now - last) / 1000); last = now;
+        // the walking pad only belongs to the walking part of the journey
+        controls.style.display = S.mode === 'play' ? '' : 'none';
+        if (!portrait()) {                    // rest quietly behind the rotate screen
+          K.tick(dt);
+          K.draw(ctx, (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+        }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

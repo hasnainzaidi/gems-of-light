@@ -1,7 +1,7 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r10'; // bumped: index.html now redirects straight to kawthar.html
+const CACHE = 'gems-of-light-v2-r11'; // bumped: Al-Falaq (Daybreak Hollow) — falaq.html + dawn assets
 const SHELL = [
   './', './index.html', './index-full.html', './manifest.webmanifest',
   './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
@@ -21,7 +21,13 @@ const SHELL = [
   './assets/paint/proc/spring.png',
   './assets/paint/proc/ll-idle.png', './assets/paint/proc/ll-walk-a.png',
   './assets/paint/proc/ll-walk-b.png', './assets/paint/proc/ll-jump.png',
-  './assets/paint/proc/ll-collect.png'
+  './assets/paint/proc/ll-collect.png',
+  // the painterly Al-Falaq level (Daybreak Hollow), installable on its own
+  './falaq.html', './js/falaq.js', './manifest-falaq.webmanifest',
+  './assets/paint/proc/gem-f1.png', './assets/paint/proc/gem-f2.png',
+  './assets/paint/proc/gem-f3.png', './assets/paint/proc/gem-f4.png',
+  './assets/paint/proc/gem-f5.png',
+  './assets/paint/proc/hollow.png', './assets/paint/proc/lantern.png'
 ];
 
 self.addEventListener('install', (e) => {

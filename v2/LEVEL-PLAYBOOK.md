@@ -157,4 +157,50 @@ read as "cartoony and homespun." The winning recipe:
 
 Known deferred items: 4-frame walk strip; straight-on regeneration of
 spring.png (current one has slight top-down perspective); rolling this
-pipeline out to the remaining five surahs.
+pipeline out to the remaining four surahs (An-Nas, Al-Ikhlas, Al-'Asr,
+Al-Fatiha).
+
+---
+
+## 9. What Al-Falaq added (level two learnings)
+
+**Baked composites can stand in for generated art.** The stone hollow was
+built in post from `wall.png` + the fringe moss (`tools/bake-falaq-assets.mjs`)
+— same masonry, same palette, zero style drift. New gem colors are hue
+rotations of the existing painted crystals (rotate strongly where saturated,
+gently on pale highlights, so sparkles stay white). Optional-upgrade prompts
+live in ASSET-SPEC §10–11; same filename = drop-in swap.
+
+**A lighting arc can carry a level's theme.** The dawn (`dawnAt()`, driven by
+camera x, smoothstepped) runs 0→1 across the walk. The recipe that worked:
+(a) `multiply` indigo veil + a plain dark veil over the whole world, scaled by
+(1−dawn); (b) a **light pass drawn after the veil** (`lighter`): lantern
+flicker, uncollected-gem halos, hero glow — lights must punch through or the
+night swallows them; (c) stars/moon drawn **above the veil too** — first
+attempt drew them under it and they vanished; (d) horizon blush strongest at
+mid-dawn (`sin(dawn·π)`), sun glow growing at the far end; (e) fireflies fade
+out as motes fade in. Draw a crescent as a filled lune (two arcs, one path) —
+a translucent shadow disc over a bright disc reads as a dead planet.
+
+**Space stairs to the jump arc.** A full-speed held jump carries ~330–400px
+per ~120px rise. Ascending shelves must put their landing zone where that arc
+comes down (we used 410px x-spacing, 280px-wide shelves). For a gem overhead,
+stop-and-jump-straight-up is the honest child move — the pilot releases
+"right" mid-air (`_vhop`) and comes back down on the shelf.
+
+**Jump-down ≠ jump.** The Kawthar pilot jumped whenever floor level changed
+ahead; on descending shelf chains that megajump overshoots. Falaq's pilot
+jumps only on true gaps (`floorAt === Infinity`, i.e. water) and walks off
+descents.
+
+**Five sockets need the iPad check.** Design-width on a 4:3 iPad is ~1067 —
+the narrowest view. The whole ordering tableau (hero + bench + 5 sockets +
+arch) must fit inside `[WORLD_W − 1067, WORLD_W]`… unless you give the camera
+its own focus: we extended the world past the arch and pointed the order-mode
+camera at `ARCH_X − 320` so the clamp no longer pins the view. Check the hero
+is on-screen in order mode — ours fell off the left edge on iPad, twice.
+Also: keep sockets off the arch doors (ghosts vanish against dark wood), and
+scale the end-of-level walk distance to where the bench actually is.
+
+**Verify with eyes at three sizes.** Desktop 1180×720, phone 800×380, iPad
+1366×1024. The iPad pass caught everything the other two missed.

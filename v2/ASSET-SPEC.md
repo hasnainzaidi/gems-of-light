@@ -98,3 +98,33 @@ most storybook games use.
 Drop the files in `assets/paint/`, then Claude builds the slice and renders
 screenshots. Judge against `concept-art/storyboards/core-gameplay-loop.png`
 panel 1. If any single asset reads wrong, regenerate just that one.
+
+---
+
+## Daybreak Hollow (Al-Falaq) — optional upgrades
+
+The Falaq level ships with two assets **baked in post** from the existing
+paintings (`tools/bake-falaq-assets.mjs`): the stone hollow is composited
+from `wall.png` masonry + the fringe moss, and the lantern is drawn. Both
+live in `assets/paint/proc/` and work — but hand-generated paintings will
+read warmer. Same filenames = drop-in replacement (then bump the SW cache).
+The five dawn gems (`gem-f1..f5.png`) are hue-shifted recolors of the three
+painted crystals and don't need regenerating.
+
+### 10. `hollow.png` — the stone brow · 1720×800 · **[cutout]**
+Style block, then:
+> A low, wide free-standing garden structure of weathered cream-tan stone:
+> two sturdy square jambs holding up a deep stone lintel, forming one wide
+> gentle doorway to walk beneath — like a fragment of an ancient garden
+> wall. Grass, moss and tiny blossoms crown the top edge; moss traces the
+> mortar. A small round sun-disc relief is carved at the center of the
+> lintel, just above the opening. Straight-on orthographic view, even
+> lighting, empty background through the doorway. Proportions: the whole
+> structure roughly twice as wide as it is tall; the doorway takes about
+> two-thirds of the width and two-thirds of the height.
+
+### 11. `lantern.png` — a garden lantern · 300×440 · **[cutout]**
+> A single small standing garden lantern of aged bronze: a gently domed cap
+> with a hanging ring, a warm cream-gold glass body glowing softly from
+> within, three slender vertical ribs, a round base dish on a short foot.
+> Isolated object, straight-on view. (Code adds the halo and flicker.)

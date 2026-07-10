@@ -12,6 +12,15 @@ itself (`assets/key-art.jpg`). Gameplay, levels and audio are unchanged from v1.
 
 **World One — The Garden** (this release): Al-Kawthar, Al-Ikhlas, Al-'Asr, Al-Falaq, An-Nas, Al-Fatiha.
 
+**Painterly levels shipped so far** (the AI-painted pipeline, one page per surah;
+`index.html` is the little gate between them):
+
+- `kawthar.html` — **Al-Kawthar**, the reference implementation (see `LEVEL-PLAYBOOK.md`)
+- `falaq.html` — **Al-Falaq**, Daybreak Hollow: the level starts in pre-dawn dark
+  (stars, an old moon, lanterns, fireflies) and the sky warms as you walk — five
+  dawn-colored gems, a stone hollow, the waterfall, three shelves into the morning
+  air, and the arch at full sunrise. The dark→light walk *is* the surah's meaning.
+
 ## Design positions (from the vision doc)
 
 - **No failure.** No lives, no death, no timer. Water lifts you gently back to the bank. Creatures are inhabitants, not enemies.
@@ -56,7 +65,11 @@ cached the first time it is heard.
 ## Structure
 
 ```
-index.html            shell + script loading
+index.html            the gate: pick a painterly level (old engine: index-full.html)
+kawthar.html          Al-Kawthar, painterly pipeline (js/kawthar.js)
+falaq.html            Al-Falaq — Daybreak Hollow (js/falaq.js)
+tools/bake-falaq-assets.mjs  bakes hollow/lantern/dawn-gem recolors from existing paint
+tools/render-falaq.mjs       headless Falaq pilot — story-beat PNGs (SHOT_W/SHOT_H env)
 js/data.js            World One surah data (Uthmani text, transliteration, kid meanings)
 js/art.js             palettes, gouache helpers, skies, parallax hills, tile atlas
 js/props.js           trees, walls, water, waterfall, fountain, the arch, creatures
