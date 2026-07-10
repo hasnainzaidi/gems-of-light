@@ -32,8 +32,55 @@
         this._makeWind();
         this._makeWater();
       }
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // iOS: resume inside the gesture, kick a silent buffer through the
+      // graph, and greet the very first successful unlock with a soft bell —
+      // so the "tap anywhere to begin" tap is also the sound turning on.
+      const welcome = () => {
+        if (this._welcomed || this.ctx.state !== 'running') return;
+        this._welcomed = true;
+        try {
+          const b = this.ctx.createBuffer(1, 1, 22050);
+          const s = this.ctx.createBufferSource();
+          s.buffer = b; s.connect(this.ctx.destination); s.start(0);
+        } catch (e) {}
+        this._mediaKick();
+        if (!this.muted) this._bell(783.99, 0, 1.2, 0.06);
+      };
+      // iOS parks contexts in 'interrupted' (not just 'suspended') —
+      // resume from ANY non-running state, on every gesture.
+      if (this.ctx.state !== 'running') {
+        const p = this.ctx.resume();
+        if (p && p.then) p.then(welcome).catch(() => {});
+      }
+      welcome();
       this.unlocked = true;
+    },
+    // iOS mutes WebAudio (the "ambient" channel) when the silent switch is
+    // on, while <audio> media plays regardless. Looping a silent media file
+    // promotes the whole session to playback, so the chimes and breeze are
+    // heard even in silent mode. (The same trick unmute.js uses.)
+    _mediaKick() {
+      if (this._kick) return;
+      try {
+        // a 0.05s silent WAV, built by hand — no asset needed
+        const rate = 8000, n = 400;
+        const bytes = new Uint8Array(44 + n * 2);
+        const dv = new DataView(bytes.buffer);
+        const wr = (o, s) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
+        wr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt ');
+        dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+        dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true);
+        dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+        wr(36, 'data'); dv.setUint32(40, n * 2, true);
+        let b64 = '';
+        for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
+        const el = new Audio('data:audio/wav;base64,' + btoa(b64));
+        el.loop = true;
+        el.volume = 0.01;
+        const p = el.play();
+        if (p && p.catch) p.catch(() => {});
+        this._kick = el;
+      } catch (e) {}
     },
     setMuted(m) {
       this.muted = m;

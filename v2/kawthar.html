@@ -25,6 +25,12 @@
     const ctx = cv.getContext('2d');
     const K = window.KAWTHAR;
     const S = K.state;
+    // iOS only counts a gesture toward "audio may play" if something is
+    // actually played synchronously inside it — attach this as early and
+    // as broadly as possible, before assets even finish loading.
+    for (const ev of ['pointerdown', 'touchend', 'mousedown', 'keydown']) {
+      document.addEventListener(ev, () => K.unlockAudio(), { passive: true });
+    }
     const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
     (async () => {
       const img = {};

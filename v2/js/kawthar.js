@@ -115,6 +115,42 @@
   };
 
   // ------------------------------------------------------------- audio ----
+  // iOS Safari only allows audio playback that starts synchronously inside
+  // a real user-gesture handler; every recitation here is actually kicked
+  // off later, from the game loop (once the character reaches a gem/arch).
+  // So the very first tap must "unlock" the page: create + resume the
+  // AudioContext, and — the part that matters most — successfully .play()
+  // a real <audio> element once, which tells Safari the whole page may
+  // play media from here on, even from calls with no gesture behind them.
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state !== 'running') AC.resume().catch(() => {});
+    } catch (e) {}
+    try {
+      // a 0.05s silent WAV — no asset needed, just to prime <audio> playback
+      const rate = 8000, n = 400;
+      const bytes = new Uint8Array(44 + n * 2);
+      const dv = new DataView(bytes.buffer);
+      const wr = (o, s) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
+      wr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt ');
+      dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+      dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true);
+      dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+      wr(36, 'data'); dv.setUint32(40, n * 2, true);
+      let b64 = '';
+      for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
+      const el = new Audio('data:audio/wav;base64,' + btoa(b64));
+      el.volume = 0.01;
+      const p = el.play();
+      if (p && p.catch) p.catch(() => { audioUnlocked = false; });
+    } catch (e) {}
+  }
+  K.unlockAudio = unlockAudio;
+
   let currentAudio = null;
   function playVerse(n, onend) {
     if (S.muted || typeof Audio === 'undefined') { if (onend) setTimeout(onend, 1200); return; }
@@ -253,14 +289,14 @@
     // the arch: begins the ordering when every gem is found
     if (S.found.length === 3 && S.px > ARCH_X - 150) {
       S.mode = 'order';
-      S.px = Math.min(S.px, ARCH_X - 150);
+      S.px = Math.min(S.px, ARCH_X - 400); S.facing = 1;
       S.vx = 0; S.moving = false;
       const shuffled = [2, 3, 1];  // never spells the answer
       S.order = {
         gems: shuffled.map((n, i) => ({
           n, placed: -1, drift: null, ph: rnd(0, 7),
-          homeX: ARCH_X - 210 + i * 150 + rnd(-16, 16),
-          homeY: 200 + (i % 2) * 70 + rnd(-10, 10),
+          homeX: ARCH_X - 690 + i * 165 + rnd(-14, 14),
+          homeY: 170 + (i % 2) * 85 + rnd(-10, 10),
           x: 0, y: 0
         })),
         sockets: [0, 1, 2].map((i) => ({ i, x: ARCH_X - 150 + i * 130, y: GY - 102 })),
@@ -504,7 +540,7 @@
     if (S.mode === 'order' || S.mode === 'recite' || S.mode === 'open' || S.mode === 'walk') {
       for (const g of S.order.gems) {
         const hot = S.mode === 'recite' && S.reciteI === g.placed;
-        drawGem(ctx, gemImg(g.n), g.x, g.y, g.placed >= 0 ? (hot ? 58 : 44) : 56, t, g.placed >= 0 ? 0.7 : 1);
+        drawGem(ctx, gemImg(g.n), g.x, g.y, g.placed >= 0 ? (hot ? 76 : 62) : 86, t, g.placed >= 0 ? 0.8 : 1.5);
       }
     }
 
@@ -796,34 +832,55 @@
     O.sockets.forEach((s, i) => {
       const placed = O.gems.some((g2) => g2.placed === i);
       const lit = placed || S.mode !== 'order';
-      // a soft ring resting on the moss — glowing gold once its gem is home
+      const holding = !!O.held;
       const pulse = 0.75 + 0.25 * Math.sin(t * 2.4 + i);
-      const rg = ctx.createRadialGradient(s.x, topY, 2, s.x, topY, 30);
-      if (lit) {
-        rg.addColorStop(0, 'rgba(255,243,196,' + 0.75 * pulse + ')');
-        rg.addColorStop(0.7, 'rgba(255,233,168,' + 0.3 * pulse + ')');
-        rg.addColorStop(1, 'rgba(255,233,168,0)');
+      // a shallow carved stone dish set into the shelf's top
+      // rim: a ring of pale stone, sunlit on top, shadowed below
+      const rim = ctx.createLinearGradient(0, topY - 18, 0, topY + 16);
+      rim.addColorStop(0, '#F4EBCB');
+      rim.addColorStop(0.55, '#D9CBA2');
+      rim.addColorStop(1, '#A99771');
+      ctx.fillStyle = rim;
+      ctx.beginPath(); ctx.ellipse(s.x, topY, 42, 19, 0, 0, Math.PI * 2); ctx.fill();
+      // the dish hollow
+      const dish = ctx.createRadialGradient(s.x, topY - 3, 3, s.x, topY + 2, 34);
+      if (placed) {
+        dish.addColorStop(0, 'rgba(255,243,196,' + 0.85 * pulse + ')');
+        dish.addColorStop(0.75, 'rgba(240,200,120,0.5)');
+        dish.addColorStop(1, 'rgba(180,140,70,0.55)');
       } else {
-        rg.addColorStop(0, 'rgba(74,64,44,0.42)');
-        rg.addColorStop(0.8, 'rgba(74,64,44,0.14)');
-        rg.addColorStop(1, 'rgba(74,64,44,0)');
+        dish.addColorStop(0, '#8E7C56');
+        dish.addColorStop(0.8, '#75653F');
+        dish.addColorStop(1, '#5E5033');
       }
-      ctx.fillStyle = rg;
-      ctx.beginPath(); ctx.ellipse(s.x, topY, 36, 16, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = lit ? 'rgba(217,164,74,' + (0.6 + 0.35 * pulse) + ')' : 'rgba(250,244,224,0.75)';
-      ctx.lineWidth = 2.4;
-      ctx.beginPath(); ctx.ellipse(s.x, topY, 28, 12, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = lit ? 'rgba(217,164,74,0.4)' : 'rgba(96,82,54,0.5)';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath(); ctx.ellipse(s.x, topY, 32, 14, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = dish;
+      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, 0, Math.PI * 2); ctx.fill();
+      // inner rim shadow (top) and light catch (bottom)
+      ctx.strokeStyle = 'rgba(74,62,40,0.55)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,250,228,0.7)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(s.x, topY + 1, 33, 14, 0, Math.PI * 0.12, Math.PI * 0.88); ctx.stroke();
+      // while a gem is held, every empty dish breathes gold: "put it here"
+      if (holding && !placed) {
+        ctx.strokeStyle = 'rgba(240,200,120,' + (0.45 + 0.45 * Math.sin(t * 5 + i)) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(s.x, topY, 46 + Math.sin(t * 5 + i) * 3, 21, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      if (lit && placed) {
+        // light spilling out under a set gem
+        const gl = ctx.createRadialGradient(s.x, topY, 4, s.x, topY, 60);
+        gl.addColorStop(0, 'rgba(255,240,190,' + 0.4 * pulse + ')');
+        gl.addColorStop(1, 'rgba(255,240,190,0)');
+        ctx.fillStyle = gl;
+        ctx.beginPath(); ctx.ellipse(s.x, topY, 60, 26, 0, 0, Math.PI * 2); ctx.fill();
+      }
       if (!placed) {
-        ctx.fillStyle = 'rgba(250,244,224,0.85)';
-        ctx.font = '800 17px Nunito, system-ui, sans-serif';
+        ctx.font = '800 19px Nunito, system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(250,244,224,0.95)';
-        ctx.fillText(String(i + 1), s.x + 1, topY + 1.5);
-        ctx.fillStyle = 'rgba(96,82,54,0.9)';
-        ctx.fillText(String(i + 1), s.x, topY);
+        ctx.fillStyle = 'rgba(34,28,16,0.45)';
+        ctx.fillText(String(i + 1), s.x + 1, topY + 2.5);
+        ctx.fillStyle = 'rgba(250,244,224,0.92)';
+        ctx.fillText(String(i + 1), s.x, topY + 1);
       }
     });
   }

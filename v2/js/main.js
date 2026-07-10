@@ -22,11 +22,16 @@
   GOL.store.load();
   GOL.Input.init(canvas);
 
-  // unlock / resume audio on every gesture (iOS is fussy; resuming is cheap)
-  canvas.addEventListener('pointerdown', () => {
+  // unlock / resume audio on every gesture. iOS is fussy about WHICH gesture
+  // counts (some versions only honor touchend/click), so listen to them all.
+  const wake = () => {
     GOL.audio.unlock();
     GOL.audio.setMuted(GOL.store.data.settings.muted);
-  });
+  };
+  for (const ev of ['pointerdown', 'touchend', 'mousedown', 'click', 'keydown']) {
+    canvas.addEventListener(ev, wake);
+    if (ev === 'keydown') window.addEventListener(ev, wake);
+  }
 
   // ------------------------------------------------------ scene handling --
   let current = null;
