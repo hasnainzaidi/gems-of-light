@@ -164,6 +164,20 @@
       }
       for (const tap of GOL.Input.taps) {
         if (tap.ui) continue;
+        // per-surah unlock chips
+        for (let i = 0; i < GOL.LEVELS.length; i++) {
+          const y = 128 + i * 42;
+          if (i > GOL.store.data.unlocked && Math.abs(tap.y - y) < 17 && tap.x > W * 0.87 && tap.x < W * 0.985) {
+            tap.ui = true;
+            const opened = GOL.store.data.opened;
+            const at = opened.indexOf(i);
+            if (at >= 0) { opened.splice(at, 1); GOL.audio.sfx('drift'); }
+            else { opened.push(i); GOL.audio.sfx('unlockLevel'); }
+            GOL.store.save();
+            break;
+          }
+        }
+        if (tap.ui) continue;
         if (tap.y > H - 70 && Math.abs(tap.x - W / 2) < 130) {
           tap.ui = true;
           if (this.confirmT > 0) {
@@ -198,12 +212,13 @@
       } else {
         GOL.text(ctx, 'How the garden is growing', W / 2, 46, { size: 24, weight: '800', color: '#F5EDD4' });
         const cols = [
-          { x: W * 0.16, label: 'surah', align: 'left' },
-          { x: W * 0.4, label: 'completed' },
-          { x: W * 0.52, label: 'walks' },
-          { x: W * 0.64, label: 'heard whole' },
-          { x: W * 0.76, label: 'helps' },
-          { x: W * 0.89, label: 'trickiest ayah' }
+          { x: W * 0.14, label: 'surah', align: 'left' },
+          { x: W * 0.36, label: 'completed' },
+          { x: W * 0.46, label: 'walks' },
+          { x: W * 0.57, label: 'heard whole' },
+          { x: W * 0.68, label: 'helps' },
+          { x: W * 0.8, label: 'trickiest ayah' },
+          { x: W * 0.9275, label: 'open early' }
         ];
         for (const c of cols) GOL.text(ctx, c.label, c.x, 92, { size: 12.5, weight: '700', color: 'rgba(245,237,212,0.55)', align: c.align || 'center' });
         GOL.LEVELS.forEach((L, i) => {
@@ -230,6 +245,21 @@
               align: cols[ci].align || 'center'
             });
           });
+          // unlock chip: lets a parent open any surah out of sequence
+          if (i > GOL.store.data.unlocked) {
+            const opened = GOL.store.data.opened.includes(i);
+            const cx = W * 0.9275, cw = W * 0.105;
+            ctx.fillStyle = opened ? 'rgba(240,200,120,0.22)' : 'rgba(245,237,212,0.1)';
+            GOL.roundRect(ctx, cx - cw / 2, y - 14, cw, 28, 14);
+            ctx.fill();
+            ctx.strokeStyle = opened ? 'rgba(240,200,120,0.8)' : 'rgba(245,237,212,0.35)';
+            ctx.lineWidth = 1.5;
+            GOL.roundRect(ctx, cx - cw / 2, y - 14, cw, 28, 14);
+            ctx.stroke();
+            GOL.text(ctx, opened ? '✓ opened' : 'unlock', cx, y, { size: 12.5, weight: '700', color: opened ? '#F0C878' : 'rgba(245,237,212,0.75)' });
+          } else {
+            GOL.text(ctx, '—', W * 0.9275, y, { size: 13, weight: '600', color: 'rgba(245,237,212,0.3)' });
+          }
         });
         GOL.text(ctx, '“Walks” counts replays of finished surahs — wandering back is the whole idea.', W / 2, 128 + 6 * 42 + 14, { size: 12.5, weight: '600', color: 'rgba(245,237,212,0.5)' });
         // reset

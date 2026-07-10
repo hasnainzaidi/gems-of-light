@@ -6,11 +6,25 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
-const { createCanvas } = require('@napi-rs/canvas');
+const { createCanvas, Image } = require('@napi-rs/canvas');
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const VIEW_W = 1180, VIEW_H = 820;
 const main = createCanvas(VIEW_W, VIEW_H);
+// see preview.mjs: canvas-as-source drawImage leaks; use cached Images
+{
+  const proto = Object.getPrototypeOf(main.getContext('2d'));
+  const raw = proto.drawImage;
+  const cache = new WeakMap();
+  proto.drawImage = function (src, ...args) {
+    if (src && typeof src.toBuffer === 'function') {
+      let img = cache.get(src);
+      if (!img) { img = new Image(); img.src = src.toBuffer('image/png'); cache.set(src, img); }
+      return raw.call(this, img, ...args);
+    }
+    return raw.call(this, src, ...args);
+  };
+}
 main.style = {};
 main.addEventListener = () => {};
 main.getBoundingClientRect = () => ({ left: 0, top: 0, width: VIEW_W, height: VIEW_H });
@@ -106,6 +120,24 @@ const check = (name, ok) => {
   await sleep(1200);
   check('interrupted sequence stays stopped', !seqEnded && !GOL.audio._seq);
   GOL.audio.stopRecitation();
+}
+
+// ---- 4. a parent can open a surah out of sequence
+{
+  GOL.go('parents');
+  await pumpFor(900);
+  const parents = GOL.SCENES.parents;
+  parents.open = true;
+  await pumpFor(100);
+  const iLocked = GOL.store.data.unlocked + 2; // definitely locked
+  GOL.Input.taps.push({ x: VIEW_W * 0.9275, y: 128 + iLocked * 42 });
+  await pumpFor(100);
+  check('parent unlock chip opens level ' + iLocked, GOL.store.data.opened.includes(iLocked));
+  check('map now treats it as open', GOL.store.isOpen(iLocked));
+  check('later levels stay locked', !GOL.store.isOpen(iLocked + 1));
+  GOL.Input.taps.push({ x: VIEW_W * 0.9275, y: 128 + iLocked * 42 });
+  await pumpFor(100);
+  check('tapping again relocks it', !GOL.store.data.opened.includes(iLocked));
 }
 
 console.log(failures ? failures + ' FAILURES' : 'all flow tests passed');

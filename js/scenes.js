@@ -239,7 +239,7 @@
         for (const n of nodes) {
           if (GOL.dist(tap.x, tap.y, n.x, n.y) < 44) {
             tap.ui = true;
-            if (n.i > GOL.store.data.unlocked) { GOL.audio.sfx('drift'); return; }
+            if (!GOL.store.isOpen(n.i)) { GOL.audio.sfx('drift'); return; }
             if (n.i === this.token && !this.hopping) {
               this.pendingEnter = { at: 0, index: n.i };
             } else if (!this.hopping) {
@@ -278,12 +278,11 @@
       }
       ctx.restore();
       // nodes
-      const unlocked = GOL.store.data.unlocked;
       for (const n of nodes) {
         const L = GOL.LEVELS[n.i];
         const st = GOL.store.level(L.surahId);
         const isDone = st.completed;
-        const isOpen = n.i <= unlocked;
+        const isOpen = GOL.store.isOpen(n.i);
         // stone disc
         ctx.fillStyle = alpha('#3E5340', 0.18);
         ctx.beginPath(); ctx.ellipse(n.x + 2, n.y + 26, 30, 9, 0, 0, Math.PI * 2); ctx.fill();

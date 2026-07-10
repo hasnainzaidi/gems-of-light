@@ -25,6 +25,7 @@
       this.attempts = 0; this.hintLevel = 0; this.autoT = 0;
       this.igniteT = 0; this.reciteI = -1; this.openT = 0; this.walkT = 0;
       this.heldGem = null;
+      this._finished = false;
       const n = this.L.surah.verses.length;
       // shuffle the display order so the cloud never spells the answer
       const order = this.L.surah.verses.map((v) => v.n);
@@ -133,7 +134,8 @@
         if (this.openT >= 1) { this.phase = 'walk'; this.walkT = 0; }
       } else if (this.phase === 'walk') {
         this.walkT += dt;
-        if (this.walkT > 2.4) {
+        if (this.walkT > 2.4 && !this._finished) {
+          this._finished = true;
           const st = GOL.store.level(this.L.surahId);
           const first = !st.completed;
           st.completed = true;

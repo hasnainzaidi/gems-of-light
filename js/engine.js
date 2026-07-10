@@ -445,7 +445,12 @@
       this.data.levels = this.data.levels || {};
       this.data.settings = this.data.settings || { muted: false };
       if (this.data.unlocked == null) this.data.unlocked = 0;
+      this.data.opened = this.data.opened || []; // parent-opened level indices
       return this.data;
+    },
+    // a level is playable if reached in sequence or opened by a parent
+    isOpen(i) {
+      return i <= this.data.unlocked || this.data.opened.includes(i);
     },
     save() {
       try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* private mode: play on */ }

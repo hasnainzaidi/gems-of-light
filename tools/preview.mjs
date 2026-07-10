@@ -1,5 +1,5 @@
 // Headless preview — renders real frames of the game without a browser.
-// Usage:  npm i @napi-rs/canvas   then   node tools/preview.mjs [outDir]
+// Usage:  npm i @napi-rs/canvas   then   node --expose-gc tools/preview.mjs [outDir]
 // Produces PNG screenshots of every scene for visual QA.
 import { createRequire } from 'module';
 import fs from 'fs';
@@ -7,7 +7,29 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
-const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, GlobalFonts, Image } = require('@napi-rs/canvas');
+
+// @napi-rs/canvas retains a pixel snapshot for every canvas-as-source
+// drawImage call (leaks GBs over thousands of frames). Image sources don't
+// leak, and all our drawImage sources are static once built — so convert
+// canvas sources to cached Images transparently.
+function patchDrawImage(protoOwner) {
+  const proto = Object.getPrototypeOf(protoOwner);
+  const raw = proto.drawImage;
+  const cache = new WeakMap();
+  proto.drawImage = function (src, ...args) {
+    if (src && typeof src.toBuffer === 'function') {
+      let img = cache.get(src);
+      if (!img) {
+        img = new Image();
+        img.src = src.toBuffer('image/png');
+        cache.set(src, img);
+      }
+      return raw.call(this, img, ...args);
+    }
+    return raw.call(this, src, ...args);
+  };
+}
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = process.argv[2] || '/tmp/gol-shots';
 fs.mkdirSync(OUT, { recursive: true });
@@ -24,6 +46,7 @@ for (const dir of ['/usr/share/fonts', '/usr/local/share/fonts']) {
 // ------------------------------------------------------------ browser shims
 const VIEW_W = 1180, VIEW_H = 820;
 const main = createCanvas(VIEW_W, VIEW_H);
+patchDrawImage(main.getContext('2d'));
 main.style = {};
 main.addEventListener = () => {};
 main.getBoundingClientRect = () => ({ left: 0, top: 0, width: VIEW_W, height: VIEW_H });
@@ -83,6 +106,8 @@ function pump(seconds) {
     NOW += 1000 / 60;
     const q = rafQ.splice(0);
     for (const fn of q) fn(NOW);
+    // native canvas memory piles up between event-loop turns; sweep it
+    if (global.gc && i % 30 === 0) global.gc();
   }
 }
 function shot(name) {
