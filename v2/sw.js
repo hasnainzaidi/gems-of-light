@@ -1,7 +1,7 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r6'; // bumped: painted home-screen icons
+const CACHE = 'gems-of-light-v2-r7'; // bumped: resilient install (fixes iPhone getting stuck on old cache)
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
@@ -25,7 +25,19 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // caches.addAll() is all-or-nothing: one flaky fetch (a slow cellular
+  // connection, a single dropped request among ~30 files) fails the WHOLE
+  // install, and the browser just keeps running whatever old worker it
+  // already had — silently, with no error surfaced anywhere. That's how a
+  // phone can get stuck several versions behind forever. Cache each file
+  // independently instead, so one miss doesn't cost every future update.
+  e.waitUntil(
+    caches.open(CACHE).then((c) =>
+      Promise.all(SHELL.map((url) => c.add(url).catch((err) => {
+        console.warn('[sw] precache miss, continuing:', url, err);
+      })))
+    ).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
