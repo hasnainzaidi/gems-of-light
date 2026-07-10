@@ -185,9 +185,17 @@
     },
     startAmbience(level) {
       if (!this.ctx) return;
-      this._ambTarget = 0.55;
+      this._ambTarget = 0.6;
       this._birdsOn = level !== 'quiet';
-      if (!this.reciting) this.amb.gain.setTargetAtTime(this._ambTarget, this.ctx.currentTime, 1.2);
+      this._birdTimer = Math.min(this._birdTimer, 0.9); // the garden answers quickly
+      if (!this.reciting) this.amb.gain.setTargetAtTime(this._ambTarget, this.ctx.currentTime, 0.35);
+    },
+    // A soft rising bell motif when a level opens — it tells small ears
+    // that the garden has sound, before the first gem is ever found.
+    enterFlourish() {
+      if (!this.ctx || this.muted) return;
+      const steps = [0, 4, 7];
+      steps.forEach((s, i) => this._bell(523.25 * Math.pow(2, s / 12), i * 0.13, 1.1, 0.055));
     },
     stopAmbience() {
       if (!this.ctx) return;

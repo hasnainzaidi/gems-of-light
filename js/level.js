@@ -116,6 +116,7 @@
 
       GOL.audio.preloadSurah(L.surah);
       GOL.audio.startAmbience('garden');
+      GOL.audio.enterFlourish();
     },
     exit() {
       GOL.Input.zones = null;
