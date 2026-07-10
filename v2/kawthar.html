@@ -77,6 +77,25 @@
   </div>
   <script src="js/kawthar.js"></script>
   <script>
+    // This page can be the very first (or only) one a visitor loads, so it
+    // needs to register/refresh the service worker itself rather than
+    // relying on index.html having done it. updateViaCache:'none' makes
+    // the browser bypass HTTP cache when checking sw.js for changes — iOS
+    // otherwise holds onto a stale worker indefinitely — and reloading once
+    // a new worker takes over means an update actually reaches the screen.
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+      addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+          .then((reg) => { reg.update().catch(() => {}); })
+          .catch(() => {});
+      });
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return;
+        reloading = true;
+        location.reload();
+      });
+    }
     const cv = document.getElementById('game');
     const ctx = cv.getContext('2d');
     const K = window.KAWTHAR;

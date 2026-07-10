@@ -97,9 +97,24 @@
   requestAnimationFrame(frame);
 
   // ------------------------------------------------------------- offline --
+  // iOS (Safari and Chrome — both run on WebKit there) is stubborn about
+  // ever re-checking a service worker script once it's cached one, so:
+  // (1) updateViaCache:'none' forces the browser to bypass HTTP cache when
+  //     checking sw.js itself, not just the assets it caches, and
+  // (2) once a new worker takes control, reload once automatically so the
+  //     update actually reaches the screen without the visitor having to
+  //     know to reload twice or clear site data by hand.
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then((reg) => { reg.update().catch(() => {}); })
+        .catch(() => {});
+    });
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return;
+      reloading = true;
+      location.reload();
     });
   }
 })();
