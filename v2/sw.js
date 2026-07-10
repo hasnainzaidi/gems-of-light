@@ -1,14 +1,27 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r4'; // bumped: self-updating service worker registration
+const CACHE = 'gems-of-light-v2-r5'; // bumped: kawthar installable from the home screen
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
   './js/audio.js', './js/engine.js', './js/levels.js', './js/scenes.js',
   './js/level.js', './js/gate.js', './js/room.js', './js/main.js',
   './assets/key-art.jpg',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png',
+  // the painterly Al-Kawthar slice, installable on its own
+  './kawthar.html', './js/kawthar.js', './manifest-kawthar.webmanifest',
+  './assets/paint/proc/bg-far.png', './assets/paint/proc/bg-mid.png',
+  './assets/paint/proc/wall.png', './assets/paint/proc/ground-fill.png',
+  './assets/paint/proc/platform.png', './assets/paint/proc/tree-olive.png',
+  './assets/paint/proc/plant-0.png', './assets/paint/proc/plant-1.png',
+  './assets/paint/proc/plant-2.png', './assets/paint/proc/grass-fringe.png',
+  './assets/paint/proc/gem-1.png', './assets/paint/proc/gem-2.png',
+  './assets/paint/proc/gem-3.png', './assets/paint/proc/arch.png',
+  './assets/paint/proc/spring.png',
+  './assets/paint/proc/ll-idle.png', './assets/paint/proc/ll-walk-a.png',
+  './assets/paint/proc/ll-walk-b.png', './assets/paint/proc/ll-jump.png',
+  './assets/paint/proc/ll-collect.png'
 ];
 
 self.addEventListener('install', (e) => {

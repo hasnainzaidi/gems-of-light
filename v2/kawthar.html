@@ -3,14 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <title>Gems of Light — Al-Kawthar</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gems of Light" />
+  <meta name="theme-color" content="#2E4032" />
+  <link rel="manifest" href="manifest-kawthar.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New&display=swap" rel="stylesheet" />
   <style>
     html, body { margin: 0; height: 100%; background: #243626; overflow: hidden;
       -webkit-user-select: none; user-select: none; }
-    #game { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #game { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; }
     #hint { position: fixed; bottom: 14px; width: 100%; text-align: center;
       font: 600 15px Nunito, system-ui; color: rgba(255,251,238,0.75); pointer-events: none;
       transition: opacity 1s; }
@@ -34,17 +42,34 @@
     #controls { display: none; position: fixed; inset: 0; z-index: 20; pointer-events: none; }
     @media (pointer: coarse) { #controls { display: block; } #hint { display: none; } }
     .padBtn { position: fixed; pointer-events: auto; touch-action: none;
-      width: 108px; height: 108px; border-radius: 50%;
+      width: min(108px, 24dvh); height: min(108px, 24dvh); border-radius: 50%;
       background: rgba(250,244,224,0.28); border: 3px solid rgba(250,244,224,0.55);
       display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent; }
     .padBtn:active, .padBtn.on { background: rgba(250,244,224,0.55); }
     .padBtn svg { width: 44px; height: 44px; fill: rgba(62,83,64,0.85); }
-    #btnL { left: 22px;  bottom: 24px; }
-    #btnR { left: 150px; bottom: 24px; }
-    #btnJ { right: 26px; bottom: 24px; width: 128px; height: 128px;
+    #btnL { left: calc(18px + env(safe-area-inset-left)); bottom: calc(18px + env(safe-area-inset-bottom)); }
+    #btnR { left: calc(18px + env(safe-area-inset-left) + min(108px, 24dvh) + 18px); bottom: calc(18px + env(safe-area-inset-bottom)); }
+    #btnJ { right: calc(20px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); width: min(128px, 28dvh); height: min(128px, 28dvh);
       border-color: rgba(240,200,120,0.7); }
     #btnJ svg { width: 54px; height: 54px; fill: rgba(122,98,56,0.9); }
+
+    /* ---- gentle add-to-home-screen nudge ---- */
+    #a2hs { display: none; position: fixed; z-index: 40;
+      left: 50%; transform: translateX(-50%);
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      max-width: min(480px, 92vw);
+      background: rgba(250,244,224,0.97); color: #3E5340;
+      border: 2px solid rgba(200,155,85,0.85); border-radius: 18px;
+      padding: 12px 44px 12px 16px;
+      font: 600 14px Nunito, system-ui; line-height: 1.45;
+      box-shadow: 0 6px 22px rgba(30,43,34,0.35); }
+    #a2hs .share { display: inline-block; vertical-align: -3px; width: 16px; height: 16px; }
+    #a2hs #a2hsClose { position: absolute; top: 6px; right: 10px;
+      font: 800 18px Nunito; color: #B98A3E; padding: 4px 6px; cursor: pointer; }
+    #a2hs #a2hsInstall { display: none; margin-top: 8px;
+      background: #3E5340; color: #F5EDD4; border: 0; border-radius: 12px;
+      font: 700 14px Nunito; padding: 8px 18px; }
   </style>
 </head>
 <body>
@@ -56,9 +81,9 @@
       <rect x="7" y="2" width="10" height="20" rx="2.4" fill="none"
         stroke="#F5EDD4" stroke-width="1.6"/>
       <circle cx="12" cy="19" r="1" fill="#F5EDD4"/>
-      <path d="M20.5 8.5 a8.5 8.5 0 0 0 -4.2 -4.9" fill="none"
+      <path d="M3.5 8.5 a8.5 8.5 0 0 1 4.2 -4.9" fill="none"
         stroke="#F0C878" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M20.9 4.7 L20.5 8.7 L16.6 7.8" fill="none"
+      <path d="M3.1 4.7 L3.5 8.7 L7.4 7.8" fill="none"
         stroke="#F0C878" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div>turn your device sideways<br/><span style="font-weight:600; font-size:15px; opacity:0.75">the garden is wide, like a meadow</span></div>
@@ -74,6 +99,12 @@
     <div class="padBtn" id="btnJ" aria-label="jump">
       <svg viewBox="0 0 24 24"><path d="M12 3.5 L18.5 10.5 L14.5 10.5 L14.5 20 L9.5 20 L9.5 10.5 L5.5 10.5 Z"/></svg>
     </div>
+  </div>
+
+  <div id="a2hs">
+    <span id="a2hsClose" aria-label="dismiss">✕</span>
+    <span id="a2hsText"></span>
+    <button id="a2hsInstall">Add it</button>
   </div>
   <script src="js/kawthar.js"></script>
   <script>
@@ -114,13 +145,65 @@
       await Promise.all(Object.entries(K.OPTIONAL).map(async ([k, f]) => {
         try { img[k] = await load(f); } catch (e) { img[k] = null; }
       }));
+      const coarse = matchMedia('(pointer: coarse)').matches;
       const fit = () => {
-        const dpr = Math.min(2, window.devicePixelRatio || 1);
-        cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+        const vw = window.visualViewport ? visualViewport.width : innerWidth;
+        const vh = window.visualViewport ? visualViewport.height : innerHeight;
+        const dpr = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
+        cv.width = vw * dpr; cv.height = vh * dpr;
+        cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        K.init(img, innerWidth, innerHeight);
+        K.init(img, vw, vh);
       };
       fit(); addEventListener('resize', fit);
+      if (window.visualViewport) visualViewport.addEventListener('resize', fit);
+      // Android: go truly fullscreen on the first touch (iOS doesn't allow it)
+      if (coarse && document.documentElement.requestFullscreen) {
+        document.addEventListener('pointerdown', function goFull() {
+          document.documentElement.requestFullscreen().catch(() => {});
+          document.removeEventListener('pointerdown', goFull);
+        }, { once: true });
+      }
+
+      // ---- add-to-home-screen nudge: once a week, touch devices, browser tab only
+      (() => {
+        const standalone = navigator.standalone === true ||
+          matchMedia('(display-mode: standalone)').matches ||
+          matchMedia('(display-mode: fullscreen)').matches;
+        if (!coarse || standalone) return;
+        const KEY = 'gol.a2hs.dismissed';
+        const last = +localStorage.getItem(KEY) || 0;
+        if (Date.now() - last < 7 * 24 * 3600 * 1000) return;
+        const box = document.getElementById('a2hs');
+        const text = document.getElementById('a2hsText');
+        const installBtn = document.getElementById('a2hsInstall');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        let deferredPrompt = null;
+        addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          text.textContent = 'Add Gems of Light to your home screen to play fullscreen, without the browser bars.';
+          installBtn.style.display = 'inline-block';
+          box.style.display = 'block';
+        });
+        if (isIOS) {
+          text.innerHTML = 'For fullscreen play: tap ' +
+            '<svg class="share" viewBox="0 0 24 24" fill="none" stroke="#3E5340" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M12 3 v12 M8.5 6.5 L12 3 l3.5 3.5"/><rect x="5" y="10" width="14" height="11" rx="2"/></svg>' +
+            ' then <b>Add to Home Screen</b>, and open the garden from its icon.';
+          setTimeout(() => (box.style.display = 'block'), 6000);
+        }
+        installBtn.addEventListener('click', async () => {
+          if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; }
+          box.style.display = 'none';
+          localStorage.setItem(KEY, String(Date.now()));
+        });
+        document.getElementById('a2hsClose').addEventListener('click', () => {
+          box.style.display = 'none';
+          localStorage.setItem(KEY, String(Date.now()));
+        });
+      })();
       addEventListener('keydown', (e) => {
         if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.input.left = true;
         if (e.code === 'ArrowRight' || e.code === 'KeyD') S.input.right = true;
