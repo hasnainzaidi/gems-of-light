@@ -34,24 +34,40 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- Only Al-Kawthar is ready to play; send visitors straight there for
-       now. The full multi-level game lives on, untouched, at
-       index-full.html — swap this redirect out once more levels ship. -->
-  <meta http-equiv="refresh" content="0; url=kawthar.html" />
-  <script>location.replace('kawthar.html');</script>
   <style>
     html, body {
       margin: 0; padding: 0;
       height: 100%;
       background: #2E4032;
       overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
     }
-    p { color: #F5EDD4; font: 600 15px Nunito, system-ui; text-align: center; }
-    a { color: #F0C878; }
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      touch-action: none;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
-  <p>Loading the garden&hellip;<br /><a href="kawthar.html">tap here if it doesn't open</a></p>
+  <canvas id="game"></canvas>
+  <noscript><p style="color:#F5EDD4;font-family:sans-serif;text-align:center;padding:2rem">Gems of Light needs JavaScript to bloom.</p></noscript>
+  <script src="js/data.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/props.js"></script>
+  <script src="js/actors.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/scenes.js"></script>
+  <script src="js/level.js"></script>
+  <script src="js/gate.js"></script>
+  <script src="js/room.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>

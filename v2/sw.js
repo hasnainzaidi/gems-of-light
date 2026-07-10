@@ -1,9 +1,9 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r9'; // bumped: Open Graph / iMessage preview image on index.html + kawthar.html
+const CACHE = 'gems-of-light-v2-r10'; // bumped: index.html now redirects straight to kawthar.html
 const SHELL = [
-  './', './index.html', './manifest.webmanifest',
+  './', './index.html', './index-full.html', './manifest.webmanifest',
   './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
   './js/audio.js', './js/engine.js', './js/levels.js', './js/scenes.js',
   './js/level.js', './js/gate.js', './js/room.js', './js/main.js',
