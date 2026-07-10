@@ -46,9 +46,11 @@
         this._mediaKick();
         if (!this.muted) this._bell(783.99, 0, 1.2, 0.06);
       };
-      if (this.ctx.state === 'suspended') {
+      // iOS parks contexts in 'interrupted' (not just 'suspended') —
+      // resume from ANY non-running state, on every gesture.
+      if (this.ctx.state !== 'running') {
         const p = this.ctx.resume();
-        if (p && p.then) p.then(welcome);
+        if (p && p.then) p.then(welcome).catch(() => {});
       }
       welcome();
       this.unlocked = true;
