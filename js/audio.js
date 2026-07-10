@@ -1,0 +1,307 @@
+// Gems of Light — audio.js
+// One voice, treated with care. Verse recitations are mp3s (local file first,
+// everyayah.com Alafasy as fallback). Everything else — breeze, birdsong,
+// water, chimes — is synthesized quietly with WebAudio, and ducks to near
+// silence whenever the Qur'an is being recited.
+(function () {
+  const GOL = window.GOL;
+  const REMOTE = 'https://everyayah.com/data/Alafasy_128kbps/';
+
+  const A = {
+    ctx: null, master: null, amb: null, sfxBus: null,
+    windGain: null, waterGain: null,
+    muted: false, unlocked: false,
+    _els: {}, _current: null, _birdTimer: 0, _birdsOn: false,
+    _seq: null,
+
+    // -------------------------------------------------------------- boot --
+    unlock() {
+      if (!this.ctx) {
+        try {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) { return; }
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.muted ? 0 : 1;
+        this.master.connect(this.ctx.destination);
+        this.amb = this.ctx.createGain();
+        this.amb.gain.value = 0;
+        this.amb.connect(this.master);
+        this.sfxBus = this.ctx.createGain();
+        this.sfxBus.gain.value = 0.9;
+        this.sfxBus.connect(this.master);
+        this._makeWind();
+        this._makeWater();
+      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      this.unlocked = true;
+    },
+    setMuted(m) {
+      this.muted = m;
+      if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 1, this.ctx.currentTime, 0.05);
+      if (this._current) this._current.el.muted = m;
+      if (this._seq && this._seq.el) this._seq.el.muted = m;
+    },
+
+    // -------------------------------------------------------- recitation --
+    key(surahId, n) {
+      return String(surahId).padStart(3, '0') + String(n).padStart(3, '0');
+    },
+    _el(key) {
+      if (!this._els[key]) {
+        const el = new Audio('audio/' + key + '.mp3');
+        el.preload = 'auto';
+        el._triedRemote = false;
+        el.addEventListener('error', () => {
+          if (!el._triedRemote) {
+            el._triedRemote = true;
+            el.src = REMOTE + key + '.mp3';
+            el.load();
+          }
+        });
+        this._els[key] = el;
+      }
+      return this._els[key];
+    },
+    preloadSurah(surah) {
+      for (const v of surah.verses) this._el(this.key(surah.id, v.n));
+    },
+    // Play one ayah. Always eventually calls onend (never blocks the child).
+    playVerse(surahId, n, onend) {
+      this.stopRecitation();
+      return this._verse(surahId, n, onend, false);
+    },
+    // The raw player. inSeq skips the stop/unduck so a running surah
+    // recitation can call it verse after verse without ending itself.
+    _verse(surahId, n, onend, inSeq) {
+      const el = this._el(this.key(surahId, n));
+      const h = { el, done: false, timer: null, guard: null };
+      const finish = () => {
+        if (h.done) return;
+        h.done = true;
+        clearTimeout(h.timer);
+        clearTimeout(h.guard);
+        el.removeEventListener('ended', finish);
+        if (this._current === h) this._current = null;
+        if (!inSeq) this.duck(false);
+        if (onend) onend();
+      };
+      h.finish = finish;
+      el.muted = this.muted;
+      el.currentTime = 0;
+      el.addEventListener('ended', finish);
+      // if audio can't load at all (fully offline + streamed surah), move on
+      h.timer = setTimeout(() => { if (el.paused || el.readyState < 2) finish(); }, 7000);
+      // and nothing may stall the garden forever, no matter what
+      h.guard = setTimeout(finish, 30000);
+      this.duck(true);
+      const p = el.play();
+      if (p && p.catch) p.catch(() => { h.timer = setTimeout(finish, 2500); });
+      this._current = h;
+      return h;
+    },
+    // Recite a whole surah, verse by verse. cb.onVerse(i) before each ayah.
+    playSurah(surah, cb) {
+      this.stopRecitation();
+      const seq = { i: 0, stopped: false, el: null };
+      this._seq = seq;
+      const step = () => {
+        if (seq.stopped) return;
+        if (seq.i >= surah.verses.length) {
+          this._seq = null;
+          this.duck(false);
+          if (cb && cb.onend) cb.onend();
+          return;
+        }
+        const v = surah.verses[seq.i];
+        if (cb && cb.onVerse) cb.onVerse(seq.i);
+        const h = this._verse(surah.id, v.n, () => {
+          seq.i++;
+          setTimeout(step, 420); // a breath between ayat
+        }, true);
+        seq.el = h.el;
+      };
+      step();
+      return seq;
+    },
+    stopRecitation() {
+      if (this._seq) { this._seq.stopped = true; this._seq = null; }
+      if (this._current) {
+        const h = this._current;
+        h.el.pause();
+        h.done = true;
+        clearTimeout(h.timer);
+        this._current = null;
+      }
+      this.duck(false);
+    },
+    get reciting() { return !!(this._current || this._seq); },
+    duck(on) {
+      if (!this.ctx) return;
+      this.amb.gain.setTargetAtTime(on ? 0.04 : this._ambTarget, this.ctx.currentTime, on ? 0.15 : 0.8);
+      this.sfxBus.gain.setTargetAtTime(on ? 0.15 : 0.9, this.ctx.currentTime, 0.15);
+    },
+
+    // ---------------------------------------------------------- ambience --
+    _ambTarget: 0,
+    _makeWind() {
+      const ctx = this.ctx;
+      const len = 2 * ctx.sampleRate;
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) {
+        const white = Math.random() * 2 - 1;
+        last = (last + 0.02 * white) / 1.02; // brown-ish
+        d[i] = last * 3.2;
+      }
+      this._noiseBuf = buf;
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 380; bp.Q.value = 0.6;
+      this.windGain = ctx.createGain();
+      this.windGain.gain.value = 0.5;
+      src.connect(bp).connect(this.windGain).connect(this.amb);
+      src.start();
+      // slow breathing of the breeze
+      const lfo = ctx.createOscillator();
+      lfo.frequency.value = 0.07;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = 0.22;
+      lfo.connect(lfoG).connect(this.windGain.gain);
+      lfo.start();
+    },
+    _makeWater() {
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource();
+      src.buffer = this._noiseBuf; src.loop = true;
+      src.playbackRate.value = 1.7;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 1600; bp.Q.value = 0.8;
+      this.waterGain = ctx.createGain();
+      this.waterGain.gain.value = 0;
+      src.connect(bp).connect(this.waterGain).connect(this.amb);
+      src.start();
+    },
+    startAmbience(level) {
+      if (!this.ctx) return;
+      this._ambTarget = 0.55;
+      this._birdsOn = level !== 'quiet';
+      if (!this.reciting) this.amb.gain.setTargetAtTime(this._ambTarget, this.ctx.currentTime, 1.2);
+    },
+    stopAmbience() {
+      if (!this.ctx) return;
+      this._ambTarget = 0;
+      this._birdsOn = false;
+      this.amb.gain.setTargetAtTime(0, this.ctx.currentTime, 0.5);
+    },
+    setWaterNearness(k) { // 0..1
+      if (this.waterGain) this.waterGain.gain.setTargetAtTime(k * 0.5, this.ctx.currentTime, 0.4);
+    },
+    tick(dt) {
+      if (!this.ctx || !this._birdsOn || this.reciting || this.muted) return;
+      this._birdTimer -= dt;
+      if (this._birdTimer <= 0) {
+        this._birdTimer = 3.5 + Math.random() * 6;
+        this._chirp();
+      }
+    },
+    _chirp() {
+      const ctx = this.ctx, t0 = ctx.currentTime;
+      const notes = 2 + Math.floor(Math.random() * 3);
+      const base = 2300 + Math.random() * 900;
+      for (let i = 0; i < notes; i++) {
+        const t = t0 + i * (0.09 + Math.random() * 0.07);
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        const f = base * (1 + (Math.random() - 0.3) * 0.25);
+        o.frequency.setValueAtTime(f, t);
+        o.frequency.exponentialRampToValueAtTime(f * (1.1 + Math.random() * 0.25), t + 0.05);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.035, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+        o.connect(g).connect(this.amb);
+        o.start(t); o.stop(t + 0.1);
+      }
+    },
+
+    // --------------------------------------------------------------- sfx --
+    _bell(freq, when, dur, vol, dest) {
+      const ctx = this.ctx;
+      const t = ctx.currentTime + (when || 0);
+      dest = dest || this.sfxBus;
+      for (const [ratio, amp] of [[1, 1], [2.76, 0.22], [5.4, 0.08]]) {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = freq * ratio;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol * amp, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur * (ratio === 1 ? 1 : 0.4));
+        o.connect(g).connect(dest);
+        o.start(t); o.stop(t + dur + 0.1);
+      }
+    },
+    // pentatonic ladder so collecting gems in any order still sounds musical
+    chime(i, opts) {
+      if (!this.ctx) return;
+      const scale = [0, 2, 4, 7, 9, 12, 14, 16];
+      const f = 523.25 * Math.pow(2, scale[i % scale.length] / 12);
+      this._bell(f, 0, opts && opts.short ? 0.5 : 1.4, opts && opts.soft ? 0.05 : 0.14);
+    },
+    sfx(name) {
+      if (!this.ctx || this.muted) return;
+      const ctx = this.ctx, t = ctx.currentTime;
+      const quick = (type, f0, f1, dur, vol, curve) => {
+        const o = ctx.createOscillator();
+        o.type = type;
+        o.frequency.setValueAtTime(f0, t);
+        if (f1) o.frequency[curve || 'exponentialRampToValueAtTime'](f1, t + dur);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g).connect(this.sfxBus);
+        o.start(t); o.stop(t + dur + 0.05);
+      };
+      const noise = (dur, vol, f, q) => {
+        const s = ctx.createBufferSource();
+        s.buffer = this._noiseBuf;
+        s.playbackRate.value = 2.5;
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q || 1;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        s.connect(bp).connect(g).connect(this.sfxBus);
+        s.start(t); s.stop(t + dur);
+      };
+      switch (name) {
+        case 'jump': quick('sine', 310, 540, 0.14, 0.05); break;
+        case 'land': quick('triangle', 150, 95, 0.1, 0.045); noise(0.07, 0.02, 700, 0.8); break;
+        case 'nearby': this._bell(1568, 0, 0.7, 0.035); break;
+        case 'settle': this._bell(1318.5, 0, 0.8, 0.06); break;
+        case 'place': noise(0.05, 0.05, 900, 2); quick('sine', 660, 700, 0.08, 0.05); break;
+        case 'drift': quick('sine', 420, 310, 0.4, 0.03, 'linearRampToValueAtTime'); break;
+        case 'hint': this._bell(1046.5, 0, 0.9, 0.05); break;
+        case 'door':
+          quick('sine', 70, 150, 1.4, 0.09, 'linearRampToValueAtTime');
+          noise(1.3, 0.03, 300, 0.5);
+          this._bell(523.25, 0.5, 1.6, 0.07);
+          this._bell(659.25, 0.85, 1.6, 0.07);
+          this._bell(784, 1.2, 1.8, 0.08);
+          break;
+        case 'splash': noise(0.35, 0.08, 900, 0.7); quick('sine', 300, 140, 0.3, 0.03); break;
+        case 'flutter': noise(0.06, 0.03, 1800, 1.5); setTimeout(() => this.ctx && noise(0.06, 0.025, 2000, 1.5), 70); break;
+        case 'tap': quick('sine', 880, 920, 0.05, 0.03); break;
+        case 'unlockLevel':
+          this._bell(783.99, 0, 1, 0.08);
+          this._bell(1046.5, 0.12, 1.2, 0.08);
+          break;
+        case 'step': noise(0.04, 0.012, 500, 1); break;
+      }
+    }
+  };
+  GOL.audio = A;
+})();
