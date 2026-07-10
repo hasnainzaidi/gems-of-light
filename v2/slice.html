@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Gems of Light — painterly slice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #243626; overflow: hidden; }
+    #game { display: block; width: 100vw; height: 100vh; }
+    #hint { position: fixed; bottom: 14px; width: 100%; text-align: center;
+      font: 600 15px system-ui; color: rgba(255,251,238,0.75); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hint">← → walk · space / tap right side to jump</div>
+  <script src="js/slice.js"></script>
+  <script>
+    const cv = document.getElementById('game');
+    const ctx = cv.getContext('2d');
+    const S = window.SLICE;
+    const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    (async () => {
+      const img = {};
+      await Promise.all(Object.entries(S.FILES).map(async ([k, f]) => (img[k] = await load(f))));
+      const fit = () => {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        S.init(img, innerWidth, innerHeight);
+      };
+      fit(); addEventListener('resize', fit);
+      addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.state.input.left = true;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.state.input.right = true;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.state.input.jump = true;
+      });
+      addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.state.input.left = false;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.state.input.right = false;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.state.input.jump = false;
+      });
+      addEventListener('pointerdown', (e) => {
+        if (e.clientX < innerWidth * 0.35) S.state.input[e.clientY > innerHeight / 2 && e.clientX < innerWidth * 0.18 ? 'left' : 'right'] = true;
+        else S.state.input.jump = true;
+      });
+      addEventListener('pointerup', () => { S.state.input.left = S.state.input.right = S.state.input.jump = false; });
+      let last = performance.now();
+      const loop = (now) => {
+        const dt = Math.min(0.033, (now - last) / 1000); last = now;
+        S.tick(dt);
+        S.draw(ctx, (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

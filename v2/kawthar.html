@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Gems of Light — Al-Kawthar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #243626; overflow: hidden;
+      -webkit-user-select: none; user-select: none; }
+    #game { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #hint { position: fixed; bottom: 14px; width: 100%; text-align: center;
+      font: 600 15px Nunito, system-ui; color: rgba(255,251,238,0.75); pointer-events: none;
+      transition: opacity 1s; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hint">← → walk · space / tap right side to jump</div>
+  <script src="js/kawthar.js"></script>
+  <script>
+    const cv = document.getElementById('game');
+    const ctx = cv.getContext('2d');
+    const K = window.KAWTHAR;
+    const S = K.state;
+    const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+    (async () => {
+      const img = {};
+      await Promise.all(Object.entries(K.FILES).map(async ([k, f]) => (img[k] = await load(f))));
+      // optional paintings: use them if they exist, placeholders otherwise
+      await Promise.all(Object.entries(K.OPTIONAL).map(async ([k, f]) => {
+        try { img[k] = await load(f); } catch (e) { img[k] = null; }
+      }));
+      const fit = () => {
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        K.init(img, innerWidth, innerHeight);
+      };
+      fit(); addEventListener('resize', fit);
+      addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.input.left = true;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.input.right = true;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.input.jump = true;
+      });
+      addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') S.input.left = false;
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') S.input.right = false;
+        if (e.code === 'Space' || e.code === 'ArrowUp') S.input.jump = false;
+      });
+      const toWorld = (e) => ({ x: e.clientX / (S.scale || 1) + S.camX, y: e.clientY / (S.scale || 1) });
+      cv.addEventListener('pointerdown', (e) => {
+        if (S.mode === 'done') { location.reload(); return; }
+        if (S.mode === 'order') { const w = toWorld(e); S.drag = w; K.pointerDown(w.x, w.y); return; }
+        if (e.clientX < innerWidth * 0.18) S.input.left = true;
+        else if (e.clientX < innerWidth * 0.36) S.input.right = true;
+        else S.input.jump = true;
+      });
+      cv.addEventListener('pointermove', (e) => { if (S.mode === 'order') S.drag = toWorld(e); });
+      cv.addEventListener('pointerup', (e) => {
+        if (S.mode === 'order') { const w = toWorld(e); K.pointerUp(w.x, w.y); S.drag = null; return; }
+        S.input.left = S.input.right = S.input.jump = false;
+      });
+      setTimeout(() => (document.getElementById('hint').style.opacity = 0), 9000);
+      let last = performance.now();
+      const loop = (now) => {
+        const dt = Math.min(0.033, (now - last) / 1000); last = now;
+        K.tick(dt);
+        K.draw(ctx, (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

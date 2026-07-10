@@ -1,0 +1,27 @@
+{
+ "idle": {
+  "w": 333,
+  "h": 403,
+  "baseline": 399
+ },
+ "walk-a": {
+  "w": 332,
+  "h": 416,
+  "baseline": 412
+ },
+ "walk-b": {
+  "w": 334,
+  "h": 407,
+  "baseline": 402
+ },
+ "jump": {
+  "w": 399,
+  "h": 399,
+  "baseline": 395
+ },
+ "collect": {
+  "w": 320,
+  "h": 399,
+  "baseline": 395
+ }
+}
