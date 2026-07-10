@@ -32,7 +32,24 @@
         this._makeWind();
         this._makeWater();
       }
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      // iOS: resume inside the gesture, kick a silent buffer through the
+      // graph, and greet the very first successful unlock with a soft bell —
+      // so the "tap anywhere to begin" tap is also the sound turning on.
+      const welcome = () => {
+        if (this._welcomed || this.ctx.state !== 'running') return;
+        this._welcomed = true;
+        try {
+          const b = this.ctx.createBuffer(1, 1, 22050);
+          const s = this.ctx.createBufferSource();
+          s.buffer = b; s.connect(this.ctx.destination); s.start(0);
+        } catch (e) {}
+        if (!this.muted) this._bell(783.99, 0, 1.2, 0.06);
+      };
+      if (this.ctx.state === 'suspended') {
+        const p = this.ctx.resume();
+        if (p && p.then) p.then(welcome);
+      }
+      welcome();
       this.unlocked = true;
     },
     setMuted(m) {
@@ -160,7 +177,7 @@
       const bp = ctx.createBiquadFilter();
       bp.type = 'bandpass'; bp.frequency.value = 380; bp.Q.value = 0.6;
       this.windGain = ctx.createGain();
-      this.windGain.gain.value = 0.5;
+      this.windGain.gain.value = 0.34;
       src.connect(bp).connect(this.windGain).connect(this.amb);
       src.start();
       // slow breathing of the breeze
@@ -185,7 +202,7 @@
     },
     startAmbience(level) {
       if (!this.ctx) return;
-      this._ambTarget = 0.6;
+      this._ambTarget = 0.3;
       this._birdsOn = level !== 'quiet';
       this._birdTimer = Math.min(this._birdTimer, 0.9); // the garden answers quickly
       if (!this.reciting) this.amb.gain.setTargetAtTime(this._ambTarget, this.ctx.currentTime, 0.35);
@@ -204,7 +221,7 @@
       this.amb.gain.setTargetAtTime(0, this.ctx.currentTime, 0.5);
     },
     setWaterNearness(k) { // 0..1
-      if (this.waterGain) this.waterGain.gain.setTargetAtTime(k * 0.5, this.ctx.currentTime, 0.4);
+      if (this.waterGain) this.waterGain.gain.setTargetAtTime(k * 0.28, this.ctx.currentTime, 0.4);
     },
     tick(dt) {
       if (!this.ctx || !this._birdsOn || this.reciting || this.muted) return;
