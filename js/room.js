@@ -6,30 +6,49 @@
   const { alpha, tint, shade } = GOL.color;
 
   // ================================================================= ROOM ==
+  // One shelf wall per world; little arrows lead to the neighbouring walls.
   const room = {
-    t: 0, fx: null, buttons: [], playing: null, playVerse: -1,
-    enter() {
+    t: 0, fx: null, buttons: [], playing: null, playVerse: -1, world: 0,
+    enter(params) {
+      params = params || {};
       this.t = 0;
       this.fx = GOL.makeFx();
+      const unlocked = Math.min(GOL.store.data.unlocked, GOL.LEVELS.length - 1);
+      this.setWorld(params.world != null ? params.world : GOL.worldOfLevel(unlocked));
+      GOL.audio.startAmbience('quiet');
+    },
+    setWorld(w) {
+      this.world = Math.max(0, Math.min(GOL.WORLDS.length - 1, w));
+      this.wd = GOL.WORLDS[this.world];
+      this.shelf = this.wd.levels.map((i) => GOL.LEVELS[i]);
+      this.maxV = Math.max.apply(null, this.shelf.map((L) => L.surah.verses.length));
       this.playing = null;
       this.playVerse = -1;
-      GOL.audio.startAmbience('quiet');
-      for (const L of GOL.LEVELS) GOL.audio.preloadSurah(L.surah);
+      this._solo = null;
+      GOL.audio.stopRecitation();
+      for (const L of this.shelf) GOL.audio.preloadSurah(L.surah);
     },
     exit() { GOL.audio.stopRecitation(); },
 
     rows(W, H) {
       const top = 92, bottom = H - 24;
-      const rh = (bottom - top) / 6;
-      return GOL.LEVELS.map((L, i) => ({ L, y: top + i * rh + rh / 2, rh }));
+      const rh = (bottom - top) / this.shelf.length;
+      return this.shelf.map((L, i) => ({ L, y: top + i * rh + rh / 2, rh }));
     },
     update(dt, W, H) {
       this.t += dt;
       this.fx.update(dt);
       this.buttons = [
-        { x: 40, y: 40, r: 30, iconName: 'back', fn: () => GOL.go('map') },
+        { x: 40, y: 40, r: 30, iconName: 'back', fn: () => GOL.go('map', { world: this.world }) },
         Object.assign({}, GOL.muteButton(W))
       ];
+      // walk the shelf walls, world by world
+      if (this.world > 0) {
+        this.buttons.push({ x: W / 2 - 340, y: 40, r: 24, iconName: 'back', fn: () => this.setWorld(this.world - 1) });
+      }
+      if (this.world < GOL.WORLDS.length - 1) {
+        this.buttons.push({ x: W / 2 + 340, y: 40, r: 24, iconName: 'play', fn: () => this.setWorld(this.world + 1) });
+      }
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       const rows = this.rows(W, H);
       for (const tap of GOL.Input.taps) {
@@ -53,24 +72,28 @@
             }
             return;
           }
-          // individual gems
+          // individual gems: the nearest one on the shelf takes the tap
+          // (long surahs sit close together — nearest beats first-in-reach)
           const verses = r.L.surah.verses.length;
+          const spacing = this.gemX(W, 1) - this.gemX(W, 0);
+          let bestV = -1, bestD = Math.max(16, Math.min(26, spacing * 0.55));
           for (let v = 0; v < verses; v++) {
-            const gx = this.gemX(W, v);
-            if (GOL.dist(tap.x, tap.y, gx, r.y) < 26 && found.includes(v + 1)) {
-              tap.ui = true;
-              this.playing = null;
-              this.playVerse = -1;
-              this._solo = { surahId: r.L.surahId, v };
-              GOL.audio.playVerse(r.L.surahId, v + 1, () => (this._solo = null));
-              this.fx.spawn('ring', gx, r.y, { color: GOL.GEMS[v % 7].glow, size: 18 });
-              return;
-            }
+            const d = GOL.dist(tap.x, tap.y, this.gemX(W, v), r.y);
+            if (d < bestD) { bestD = d; bestV = v; }
+          }
+          if (bestV >= 0 && found.includes(bestV + 1)) {
+            tap.ui = true;
+            this.playing = null;
+            this.playVerse = -1;
+            this._solo = { surahId: r.L.surahId, v: bestV };
+            GOL.audio.playVerse(r.L.surahId, bestV + 1, () => (this._solo = null));
+            this.fx.spawn('ring', this.gemX(W, bestV), r.y, { color: GOL.GEMS[bestV % 7].glow, size: 18 });
+            return;
           }
         }
       }
     },
-    gemX(W, v) { return 280 + v * Math.min(62, (W - 330) / 7); },
+    gemX(W, v) { return 280 + v * Math.min(62, (W - 330) / Math.max(7, this.maxV)); },
 
     draw(ctx, W, H) {
       const t = this.t;
@@ -103,7 +126,25 @@
         ctx.restore();
       }
       GOL.text(ctx, 'The Recitation Room', W / 2, 40, { size: 26, weight: '800' });
-      GOL.text(ctx, 'everything you have gathered, kept glowing', W / 2, 66, { size: 14, weight: '600', color: GOL.INK_SOFT });
+      GOL.text(ctx, this.wd.name + ' — everything you have gathered, kept glowing', W / 2, 66, { size: 14, weight: '600', color: GOL.INK_SOFT });
+      // this wall's windowsill of hidden Rahma blossoms
+      {
+        const found = this.shelf.filter((L) => GOL.store.level(L.surahId).blossom).length;
+        const total = this.shelf.length;
+        const bx = W - 178, by = 40;
+        ctx.fillStyle = '#B99B6E';
+        ctx.fillRect(bx - 24, by + 22, total * 22 + 34, 5);
+        this.shelf.forEach((L, i) => {
+          const has = GOL.store.level(L.surahId).blossom;
+          const fx2 = bx + i * 22 - 8;
+          if (has) GOL.drawRahmaBlossom(ctx, fx2, by + 10, 6, t + i);
+          else {
+            ctx.fillStyle = 'rgba(120,104,70,0.18)';
+            ctx.beginPath(); ctx.ellipse(fx2, by + 12, 4, 6, 0, 0, Math.PI * 2); ctx.fill();
+          }
+        });
+        GOL.text(ctx, found ? 'hidden blossoms · ' + found + ' of ' + total : 'secret blossoms sleep in the gardens…', bx + total * 11 - 8, by + 42, { size: 11.5, weight: '700', color: found ? GOL.GOLD : '#9A9478' });
+      }
 
       const rows = this.rows(W, H);
       for (const r of rows) {
@@ -166,8 +207,8 @@
         if (tap.ui) continue;
         // per-surah unlock chips
         for (let i = 0; i < GOL.LEVELS.length; i++) {
-          const y = 128 + i * 42;
-          if (i > GOL.store.data.unlocked && Math.abs(tap.y - y) < 17 && tap.x > W * 0.87 && tap.x < W * 0.985) {
+          const y = this.rowY(i, H);
+          if (i > GOL.store.data.unlocked && Math.abs(tap.y - y) < this.rowH(H) / 2 && tap.x > W * 0.87 && tap.x < W * 0.985) {
             tap.ui = true;
             const opened = GOL.store.data.opened;
             const at = opened.indexOf(i);
@@ -190,6 +231,9 @@
         }
       }
     },
+    // seventeen gardens now share this page — rows shrink to fit the screen
+    rowH(H) { return Math.min(42, (H - 214) / GOL.LEVELS.length); },
+    rowY(i, H) { return 112 + (i + 0.5) * this.rowH(H); },
     draw(ctx, W, H) {
       ctx.fillStyle = '#2E4032';
       ctx.fillRect(0, 0, W, H);
@@ -212,21 +256,24 @@
       } else {
         GOL.text(ctx, 'How the garden is growing', W / 2, 46, { size: 24, weight: '800', color: '#F5EDD4' });
         const cols = [
-          { x: W * 0.14, label: 'surah', align: 'left' },
-          { x: W * 0.36, label: 'completed' },
-          { x: W * 0.46, label: 'walks' },
-          { x: W * 0.57, label: 'heard whole' },
-          { x: W * 0.68, label: 'helps' },
-          { x: W * 0.8, label: 'trickiest ayah' },
+          { x: W * 0.135, label: 'surah', align: 'left' },
+          { x: W * 0.315, label: 'done' },
+          { x: W * 0.385, label: 'walks' },
+          { x: W * 0.4575, label: 'star walks' },
+          { x: W * 0.53, label: 'heard whole' },
+          { x: W * 0.6, label: 'helps' },
+          { x: W * 0.6675, label: 'moon' },
+          { x: W * 0.775, label: 'trickiest ayah' },
           { x: W * 0.9275, label: 'open early' }
         ];
         for (const c of cols) GOL.text(ctx, c.label, c.x, 92, { size: 12.5, weight: '700', color: 'rgba(245,237,212,0.55)', align: c.align || 'center' });
+        const rh = this.rowH(H);
         GOL.LEVELS.forEach((L, i) => {
           const st = GOL.store.level(L.surahId);
-          const y = 128 + i * 42;
+          const y = this.rowY(i, H);
           if (i % 2 === 0) {
             ctx.fillStyle = 'rgba(245,237,212,0.05)';
-            ctx.fillRect(W * 0.08, y - 17, W * 0.86, 34);
+            ctx.fillRect(W * 0.08, y - rh / 2 + 1, W * 0.86, rh - 2);
           }
           let worst = '—', worstN = 0;
           for (const k in st.misorders) if (st.misorders[k] > worstN) { worstN = st.misorders[k]; worst = 'ayah ' + k + ' (' + worstN + '×)'; }
@@ -234,34 +281,46 @@
             L.surah.englishName,
             st.completed ? '✓' : '·',
             String(st.replays || 0),
+            String(st.starWalks || 0),
             String(st.heardFull || 0),
             String(st.hintsUsed || 0),
+            st.trialAsked ? Math.round((st.trialFirstTry / st.trialAsked) * 100) + '%' : '—',
             worst
           ];
+          const fs = rh < 34 ? 1.5 : 0; // shave text a touch when rows tighten
           cells.forEach((val, ci) => {
             GOL.text(ctx, val, cols[ci].x, y, {
-              size: ci === 0 ? 15 : 14, weight: ci === 0 ? '800' : '600',
+              size: (ci === 0 ? 15 : 14) - fs, weight: ci === 0 ? '800' : '600',
               color: ci === 1 && st.completed ? '#A6DA8C' : '#F5EDD4',
               align: cols[ci].align || 'center'
             });
           });
+          if (st.blossom) GOL.star8(ctx, W * 0.135 - 16, y, 5, Math.PI / 8, 'rgba(240,200,120,0.9)');
           // unlock chip: lets a parent open any surah out of sequence
+          const ch = Math.min(28, rh - 4);
           if (i > GOL.store.data.unlocked) {
             const opened = GOL.store.data.opened.includes(i);
             const cx = W * 0.9275, cw = W * 0.105;
             ctx.fillStyle = opened ? 'rgba(240,200,120,0.22)' : 'rgba(245,237,212,0.1)';
-            GOL.roundRect(ctx, cx - cw / 2, y - 14, cw, 28, 14);
+            GOL.roundRect(ctx, cx - cw / 2, y - ch / 2, cw, ch, ch / 2);
             ctx.fill();
             ctx.strokeStyle = opened ? 'rgba(240,200,120,0.8)' : 'rgba(245,237,212,0.35)';
             ctx.lineWidth = 1.5;
-            GOL.roundRect(ctx, cx - cw / 2, y - 14, cw, 28, 14);
+            GOL.roundRect(ctx, cx - cw / 2, y - ch / 2, cw, ch, ch / 2);
             ctx.stroke();
-            GOL.text(ctx, opened ? '✓ opened' : 'unlock', cx, y, { size: 12.5, weight: '700', color: opened ? '#F0C878' : 'rgba(245,237,212,0.75)' });
+            GOL.text(ctx, opened ? '✓ opened' : 'unlock', cx, y, { size: 12.5 - fs, weight: '700', color: opened ? '#F0C878' : 'rgba(245,237,212,0.75)' });
           } else {
             GOL.text(ctx, '—', W * 0.9275, y, { size: 13, weight: '600', color: 'rgba(245,237,212,0.3)' });
           }
         });
-        GOL.text(ctx, '“Walks” counts replays of finished surahs — wandering back is the whole idea.', W / 2, 128 + 6 * 42 + 14, { size: 12.5, weight: '600', color: 'rgba(245,237,212,0.5)' });
+        let echoes = 0;
+        for (const L of GOL.LEVELS) echoes += GOL.store.level(L.surahId).echoes || 0;
+        const footY = this.rowY(GOL.LEVELS.length, H);
+        GOL.text(ctx, '“Moon” is how often a trial answer was right on the first listen. ★ = found the hidden blossom.', W / 2, footY, { size: 12.5, weight: '600', color: 'rgba(245,237,212,0.5)' });
+        const wk = 7 * 24 * 3600 * 1000;
+        const weekly = 'this week: ' + GOL.stampCount('walk', wk) + ' walks · ' + GOL.stampCount('starWalk', wk) + ' star walks · ' +
+          GOL.stampCount('trial', wk) + ' moon trials · ' + GOL.stampCount('meanings', wk) + ' meaning matches · ' + GOL.stampCount('story', wk) + ' stories';
+        GOL.text(ctx, weekly + '  ·  say-it-out-loud moments so far: ' + echoes, W / 2, footY + 19, { size: 12.5, weight: '600', color: 'rgba(245,237,212,0.5)' });
         // reset
         const warm = this.confirmT > 0;
         GOL.drawPanel(ctx, W / 2 - 130, H - 66, 260, 46, { radius: 22, plain: true, alpha: warm ? 1 : 0.25 });

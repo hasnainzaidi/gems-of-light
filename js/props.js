@@ -219,6 +219,164 @@
       S.sundial = c;
     }
 
+    // -- fruit trees for the Orchard: orange / pomegranate / lemon
+    S.fruit = [0, 1, 2].map((v) => {
+      const w = 150, h = 150;
+      const c = makeCanvas(w, h);
+      const x = c.getContext('2d');
+      const r = GOL.rng(seed + 611 + v * 37);
+      const cx = w / 2, gy = h - 4;
+      const fruitCol = ['#E8964B', '#C95B4E', '#E8C84B'][v];
+      // trunk: shorter and rounder than the olive's
+      x.strokeStyle = P.trunk; x.lineCap = 'round';
+      x.lineWidth = 11;
+      x.beginPath(); x.moveTo(cx + 1, gy);
+      x.quadraticCurveTo(cx + (r() - 0.5) * 18, gy - 30, cx + (r() - 0.5) * 12, gy - 52);
+      x.stroke();
+      x.strokeStyle = alpha(P.trunkDark, 0.5); x.lineWidth = 4;
+      x.beginPath(); x.moveTo(cx - 3, gy - 3);
+      x.quadraticCurveTo(cx - 6, gy - 26, cx - 2, gy - 44);
+      x.stroke();
+      x.strokeStyle = P.trunk; x.lineWidth = 5;
+      x.beginPath(); x.moveTo(cx, gy - 46); x.quadraticCurveTo(cx - 20, gy - 62, cx - 30, gy - 70); x.stroke();
+      x.beginPath(); x.moveTo(cx, gy - 48); x.quadraticCurveTo(cx + 18, gy - 64, cx + 28, gy - 72); x.stroke();
+      // canopy: one generous round crown, dappled
+      const cy = gy - 86;
+      const layer = (col, dr, n, rad) => {
+        const rr = GOL.rng(seed + 641 + v * 13 + n);
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2 + rr() * 0.9;
+          const dist = dr * (0.5 + rr() * 0.6);
+          blob(x, cx + Math.cos(a) * dist * 1.2, cy + Math.sin(a) * dist * 0.8, rad * (0.8 + rr() * 0.5), col);
+        }
+      };
+      layer(shade(P.leafDark, 0.1), 30, 8, 20);
+      layer(P.leaf, 26, 8, 17);
+      layer(P.leafLight, 20, 6, 12);
+      dabs(x, cx - 8, cy - 34, 54, 30, alpha(tint(P.leafLight, 0.35), 0.75), 7, seed + v * 9, 3, 6);
+      // the fruit — round, glad, catching the light
+      const rf = GOL.rng(seed + 661 + v * 7);
+      for (let i = 0; i < 7; i++) {
+        const fx = cx - 42 + rf() * 84;
+        const fy = cy - 18 + rf() * 42;
+        const fr = v === 1 ? 4.6 : 4;
+        blob(x, fx, fy, fr, fruitCol);
+        blob(x, fx - fr * 0.3, fy - fr * 0.35, fr * 0.32, alpha(tint(fruitCol, 0.55), 0.9));
+        if (v === 1) { // pomegranate crown
+          x.fillStyle = shade(fruitCol, 0.3);
+          x.fillRect(fx - 1.2, fy - fr - 2, 2.4, 2.4);
+        }
+      }
+      c._anchor = { x: cx, y: gy + 2 };
+      return c;
+    });
+
+    // -- date palm: a long curved trunk and a crown of arcing fronds
+    S.palm = [0, 1].map((v) => {
+      const w = 150, h = 210;
+      const c = makeCanvas(w, h);
+      const x = c.getContext('2d');
+      const r = GOL.rng(seed + 733 + v * 41);
+      const cx = w / 2, gy = h - 4;
+      const lean = (v ? -1 : 1) * (10 + r() * 8);
+      const topX = cx + lean, topY = gy - 140;
+      // trunk: stacked little arcs like woven bark
+      const segs = 12;
+      for (let i = 0; i < segs; i++) {
+        const k = i / segs;
+        const tx = cx + lean * Math.sin(k * Math.PI / 2);
+        const ty = gy - k * 138;
+        const tw = 10 - k * 3.5;
+        x.fillStyle = mix(P.trunk, P.trunkDark, 0.25 + (i % 2) * 0.25);
+        x.beginPath();
+        x.ellipse(tx, ty, tw, 6.5, lean * 0.004, 0, Math.PI * 2);
+        x.fill();
+        if (i % 2 === 0) {
+          x.fillStyle = alpha(tint(P.trunk, 0.3), 0.5);
+          x.beginPath(); x.ellipse(tx + tw * 0.3, ty - 2, tw * 0.4, 2.2, 0, 0, Math.PI * 2); x.fill();
+        }
+      }
+      // fronds: long arcs sweeping out and down
+      for (let i = 0; i < 7; i++) {
+        const a = -Math.PI * 0.95 + (i / 6) * Math.PI * 0.9;
+        const len = 52 + r() * 14;
+        const ex = topX + Math.cos(a) * len;
+        const ey = topY + Math.sin(a) * len * 0.62 + 16;
+        const col = i % 2 ? P.leaf : mix(P.leaf, P.leafDark, 0.4);
+        x.strokeStyle = col;
+        x.lineWidth = 3; x.lineCap = 'round';
+        x.beginPath();
+        x.moveTo(topX, topY);
+        x.quadraticCurveTo(topX + Math.cos(a) * len * 0.6, topY + Math.sin(a) * len * 0.2 - 10, ex, ey);
+        x.stroke();
+        // leaflets
+        x.lineWidth = 1.6;
+        for (let s = 2; s <= 7; s++) {
+          const k = s / 8;
+          const px = topX + (ex - topX) * k + Math.cos(a) * 2;
+          const py = topY + (ey - topY) * k - Math.sin(Math.PI * k) * 10;
+          x.strokeStyle = alpha(k > 0.6 ? P.leafLight : col, 0.9);
+          x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a + 0.9) * 9, py + Math.sin(a + 0.9) * 9 + 4); x.stroke();
+          x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a - 0.9) * 9, py + Math.sin(a - 0.9) * 9 + 4); x.stroke();
+        }
+      }
+      // hanging dates
+      x.fillStyle = '#C98A4B';
+      for (let i = 0; i < 8; i++) {
+        x.beginPath();
+        x.ellipse(topX - 6 + r() * 12, topY + 14 + r() * 10, 2, 3, 0.3, 0, Math.PI * 2);
+        x.fill();
+      }
+      c._anchor = { x: cx, y: gy + 2 };
+      return c;
+    });
+
+    // -- carved courtyard column, standing alone (decor, not solid)
+    S.column = [0, 1].map((v) => {
+      const w = 56, h = 158;
+      const c = makeCanvas(w, h);
+      const x = c.getContext('2d');
+      const cx = w / 2, gy = h - 3;
+      const colH = 118 + v * 20;
+      // base
+      x.fillStyle = P.stoneShade;
+      x.fillRect(cx - 16, gy - 10, 32, 10);
+      x.fillStyle = tint(P.stone, 0.2);
+      x.fillRect(cx - 13, gy - 16, 26, 7);
+      // shaft with gentle entasis
+      const g = x.createLinearGradient(cx - 11, 0, cx + 11, 0);
+      g.addColorStop(0, P.stoneShade);
+      g.addColorStop(0.42, tint(P.stone, 0.34));
+      g.addColorStop(1, shade(P.stoneShade, 0.1));
+      x.fillStyle = g;
+      x.beginPath();
+      x.moveTo(cx - 10, gy - 16);
+      x.quadraticCurveTo(cx - 12.5, gy - 16 - colH * 0.55, cx - 8, gy - 16 - colH);
+      x.lineTo(cx + 8, gy - 16 - colH);
+      x.quadraticCurveTo(cx + 12.5, gy - 16 - colH * 0.55, cx + 10, gy - 16);
+      x.closePath(); x.fill();
+      // flute lines
+      x.strokeStyle = alpha(P.stoneDark, 0.3); x.lineWidth = 1.4;
+      for (const off of [-4.5, 0, 4.5]) {
+        x.beginPath();
+        x.moveTo(cx + off, gy - 20);
+        x.lineTo(cx + off * 0.8, gy - 12 - colH);
+        x.stroke();
+      }
+      // capital
+      const capY = gy - 16 - colH;
+      x.fillStyle = tint(P.stone, 0.25);
+      x.fillRect(cx - 13, capY - 7, 26, 7);
+      x.fillStyle = tint(P.stone, 0.4);
+      x.fillRect(cx - 16, capY - 14, 32, 7);
+      GOL.star8(x, cx, capY - 24, 6, Math.PI / 8, alpha(P.goldDeep, 0.75));
+      // a little moss at the foot
+      x.fillStyle = alpha(P.grass, 0.8);
+      x.beginPath(); x.ellipse(cx - 12, gy - 9, 5, 3, 0, Math.PI, 0); x.fill();
+      c._anchor = { x: cx, y: gy + 1 };
+      return c;
+    });
+
     // -- stepping stone (in water)
     S.stepStone = [0, 1].map((v) => {
       const w = 56, h = 26;
@@ -575,4 +733,181 @@
     ctx.restore();
   }
   GOL.drawTortoise = drawTortoise;
+
+  // ------------------------------------------------- journey ingredients ---
+  // A bounce blossom: a big springy flower pad. (x,y)=ground center.
+  // squish 0..1 = how compressed it is right now (spring anim from level).
+  function drawBounceBlossom(ctx, x, y, t, squish) {
+    const sq = squish || 0;
+    ctx.save();
+    ctx.translate(x, y);
+    // shadow
+    ctx.fillStyle = alpha('#3E5340', 0.16);
+    ctx.beginPath(); ctx.ellipse(0, 0, 26, 6, 0, 0, Math.PI * 2); ctx.fill();
+    // stem coil (the spring)
+    const h = 16 - sq * 9;
+    ctx.strokeStyle = '#6DA84E';
+    ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 12; i++) {
+      const k = i / 12;
+      const px = Math.sin(k * Math.PI * 3) * 7;
+      const py = -k * h;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // the pad: layered petals, wide and inviting
+    const py = -h - 4, breathe = 1 + Math.sin(t * 1.8) * 0.03 + sq * 0.22;
+    ctx.translate(0, py);
+    ctx.scale(breathe, 1 - sq * 0.45);
+    for (let ring = 0; ring < 2; ring++) {
+      const n = 8, rr = 24 - ring * 8;
+      ctx.fillStyle = ring === 0 ? '#E88BA0' : '#F5B8C4';
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + ring * 0.4 + Math.sin(t * 0.9) * 0.04;
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(a) * rr * 0.62, Math.sin(a) * rr * 0.26 - 2, rr * 0.5, rr * 0.24, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // heart of the flower — a soft gold cushion
+    const g = ctx.createRadialGradient(0, -3, 1, 0, -2, 13);
+    g.addColorStop(0, '#FFF3C4'); g.addColorStop(1, '#F0C878');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, -2, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha('#D9A44A', 0.55);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + t * 0.4;
+      ctx.beginPath(); ctx.arc(Math.cos(a) * 6, -2 + Math.sin(a) * 3.4, 1.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  GOL.drawBounceBlossom = drawBounceBlossom;
+
+  // A drifting leaf platform. (x,y)=top center of the leaf; hw = half width.
+  function drawDriftLeaf(ctx, x, y, hw, t, phase, dip) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.sin(t * 0.9 + phase) * 0.035);
+    const d = (dip || 0) * 3;
+    // underside shadow
+    ctx.fillStyle = alpha('#3E5340', 0.14);
+    ctx.beginPath(); ctx.ellipse(2, 10 + d, hw * 0.94, 7, 0, 0, Math.PI * 2); ctx.fill();
+    // leaf body: a long soft leaf, ribbed
+    const g = ctx.createLinearGradient(0, -4 + d, 0, 12 + d);
+    g.addColorStop(0, '#A9D67E'); g.addColorStop(1, '#7DB25C');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-hw, 4 + d);
+    ctx.quadraticCurveTo(-hw * 0.5, -3 + d, 0, -2.5 + d);
+    ctx.quadraticCurveTo(hw * 0.55, -3 + d, hw + 6, 1 + d); // little tip
+    ctx.quadraticCurveTo(hw * 0.5, 9 + d, 0, 9.5 + d);
+    ctx.quadraticCurveTo(-hw * 0.5, 9 + d, -hw, 4 + d);
+    ctx.closePath(); ctx.fill();
+    // center rib + veins
+    ctx.strokeStyle = alpha('#5E8F45', 0.8);
+    ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-hw + 6, 4 + d); ctx.quadraticCurveTo(0, 2 + d, hw + 2, 1.5 + d); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * hw * 0.3, 3 + d);
+      ctx.quadraticCurveTo(i * hw * 0.3 + 5, -1 + d, i * hw * 0.3 + 10, -2 + d);
+      ctx.stroke();
+    }
+    // dew sparkle
+    if (Math.sin(t * 2.3 + phase * 3) > 0.7) {
+      ctx.fillStyle = alpha('#FFFFFF', 0.8);
+      ctx.beginPath(); ctx.arc(hw * 0.4, d, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  GOL.drawDriftLeaf = drawDriftLeaf;
+
+  // The hidden Rahma blossom — a golden flower, rare and glad to be found.
+  function drawRahmaBlossom(ctx, x, y, r, t) {
+    ctx.save();
+    ctx.translate(x, y);
+    const pulse = 0.85 + 0.15 * Math.sin(t * 2.4);
+    // halo
+    const halo = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 3);
+    halo.addColorStop(0, alpha('#FFE9A8', 0.5 * pulse));
+    halo.addColorStop(1, alpha('#FFE9A8', 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(0, 0, r * 3, 0, Math.PI * 2); ctx.fill();
+    ctx.rotate(Math.sin(t * 0.8) * 0.08 + t * 0.15);
+    // gold petals
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const pg = ctx.createLinearGradient(0, 0, Math.cos(a) * r * 1.6, Math.sin(a) * r * 1.6);
+      pg.addColorStop(0, '#F7D98C'); pg.addColorStop(1, '#EBB44E');
+      ctx.fillStyle = pg;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85, r * 0.72, r * 0.34, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // heart
+    const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.62);
+    hg.addColorStop(0, '#FFFBEA'); hg.addColorStop(1, '#F0C878');
+    ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = alpha('#D9A44A', 0.9); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.6, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+    // twinkle above (unrotated)
+    const tw = Math.sin(t * 3.4);
+    if (tw > 0.5) {
+      GOL.star8(ctx, x + r, y - r * 1.2, r * 0.34 * (tw - 0.5) * 2, Math.PI / 8, alpha('#FFFFFF', 0.9));
+    }
+  }
+  GOL.drawRahmaBlossom = drawRahmaBlossom;
+
+  // A noor seed — the small gathered light that traces the path.
+  function drawSeed(ctx, x, y, t, phase) {
+    const k = 0.75 + 0.25 * Math.sin(t * 3 + phase);
+    ctx.save();
+    ctx.translate(x, y);
+    const halo = ctx.createRadialGradient(0, 0, 0.5, 0, 0, 11);
+    halo.addColorStop(0, alpha('#FFF3C4', 0.55 * k));
+    halo.addColorStop(1, alpha('#FFF3C4', 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill();
+    GOL.star8Path(ctx, 0, 0, 4.6 + k * 1.2, t * 0.5 + phase);
+    ctx.fillStyle = alpha('#FFE9A8', 0.95);
+    ctx.fill();
+    ctx.strokeStyle = alpha('#E8B25C', 0.85);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+  GOL.drawSeed = drawSeed;
+
+  // Noor the firefly — a companion mote of light with tiny wings.
+  function drawFirefly(ctx, x, y, t, glow) {
+    const g = glow == null ? 1 : glow;
+    ctx.save();
+    ctx.translate(x, y);
+    const blink = 0.7 + 0.3 * Math.sin(t * 5.2);
+    const halo = ctx.createRadialGradient(0, 0, 0.5, 0, 0, 16);
+    halo.addColorStop(0, alpha('#FFF3C4', 0.6 * blink * g));
+    halo.addColorStop(1, alpha('#FFF3C4', 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.fill();
+    // wings
+    const flap = Math.sin(t * 21) * 0.7;
+    ctx.fillStyle = alpha('#F7EFDA', 0.7);
+    for (const s of [-1, 1]) {
+      ctx.save();
+      ctx.rotate(s * (0.5 + flap * 0.4));
+      ctx.beginPath(); ctx.ellipse(s * 3.4, -3.6, 4.4, 2.1, s * 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    // body
+    const bg = ctx.createRadialGradient(0.6, -0.8, 0.3, 0, 0, 4);
+    bg.addColorStop(0, '#FFFBEA'); bg.addColorStop(1, '#F0C878');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  GOL.drawFirefly = drawFirefly;
 })();

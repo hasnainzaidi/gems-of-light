@@ -107,6 +107,87 @@
   }
   GOL.drawGem = drawGem;
 
+  // A gem wrapped in light — pearl-soft, all alike, until it is known.
+  // Used at the listening gate, on Star Walks, and in the Moon Trials.
+  function drawVeiledGem(ctx, x, y, r, t, phase, pulse, heard) {
+    ctx.save();
+    ctx.translate(x, y);
+    const breathe = 0.85 + 0.15 * Math.sin(t * 2 + (phase || 0));
+    const halo = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 2.6);
+    halo.addColorStop(0, alpha('#FFF6DC', 0.5 * breathe));
+    halo.addColorStop(1, alpha('#FFF6DC', 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(0, 0, r * 2.6, 0, Math.PI * 2); ctx.fill();
+    // pearl body
+    const bg = ctx.createRadialGradient(r * 0.28, -r * 0.3, r * 0.1, 0, 0, r * 1.1);
+    bg.addColorStop(0, '#FFFDF4');
+    bg.addColorStop(0.6, '#F7ECCB');
+    bg.addColorStop(1, '#E8D5A0');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = alpha('#D9A44A', 0.55);
+    ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(0, 0, r - 0.8, 0, Math.PI * 2); ctx.stroke();
+    // a slow star turning inside the light
+    GOL.star8Path(ctx, 0, 0, r * 0.5, t * 0.4 + (phase || 0));
+    ctx.fillStyle = alpha('#EBC77E', 0.7 + (pulse || 0) * 0.3);
+    ctx.fill();
+    // sound-ripples when it is speaking
+    if ((pulse || 0) > 0.01) {
+      ctx.strokeStyle = alpha('#FFE9A8', 0.6 * pulse);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, r + 8 + (1 - pulse) * 26, 0, Math.PI * 2); ctx.stroke();
+    }
+    // an unheard gem waves shyly for attention
+    if (!heard) {
+      const tw = Math.sin(t * 2.6 + (phase || 0) * 3);
+      if (tw > 0.4) GOL.star8(ctx, r * 0.75, -r * 0.95, 4 * (tw - 0.4) / 0.6, Math.PI / 8, alpha('#FFFFFF', 0.9));
+    }
+    ctx.restore();
+  }
+  GOL.drawVeiledGem = drawVeiledGem;
+
+  // The remembering moon: it waxes as a surah settles into the heart.
+  // k = 0 (new) .. 1 (full). Drawn small beside map nodes and in trials.
+  function drawMoon(ctx, x, y, r, k, t, opts) {
+    opts = opts || {};
+    ctx.save();
+    ctx.translate(x, y);
+    if (opts.glow !== false && k > 0.02) {
+      const halo = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 2.4);
+      halo.addColorStop(0, alpha('#FFF6DC', 0.28 * k));
+      halo.addColorStop(1, alpha('#FFF6DC', 0));
+      ctx.fillStyle = halo;
+      ctx.beginPath(); ctx.arc(0, 0, r * 2.4, 0, Math.PI * 2); ctx.fill();
+    }
+    // dark disc (the not-yet-remembered part)
+    ctx.fillStyle = alpha('#57685B', 0.55);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    // lit part: crescent → full, carved with an offset shadow disc
+    if (k > 0.01) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip();
+      const lg = ctx.createLinearGradient(-r, -r, r, r);
+      lg.addColorStop(0, '#FFFBEA'); lg.addColorStop(1, '#F3D492');
+      ctx.fillStyle = lg;
+      if (k >= 0.98) {
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      } else {
+        // shadow disc slides away as k grows
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'destination-out';
+        const off = (1 - k) * r * 1.9;
+        ctx.beginPath(); ctx.arc(-off, 0, r * (1 + (1 - k) * 0.12), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.strokeStyle = alpha('#D9A44A', 0.7);
+    ctx.lineWidth = Math.max(1, r * 0.09);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  GOL.drawMoon = drawMoon;
+
   // ------------------------------------------------------------- the hero --
   // A small round creature made of light. (x,y) = feet center.
   // s: {vx, vy, grounded, facing, t, idleT, blink, squashX, squashY, moving}
@@ -269,17 +350,20 @@
 
   // The band at the top of the screen where collected ayat come to rest.
   // slots: total; found: array of gem indices collected (in ayah order 0-based).
-  function drawHudBand(ctx, cx, y, slots, found, t) {
-    const gap = 44, w = slots * gap + 34, h = 52;
+  function drawHudBand(ctx, cx, y, slots, found, t, maxW) {
+    // the band squeezes gently for long surahs (Al-'Alaq carries 19 gems)
+    const gap = Math.max(22, Math.min(44, maxW ? (maxW - 34) / slots : 44));
+    const w = slots * gap + 34, h = 52;
+    const gr = Math.min(10, gap * 0.36), sr = Math.min(8, gap * 0.3);
     const x = cx - w / 2;
     drawPanel(ctx, x, y, w, h, { radius: 26, alpha: 0.82, plain: true });
     for (let i = 0; i < slots; i++) {
-      const sx = x + 26 + i * gap + gap / 2 - gap / 2;
+      const sx = x + 26 + i * gap;
       const sy = y + h / 2;
       if (found.includes(i)) {
-        drawGem(ctx, sx, sy, 10, GOL.GEMS[i % GOL.GEMS.length], t, { glow: 0.55, phase: i });
+        drawGem(ctx, sx, sy, gr, GOL.GEMS[i % GOL.GEMS.length], t, { glow: 0.55, phase: i });
       } else {
-        GOL.star8Path(ctx, sx, sy, 8, Math.PI / 8);
+        GOL.star8Path(ctx, sx, sy, sr, Math.PI / 8);
         ctx.fillStyle = 'rgba(120,104,70,0.14)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(150,128,84,0.35)';
@@ -336,6 +420,45 @@
       ctx.lineTo(x + s * 1.05, y - s * 0.55); ctx.quadraticCurveTo(x + s * 0.9, y - s * 1.05, x, y - s * 0.7);
       ctx.moveTo(x, y - s * 0.7); ctx.lineTo(x, y + s * 0.75);
       ctx.lineWidth = 2; ctx.stroke();
+    } else if (icon === 'star') {
+      GOL.star8Path(ctx, x, y, s * 1.15, Math.PI / 8);
+      ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, s * 0.28, 0, Math.PI * 2); ctx.fill();
+    } else if (icon === 'moon') {
+      ctx.beginPath(); ctx.arc(x, y, s * 1.05, Math.PI * 0.32, Math.PI * 1.68, false);
+      ctx.arc(x + s * 0.62, y, s * 0.72, Math.PI * 1.55, Math.PI * 0.45, true);
+      ctx.closePath();
+      ctx.lineWidth = 2; ctx.stroke();
+    } else if (icon === 'story') {
+      // an open scroll
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - s * 0.95, y - s * 0.75); ctx.lineTo(x + s * 0.7, y - s * 0.75);
+      ctx.quadraticCurveTo(x + s * 1.1, y - s * 0.75, x + s * 1.1, y - s * 0.35);
+      ctx.moveTo(x - s * 0.95, y - s * 0.75); ctx.quadraticCurveTo(x - s * 1.3, y - s * 0.7, x - s * 0.95, y - s * 0.4);
+      ctx.lineTo(x - s * 0.95, y + s * 0.8); ctx.lineTo(x + s * 0.75, y + s * 0.8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - s * 0.55, y - s * 0.25); ctx.lineTo(x + s * 0.4, y - s * 0.25);
+      ctx.moveTo(x - s * 0.55, y + s * 0.12); ctx.lineTo(x + s * 0.4, y + s * 0.12);
+      ctx.moveTo(x - s * 0.55, y + s * 0.48); ctx.lineTo(x + s * 0.1, y + s * 0.48);
+      ctx.lineWidth = 1.6; ctx.stroke();
+    } else if (icon === 'check') {
+      ctx.beginPath(); ctx.moveTo(x - s * 0.8, y + s * 0.05); ctx.lineTo(x - s * 0.15, y + s * 0.7); ctx.lineTo(x + s * 0.9, y - s * 0.6); ctx.stroke();
+    } else if (icon === 'replay') {
+      ctx.beginPath(); ctx.arc(x, y, s * 0.85, -0.5, Math.PI * 1.35); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + s * 1.15, y - s * 0.75); ctx.lineTo(x + s * 0.55, y - s * 0.55); ctx.lineTo(x + s * 1.05, y - s * 0.05);
+      ctx.closePath(); ctx.fill();
+    } else if (icon === 'match') {
+      // a gem meeting a heart: meanings
+      GOL.star8Path(ctx, x - s * 0.55, y, s * 0.6, Math.PI / 8);
+      ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + s * 0.55, y + s * 0.5);
+      ctx.bezierCurveTo(x - s * 0.1, y - s * 0.1, x + s * 0.15, y - s * 0.75, x + s * 0.55, y - s * 0.28);
+      ctx.bezierCurveTo(x + s * 0.95, y - s * 0.75, x + s * 1.2, y - s * 0.1, x + s * 0.55, y + s * 0.5);
+      ctx.stroke();
     }
     ctx.restore();
     return { x, y, r: r * 1.35 }; // generous hit circle

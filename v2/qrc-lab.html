@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>QRC Lab — Gems of Light recitation test harness</title>
+<style>
+  :root{
+    --cream:#f6f1e6; --stone:#efe7d6; --ink:#3a3a32; --moss:#6f8f5a; --moss-deep:#4f7040;
+    --gold:#d9a441; --dim:#c9c0ad; --line:#e2d8c3; --bad:#c98a6b; --shadow:0 6px 24px rgba(80,70,40,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+       color:var(--ink); background:radial-gradient(120% 100% at 50% 0%, #fbf7ee, #f0e8d6);
+       min-height:100vh; padding:22px; -webkit-tap-highlight-color:transparent}
+  .wrap{max-width:860px; margin:0 auto}
+  h1{font-size:20px; margin:0 0 2px; font-weight:650}
+  .sub{color:#8a8168; font-size:13px; margin:0 0 18px}
+  .card{background:var(--cream); border:1px solid var(--line); border-radius:16px;
+        box-shadow:var(--shadow); padding:18px; margin-bottom:16px}
+  .row{display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+  .row.between{justify-content:space-between}
+  label.fld{display:flex; flex-direction:column; gap:4px; font-size:12px; color:#8a8168}
+  select,input[type=text],input[type=password]{font:inherit; padding:8px 10px; border:1px solid var(--line);
+        border-radius:10px; background:#fff; color:var(--ink)}
+  input[type=range]{accent-color:var(--moss)}
+  .seg{display:inline-flex; background:var(--stone); border-radius:12px; padding:3px}
+  .seg button{border:0; background:transparent; padding:7px 14px; border-radius:10px; font:inherit; cursor:pointer; color:#6b6350}
+  .seg button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  /* Ayah display */
+  .ayah{direction:rtl; text-align:center; font-size:30px; line-height:2.15; margin:6px 0 4px;
+        font-family:"Scheherazade New","Amiri","Geeza Pro","Noto Naskh Arabic",serif}
+  .w{display:inline-block; margin:0 .18em; padding:0 .06em; color:#b9b09a; transition:color .35s, text-shadow .35s, transform .35s}
+  .w.hit{color:var(--moss-deep); text-shadow:0 0 14px rgba(140,175,95,.55); transform:translateY(-1px)}
+  .w.skip{color:var(--bad); text-decoration:underline dotted}
+  .w.taj{color:var(--gold)}
+  .vnum{display:inline-block; font-size:12px; color:#a89e84; vertical-align:middle;
+        border:1px solid var(--line); border-radius:50%; width:22px; height:22px; line-height:20px; text-align:center; margin:0 .3em}
+  .tr{direction:ltr; text-align:center; color:#9a9078; font-size:13px; font-style:italic; margin-top:-2px}
+
+  .bigbtn{display:block; width:100%; border:0; border-radius:14px; padding:18px; font-size:18px; font-weight:600;
+          color:#fff; background:linear-gradient(180deg,var(--moss),var(--moss-deep)); cursor:pointer; box-shadow:var(--shadow)}
+  .bigbtn.stop{background:linear-gradient(180deg,#c98a6b,#a96e50)}
+  .bigbtn:disabled{opacity:.5; cursor:default}
+  .btn{border:1px solid var(--line); background:#fff; padding:8px 14px; border-radius:10px; font:inherit; cursor:pointer; color:var(--ink)}
+  .btn.gold{background:var(--gold); border-color:#c9942f; color:#3a2f12}
+
+  .meter{height:12px; background:var(--stone); border-radius:8px; overflow:hidden; margin:12px 0 6px}
+  .meter > span{display:block; height:100%; width:0; background:linear-gradient(90deg,#a8c884,var(--moss)); transition:width .35s}
+  .status{font-size:13px; color:#8a8168; min-height:18px}
+  .pill{font-size:11px; padding:2px 8px; border-radius:20px; background:var(--stone); color:#6b6350}
+  .pill.live{background:#e7efdc; color:var(--moss-deep)} .pill.mock{background:#efe3c9; color:#8a6d1f}
+
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--line)}
+  th{color:#8a8168; font-weight:600}
+  .muted{color:#9a9078}
+  details{font-size:13.5px; color:#5f5946} details summary{cursor:pointer; font-weight:600; color:var(--ink)}
+  code{background:#efe7d6; padding:1px 5px; border-radius:5px; font-size:12.5px}
+  .warn{background:#fbf0dd; border:1px solid #ecd9ac; border-radius:10px; padding:10px 12px; font-size:13px; color:#7a5f1f}
+  .celebrate{text-align:center; padding:8px 0}
+  .celebrate .big{font-size:22px; color:var(--moss-deep); font-weight:650}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>QRC Lab <span class="pill" id="modePill">mock</span></h1>
+  <p class="sub">A test harness for the Qurani.ai recitation-correction mechanic in <b>Gems of Light</b>.
+     Runs in <b>Mock</b> mode with no key so you can feel the flow; paste an API key and switch to <b>Live</b> to hit the real QRC WebSocket.</p>
+
+  <!-- ============ CONTROLS ============ -->
+  <div class="card">
+    <div class="row between">
+      <label class="fld">Surah
+        <select id="surahSel"></select>
+      </label>
+      <div class="fld">Mode
+        <div class="seg" id="modeSeg">
+          <button data-mode="mock" class="on">Mock</button>
+          <button data-mode="live">Live (QRC)</button>
+        </div>
+      </div>
+      <label class="fld">Pass threshold <span id="thVal" class="muted"></span>
+        <input type="range" id="thresh" min="0.2" max="1" step="0.05" value="0.6" />
+      </label>
+    </div>
+
+    <details style="margin-top:14px">
+      <summary>Live QRC settings &amp; tuning knobs</summary>
+      <div class="row" style="margin-top:12px">
+        <label class="fld" style="flex:1; min-width:260px">API key (from qurani.ai dashboard)
+          <input type="password" id="apiKey" placeholder="paste your QRC API key" autocomplete="off" />
+        </label>
+        <label class="fld">WebSocket URL
+          <input type="text" id="wsUrl" value="wss://api.qurani.ai" style="min-width:220px" />
+        </label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label class="fld">hafz_level <span id="hafzVal" class="muted">2</span>
+          <input type="range" id="hafz" min="1" max="3" step="1" value="2" />
+        </label>
+        <label class="fld">tajweed_level <span id="tajVal" class="muted">1</span>
+          <input type="range" id="taj" min="1" max="3" step="1" value="1" />
+        </label>
+        <label class="fld">Audio transport
+          <select id="transport">
+            <option value="mediarecorder">MediaRecorder (webm/opus, auto-detect)</option>
+            <option value="mp4">MediaRecorder (mp4/aac — Safari)</option>
+          </select>
+        </label>
+      </div>
+      <div class="warn" style="margin-top:12px">
+        <b>One thing to confirm with Qurani before Live works cleanly:</b> their public sample streams
+        <code>MediaRecorder</code> chunks and vaguely says "encode to opus," but doesn't pin the exact wire
+        format (raw Opus frames? ogg/opus? webm container? sample rate?). The <code>transport.send()</code>
+        function below is the single place to adapt it. For <b>top performance &amp; iPad reliability</b> ask them:
+        (1) exact audio format + sample rate, (2) what <code>hafz_level</code>/<code>tajweed_level</code> mean
+        (set tajweed low for kids), (3) whether partial/streaming words fire mid-verse.
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ RECITATION ============ -->
+  <div class="card">
+    <div id="ayahHost"></div>
+    <div class="meter"><span id="meterFill"></span></div>
+    <div class="row between">
+      <div class="status" id="status">Ready. Press “Recite” and say the surah.</div>
+      <div class="muted" id="wordCount"></div>
+    </div>
+    <div style="margin-top:12px"><button class="bigbtn" id="reciteBtn">🎙️ Recite</button></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="hintBtn">🔊 Hear it (hint)</button>
+      <button class="btn" id="resetBtn">↺ Reset ayah lights</button>
+      <span class="muted" id="tries"></span>
+    </div>
+    <div id="gate"></div>
+  </div>
+
+  <!-- ============ LOG ============ -->
+  <div class="card">
+    <div class="row between">
+      <b>Attempt log</b>
+      <div class="row">
+        <button class="btn" id="dlLog">⭳ Download JSON</button>
+        <button class="btn" id="clearLog">Clear</button>
+      </div>
+    </div>
+    <p class="sub" style="margin:6px 0 10px">This is your baseline. When you later swap the recognizer for the
+       on-device model, log the same attempts and diff the <b>score</b> / <b>false-reject</b> columns to measure the privacy dropoff.</p>
+    <table><thead><tr><th>#</th><th>time</th><th>surah</th><th>mode</th><th>correct</th><th>skipped</th><th>score</th><th>result</th><th>ms</th></tr></thead>
+      <tbody id="logBody"><tr><td colspan="9" class="muted">No attempts yet.</td></tr></tbody></table>
+  </div>
+
+  <details class="card">
+    <summary>How to go Live &amp; how this maps into the game</summary>
+    <ol style="line-height:1.7">
+      <li>Create an account at <b>qurani.ai</b> → Dashboard → get a QRC API key (this is where you'll also see pricing/subscription).</li>
+      <li>Paste the key above, switch Mode to <b>Live (QRC)</b>, pick the surah, press Recite.</li>
+      <li>Confirm the audio format question in the yellow box; adjust <code>transport.send()</code> if the socket rejects chunks.</li>
+      <li>Tune <code>hafz_level</code> / <code>tajweed_level</code> and the <b>pass threshold</b> so real kids almost never get wrongly blocked (watch the <b>false-reject</b> outcomes in the log).</li>
+      <li>To wire into <code>gate.js</code>: each carved setting lights by reciting its ayah instead of dragging the gem; below threshold → play the ayah (hint) → after N tries the setting opens anyway (identical to the existing forgiving gate).</li>
+    </ol>
+  </details>
+</div>
+
+<script>
+/* ============================================================================
+   CONFIG — the dials worth knowing about live at the top.
+   ============================================================================ */
+const CONFIG = {
+  MAX_TRIES_BEFORE_AUTO_OPEN: 3,   // "nobody is ever locked out" — opens anyway after this
+  WORD_SIM_NOTE: "QRC returns correct_words[]; we light exactly those. Order falls out of QRC's cursor.",
+  LOCAL_AUDIO_DIR: "audio/",       // your SSSAAA.mp3 files (108001.mp3 ...)
+  REMOTE_AUDIO: "https://everyayah.com/data/Alafasy_128kbps/",
+};
+
+/* ---- Surah data: pulled from the game's js/data.js (Uthmani text) ---- */
+const SURAHS = {
+  108: { name:"Al-Kawthar (108)", verses:[
+    "إِنَّآ أَعْطَيْنَـٰكَ ٱلْكَوْثَرَ",
+    "فَصَلِّ لِرَبِّكَ وَٱنْحَرْ",
+    "إِنَّ شَانِئَكَ هُوَ ٱلْأَبْتَرُ" ]},
+  112: { name:"Al-Ikhlas (112)", verses:[
+    "قُلْ هُوَ ٱللَّهُ أَحَدٌ",
+    "ٱللَّهُ ٱلصَّمَدُ",
+    "لَمْ يَلِدْ وَلَمْ يُولَدْ",
+    "وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ" ]},
+};
+
+/* ============================================================================
+   STATE + DOM
+   ============================================================================ */
+const $ = s => document.querySelector(s);
+let mode = "mock";
+let surahId = 108;
+let words = [];        // flat: {v, w, text, el, matched:false}
+let session = null;    // {ws, mediaRecorder, stream, t0, tries, opened}
+let tries = 0;
+const log = [];
+
+/* ============================================================================
+   RENDER the ayahs, each word a light-able span
+   ============================================================================ */
+function buildSurahSelect(){
+  const sel = $("#surahSel");
+  sel.innerHTML = Object.entries(SURAHS).map(([id,s])=>`<option value="${id}">${s.name}</option>`).join("");
+  sel.value = surahId;
+}
+function renderAyahs(){
+  const host = $("#ayahHost"); host.innerHTML = ""; words = [];
+  SURAHS[surahId].verses.forEach((line, vi)=>{
+    const v = vi+1;
+    const div = document.createElement("div"); div.className = "ayah";
+    line.trim().split(/\s+/).forEach((tok, wi)=>{
+      const span = document.createElement("span");
+      span.className = "w"; span.textContent = tok;
+      div.appendChild(span);
+      words.push({ v, w: wi+1, text: tok, el: span, matched:false });
+    });
+    const num = document.createElement("span"); num.className="vnum"; num.textContent = v;
+    div.appendChild(num);
+    host.appendChild(div);
+  });
+  updateProgress();
+}
+function resetLights(){
+  words.forEach(w=>{ w.matched=false; w.el.className="w"; });
+  updateProgress(); $("#gate").innerHTML=""; setStatus("Ready. Press “Recite” and say the surah.");
+}
+function updateProgress(){
+  const hit = words.filter(w=>w.matched).length;
+  const frac = words.length ? hit/words.length : 0;
+  $("#meterFill").style.width = (frac*100)+"%";
+  $("#wordCount").textContent = hit+" / "+words.length+" words";
+  return frac;
+}
+function setStatus(t){ $("#status").textContent = t; }
+
+/* ============================================================================
+   The forgiving "dimmer, not a switch" gate logic
+   ============================================================================ */
+function applyResult(res){
+  // res: {correct:[{verse,word}], skipped:[{verse,word}], tajweed:[{verse,word}]}
+  (res.correct||[]).forEach(c=>{
+    const m = words.find(w=>w.v===c.verse && w.w===c.word);
+    if(m){ m.matched=true; m.el.classList.add("hit"); m.el.classList.remove("skip"); }
+  });
+  (res.skipped||[]).forEach(c=>{
+    const m = words.find(w=>w.v===c.verse && w.w===c.word);
+    if(m && !m.matched) m.el.classList.add("skip");
+  });
+  (res.tajweed||[]).forEach(c=>{
+    const m = words.find(w=>w.v===c.verse && w.w===c.word);
+    if(m) m.el.classList.add("taj");
+  });
+  const frac = updateProgress();
+  const threshold = parseFloat($("#thresh").value);
+  if(frac >= threshold && !session?.opened){ openGate(frac, "passed"); }
+}
+function openGate(score, result){
+  if(session) session.opened = true;
+  stopRecording();
+  const ms = session ? Math.round(performance.now()-session.t0) : 0;
+  logAttempt(score, result, ms);
+  $("#gate").innerHTML = `<div class="celebrate"><div class="big">✨ The arch opens ✨</div>
+     <div class="muted">Reciting the surah whole…</div></div>`;
+  playWholeSurah();
+}
+function autoOpen(){ // never locked out
+  words.forEach(w=>{ if(!w.matched){ w.matched=true; w.el.classList.add("hit"); }});
+  updateProgress();
+  $("#gate").innerHTML = `<div class="celebrate"><div class="big">🌱 The garden helps you through</div>
+     <div class="muted">No one is ever locked out — listen once more.</div></div>`;
+  const ms = session ? Math.round(performance.now()-session.t0) : 0;
+  logAttempt(updateProgress(), "auto-open", ms);
+  playWholeSurah();
+}
+
+/* ============================================================================
+   AUDIO — hints & the whole-surah reward (reuses the game's mp3 naming)
+   ============================================================================ */
+function ayahUrl(v){
+  const key = String(surahId).padStart(3,"0") + String(v).padStart(3,"0");
+  return { local: CONFIG.LOCAL_AUDIO_DIR+key+".mp3", remote: CONFIG.REMOTE_AUDIO+key+".mp3" };
+}
+function playAyah(v){
+  return new Promise(res=>{
+    const {local,remote} = ayahUrl(v);
+    const a = new Audio(local);
+    a.onended = res; a.onerror = ()=>{ a.onerror=null; a.src=remote; a.play().catch(res); };
+    a.play().catch(()=>{ a.src=remote; a.play().catch(res); });
+  });
+}
+async function playWholeSurah(){ for(let v=1; v<=SURAHS[surahId].verses.length; v++){ await playAyah(v); } }
+
+/* ============================================================================
+   MOCK recognizer — streams check_tilawa-shaped messages word by word,
+   so the whole UX works with no API key. ~occasionally "skips" a word to demo it.
+   ============================================================================ */
+function runMock(){
+  let i = 0;
+  session = { opened:false, t0:performance.now(), mock:true };
+  setStatus("Listening (mock)… reciting along.");
+  const tick = ()=>{
+    if(!session || session.opened) return;
+    if(i >= words.length){ // finished the surah in mock
+      const frac = updateProgress();
+      if(frac < parseFloat($("#thresh").value)) missAndMaybeHint(frac);
+      return;
+    }
+    const w = words[i];
+    const skip = Math.random() < 0.12;   // ~12% mock skip to show the state
+    if(skip){ applyResult({ skipped:[{verse:w.v, word:w.w}] }); }
+    else    { applyResult({ correct:[{verse:w.v, word:w.w}] }); }
+    i++;
+    if(session && !session.opened) session._timer = setTimeout(tick, 380 + Math.random()*260);
+  };
+  tick();
+}
+
+/* ============================================================================
+   LIVE recognizer — Qurani.ai QRC WebSocket
+   Protocol (from qurani.ai/en/docs/2-advanced-tools/qrc):
+     open  wss://api.qurani.ai?api_key=KEY
+     send  {method:"StartTilawaSession", chapter_index, verse_index, word_index, hafz_level, tajweed_level}
+     recv  {event:"start_tilawa_session", ...}  -> begin streaming audio
+     recv  {event:"check_tilawa", correct_words[], skipped_words[], tajweed_mistakes[], verse_index, word_index}
+   ============================================================================ */
+function runLive(){
+  const key = $("#apiKey").value.trim();
+  if(!key){ setStatus("Paste an API key first (Live QRC settings), or use Mock mode."); return; }
+  const url = $("#wsUrl").value.trim() + "?api_key=" + encodeURIComponent(key);
+  let ws;
+  try { ws = new WebSocket(url); } catch(e){ setStatus("WebSocket failed: "+e.message); return; }
+  session = { ws, opened:false, t0:performance.now() };
+  setStatus("Connecting to QRC…");
+
+  ws.onopen = ()=>{
+    ws.send(JSON.stringify({
+      method:"StartTilawaSession",
+      chapter_index: surahId, verse_index:1, word_index:1,
+      hafz_level: parseInt($("#hafz").value,10),
+      tajweed_level: parseInt($("#taj").value,10),
+    }));
+  };
+  ws.onerror = ()=> setStatus("WebSocket error — check key / URL / network.");
+  ws.onclose = ()=>{ if(session && !session.opened) setStatus("Session closed."); };
+  ws.onmessage = (ev)=>{
+    let r; try{ r = JSON.parse(ev.data); }catch{ return; }
+    if(r.event === "start_tilawa_session"){ setStatus("Session started — listening. Recite now."); startRecording(ws); }
+    else if(r.event === "check_tilawa"){
+      applyResult({
+        correct:  (r.correct_words ||[]).map(x=>({verse:x.verse, word:x.word})),
+        skipped:  (r.skipped_words ||[]).map(x=>({verse:x.verse, word:x.word})),
+        tajweed:  (r.tajweed_mistakes||[]).map(x=>({verse:x.verse, word:x.word})),
+      });
+    }
+  };
+}
+
+/* ---- microphone capture → stream chunks to the socket ---- */
+async function startRecording(ws){
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({ audio:{ channelCount:1, echoCancellation:true, noiseSuppression:true } }); }
+  catch(e){ setStatus("Mic permission denied: "+e.message); return; }
+  session.stream = stream;
+
+  // Pick a supported container. NOTE: iPad Safari often only supports mp4/aac here.
+  const want = $("#transport").value;
+  const prefs = want==="mp4"
+    ? ["audio/mp4","audio/webm;codecs=opus","audio/webm"]
+    : ["audio/webm;codecs=opus","audio/webm","audio/mp4"];
+  const mime = prefs.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
+  const mr = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined);
+  session.mediaRecorder = mr;
+
+  mr.ondataavailable = async (e)=>{
+    if(e.data && e.data.size>0 && ws.readyState===1){
+      const buf = await e.data.arrayBuffer();
+      transport.send(ws, buf);        // <-- SINGLE PLACE to adapt to QRC's exact wire format
+    }
+  };
+  mr.start(20); // 20ms chunks, matching QRC's sample
+  setStatus("Listening (live)… recite the surah.");
+}
+
+/* The one adapter you may need to change once Qurani confirms the format.
+   Today: forward the container chunk as-is. If the server wants raw Opus
+   frames or 16k PCM, transcode here (e.g. opus-recorder / an AudioWorklet). */
+const transport = {
+  send(ws, arrayBuffer){ try{ ws.send(arrayBuffer); }catch{} }
+};
+
+function stopRecording(){
+  try{ session?.mediaRecorder?.state==="recording" && session.mediaRecorder.stop(); }catch{}
+  try{ session?.stream?.getTracks().forEach(t=>t.stop()); }catch{}
+  try{ session?.ws?.readyState===1 && session.ws.close(); }catch{}
+  clearTimeout(session?._timer);
+  $("#reciteBtn").textContent = "🎙️ Recite"; $("#reciteBtn").classList.remove("stop");
+  recording = false;
+}
+
+/* ============================================================================
+   miss / hint / never-locked-out flow
+   ============================================================================ */
+function missAndMaybeHint(frac){
+  tries++; $("#tries").textContent = "attempts: "+tries;
+  logAttempt(frac, "below-threshold", session?Math.round(performance.now()-session.t0):0);
+  if(tries >= CONFIG.MAX_TRIES_BEFORE_AUTO_OPEN){ autoOpen(); return; }
+  setStatus("Almost — listen once, then try again. (The light is waiting, not judging.)");
+  const firstUnlit = words.find(w=>!w.matched);
+  if(firstUnlit) playAyah(firstUnlit.v);
+}
+
+/* ============================================================================
+   LOG
+   ============================================================================ */
+function logAttempt(score, result, ms){
+  const hit = words.filter(w=>w.matched).length;
+  const skip = words.filter(w=>w.el.classList.contains("skip")).length;
+  const rec = { n:log.length+1, time:new Date().toLocaleTimeString(), surah:SURAHS[surahId].name,
+                mode, correct:hit, skipped:skip, total:words.length,
+                score:+score.toFixed(2), result, ms };
+  log.push(rec); renderLog();
+}
+function renderLog(){
+  const body = $("#logBody");
+  if(!log.length){ body.innerHTML = `<tr><td colspan="9" class="muted">No attempts yet.</td></tr>`; return; }
+  body.innerHTML = log.slice().reverse().map(r=>{
+    const good = r.result==="passed";
+    const col = good ? "var(--moss-deep)" : (r.result==="auto-open" ? "#8a6d1f" : "var(--bad)");
+    return `<tr><td>${r.n}</td><td class="muted">${r.time}</td><td>${r.surah}</td>
+      <td><span class="pill ${r.mode}">${r.mode}</span></td>
+      <td>${r.correct}/${r.total}</td><td>${r.skipped}</td><td>${r.score}</td>
+      <td style="color:${col};font-weight:600">${r.result}</td><td class="muted">${r.ms||""}</td></tr>`;
+  }).join("");
+}
+
+/* ============================================================================
+   WIRING
+   ============================================================================ */
+let recording = false;
+function onRecite(){
+  if(recording){ // pressing again = stop / evaluate
+    if(mode==="mock"){ clearTimeout(session?._timer); const f=updateProgress();
+      if(!session?.opened){ if(f>=parseFloat($("#thresh").value)) openGate(f,"passed"); else missAndMaybeHint(f); } }
+    else { stopRecording(); const f=updateProgress();
+      if(!session?.opened){ if(f>=parseFloat($("#thresh").value)) openGate(f,"passed"); else missAndMaybeHint(f); } }
+    recording=false; $("#reciteBtn").textContent="🎙️ Recite"; $("#reciteBtn").classList.remove("stop");
+    return;
+  }
+  resetLightsSoft();
+  recording=true; $("#reciteBtn").textContent="⏹ Stop & check"; $("#reciteBtn").classList.add("stop");
+  if(mode==="mock") runMock(); else runLive();
+}
+function resetLightsSoft(){ words.forEach(w=>{ w.matched=false; w.el.className="w"; }); updateProgress(); $("#gate").innerHTML=""; }
+
+function setMode(m){
+  mode=m; $("#modePill").textContent=m; $("#modePill").className="pill "+m;
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.classList.toggle("on", b.dataset.mode===m));
+  setStatus(m==="live" ? "Live QRC — paste key in settings, then Recite." : "Mock mode — no key needed. Recite to see the flow.");
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  buildSurahSelect(); renderAyahs(); setMode("mock");
+  $("#thVal").textContent = "0.6";
+  $("#surahSel").onchange = e=>{ surahId=parseInt(e.target.value,10); tries=0; $("#tries").textContent=""; renderAyahs(); };
+  document.querySelectorAll("#modeSeg button").forEach(b=> b.onclick=()=>setMode(b.dataset.mode));
+  $("#thresh").oninput = e=> $("#thVal").textContent = e.target.value;
+  $("#hafz").oninput = e=> $("#hafzVal").textContent = e.target.value;
+  $("#taj").oninput  = e=> $("#tajVal").textContent  = e.target.value;
+  $("#reciteBtn").onclick = onRecite;
+  $("#hintBtn").onclick = ()=>{ const w=words.find(x=>!x.matched)||words[0]; playAyah(w.v); };
+  $("#resetBtn").onclick = ()=>{ tries=0; $("#tries").textContent=""; resetLights(); };
+  $("#clearLog").onclick = ()=>{ log.length=0; renderLog(); };
+  $("#dlLog").onclick = ()=>{
+    const blob = new Blob([JSON.stringify(log,null,2)], {type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="qrc-lab-log.json"; a.click();
+  };
+});
+</script>
+</body>
+</html>

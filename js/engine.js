@@ -195,7 +195,31 @@
     // integrate + collide, x then y
     moveX(pl, level, pl.vx * dt);
     const wasAir = !pl.grounded;
+    const prevFeet = pl.y;
     moveY(pl, level, pl.vy * dt, input);
+
+    // drifting leaf platforms: one-way, and they carry you
+    if (level.movers && level.movers.length) {
+      let onLeaf = null;
+      for (const m of level.movers) {
+        const top = m.y;
+        if (pl.x < m.x - m.hw - P.W || pl.x > m.x + m.hw + P.W) continue;
+        if (pl.vy >= 0 && prevFeet <= top + 7 && pl.y >= top - 3 && pl.y <= top + 22) {
+          pl.y = top;
+          pl.vy = 0;
+          pl.grounded = true;
+          onLeaf = m;
+          break;
+        }
+      }
+      if (onLeaf) {
+        pl.x += onLeaf.dx || 0;
+        pl.carrier = onLeaf;
+        onLeaf.dip = Math.min(1, (onLeaf.dip || 0) + dt * 5);
+      } else {
+        pl.carrier = null;
+      }
+    }
 
     if (pl.grounded && wasAir) {
       // landing: squash + dust
@@ -349,6 +373,9 @@
           case 'burst': // gem collect firework, gentle
             Object.assign(p, { vx: Math.cos(o.a) * o.sp, vy: Math.sin(o.a) * o.sp, life: rnd(0.6, 1.1), size: rnd(2, 4.5), color: o.color, grav: 30, star: Math.random() < 0.5 });
             break;
+          case 'petal': // celebration petals, falling like soft rain
+            Object.assign(p, { vx: rnd(-26, 26), vy: rnd(10, 46), life: rnd(2.2, 4), size: rnd(3, 5.5), color: o.color || '#F5B8C4', grav: 8, sway: rnd(0.8, 1.8), swayA: rnd(14, 30), petal: true, spin: rnd(1, 3) });
+            break;
         }
         this.list.push(p);
       },
@@ -379,6 +406,18 @@
             continue;
           }
           ctx.globalAlpha = Math.min(1, k * 1.6) * 0.9;
+          if (p.petal) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.age * p.spin);
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.size, p.size * 0.55, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            continue;
+          }
           if (p.star) {
             ctx.strokeStyle = p.color;
             ctx.lineWidth = 1.3; ctx.lineCap = 'round';
@@ -458,8 +497,37 @@
     level(id) {
       const L = this.data.levels;
       if (!L[id]) L[id] = { completed: false, replays: 0, sortAttempts: 0, hintsUsed: 0, misorders: {}, heardFull: 0 };
-      return L[id];
+      const st = L[id];
+      if (st.seeds == null) st.seeds = 0;          // best noor-seed gathering
+      if (st.blossom == null) st.blossom = false;  // hidden Rahma blossom found
+      if (st.lastPlayed == null) st.lastPlayed = 0;
+      if (st.echoes == null) st.echoes = 0;        // "say it out loud" moments completed
+      if (st.starWalks == null) st.starWalks = 0;  // in-order recall walks completed
+      if (st.trialAsked == null) st.trialAsked = 0;    // moon trial questions asked
+      if (st.trialFirstTry == null) st.trialFirstTry = 0; // answered right first listen
+      if (st.moon == null) st.moon = 0;            // the moon a child has seen (never wanes)
+      if (st.meanings == null) st.meanings = 0;    // meaning-match completions
+      if (st.storyRead == null) st.storyRead = 0;  // surah story pages read to the end
+      return st;
     },
-    reset() { this.data = { levels: {}, settings: { muted: false }, unlocked: 0 }; this.save(); }
+    reset() { this.data = { levels: {}, settings: { muted: false }, unlocked: 0, opened: [] }; this.save(); }
+  };
+
+  // Quiet engagement stamps — which modes get played, and when. Local only;
+  // surfaces on the grown-ups page (and helps pilot-testing with older kids).
+  GOL.stamp = function (kind) {
+    const d = GOL.store.data;
+    d.stats = d.stats || {};
+    const arr = (d.stats[kind] = d.stats[kind] || []);
+    arr.push(Date.now());
+    if (arr.length > 200) arr.splice(0, arr.length - 200);
+    GOL.store.save();
+  };
+  GOL.stampCount = function (kind, sinceMs) {
+    const d = GOL.store.data;
+    const arr = (d.stats && d.stats[kind]) || [];
+    if (sinceMs == null) return arr.length;
+    const cut = Date.now() - sinceMs;
+    return arr.filter((t) => t >= cut).length;
   };
 })();

@@ -76,6 +76,74 @@
     fatiha: pal({ skyTop: '#9ED2C6', skyMid: '#DFF0C8', skyLow: '#FBE7AE', sunGlow: '#FFE9A0', grassLight: '#ACDE90', gold: '#F4CD7E' })
   };
 
+  // World Two: The Orchard. Afternoon light, dappled shade, fruit on the bough.
+  const ORCHARD = {
+    skyTop: '#A3CBAB', skyMid: '#DCE8B4', skyLow: '#F8DCA2',
+    sun: '#FFF2CC', sunGlow: '#FFE29A', ray: '#FFEFB4',
+    hillFar: '#B5CFA0', hillMid: '#8CB47F', hillNear: '#699F63',
+    grass: '#7CB863', grassLight: '#A4D384', grassDark: '#5A954D',
+    leaf: '#6FAA58', leafLight: '#98CB77', leafDark: '#4E8746',
+    soil: '#C7A87A', gold: '#F2C46E'
+  };
+  const palO = (over) => Object.assign({}, BASE_PAL, ORCHARD, over || {});
+
+  // World Three: The Courtyard. Late afternoon, warm stone, long shadows.
+  const COURTYARD = {
+    skyTop: '#B3C9A9', skyMid: '#E7DFAE', skyLow: '#F6CE92',
+    sun: '#FFEFC0', sunGlow: '#FFD98E', ray: '#FFE9AC',
+    hillFar: '#C1C69E', hillMid: '#9AAC7C', hillNear: '#77975F',
+    mist: '#F0E3C4',
+    grass: '#8CB061', grassLight: '#B0CC80', grassDark: '#6A8F4C',
+    stone: '#F0E0BE', stoneShade: '#D2BC90', stoneDark: '#B29768',
+    soil: '#CCA678', trunk: '#8F6E50',
+    gold: '#F3C572', goldDeep: '#DCA346',
+    waterHi: '#C4E4D2', water: '#8FC9B8', waterDeep: '#5A9E92'
+  };
+  const palC = (over) => Object.assign({}, BASE_PAL, COURTYARD, over || {});
+
+  Object.assign(GOL.PALETTES, {
+    // -------------------------------------------------- World Two · Orchard
+    // The Shared Table — the orchard gate, generous and open.
+    maun: palO({ waterHi: '#C9ECDD' }),
+    // The Caravan Rest — dust of the road, warm and settled.
+    quraysh: palO({ skyLow: '#F5D294', soil: '#CDAB7C', hillFar: '#BBCB97', mist: '#F2E8CC' }),
+    // The Bird Sky — wide bright air over the grove.
+    fil: palO({ skyTop: '#9ECFC0', skyMid: '#DFEDC0', cloud: '#FFF8E6' }),
+    // The Deep Shade — cool under heavy branches.
+    humazah: palO({ skyMid: '#D3E2AC', hillNear: '#5F9459', grassDark: '#528A47', leafDark: '#47793F' }),
+    // The Laden Boughs — everything golden and heavy with fruit.
+    takathur: palO({ skyLow: '#F9D794', gold: '#F5CB74', leafLight: '#A2CE7E' }),
+    // The Weighing Light — shimmer before evening.
+    qariah: palO({ skyTop: '#A9C3A4', skyMid: '#E3DEA8', skyLow: '#F4C98E', mist: '#EFE0BC' }),
+    // ------------------------------------------------ World Three · Courtyard
+    // The Trembling Steps — warm stone, the courtyard opens.
+    zalzalah: palC({}),
+    // The Dawn Chargers — rose-gold air, dust of hooves.
+    adiyat: palC({ skyLow: '#F7C795', sunGlow: '#FFD9A0', soil: '#D0A97C', mist: '#EFDDBC' }),
+    // The Hall of Light — luminous cream colonnades.
+    bayyinah: palC({ skyMid: '#EDE6BC', stone: '#F4E6C6', ray: '#FFF0BE' }),
+    // The Night of Qadr — dusk deepening into a starred, peaceful night.
+    qadr: palC({
+      skyTop: '#7E93A2', skyMid: '#A9AF9E', skyLow: '#E8B77E',
+      sun: '#FFE9B0', sunGlow: '#F5CE96',
+      hillFar: '#93A88C', hillMid: '#77926F', hillNear: '#5C7D57',
+      grass: '#6FA05B', grassLight: '#8FC077', mist: '#DCD2B4'
+    }),
+    qadrEnd: palC({
+      skyTop: '#2E4058', skyMid: '#4A5B72', skyLow: '#8A7B94',
+      sun: '#F4E9C8', sunGlow: '#C9D4E8', cloud: '#93A0B4', ray: '#BFCDE8',
+      hillFar: '#4E6258', hillMid: '#41544C', hillNear: '#35473F',
+      grass: '#4C7350', grassLight: '#699668', grassDark: '#3A5C40', mist: '#6C7C86'
+    }),
+    // The Cave of Hira — pre-dawn stone, then the first light of Read.
+    alaq: palC({
+      skyTop: '#8FA8A6', skyMid: '#C4C6A8', skyLow: '#F2CE96',
+      hillFar: '#9FB096', hillMid: '#7E9678', hillNear: '#617E5C',
+      stone: '#E9DCC0', sunGlow: '#FFE1A0', ray: '#FFEDB0'
+    }),
+    alaqEnd: palC({ skyTop: '#A8D0C0', skyMid: '#E0EEC8', skyLow: '#FAE5AC', sunGlow: '#FFE9A0' })
+  });
+
   // Gem greens — one per ayah position, chosen to read distinctly at a glance.
   GOL.GEMS = [
     { name: 'mint',    base: '#96E2B4' },

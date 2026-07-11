@@ -87,6 +87,7 @@
       if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 1, this.ctx.currentTime, 0.05);
       if (this._current) this._current.el.muted = m;
       if (this._seq && this._seq.el) this._seq.el.muted = m;
+      if (this._speaking) this._speaking.el.muted = m;
     },
 
     // -------------------------------------------------------- recitation --
@@ -114,6 +115,7 @@
     },
     // Play one ayah. Always eventually calls onend (never blocks the child).
     playVerse(surahId, n, onend) {
+      this.stopSpeak(); // narration always yields to the Qur'an
       this.stopRecitation();
       return this._verse(surahId, n, onend, false);
     },
@@ -148,6 +150,7 @@
     },
     // Recite a whole surah, verse by verse. cb.onVerse(i) before each ayah.
     playSurah(surah, cb) {
+      this.stopSpeak();
       this.stopRecitation();
       const seq = { i: 0, stopped: false, el: null };
       this._seq = seq;
@@ -180,6 +183,69 @@
         this._current = null;
       }
       this.duck(false);
+    },
+
+    // -------------------------------------------------------- narration ---
+    // A warm human voice for the English lines (stories, gentle instructions),
+    // pre-generated with ElevenLabs into audio/voice/<id>.mp3 and cached like
+    // recitations. If a file is missing the garden simply stays quiet —
+    // NO synthetic/robot voice fallback, ever. Never speaks over the Qur'an.
+    _speakEls: {}, _speakMissing: {}, _speaking: null,
+    speak(id, onend) {
+      if (this.reciting) { if (onend) onend(); return null; } // the Qur'an has the room
+      if (this._speakMissing[id]) { if (onend) onend(); return null; }
+      this.stopSpeak();
+      let el = this._speakEls[id];
+      if (!el) {
+        el = new Audio('audio/voice/' + id + '.mp3');
+        el.preload = 'auto';
+        this._speakEls[id] = el;
+      }
+      const h = { el, id, done: false };
+      const finish = (missing) => {
+        if (h.done) return;
+        h.done = true;
+        clearTimeout(h.guard);
+        el.removeEventListener('ended', onEnded);
+        el.removeEventListener('error', onError);
+        if (missing) this._speakMissing[id] = true;
+        if (this._speaking === h) {
+          this._speaking = null;
+          if (!this.reciting) this.duck(false);
+        }
+        if (onend) onend();
+      };
+      const onEnded = () => finish(false);
+      const onError = () => finish(true);
+      el.muted = this.muted;
+      el.currentTime = 0;
+      el.addEventListener('ended', onEnded);
+      el.addEventListener('error', onError);
+      h.guard = setTimeout(() => finish(false), 30000);
+      this._speaking = h;
+      this.duck(true);
+      const p = el.play();
+      if (p && p.catch) p.catch(() => finish(true));
+      return h;
+    },
+    stopSpeak() {
+      if (!this._speaking) return;
+      const h = this._speaking;
+      this._speaking = null;
+      h.done = true;
+      clearTimeout(h.guard);
+      try { h.el.pause(); } catch (e) {}
+      if (!this.reciting) this.duck(false);
+    },
+    preloadVoice(ids) {
+      for (const id of ids || []) {
+        if (!this._speakEls[id] && !this._speakMissing[id]) {
+          const el = new Audio('audio/voice/' + id + '.mp3');
+          el.preload = 'auto';
+          el.addEventListener('error', () => { this._speakMissing[id] = true; });
+          this._speakEls[id] = el;
+        }
+      }
     },
     get reciting() { return !!(this._current || this._seq); },
     duck(on) {
@@ -305,6 +371,13 @@
       const f = 523.25 * Math.pow(2, scale[i % scale.length] / 12);
       this._bell(f, 0, opts && opts.short ? 0.5 : 1.4, opts && opts.soft ? 0.05 : 0.14);
     },
+    // noor seeds: quick pentatonic ticks that climb as a trail is gathered
+    seedTick(step) {
+      if (!this.ctx || this.muted) return;
+      const scale = [0, 2, 4, 7, 9];
+      const f = 1046.5 * Math.pow(2, (scale[step % 5] + 12 * Math.floor((step % 15) / 5)) / 12);
+      this._bell(f, 0, 0.32, 0.035);
+    },
     sfx(name) {
       if (!this.ctx || this.muted) return;
       const ctx = this.ctx, t = ctx.currentTime;
@@ -355,6 +428,32 @@
           this._bell(1046.5, 0.12, 1.2, 0.08);
           break;
         case 'step': noise(0.04, 0.012, 500, 1); break;
+        case 'bounce':
+          quick('sine', 170, 640, 0.24, 0.07);
+          noise(0.1, 0.03, 500, 0.8);
+          break;
+        case 'blossom': // finding a hidden Rahma blossom — a small golden fanfare
+          this._bell(659.25, 0, 1.1, 0.09);
+          this._bell(783.99, 0.14, 1.1, 0.09);
+          this._bell(987.77, 0.28, 1.5, 0.1);
+          this._bell(1318.5, 0.46, 1.8, 0.08);
+          break;
+        case 'praise': // the echo moment ends: warm, proud, tiny
+          this._bell(1046.5, 0, 0.8, 0.06);
+          this._bell(1318.5, 0.11, 1.1, 0.06);
+          break;
+        case 'yourTurn': // a soft "listening" cue
+          this._bell(880, 0, 0.5, 0.04);
+          this._bell(1174.7, 0.16, 0.7, 0.035);
+          break;
+        case 'veil': // a veiled gem revealing its true color
+          noise(0.3, 0.025, 3200, 1.2);
+          this._bell(1567.98, 0.02, 0.9, 0.05);
+          break;
+        case 'bloom': // flowers growing on the map
+          this._bell(1318.5, 0, 0.6, 0.045);
+          this._bell(1567.98, 0.1, 0.9, 0.04);
+          break;
       }
     }
   };

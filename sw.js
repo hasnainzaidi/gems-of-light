@@ -1,12 +1,12 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v6';
+const CACHE = 'gems-of-light-v8';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
-  './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
+  './js/data.js', './js/voice-lines.js', './js/art.js', './js/props.js', './js/actors.js',
   './js/audio.js', './js/engine.js', './js/levels.js', './js/scenes.js',
-  './js/level.js', './js/gate.js', './js/room.js', './js/main.js',
+  './js/level.js', './js/gate.js', './js/room.js', './js/modes.js', './js/debug.js', './js/main.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'
 ];
 

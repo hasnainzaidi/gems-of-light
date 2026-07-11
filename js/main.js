@@ -2,7 +2,7 @@
 // Boot, the render loop, and soft scene transitions.
 (function () {
   const GOL = window.GOL;
-  GOL.VERSION = 'v6'; // keep in step with CACHE in sw.js
+  GOL.VERSION = 'v8'; // keep in step with CACHE in sw.js
 
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -44,6 +44,7 @@
   function switchTo(name, params) {
     if (current && current.exit) current.exit();
     current = GOL.SCENES[name];
+    GOL.sceneName = name;
     current.enter(params || {});
   }
   switchTo('title');
@@ -57,15 +58,15 @@
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // transitions
+    // transitions (debug: near-instant, a speed run shouldn't wait on veils)
     if (fade.phase === 'out') {
-      fade.t += dt / 0.32;
+      fade.t += dt / (GOL.DEBUG ? 0.08 : 0.32);
       if (fade.t >= 1) {
         switchTo(fade.next, fade.params);
         fade = { phase: 'in', t: 0 };
       }
     } else if (fade.phase === 'in') {
-      fade.t = Math.min(1, fade.t + dt / 0.38);
+      fade.t = Math.min(1, fade.t + dt / (GOL.DEBUG ? 0.08 : 0.38));
       if (fade.t >= 1) fade.phase = 'idle';
     }
 
@@ -93,6 +94,7 @@
         ctx.fillRect(0, 0, W, H);
       }
     }
+    if (GOL.debugDraw) GOL.debugDraw(ctx, W, H);
     GOL.Input.endFrame();
   }
   requestAnimationFrame(frame);
