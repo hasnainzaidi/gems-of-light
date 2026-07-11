@@ -472,6 +472,10 @@
     level(id) {
       const L = this.data.levels;
       if (!L[id]) L[id] = { completed: false, replays: 0, sortAttempts: 0, hintsUsed: 0, misorders: {}, heardFull: 0 };
+      L[id].recite = L[id].recite || {
+        sessions: 0, ayahsPassed: 0, ayahsCarried: 0,
+        bestScores: {}, wordMisses: {}, engine: ''
+      };
       return L[id];
     },
     reset() { this.data = { levels: {}, settings: { muted: false }, unlocked: 0 }; this.save(); }

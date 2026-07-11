@@ -1,12 +1,29 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v2-r11'; // bumped: Al-Falaq (Daybreak Hollow) — falaq.html + dawn assets
+const CACHE = 'gems-of-light-v2-r14'; // bumped: GitHub-sized q4 reciter + readiness diagnostics
 const SHELL = [
   './', './index.html', './index-full.html', './manifest.webmanifest',
-  './js/data.js', './js/art.js', './js/props.js', './js/actors.js',
-  './js/audio.js', './js/engine.js', './js/levels.js', './js/scenes.js',
+  './js/data.js', './js/recite-score.js', './js/art.js', './js/props.js', './js/actors.js',
+  './js/audio.js', './js/recite.js', './js/asr-worker.js', './js/engine.js', './js/levels.js', './js/scenes.js',
   './js/level.js', './js/gate.js', './js/room.js', './js/main.js',
+  './vendor/transformers.min.js',
+  './vendor/ort/ort-wasm-simd-threaded.wasm',
+  './vendor/ort/ort-wasm-simd-threaded.mjs',
+  './vendor/ort/ort-wasm-simd-threaded.jsep.wasm',
+  './vendor/ort/ort-wasm-simd-threaded.jsep.mjs',
+  './models/whisper-tiny-ar-quran/config.json',
+  './models/whisper-tiny-ar-quran/generation_config.json',
+  './models/whisper-tiny-ar-quran/preprocessor_config.json',
+  './models/whisper-tiny-ar-quran/tokenizer.json',
+  './models/whisper-tiny-ar-quran/tokenizer_config.json',
+  './models/whisper-tiny-ar-quran/added_tokens.json',
+  './models/whisper-tiny-ar-quran/merges.txt',
+  './models/whisper-tiny-ar-quran/normalizer.json',
+  './models/whisper-tiny-ar-quran/special_tokens_map.json',
+  './models/whisper-tiny-ar-quran/vocab.json',
+  './models/whisper-tiny-ar-quran/onnx/encoder_model_q4.onnx',
+  './models/whisper-tiny-ar-quran/onnx/decoder_model_merged_q4.onnx',
   './assets/key-art.jpg',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png',
   // the painterly Al-Kawthar slice, installable on its own

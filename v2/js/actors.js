@@ -418,7 +418,7 @@
   }
   GOL.drawHudBand = drawHudBand;
 
-  // Round soft button. icon: 'pause'|'sound'|'soundOff'|'map'|'back'|'play'|'book'
+  // Round soft button. icon: 'pause'|'sound'|'soundOff'|'map'|'back'|'play'|'book'|'mic'
   function drawButton(ctx, x, y, r, icon, opts) {
     opts = opts || {};
     ctx.save();
@@ -463,6 +463,17 @@
       ctx.lineTo(x + s * 1.05, y - s * 0.55); ctx.quadraticCurveTo(x + s * 0.9, y - s * 1.05, x, y - s * 0.7);
       ctx.moveTo(x, y - s * 0.7); ctx.lineTo(x, y + s * 0.75);
       ctx.lineWidth = 2; ctx.stroke();
+    } else if (icon === 'mic') {
+      ctx.beginPath();
+      GOL.roundRect(ctx, x - s * 0.42, y - s, s * 0.84, s * 1.42, s * 0.42);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y - s * 0.12, s * 0.78, 0.18, Math.PI - 0.18);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y + s * 0.66); ctx.lineTo(x, y + s);
+      ctx.moveTo(x - s * 0.52, y + s); ctx.lineTo(x + s * 0.52, y + s);
+      ctx.stroke();
     }
     ctx.restore();
     return { x, y, r: r * 1.35 }; // generous hit circle
