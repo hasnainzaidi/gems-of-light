@@ -20,11 +20,14 @@ its recipe. Verify every world with `node v3/tools/check.mjs wN` (zero errors).
   hard-floor is 14) tracing the route; arcs mark the leaps.
 - **No text, no hazards, no failure.** Water is safe (rescue, never death). No
   quizzes, dialogue, or instructional UI. Creatures are ambient only.
-- **One memory stone per world after W1**, on a short spur just past the
-  campfire clearing: `b.memory(x, surahId)` recalling an earlier surah (see
-  W2). It arms only in the ember phase — the Remembering, PLAN §10. (Engine-
-  aimed `b.memory(x)` with runtime surah choice is planned Wave 1 plumbing;
-  see WORLDS-PLAN.md §1.)
+- **No memory stone in new worlds** (2026-07-12): the Remembering's doorway
+  moved to the journey screen — a completed disc's moonlit moon is the way
+  into the dream-shrine (PLAN §10). In-world stones are disarmed scenery;
+  the ones already placed (w2/w5/w6) stay as quiet set dressing only.
+- **Long surahs (13+ ayat) declare stanzas:** `stanzas: [..]` on the world
+  def — run lengths summing to the ayah count — and the shrine, campfire,
+  and level layout all breathe in those chunks (WORLDS-PLAN §1, "the
+  stanza shrine"). Put a small flat rest ledge between stanza stretches.
 - **Palette drift is optional soul:** set `endPalette` and the sky lerps from
   `palette` → `endPalette` as gems are gathered.
 

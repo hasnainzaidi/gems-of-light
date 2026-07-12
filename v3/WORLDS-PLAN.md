@@ -24,13 +24,33 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
   Grand Gem). Hardcoded ids (W2's `b.memory(88, 113)`) keep working as an
   override. This is Wave 1 orchestrator plumbing — one small change in
   dsl/adventure, done before any new recipe lands.
-- **No world over 12 ayat ships before the shrine has a chunking design.**
-  The shrine is proven to 11 sockets (W3). Al-Lail is 21 — a fan of 21 gems
-  won't fit a 390px-tall screen, and a 21-recitation campfire is a long sit
-  for a five-year-old. Likely shape: sockets light in stanzas of 5–7 with the
-  fan showing only the current stanza, campfire recites in the same breaths.
-  Design decision goes to PLAN §10 before Al-Lail is briefed. (This same wall
-  guards Level 3's 20+ ayah surahs later.)
+- **THE STANZA SHRINE (designed 2026-07-12; the chunking gate is open).**
+  The shrine was proven to 11 sockets (W3); long surahs break it — a fan of
+  21 gems can't fit a 390px screen and 21-item recall is the wrong load for
+  a child. The design mirrors how huffaz actually memorize: in maqati'
+  (thematic stanzas).
+  - A world may declare `stanzas: [4, 7, 5, 5]` (run lengths summing to its
+    ayah count). No declaration + ≤12 ayat = exactly today's shrine,
+    byte-identical behavior.
+  - The shrine presents ONE STANZA at a time: only its gems float in the
+    fan (4–7 — a legible set), only its sockets stand open. Recall runs
+    within the stanza; order across stanzas is carried by the shrine, not
+    the child's working memory.
+  - Completing a stanza: its gems settle and MERGE into one bright star on
+    the shrine's crest (the stanza, compressed), a short wordless breath,
+    then the next stanza's gems drift in and its sockets fade up. Crest
+    stars accumulate — progress reads at a glance, no numbers.
+  - Full completion = normal bloom / Grand Gem / moon ceremony. Dreams use
+    the same chunking automatically (same scene). Telemetry unchanged
+    (tries/listens per socket still tell the truth).
+  - The campfire breathes in the same stanzas: for stanza-worlds the "your
+    turn" chime opens its breath at STANZA ENDS only (a 21-chime campfire
+    would be the laborious echo all over again); within a stanza the ayat
+    flow at the normal tight gap.
+  - The world itself echoes the chunks: Al-Lail's climb pauses at small
+    rest ledges ("night camps") between stanzas — the same rhythm felt in
+    the legs, the fire, and the stone.
+  (This unlocks every Level 3 surah of 20+ ayat later.)
 - **The consequence surahs (Masad, Humazah, Takathur) stay wordless-gentle.**
   The world is a gentle place to *be* while the surah is heard — it never
   dramatizes the warning. Each anchors to a soft image from the surah (the
@@ -144,12 +164,21 @@ deep-blue starlit stillness and warms **gem by gem** into golden forenoon
 reassurance of the surah lives entirely in the warming light. 11 gems give
 the dawn room to unfold (width ~W3 scale).
 
-### L. Al-Lail — The Night and the Two Ways (21 ayat, The Climb) — LAST
-A long night ascent under stars (P2 tall grid), switchbacking upward, the
-two-ways motif appearing as forks that always rejoin toward the light — and
-as the summit's view. **Blocked until the shrine-chunking design (§1) is
-decided and built.** This world is the proving ground for every long surah
-after it; treat it as a new-mechanic world, not a recipe.
+### L. Al-Lail — The Night and the Two Ways (21 ayat, The Climb)
+A long night ascent under stars (tall grid, h ≈ 60+), switchbacking upward,
+the two-ways motif appearing as forks that always rejoin toward the light.
+Built on the STANZA SHRINE (§1) with `stanzas: [4, 7, 5, 5]`, the surah's
+own thematic movements:
+1. **vv1–4, the oaths** — night, day, the making of two — "your striving
+   is diverse": the trailhead rise, four gems in the dark.
+2. **vv5–11, the two ways** — the giver eased, the withholder hardened:
+   the long middle face, where the path forks and rejoins, seven gems.
+3. **vv12–16, the guidance and the warning**: the high slab face, five.
+4. **vv17–21, the giver pleased** — "and he will surely be pleased": the
+   last rungs to the starred summit, five.
+Between stanzas: small flat REST LEDGES (night camps — a lantern, a still
+moment) so the climb breathes in the same maqati' as the campfire and
+shrine. This world proves the long-surah machinery for all of Level 3.
 
 ## 4. Waves (orchestrator plumbing first; playtest gates between)
 

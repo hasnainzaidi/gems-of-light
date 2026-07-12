@@ -27,6 +27,15 @@
       const def = params.world ? GOL.WORLDS3[params.world - 1]
         : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
+      // stanza worlds (WORLDS-PLAN §1): the campfire breathes at stanza ends.
+      // this.stanzaCuts holds the 0-based index of each stanza's LAST ayah
+      // (except the final stanza — the surah always ends cleanly)
+      this.stanzaCuts = null;
+      if (def && Array.isArray(def.stanzas) && def.stanzas.length > 1) {
+        this.stanzaCuts = new Set();
+        let acc = 0;
+        for (const n of def.stanzas.slice(0, -1)) { acc += n; this.stanzaCuts.add(acc - 1); }
+      }
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';
@@ -579,10 +588,16 @@
           if (GOL.DEBUG) {
             setTimeout(() => { if (this.phase === 'campfire') this.openDoor(); }, 800);
           } else if (turn) {
+            // stanza worlds: the long "your turn" breath opens only at
+            // stanza ends (21 chimes would be the laborious echo reborn);
+            // within a stanza the ayat flow at the normal tight gap.
+            // Short worlds (no stanzas): every ayah gets its breath, as before.
+            const cuts = this.stanzaCuts;
+            const breathes = (i) => !cuts || cuts.has(i);
             GOL.audio.playSurah(L.surah, {
-              breath: 2.2,
+              breathFor: (i) => (breathes(i) ? 2.2 : 0.42),
               onVerse: (i) => { this.reciteI = i; this.echoI = -1; this.setCampAr(i); },
-              onBreath: (i) => { this.echoI = i; GOL.audio.sfx('yourTurn'); },
+              onBreath: (i) => { if (breathes(i)) { this.echoI = i; GOL.audio.sfx('yourTurn'); } },
               onend: () => { this.echoI = -1; if (this.phase === 'campfire') this.openDoor(); }
             });
           } else {

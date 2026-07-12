@@ -214,9 +214,13 @@
           seq.i++;
           const last = seq.i >= surah.verses.length;
           // the breath (and its "your turn") sits between ayat, never after
-          // the final one — the surah should end cleanly into what follows
+          // the final one — the surah should end cleanly into what follows.
+          // cb.breathFor(i) may vary the gap per ayah (stanza worlds breathe
+          // long at stanza ends and flow tight within one — WORLDS-PLAN §1)
+          const gap = last ? 420
+            : (cb && cb.breathFor ? Math.max(0.05, cb.breathFor(heard)) * 1000 : breathMs);
           if (!last && cb && cb.onBreath) cb.onBreath(heard);
-          setTimeout(step, last ? 420 : breathMs);
+          setTimeout(step, gap);
         }, true);
         seq.el = h.el;
       };
