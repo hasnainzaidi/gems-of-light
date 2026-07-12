@@ -19,12 +19,20 @@
     pads: null, movers: null, blossomState: null, fly: null,
     orbit: null, restoreK: 0, glowAr: null, echoT: 0,
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
+    breathT: 0, breathI: -1, memState: null,
 
     enter(params) {
       const def = params.world ? GOL.WORLDS3[params.world - 1]
         : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
       this.worldN = params.world || null;
+      // waking from the dream (shrine.js's memory shrine) drops the child back
+      // at their own campfire, ember-lit, everything as they left it
+      const resume = params.resume === 'ember';
       const L = (this.L = GOL.buildPrototype(def));
+      // coming back to a world whose Grand Gem is already earned pre-grows the
+      // garden — the same clearing, remembered fuller, as a reward for return.
+      // A dream round-trip is NOT a new visit: grow, but don't count it.
+      this.applyReplayGrowth(L, resume);
       this.t = 0;
       this.paused = false;
       this.found = [];
@@ -34,6 +42,8 @@
       this.fireT = 0;
       this.doorK = 0;
       this.reciteI = -1;
+      this.breathT = 0;
+      this.breathI = -1;
       this.restoreK = 0;
       this.glowAr = null;
       this.echoT = 5; // let the garden breathe before the first echo
@@ -50,8 +60,10 @@
       });
       // foreground curtains that soften when the wanderer steps behind them
       this.occs = (L.occluders || []).map((o) => ({ o, fade: 1 }));
-      // the memory stone, if this world remembers an earlier surah
-      this.memState = L.memory ? { woken: false, hintT: 0 } : null;
+      // the memory stone, if this world remembers an earlier surah. It stays
+      // 'inert' scenery through roam/settle/campfire and only 'arms' at the
+      // ember phase — the deliberate, never-mid-collection redesign (PLAN §9).
+      this.memState = L.memory ? { phase: 'inert', dwell: 0, travel: 0, from: null, litT: 0 } : null;
       L.movers = this.movers;
       const stPre = GOL.store.level(L.surahId);
       this.blossomState = L.blossom ? { x: L.blossom.x, y: L.blossom.y, taken: false, everFound: stPre.blossom } : null;
@@ -143,6 +155,26 @@
       this.gemStates = L.gems.map(() => ({ near: false }));
       this.cam = null;
 
+      if (resume) {
+        // everything as the child left it: gems gathered, world restored, the
+        // door aglow — seated by the campfire's ember light, dream complete
+        this.found = L.gems.map((g) => g.ayah).sort((a, b) => a - b);
+        this.restoreK = 1;
+        this.phase = 'ember';
+        this.doorK = 1;
+        this.orbit = [];
+        const pl = this.player;
+        pl.x = L.campfire.x + 60; // the door side of the fire
+        pl.y = L.campfire.y;
+        pl.lastSafe = { x: pl.x, y: pl.y };
+        // (cam is null — the first update snaps it onto the player)
+        // the stone re-arms if the old Grand Gem is still carried; entering
+        // the dream again is allowed (the moon just won't double-wax)
+        if (this.memState && L.memory && GOL.store.data.grand && GOL.store.data.grand[L.memory.surahId]) {
+          this.memState.phase = 'armed';
+        }
+      }
+
       const st = GOL.store.level(L.surahId);
       st.lastPlayed = Date.now();
       GOL.store.save();
@@ -150,7 +182,7 @@
 
       GOL.audio.preloadSurah(L.surah);
       GOL.audio.startAmbience('garden');
-      GOL.audio.enterFlourish();
+      if (!resume) GOL.audio.enterFlourish(); // waking from a dream is quiet
     },
 
     exit() {
@@ -292,33 +324,10 @@
         }
       }
 
-      // the memory stone: an old surah's Grand Gem wakes it — the surah
-      // sounds again and the garden answers. Without the gem it only
-      // shimmers, a promise for later.
-      if (this.memState && !this.memState.woken && this.L.memory) {
-        const m = this.L.memory;
-        const d = Math.hypot(pl.x - m.x, (pl.y - 16) - (m.y - 30));
-        const hasGem = GOL.store.data.grand && GOL.store.data.grand[m.surahId];
-        if (d < 46) {
-          if (hasGem) {
-            this.memState.woken = true;
-            GOL.audio.sfx('blossom');
-            this.fx.burst(m.x, m.y - 30, '#F0C878', 24);
-            this.fx.spawn('ring', m.x, m.y - 30, { color: '#FFE9A8', size: 34 });
-            this.bloomAround(m.x);
-            const s = window.GOL_DATA.surahs.find((x) => x.id === m.surahId);
-            if (s && !GOL.DEBUG) GOL.audio.playSurah(s, {});
-            const st = GOL.store.level(m.surahId);
-            st.heardFull = (st.heardFull || 0) + 1;
-            GOL.store.save();
-            GOL.stamp('v3memory');
-          } else if (this.t > this.memState.hintT) {
-            this.memState.hintT = this.t + 3;
-            GOL.audio.sfx('hint');
-            this.fx.spawn('ring', m.x, m.y - 30, { color: '#FFF6DC', size: 16 });
-          }
-        }
-      }
+      // the memory stone stays INERT scenery through roam — plain, no pulse,
+      // no hint, cannot wake. It only arms after this world's campfire (the
+      // 'ember' phase); see updateMemoryStone. This is the fix for the parked
+      // v1 mechanic, whose walk-by trigger collided mid-collection (PLAN §9).
 
       this.updateFirefly(dt);
 
@@ -532,6 +541,7 @@
     updateCampfire(dt, W, H) {
       const L = this.L, pl = this.player;
       this.fireT += dt;
+      this.breathT = Math.max(0, this.breathT - dt); // the "your turn" swell fades
       if (this.phase !== 'ember') pl.t += dt; // the seated sprite still breathes
       this.fx.update(dt);
       this.updateOrbit(dt);
@@ -553,8 +563,12 @@
           if (GOL.DEBUG) {
             setTimeout(() => { if (this.phase === 'campfire') this.openDoor(); }, 800);
           } else {
+            // the campfire lengthens the breath between ayat and marks each
+            // one — a wordless "your turn" to echo aloud (no text, no mic)
             GOL.audio.playSurah(L.surah, {
+              breath: 2.4,
               onVerse: (i) => { this.reciteI = i; },
+              onBreath: (i) => { this.breathI = i; this.breathT = 2.4; },
               onend: () => { if (this.phase === 'campfire') this.openDoor(); }
             });
           }
@@ -573,6 +587,8 @@
         GOL.Input.poll(W, H);
         GOL.Input.routeTapsToJump();
         GOL.updatePlayer(pl, L, GOL.Input, dt, this.fx);
+        // the memory stone can now be woken — deliberately, off to the side
+        this.updateMemoryStone(dt);
         if (Math.random() < dt * 8 && L.door) {
           this.fx.spawn('sparkle', L.door.x + GOL.rnd(-40, 40), L.door.y - GOL.rnd(10, 170), { color: '#FFE9A8' });
         }
@@ -591,6 +607,132 @@
       GOL.store.save();
       GOL.audio.sfx('door');
       GOL.audio.startAmbience('garden');
+      // arm the memory stone now, and only now — if the child carries the
+      // named Grand Gem it will glow a soft invitation; without it, it stays
+      // plain stone forever (no shimmer, no hint)
+      if (this.memState && this.memState.phase === 'inert') {
+        const m = this.L.memory;
+        const hasGem = m && GOL.store.data.grand && GOL.store.data.grand[m.surahId];
+        if (hasGem) this.memState.phase = 'armed';
+      }
+    },
+
+    // THE REMEMBERING (PLAN §9). Awake only in the ember phase. Armed, the
+    // stone raises a level-wide beam (drawn in drawMemoryStone) and, on
+    // approach, whispers the old surah's FIRST ayah — identity before consent.
+    // Waking is DELIBERATE: ~40px for a 0.6s dwell (a ring fills as intent).
+    // On wake the OLD surah's Grand Gem rises from the child and travels to
+    // the socket over ~1.5s, sets with a chime, rests a beat — and then the
+    // dream begins: the old surah's moonlit shrine (shrine.js owns the dream).
+    updateMemoryStone(dt) {
+      const ms = this.memState, m = this.L.memory;
+      if (!ms || !m || ms.phase === 'inert') return;
+      const pl = this.player;
+      if (ms.phase === 'armed') {
+        const d = Math.hypot(pl.x - m.x, (pl.y - 16) - (m.y - 30));
+        // the whisper: coming near, the stone breathes the old surah's first
+        // ayah once — and again only after truly leaving and returning
+        if (d < 130 && !ms.whispered) {
+          ms.whispered = true;
+          GOL.audio.echoVerse(m.surahId, 1, 0.3);
+        } else if (d > 260 && ms.whispered) {
+          ms.whispered = false;
+        }
+        if (d < 40 && pl.grounded) {
+          ms.dwell += dt;
+          if (Math.random() < dt * 5) {
+            this.fx.spawn('sparkle', m.x + GOL.rnd(-10, 10), m.y - 30 - GOL.rnd(0, 22), { color: '#FFE9A8' });
+          }
+          if (ms.dwell >= 0.6) {
+            // intent confirmed: the old Grand Gem lifts from the child
+            ms.phase = 'travel';
+            ms.travel = 0;
+            ms.from = { x: pl.x, y: pl.y - 40 };
+            GOL.audio.sfx('yourTurn');
+          }
+        } else {
+          ms.dwell = Math.max(0, ms.dwell - dt * 1.5); // drifting away lets it settle
+        }
+      } else if (ms.phase === 'travel') {
+        ms.travel = Math.min(1, ms.travel + dt / 1.5);
+        if (Math.random() < 0.5) {
+          const k = GOL.ease.inOut(ms.travel);
+          const gx = ms.from.x + (m.x - ms.from.x) * k;
+          const gy = ms.from.y + ((m.y - 34) - ms.from.y) * k - Math.sin(Math.PI * ms.travel) * 30;
+          this.fx.spawn('trail', gx, gy, { color: '#FFE9A8' });
+        }
+        if (ms.travel >= 1) {
+          // the gem sets into the socket with a chime, and rests a beat
+          ms.phase = 'set';
+          ms.litT = 0;
+          GOL.audio.sfx('settle');
+          this.fx.burst(m.x, m.y - 34, '#F0C878', 20);
+          this.fx.spawn('ring', m.x, m.y - 34, { color: '#FFE9A8', size: 30 });
+          this.bloomAround(m.x);
+        }
+      } else if (ms.phase === 'set') {
+        // a short settle beat with the gem glowing in its socket — legibility
+        // before anything sounds — then the dream carries the child away
+        ms.litT += dt;
+        if (ms.litT >= 0.6) {
+          if (this.worldN) {
+            ms.phase = 'reciting'; // hold the set-gem look under the fade-out
+            GOL.go('shrine', { memory: { surahId: m.surahId, returnWorld: this.worldN } });
+          } else {
+            // prototype mode — no journey to return to; fall back to the old
+            // payoff: the surah recites in place, petals falling
+            ms.phase = 'reciting';
+            const s = window.GOL_DATA.surahs.find((x) => x.id === m.surahId);
+            if (s && !GOL.DEBUG) GOL.audio.playSurah(s, {
+              onVerse: () => {
+                for (let k = 0; k < 5; k++) this.fx.spawn('petal', m.x + GOL.rnd(-42, 42), m.y - 62, { color: k % 2 ? '#F5B8C4' : '#FFE9A8' });
+              }
+            });
+            const st = GOL.store.level(m.surahId);
+            st.heardFull = (st.heardFull || 0) + 1;
+            GOL.store.save();
+            GOL.stamp('v3memory');
+          }
+        }
+      } else if (ms.phase === 'reciting') {
+        ms.litT += dt;
+        if (this.worldN) return; // dream-bound: the fade-out is carrying us
+        if (Math.random() < dt * 4) {
+          this.fx.spawn('petal', m.x + GOL.rnd(-50, 50), m.y - 70, { color: Math.random() < 0.5 ? '#F5B8C4' : '#FFE9A8' });
+        }
+      }
+    },
+
+    // pre-grow the garden on return: 3 × min(replays, 6) extra flower/tuft
+    // props on grassy surface tiles, drawn as a growing PREFIX of one fixed
+    // deterministic stream — so each return is the same clearing, fuller.
+    // A resume (waking from the dream) still grows, but doesn't count a visit.
+    applyReplayGrowth(L, resume) {
+      const grand = GOL.store.data.grand;
+      if (!grand || !grand[L.surahId]) return;
+      const st = GOL.store.level(L.surahId);
+      if (!resume) {
+        st.replays = (st.replays || 0) + 1;
+        GOL.store.save();
+      }
+      const extra = 3 * Math.min(st.replays || 0, 6);
+      if (extra <= 0) return;
+      const cols = [];
+      for (let x = 1; x < L.w - 1; x++) {
+        const s = L.surface(x);
+        if (s >= L.h) continue;
+        if (L.tiles[s * L.w + x] !== 1) continue;         // grassy ground only
+        if (L.tiles[(s - 1) * L.w + x] !== 0) continue;   // open sky above
+        cols.push(x);
+      }
+      if (!cols.length) return;
+      const r = GOL.rng(9000 + L.id * 31); // fixed per level → prefix grows
+      for (let i = 0; i < extra; i++) {
+        const cx = cols[Math.floor(r() * cols.length)];
+        const s = L.surface(cx);
+        if (r() < 0.62) L.props.push({ type: 'flowers', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 3) });
+        else L.props.push({ type: 'tuft', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 2) });
+      }
     },
 
     // debug helpers: G collects everything, E warps to the campfire
@@ -613,6 +755,10 @@
     // -------------------------------------------------------------- draw --
     draw(ctx, W, H) {
       const L = this.L, t = this.t, cam = this.cam || { x: 0, y: 0, viewW: W, viewH: H };
+      // the campfire breath: a swell that rises then settles across the pause,
+      // a wordless "your turn" — the flame grows, the just-heard gem brightens
+      const breathSw = (this.phase === 'campfire' && this.breathT > 0)
+        ? Math.sin(Math.PI * (1 - this.breathT / 2.4)) : 0;
       let P = this.P;
       const dawnK = this.endP ? this.restoreK : 0;
       if (this.endP) P = GOL.lerpPal(this.P, this.endP, dawnK);
@@ -664,7 +810,7 @@
       // the memory stone, holding a place for an earlier surah's Grand Gem
       if (L.memory) this.drawMemoryStone(ctx, L.memory, t);
       // the campfire (sleeping until every gem is found)
-      if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t);
+      if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t, breathSw);
       // the shrine door, revealed by the ember light
       if (L.door && this.doorK > 0) {
         GOL.drawArch(ctx, L.door.x, L.door.y, t, P, 0.18 * this.doorK + 0.06 * Math.sin(t * 1.8) * this.doorK, this.doorK * (0.5 + 0.3 * Math.sin(t * 2.2)));
@@ -728,13 +874,15 @@
         const behind = Math.sin(o.angle + (i / Math.max(1, n)) * Math.PI * 2) < 0;
         const r = (seated || this.phase === 'campfire' ? 12 : 8) * (0.7 + 0.3 * o.join);
         const lit = this.reciteI >= 0 && this.L.surah.verses[this.reciteI] && this.L.surah.verses[this.reciteI].n === o.ayah;
+        // during the breath, the just-heard ayah's gem pulses brighter still
+        const onBreath = breathSw > 0 && this.breathI >= 0 && this.L.surah.verses[this.breathI] && this.L.surah.verses[this.breathI].n === o.ayah;
         if (lit) {
           ctx.strokeStyle = alpha(o.C.glow, 0.65 + 0.3 * Math.sin(t * 4));
           ctx.lineWidth = 2.4;
-          ctx.beginPath(); ctx.arc(o.x, o.y, r + 9, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(o.x, o.y, r + 9 + (onBreath ? breathSw * 6 : 0), 0, Math.PI * 2); ctx.stroke();
         }
         ctx.globalAlpha = behind ? 0.72 : 1;
-        GOL.drawGem(ctx, o.x, o.y, lit ? r + 3 : r, o.C, t, { phase: i * 1.3, glow: lit ? 1 : 0.55 });
+        GOL.drawGem(ctx, o.x, o.y, (lit ? r + 3 : r) + (onBreath ? breathSw * 4 : 0), o.C, t, { phase: i * 1.3, glow: lit ? 1 : 0.55 });
         ctx.globalAlpha = 1;
       });
 
@@ -814,14 +962,35 @@
       GOL.drawVignette(ctx, W, H, 0.14);
     },
 
-    // A weathered standing stone with a star-shaped setting. Woken, it holds
-    // the earlier surah's Grand Gem, shining; unwoken it waits — and if the
-    // child already carries that gem, the setting breathes with invitation.
+    // A weathered standing stone with a star-shaped setting. Its look is driven
+    // wholly by memState.phase: INERT is plain scenery (roam/settle/campfire),
+    // ARMED raises a level-wide beam and breathes an invitation with a filling
+    // dwell ring, TRAVEL shows the old Grand Gem gliding in, SET/RECITING hold
+    // the set gem shining (under the fade into the dream).
     drawMemoryStone(ctx, m, t) {
-      const woken = this.memState && this.memState.woken;
-      const hasGem = GOL.store.data.grand && GOL.store.data.grand[m.surahId];
+      const ms = this.memState;
+      const phase = ms ? ms.phase : 'inert';
+      const socketY = -34;
       ctx.save();
       ctx.translate(m.x, m.y);
+      // THE BEAM: while armed, a thin column of soft light rises from the
+      // stone to the top of the world — a promise visible from far away.
+      // It eases out as the gem travels in (the ceremony takes the stage).
+      const beamK = phase === 'armed' ? 1 : phase === 'travel' ? 1 - ms.travel : 0;
+      if (beamK > 0.01) {
+        const pulse = 0.75 + 0.25 * Math.sin(t * 1.6);
+        const topY = -m.y - 60; // past the top edge of the world
+        const bg = ctx.createLinearGradient(0, socketY - 12, 0, topY);
+        bg.addColorStop(0, alpha('#FFE9A8', 0.34 * beamK * pulse));
+        bg.addColorStop(0.5, alpha('#FFF6DC', 0.16 * beamK * pulse));
+        bg.addColorStop(1, alpha('#FFF6DC', 0));
+        ctx.fillStyle = bg;
+        const hw = 5 + Math.sin(t * 1.6) * 1.2;
+        ctx.fillRect(-hw, topY, hw * 2, socketY - 12 - topY);
+        // a faint wider halo so the beam reads as light, not a stripe
+        ctx.fillStyle = alpha('#FFE9A8', 0.06 * beamK * pulse);
+        ctx.fillRect(-hw * 2.6, topY, hw * 5.2, socketY - 12 - topY);
+      }
       ctx.fillStyle = alpha('#3E5340', 0.16);
       ctx.beginPath(); ctx.ellipse(1, 2, 20, 6, 0, 0, Math.PI * 2); ctx.fill();
       const g = ctx.createLinearGradient(0, -56, 0, 0);
@@ -834,30 +1003,53 @@
       ctx.lineWidth = 1.8;
       GOL.roundRect(ctx, -15, -56, 30, 56, 10);
       ctx.stroke();
-      // the setting
-      GOL.star8Path(ctx, 0, -34, 10, Math.PI / 8);
-      if (woken) {
+      // the star setting
+      GOL.star8Path(ctx, 0, socketY, 10, Math.PI / 8);
+      if (phase === 'reciting' || phase === 'set') {
         ctx.fillStyle = alpha('#FFE9A8', 0.7);
         ctx.fill();
-        GOL.drawGem(ctx, 0, -34, 9, GRAND, t, { phase: 2, glow: 0.9 });
-      } else {
-        const invite = hasGem ? 0.35 + 0.3 * Math.sin(t * 2.6) : 0.15;
-        ctx.fillStyle = alpha('#B98A3E', invite);
+        GOL.drawGem(ctx, 0, socketY, 9, GRAND, t, { phase: 2, glow: 0.9 });
+        ctx.strokeStyle = alpha('#FFE9A8', 0.3 + 0.2 * Math.sin(t * 3));
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, socketY, 18 + Math.sin(t * 3) * 2, 0, Math.PI * 2); ctx.stroke();
+      } else if (phase === 'armed' || phase === 'travel') {
+        // a soft invitation: the setting breathes (the child carries the gem)
+        ctx.fillStyle = alpha('#B98A3E', 0.35 + 0.3 * Math.sin(t * 2.6));
         ctx.fill();
-        ctx.strokeStyle = alpha('#B98A3E', 0.55);
+        ctx.strokeStyle = alpha('#FFE9A8', 0.35 + 0.25 * Math.sin(t * 2.6));
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, socketY, 16 + Math.sin(t * 2.6) * 2, 0, Math.PI * 2); ctx.stroke();
+        // the dwell ring fills as the child lingers — intent, made visible
+        if (phase === 'armed' && ms.dwell > 0) {
+          const frac = Math.min(1, ms.dwell / 0.6);
+          ctx.strokeStyle = alpha('#FFF6DC', 0.95);
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, socketY, 21, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2);
+          ctx.stroke();
+        }
+      } else {
+        // INERT: a plain weathered setting — no pulse, no hint, cannot wake
+        ctx.fillStyle = alpha('#B98A3E', 0.15);
+        ctx.fill();
+        ctx.strokeStyle = alpha('#AB9C78', 0.5);
         ctx.lineWidth = 1.5;
         ctx.stroke();
-        if (hasGem) {
-          ctx.strokeStyle = alpha('#FFE9A8', 0.3 + 0.25 * Math.sin(t * 2.6));
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(0, -34, 16 + Math.sin(t * 2.6) * 2, 0, Math.PI * 2); ctx.stroke();
-        }
       }
       ctx.restore();
+      // the old Grand Gem in transit — rising from the child to the socket,
+      // legible BEFORE any sound (drawn in world space, outside the translate)
+      if (phase === 'travel' && ms.from) {
+        const k = GOL.ease.inOut(ms.travel);
+        const gx = ms.from.x + (m.x - ms.from.x) * k;
+        const gy = ms.from.y + ((m.y + socketY) - ms.from.y) * k - Math.sin(Math.PI * ms.travel) * 30;
+        GOL.drawGem(ctx, gx, gy, 9, GRAND, t, { phase: 2, glow: 0.95 });
+      }
     },
 
-    drawCampfire(ctx, x, y, t) {
+    drawCampfire(ctx, x, y, t, swell) {
       const lit = this.phase !== 'roam' || this.found.length === this.L.gems.length;
+      const sw = swell || 0; // breath swell: the flame grows ~1.3× — "your turn"
       ctx.save();
       ctx.translate(x, y);
       // ring of stones
@@ -885,14 +1077,16 @@
           ctx.closePath();
           ctx.fill();
         };
-        const glow = ctx.createRadialGradient(0, -22, 4, 0, -22, 90);
-        glow.addColorStop(0, alpha('#FFD98E', 0.4 + 0.08 * Math.sin(t * 5)));
+        const grow = 1 + 0.3 * sw; // the flame swells during the breath
+        const glowR = 90 * (1 + 0.18 * sw);
+        const glow = ctx.createRadialGradient(0, -22, 4, 0, -22, glowR);
+        glow.addColorStop(0, alpha('#FFD98E', 0.4 + 0.08 * Math.sin(t * 5) + 0.12 * sw));
         glow.addColorStop(1, alpha('#FFD98E', 0));
         ctx.fillStyle = glow;
-        ctx.beginPath(); ctx.arc(0, -22, 90, 0, Math.PI * 2); ctx.fill();
-        fl(13, 30 + Math.sin(t * 4) * 3, alpha('#E8896B', 0.85), 3.4, 0);
-        fl(9, 24 + Math.sin(t * 5.2) * 3, alpha('#F7D98C', 0.9), 4.2, 1.4);
-        fl(5, 16 + Math.sin(t * 6) * 2, alpha('#FFFBEA', 0.95), 5, 2.6);
+        ctx.beginPath(); ctx.arc(0, -22, glowR, 0, Math.PI * 2); ctx.fill();
+        fl(13 * grow, (30 + Math.sin(t * 4) * 3) * grow, alpha('#E8896B', 0.85), 3.4, 0);
+        fl(9 * grow, (24 + Math.sin(t * 5.2) * 3) * grow, alpha('#F7D98C', 0.9), 4.2, 1.4);
+        fl(5 * grow, (16 + Math.sin(t * 6) * 2) * grow, alpha('#FFFBEA', 0.95), 5, 2.6);
       } else {
         // unlit: a quiet promise
         ctx.strokeStyle = alpha('#C9BC9A', 0.5);

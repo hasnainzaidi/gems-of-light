@@ -16,17 +16,37 @@
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
     phase: 'place', bloomT: 0, grandK: 0, lightK: 0, reciteGem: null,
     buttons: [], firstTry: 0,
+    // DREAM MODE (the Remembering): reconstructing an EARLIER surah from
+    // memory. Set when params.memory is present; absent = the normal shrine.
+    dream: false, memory: null, moonT: 0, moonFrom: 0, moonTo: 0, moonK: 0, moonRise: 0,
 
     enter(params) {
-      const def = params.world ? GOL.WORLDS3[params.world - 1]
-        : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
-      this.worldN = params.world || null;
-      const surahId = GOL.V3.surah || def.surahId;
+      // A dream is a memory, not a place: the OLD surah, drawn from its own
+      // world's palette. When params.memory is absent, everything below is
+      // exactly the normal shrine (regression-free).
+      this.dream = !!(params.memory && params.memory.surahId);
+      this.memory = this.dream ? params.memory : null;
+
+      let def, surahId, palKey, seed;
+      if (this.dream) {
+        surahId = params.memory.surahId;
+        const wdef = GOL.WORLDS3.find((w) => w && w.surahId === surahId);
+        palKey = (wdef && (wdef.endPalette || wdef.palette)) || 'falaq';
+        if (!GOL.PALETTES[palKey]) palKey = 'falaq';
+        seed = 900 + (wdef && wdef.id ? wdef.id : surahId);
+        this.worldN = null; // a dream earns no Grand Gem, opens no world
+      } else {
+        def = params.world ? GOL.WORLDS3[params.world - 1]
+          : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+        this.worldN = params.world || null;
+        surahId = GOL.V3.surah || def.surahId;
+        palKey = def.endPalette || def.palette;
+        seed = 900 + def.id;
+      }
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
-      const palKey = def.endPalette || def.palette;
       this.P = GOL.PALETTES[palKey];
-      this.bd = GOL.buildBackdrop(palKey, 900 + def.id);
+      this.bd = GOL.buildBackdrop(palKey, seed);
       this.fx = GOL.makeFx();
       this.t = 0;
       this.phase = 'place';
@@ -39,6 +59,8 @@
       this.heldGem = null;
       this.reciteGem = null;
       this.firstTry = 0;
+      this.moonT = 0; this.moonFrom = 0; this.moonTo = 0; this.moonK = 0; this.moonRise = 0;
+      this._dreamRecorded = false;
       this._socketMissed = false;
       // knowledge telemetry: the shrine can be brute-forced, so completion
       // alone means little — tries-per-gem and listens-per-gem tell the truth
@@ -97,7 +119,9 @@
       if (Math.random() < dt * 2) this.fx.spawn('mote', Math.random() * W, Math.random() * H * 0.7, {});
 
       this.buttons = [Object.assign({}, GOL.homeButton()), Object.assign({}, GOL.muteButton(W))];
-      if (this.phase !== 'done') GOL.hitButtons(GOL.Input.taps, this.buttons);
+      // during a ceremony the child taps anywhere to move on — don't let the
+      // buttons swallow that tap ('moon' is the dream's equivalent of 'done')
+      if (this.phase !== 'done' && this.phase !== 'moon') GOL.hitButtons(GOL.Input.taps, this.buttons);
 
       // gems drift like slow fireflies; placed ones sit in their sockets
       // (during the bloom the spiral owns their motion instead)
@@ -146,6 +170,7 @@
           this.fx.spawn('sparkle', cx + GOL.rnd(-80, 80), cy - GOL.rnd(0, 120), { color: '#FFE9A8' });
         }
         if (this.bloomT > 2.4) {
+          if (this.dream) { this.beginRemembering(); return; }
           this.phase = 'done';
           this.grandK = 0;
           GOL.audio.sfx('blossom');
@@ -166,6 +191,29 @@
           if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
           GOL.store.save();
           GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+        }
+      } else if (this.phase === 'moon') {
+        // THE REMEMBERING MOON — the dream's reward. It rises center-screen and
+        // waxes from the old fullness toward the new (once a calendar day).
+        this.moonT += dt;
+        this.moonRise = GOL.ease.out(Math.min(1, this.moonT / 1.2));
+        const waxT = GOL.ease.inOut(Math.min(1, Math.max(0, (this.moonT - 1.3) / 1.2)));
+        this.moonK = this.moonFrom + (this.moonTo - this.moonFrom) * waxT;
+        if (Math.random() < dt * 9) {
+          this.fx.spawn('petal', Math.random() * W, -12, { color: ['#F5B8C4', '#FFF6DC', '#BFE8DC'][Math.floor(Math.random() * 3)] });
+        }
+        const mx = W / 2, my = this.moonY(H);
+        if (Math.random() < dt * 5) {
+          this.fx.spawn('sparkle', mx + GOL.rnd(-70, 70), my + GOL.rnd(-70, 70), { color: '#FFF6DC' });
+        }
+        // once the moon has settled, one tap anywhere carries the dream home
+        if (this.moonT > 3) {
+          for (const tap of GOL.Input.taps) {
+            if (tap.ui) continue;
+            tap.ui = true;
+            GOL.go('adventure', { world: this.memory.returnWorld, resume: 'ember' });
+            return;
+          }
         }
       } else if (this.phase === 'done') {
         this.grandK = Math.min(1, this.grandK + dt / 1.2);
@@ -300,10 +348,58 @@
       }
     },
 
-    // debug: G places the next correct gem instantly
+    // debug: G places the next correct gem instantly (works in the dream too,
+    // since dream mode shares the identical 'place' phase)
     debugCollectAll() {
       const g = this.gems.find((x) => x.ayah === this.neededAyah() && x.placed < 0);
       if (g && this.phase === 'place') this.place(g, this.sockets[this.placed]);
+    },
+
+    // where the Remembering Moon sits, rising as the ceremony opens
+    moonY(H) { return H * 0.42 + (1 - (this.moonRise || 0)) * H * 0.22; },
+
+    // a local calendar-day key ('2026-07-12') — the once-a-day wax schedule
+    todayKey() {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    },
+
+    // Enter the moon ceremony: NO Grand Gem, NO world unlock — only the OLD
+    // surah's Remembering Moon waxes a quarter (capped at 1), at most once per
+    // calendar day. All the run telemetry still records, tagged dream:true.
+    beginRemembering() {
+      this.phase = 'moon';
+      this.moonT = 0;
+      if (this._dreamRecorded) return; // guard against a double-entry
+      this._dreamRecorded = true;
+      GOL.audio.sfx('blossom');
+
+      const st = GOL.store.level(this.surahId);
+      this.moonFrom = st.moon || 0;
+      const today = this.todayKey();
+      if (st.moonWaxedDay !== today) {
+        st.moon = Math.min(1, (st.moon || 0) + 0.25);
+        st.moonWaxedDay = today;
+      }
+      // already remembered today: the ceremony still plays, the moon simply
+      // glows at its current fullness — no double-wax, no punishment
+      this.moonTo = st.moon;
+      this.moonK = this.moonFrom;
+
+      // knowledge telemetry: same shape as a normal run, marked as a dream —
+      // but never d.grand, st.completed, nor a v3grandGem stamp
+      st.shrineDone = (st.shrineDone || 0) + 1;
+      st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
+      st.shrineRuns = st.shrineRuns || [];
+      st.shrineRuns.push({
+        at: Date.now(), sockets: this.gems.length,
+        firstTry: this.firstTry, misses: this.missTotal,
+        listens: this.listens, hints: this.runHints, dream: true
+      });
+      if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      GOL.store.save();
+      GOL.stamp('v3remember');
     },
 
     // ---------------------------------------------------------------- draw --
@@ -311,6 +407,10 @@
       const t = this.t, P = this.P;
       const lay = this.layout(W, H);
       const groundY = GOL.drawBackdrop(ctx, this.bd, W, H, t, 40, 0.62);
+
+      // a dream is hushed and moonlit: a deep-blue veil over the remembered
+      // world, and a field of quietly twinkling stars in the upper sky
+      if (this.dream) this.drawDreamSky(ctx, W, H, groundY, t);
 
       // mossy shrine floor
       const fg = ctx.createLinearGradient(0, groundY, 0, H);
@@ -325,8 +425,10 @@
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
       }
 
-      // the Wise Tree, waking with the shrine's light
-      this.drawTree(ctx, lay.treeX, lay.treeY + 46, t, this.phase !== 'place' ? 1 : this.lightK);
+      // the Wise Tree. Awake in the shrine; in the dream it sleeps — a darker
+      // silhouette, greens shaded down, never blossoming (k stays 0).
+      this.drawTree(ctx, lay.treeX, lay.treeY + 46, t,
+        this.dream ? 0 : (this.phase !== 'place' ? 1 : this.lightK), this.dream);
 
       // light flows along the restored steps
       if (this.lightK > 0.01 && this.sockets.length > 1) {
@@ -400,26 +502,55 @@
         }
       }
 
+      // THE REMEMBERING MOON rises center-screen and waxes (drawn above fx so
+      // its halo reads clearly, below the vignette)
+      if (this.phase === 'moon') {
+        const my = this.moonY(H);
+        GOL.drawMoon(ctx, W / 2, my, 66, this.moonK, t);
+      }
+
       this.fx.draw(ctx);
-      if (this.phase !== 'done') {
+      if (this.phase !== 'done' && this.phase !== 'moon') {
         for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       }
-      // light floods gently as the tree wakes
-      if (this.phase !== 'place') {
+      // a warm light floods gently as the tree wakes — but a dream stays cool,
+      // lit only by its moon
+      if (!this.dream && this.phase !== 'place') {
         ctx.fillStyle = alpha('#FFF6D0', 0.14 + 0.1 * Math.min(1, this.bloomT / 2.4));
         ctx.fillRect(0, 0, W, H);
       }
       GOL.drawVignette(ctx, W, H, 0.15);
     },
 
-    // The Wise Tree. k = 0 (asleep) .. 1 (in blossom).
-    drawTree(ctx, x, baseY, t, k) {
+    // A moonlit veil + a field of quietly twinkling stars, over the remembered
+    // world. Deterministic star positions (fixed rng seed), gentle twinkle.
+    drawDreamSky(ctx, W, H, groundY, t) {
+      ctx.fillStyle = alpha('#2E3B58', 0.25);
+      ctx.fillRect(0, 0, W, H);
+      const r = GOL.rng(20260712);
+      const top = Math.min(groundY - 10, H * 0.62);
+      for (let i = 0; i < 64; i++) {
+        const sx = r() * W;
+        const sy = r() * top;
+        const rad = 0.7 + r() * 1.5;
+        const base = 0.3 + r() * 0.55;
+        const tw = base * (0.55 + 0.45 * Math.sin(t * 2 + i * 1.7));
+        ctx.fillStyle = alpha('#FFF6DC', Math.max(0, tw));
+        ctx.beginPath(); ctx.arc(sx, sy, rad, 0, Math.PI * 2); ctx.fill();
+      }
+    },
+
+    // The Wise Tree. k = 0 (asleep) .. 1 (in blossom). `muted` = the dream's
+    // sleeping silhouette: greens and bark shaded down, blossoms never open.
+    drawTree(ctx, x, baseY, t, k, muted) {
+      const bark = muted ? shade('#8A6B4F', 0.42) : '#8A6B4F';
+      const rootCol = muted ? shade('#6E5340', 0.42) : '#6E5340';
       ctx.save();
       ctx.translate(x, baseY);
       const sway = Math.sin(t * 0.7) * 0.012;
       ctx.rotate(sway);
       // roots
-      ctx.strokeStyle = '#6E5340';
+      ctx.strokeStyle = rootCol;
       ctx.lineCap = 'round';
       for (const [dx, w] of [[-26, 7], [26, 7], [-10, 5], [12, 5]]) {
         ctx.lineWidth = w;
@@ -429,7 +560,7 @@
         ctx.stroke();
       }
       // trunk
-      ctx.fillStyle = '#8A6B4F';
+      ctx.fillStyle = bark;
       ctx.beginPath();
       ctx.moveTo(-16, 0);
       ctx.quadraticCurveTo(-10, -60, -7, -104);
@@ -438,13 +569,13 @@
       ctx.closePath();
       ctx.fill();
       // limbs
-      ctx.strokeStyle = '#8A6B4F';
+      ctx.strokeStyle = bark;
       ctx.lineWidth = 8;
       ctx.beginPath(); ctx.moveTo(-4, -92); ctx.quadraticCurveTo(-34, -112, -52, -128); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(4, -92); ctx.quadraticCurveTo(36, -114, 56, -126); ctx.stroke();
       // canopy: sleeping green, waking gold-blossom
       const leaf = (dx, dy, r, base, litCol) => {
-        ctx.fillStyle = GOL.color.mix(base, litCol, k * 0.55);
+        ctx.fillStyle = GOL.color.mix(muted ? shade(base, 0.42) : base, litCol, k * 0.55);
         ctx.beginPath();
         ctx.ellipse(dx, dy + Math.sin(t * 0.9 + dx * 0.03) * 2.5, r, r * 0.72, dx * 0.002, 0, Math.PI * 2);
         ctx.fill();

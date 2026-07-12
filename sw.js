@@ -1,7 +1,7 @@
 // Gems of Light — service worker.
 // Cache-first for the app shell; recitations cache as they are first heard,
 // so a surah once played is a surah kept, even offline.
-const CACHE = 'gems-of-light-v9';
+const CACHE = 'gems-of-light-v10';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './js/data.js', './js/voice-lines.js', './js/art.js', './js/props.js', './js/actors.js',
@@ -22,10 +22,22 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  // the v3 lab iterates fast — let the network own it entirely, or phones
-  // keep playing stale builds (recitation mp3s live outside /v3/ and still
-  // cache below the first time they are heard)
-  if (url.origin === location.origin && url.pathname.includes('/v3/')) return;
+  // /v3 is network-first: always fresh when online (the lab iterates fast),
+  // but cached copies keep the game playable offline
+  if (url.origin === location.origin && url.pathname.includes('/v3/')) {
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request, { ignoreSearch: true }))
+    );
+    return;
+  }
   const isAudio = url.pathname.endsWith('.mp3');
   const isFont = url.hostname.includes('fonts.g');
   e.respondWith(

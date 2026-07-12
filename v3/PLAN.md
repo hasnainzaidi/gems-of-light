@@ -273,6 +273,25 @@ pattern, never shown to the child:
   value"); P8's landmark ("fine but kinda random" — if landmarks return,
   they should be *meaningful*, e.g. the Wise Tree/shrine visible from afar,
   not an arbitrary tower).
+- **THE REMEMBERING (approved 2026-07-12)** — memory stone v3, replacing the
+  parked v1 and superseding v2's recite-in-place payoff. The stone is a
+  prominent monument on a short SPUR off the main line (visible from the
+  path, reached on purpose). It arms ONLY in the ember phase — after the
+  current walk's campfire, including on replays (arming any earlier would
+  put the old surah's whisper inside an active collection: the v1 bug);
+  armed, a
+  thin beam of light rises from it, visible level-wide. On approach it
+  whispers the old surah's FIRST ayah (identity before consent); a 0.6s
+  dwell + the Grand Gem traveling to its socket enters **the dream**: the
+  old surah's shrine, moonlit and starlit, same one-socket mechanic —
+  retrieval practice disguised as a dream. Completing it waxes that surah's
+  **Remembering Moon** by a quarter, at most once per day (the once-a-day
+  rule IS the spaced-repetition schedule; the moon never wanes). The moon
+  shows on the journey disc beside the Grand Gem, on the stone itself, and
+  in the grown-ups page. Dream runs record into st.shrineRuns with
+  dream:true. Entry contract: GOL.go('shrine', { memory: { surahId,
+  returnWorld } }); completion returns via GOL.go('adventure', { world:
+  returnWorld, resume: 'ember' }).
 - **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
   full recitation of an *earlier* surah, mid-collection of the *current*
   one, fires by accident and collides two surahs — very confusing. The

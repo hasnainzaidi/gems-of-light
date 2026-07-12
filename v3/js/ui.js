@@ -208,6 +208,7 @@
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
       this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
+      this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
       if (this.celebrateT > 0) {
         this.celebrateT -= dt;
         const wb = (this.worldBtns || [])[this.celebrateN - 1];
@@ -231,6 +232,25 @@
           }
         }
       }));
+      // the garden that misses you: among DONE worlds, the one whose last
+      // visit is oldest and more than 20 hours ago. Its disc will breathe a
+      // soft golden ring and Noor comes to rest beside it (see draw()).
+      this.missN = 0;
+      {
+        let oldest = Infinity;
+        for (const b of this.worldBtns) {
+          if (!b.done || b.surahId == null) continue;
+          const st = GOL.store.level(b.surahId);
+          const lp = st.lastPlayed || 0;
+          if (Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) { oldest = lp; this.missN = b.n; }
+        }
+      }
+      if (this.missN) {
+        const mb = this.worldBtns[this.missN - 1];
+        if (mb && Math.random() < dt * 2.2) {
+          this.fx.spawn('sparkle', mb.x + GOL.rnd(-26, 26), mb.y - GOL.rnd(-6, 30), { color: '#FFE9A8' });
+        }
+      }
       // the prototype shelf lives on behind the debug flag (the lab)
       const ids = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
       this.protoBtns = ids.map((id, i) => ({
@@ -254,6 +274,23 @@
           else this.settingsOpen = false; // a tap outside closes it
         }
         return;
+      }
+      // the grown-ups doorway: a quiet star, bottom-right, that opens only on
+      // a patient press-and-hold (~1s). A plain tap just pulses — this keeps
+      // children out gently, the way v1's hold-the-star did.
+      {
+        const gb = this.grownBtn;
+        let holding = false;
+        for (const [, p] of GOL.Input.pointers) {
+          if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
+        }
+        for (const tap of GOL.Input.taps) {
+          if (tap.ui) continue;
+          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.r + 14) { tap.ui = true; this.grownPulse = 1; }
+        }
+        this.grownHold = holding ? Math.min(1, (this.grownHold || 0) + dt) : Math.max(0, (this.grownHold || 0) - dt * 2.2);
+        this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
+        if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
       }
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
@@ -377,6 +414,11 @@
         if (st && st.blossom) {
           GOL.drawRahmaBlossom(ctx, b.x + 28, b.y - 28, 6.5, t + b.n);
         }
+        // the Remembering Moon, waxing with every dream remembered — it rests
+        // at the disc's other brow (v1's map idiom; the blossom keeps the right)
+        if (b.done && st && (st.moon || 0) > 0.01) {
+          GOL.drawMoon(ctx, b.x - 28, b.y - 28, 9, st.moon, t, { glow: false });
+        }
         // a freshly-earned world celebrates: a pulsing golden ring for ~3s
         if (this.celebrateT > 0 && b.n === this.celebrateN) {
           const cp = 0.5 + 0.5 * Math.sin(t * 4.5);
@@ -388,11 +430,24 @@
           ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.arc(b.x, b.y, 48 + cp * 4, 0, Math.PI * 2); ctx.stroke();
         }
+        // a done garden long unheard breathes a soft golden ring — wordless
+        if (b.n === this.missN) {
+          const br = 0.35 + 0.3 * Math.sin(t * 2.2);
+          ctx.strokeStyle = alpha('#FFE9A8', br);
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(b.x, b.y, 38 + Math.sin(t * 2.2) * 3, 0, Math.PI * 2); ctx.stroke();
+        }
         GOL.text(ctx, b.key, b.x, b.y + (b.open && !b.done && surah ? 62 : 52), { size: 11, weight: '700', color: alpha('#FFFFFF', b.open ? 0.7 : 0.4) });
       }
-      // Noor the firefly keeps watch over the world that waits next
-      const cur = (this.worldBtns || [])[GOL.currentWorld() - 1];
-      if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
+      // Noor the firefly rests beside the garden that misses its child, else
+      // keeps watch over the world that waits next
+      const missB = this.missN ? (this.worldBtns || [])[this.missN - 1] : null;
+      if (missB) {
+        GOL.drawFirefly(ctx, missB.x + 34 + Math.sin(t * 1.3) * 10, missB.y - 40 + Math.sin(t * 2.2) * 7, t, 1.25);
+      } else {
+        const cur = (this.worldBtns || [])[GOL.currentWorld() - 1];
+        if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
+      }
       // the prototype shelf (debug only)
       for (const b of this.protoBtns || []) {
         ctx.fillStyle = alpha('#FAF4E0', 0.72);
@@ -406,6 +461,28 @@
       GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
+      // the grown-ups doorway: a small quiet star, held to open
+      if (this.grownBtn) {
+        const gb = this.grownBtn;
+        const gp = this.grownHold || 0;
+        if (this.grownPulse > 0) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.45 * this.grownPulse);
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 6 + (1 - this.grownPulse) * 7, 0, Math.PI * 2); ctx.stroke();
+        }
+        GOL.star8Path(ctx, gb.x, gb.y, gb.r * 0.62, Math.PI / 8 + t * 0.12);
+        ctx.fillStyle = alpha('#FAF4E0', 0.42 + 0.14 * Math.sin(t * 1.4));
+        ctx.fill();
+        ctx.strokeStyle = alpha(GOLD, 0.6);
+        ctx.lineWidth = 1.3; ctx.stroke();
+        if (gp > 0.01) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.9);
+          ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 5, -Math.PI / 2, -Math.PI / 2 + gp * Math.PI * 2); ctx.stroke();
+          ctx.lineCap = 'butt';
+        }
+        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
+      }
       const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
       GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
       if (this.settingsOpen) this.drawSettings(ctx, W, H);

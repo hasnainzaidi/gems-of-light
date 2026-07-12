@@ -5,7 +5,7 @@
 // dune-mounds that climb a little with each step, a dry riverbed to cross, an
 // old caravan track between ruined walls, then a real ridge to breast before
 // the ground finally quiets into the campfire clearing. Paced in breaths of
-// three or four gems so eleven never drags. And an old stone waits mid-road
+// three or four gems so eleven never drags. And a low stone step by the campfire
 // that remembers An-Nas's Grand Gem — a child carrying it wakes the surah again.
 (function () {
   const GOL = window.GOL;
@@ -65,7 +65,8 @@
       b.prop('cypress', 83).prop('wall', 89, { n: 2 });
 
       // MID-ROAD — a lantern-lit wayside rest
-      // (a memory stone lived here once — parked pending redesign)
+      // (the memory stone that once stood here now waits by the campfire,
+      // inert until this world's own surah has been heard — see below)
       b.prop('lantern', 91).prop('lantern', 93).prop('flowers', 92, { v: 1 });
       b.seed(92, 11).seed(92, 10);
       b.creature('tortoise', 95, null, { range: 40 });
@@ -91,7 +92,12 @@
       b.blossom(121, 6); // the hidden Rahma blossom, straight up off the bounce
       b.prop('olive', 118).prop('flowers', 123);
 
-      // the campfire clearing, and the shrine door beyond it — calm and sparse
+      // the campfire clearing, and the shrine door beyond it — calm and sparse.
+      // A low stone step just before the fire holds an ancient setting that
+      // remembers An-Nas's Grand Gem — wakeable only after this world's own
+      // campfire, and only by a child who carries that gem.
+      b.slab(136, 136, 12);
+      b.memory(136, 114);
       b.campfire(138);
       b.door(146);
       b.prop('lantern', 135).prop('cypress', 142).prop('lantern', 144);

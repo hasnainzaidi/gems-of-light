@@ -36,4 +36,5 @@
   GOL.registerWorld(1, { surahId: 113, key: 'falaq', name: 'the daybreak' });
   GOL.registerWorld(2, { surahId: 114, key: 'nas', name: 'the village' });
   GOL.registerWorld(3, { surahId: 100, key: 'adiyat', name: 'the chargers' });
+  GOL.registerWorld(4, { surahId: 97, key: 'qadr', name: 'the blessed night' });
 })();

@@ -37,8 +37,8 @@
       b.creature('tortoise', 36, null, { range: 60 });
 
       // a walled dooryard, up one lantern-lit step off the lane
-      // (a memory stone lived here once — parked pending redesign; the
-      // proximity trigger collided with the surah being collected)
+      // (the memory stone that once stood here now waits by the campfire,
+      // inert until this village's own surah has been heard — see below)
       b.stoneBlock(46, 49, 12, 12);
       b.prop('wall', 45, { n: 2 }).prop('lantern', 46).prop('lantern', 49)
        .prop('flowers', 48, { v: 2 });
@@ -64,9 +64,15 @@
       // the last gem on a final garden step
       b.block(84, 86, 12, 12);
       b.gem(6, 85, 10);
-      b.prop('olive', 88).prop('flowers', 83);
+      b.prop('olive', 82).prop('flowers', 83);
 
-      // the campfire clearing, and the shrine door beyond it — calm and sparse
+      // the campfire clearing, and the shrine door beyond it — calm and sparse.
+      // Up one low stone step just before the fire (off the walking line, flat
+      // with air above) an ancient setting remembers Al-Falaq's Grand Gem — a
+      // child who carries it may wake the dawn-surah here, but only after this
+      // village's own campfire has been heard.
+      b.slab(88, 88, 12);
+      b.memory(88, 113);
       b.campfire(90);
       b.door(96);
       b.prop('lantern', 87).prop('wall', 93, { n: 3 }).prop('lantern', 94);

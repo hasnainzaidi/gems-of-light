@@ -165,10 +165,15 @@
       this._current = h;
       return h;
     },
-    // Recite a whole surah, verse by verse. cb.onVerse(i) before each ayah.
+    // Recite a whole surah, verse by verse. cb.onVerse(i) fires before each
+    // ayah. cb.breath sets the pause (seconds) BETWEEN ayat — default 0.42s,
+    // the old value; the campfire lengthens it so a child can echo aloud.
+    // cb.onBreath(i) fires as each such pause begins, carrying the index of the
+    // ayah just heard (a wordless "your turn").
     playSurah(surah, cb) {
       this.stopSpeak();
       this.stopRecitation();
+      const breathMs = (cb && cb.breath != null ? cb.breath : 0.42) * 1000;
       const seq = { i: 0, stopped: false, el: null };
       this._seq = seq;
       const step = () => {
@@ -182,8 +187,13 @@
         const v = surah.verses[seq.i];
         if (cb && cb.onVerse) cb.onVerse(seq.i);
         const h = this._verse(surah.id, v.n, () => {
+          const heard = seq.i; // the ayah just finished
           seq.i++;
-          setTimeout(step, 420); // a breath between ayat
+          const last = seq.i >= surah.verses.length;
+          // the breath (and its "your turn") sits between ayat, never after
+          // the final one — the surah should end cleanly into what follows
+          if (!last && cb && cb.onBreath) cb.onBreath(heard);
+          setTimeout(step, last ? 420 : breathMs);
         }, true);
         seq.el = h.el;
       };
