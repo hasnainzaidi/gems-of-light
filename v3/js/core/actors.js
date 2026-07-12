@@ -353,7 +353,7 @@
   function drawHudBand(ctx, cx, y, slots, found, t, maxW) {
     // the band squeezes gently for long surahs (Al-'Alaq carries 19 gems)
     const gap = Math.max(22, Math.min(44, maxW ? (maxW - 34) / slots : 44));
-    const w = slots * gap + 34, h = 52;
+    const w = (slots - 1) * gap + 52, h = 52;
     const gr = Math.min(10, gap * 0.36), sr = Math.min(8, gap * 0.3);
     const x = cx - w / 2;
     drawPanel(ctx, x, y, w, h, { radius: 26, alpha: 0.82, plain: true });

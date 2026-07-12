@@ -1,6 +1,7 @@
-// v3 prototype integrity checker — run from the repo root:
-//   node v3/tools/check.mjs        (checks every prototype file present)
-//   node v3/tools/check.mjs 7      (checks only p7)
+// v3 level integrity checker — run from the repo root:
+//   node v3/tools/check.mjs        (checks every prototype AND world present)
+//   node v3/tools/check.mjs 7      (checks only prototype p7)
+//   node v3/tools/check.mjs w2     (checks only world 2)
 // Simulates reachability with the game's generous jump (≈3 tiles up, ≈4
 // across; bounce blossoms higher), including riding leaves and rafts, and
 // verifies every gem, the campfire, and the shrine door can be reached.
@@ -23,24 +24,54 @@ const GOL = global.GOL;
 GOL.V3 = { surah: null };
 const TILE = GOL.TILE;
 
-const only = process.argv[2] ? parseInt(process.argv[2], 10) : null;
-const ids = only ? [only] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+// GOL.store is only touched by worlds.js helpers at runtime; stub it here
+GOL.store = { data: {} };
+const arg = process.argv[2] || null;
+const worldMode = arg && arg[0] === 'w';
+const only = arg && !worldMode ? parseInt(arg, 10) : null;
+const onlyWorld = worldMode ? parseInt(arg.slice(1), 10) : null;
+
+// load the world registry + any world recipe files present
+require(join(V3, 'js', 'worlds.js'));
+import { readdirSync } from 'fs';
+const worldFiles = existsSync(join(V3, 'js', 'worlds'))
+  ? readdirSync(join(V3, 'js', 'worlds')).filter((f) => f.endsWith('.js'))
+  : [];
+for (const f of worldFiles) require(join(V3, 'js', 'worlds', f));
+
 let failures = 0, checked = 0;
 
-for (const id of ids) {
-  const file = join(V3, 'js', 'prototypes', 'p' + id + '.js');
-  if (!existsSync(file)) {
-    if (only) { console.log('✗ p' + id + '.js does not exist'); failures++; }
-    continue;
+const targets = [];
+if (only) targets.push({ kind: 'p', id: only });
+else if (onlyWorld) targets.push({ kind: 'w', id: onlyWorld });
+else {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) targets.push({ kind: 'p', id });
+  (GOL.WORLDS3 || []).forEach((w) => { if (w && w.build) targets.push({ kind: 'w', id: w.n }); });
+}
+
+for (const tgt of targets) {
+  const id = tgt.id;
+  let def, tag;
+  if (tgt.kind === 'p') {
+    tag = 'p' + id;
+    const file = join(V3, 'js', 'prototypes', 'p' + id + '.js');
+    if (!existsSync(file)) {
+      if (only) { console.log('✗ p' + id + '.js does not exist'); failures++; }
+      continue;
+    }
+    require(file);
+    def = GOL.PROTOTYPES[id];
+    if (!def) { console.log('✗ p' + id + '.js did not register GOL.PROTOTYPES[' + id + ']'); failures++; continue; }
+  } else {
+    tag = 'w' + id;
+    def = (GOL.WORLDS3 || [])[id - 1];
+    if (!def || !def.build) { console.log('✗ world ' + id + ' has no build() recipe registered'); failures++; continue; }
   }
-  require(file);
-  const def = GOL.PROTOTYPES[id];
-  if (!def) { console.log('✗ p' + id + '.js did not register GOL.PROTOTYPES[' + id + ']'); failures++; continue; }
   checked++;
 
   let L;
   try { L = GOL.buildPrototype(def); }
-  catch (e) { console.log('✗ p' + id + ' build threw: ' + e.message); failures++; continue; }
+  catch (e) { console.log('✗ ' + tag + ' build threw: ' + e.message); failures++; continue; }
 
   const errs = [];
   if (!GOL.PALETTES[def.palette]) errs.push('unknown palette "' + def.palette + '"');
@@ -136,6 +167,20 @@ for (const id of ids) {
     errs.push('door should stand a few tiles past the campfire (walk onward after the recitation)');
   }
 
+  // the memory stone (a callback to an earlier surah) must be reachable
+  if (L.memory) {
+    const mx = Math.floor(L.memory.x / TILE);
+    const my = L.surface(mx);
+    let ok = false;
+    for (const k of seen) {
+      const [sx, sy] = k.split(',').map(Number);
+      if (Math.abs(sx - mx) <= 2 && Math.abs(sy - my) <= 1) { ok = true; break; }
+    }
+    if (!ok) errs.push('memory stone unreachable');
+    for (let dy = 1; dy <= 2; dy++) if (get(mx, my - dy) !== 0) errs.push('memory stone lacks air at -' + dy);
+    if (!window.GOL_DATA.surahs.find((s) => s.id === L.memory.surahId)) errs.push('memory stone names unknown surah ' + L.memory.surahId);
+  }
+
   for (const p of L.props) {
     if (p.type === 'stepStone') {
       const sx = Math.floor(p.x / TILE), sy = Math.floor(p.y / TILE);
@@ -161,7 +206,7 @@ for (const id of ids) {
   const sx0 = Math.floor(L.start.x / TILE);
   for (let dy = 1; dy <= 3; dy++) if (get(sx0, startY - dy) !== 0) errs.push('start lacks headroom');
 
-  const label = `p${id} ${def.name} (${def.key}) ${L.w}x${L.h}, ${L.gems.length} gems, ` +
+  const label = `${tag} ${def.name} (${def.key}) ${L.w}x${L.h}, ${L.gems.length} gems, ` +
     `${(L.seeds || []).length} seeds, ${(L.pads || []).length} bounce, ${(L.moverDefs || []).length} movers` +
     (L.weather ? ', weather:' + L.weather : '') + (L.occluders && L.occluders.length ? ', ' + L.occluders.length + ' occluders' : '');
   if (errs.length) { failures++; console.log('✗ ' + label); errs.forEach((e) => console.log('   - ' + e)); }

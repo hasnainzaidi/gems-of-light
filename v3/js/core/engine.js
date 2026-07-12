@@ -346,7 +346,7 @@
     cam.x += (tx - cam.x) * Math.min(1, dt * 5.2);
     cam.y += (ty - cam.y) * Math.min(1, dt * 4);
     cam.x = Math.max(0, Math.min(cam.level.w * TILE - cam.viewW, cam.x));
-    cam.y = Math.max(-140, Math.min(cam.level.h * TILE - cam.viewH + 8, cam.y));
+    cam.y = Math.max(-140, Math.min(cam.level.h * TILE - cam.viewH, cam.y));
   }
   GOL.makeCamera = makeCamera;
   GOL.updateCamera = updateCamera;

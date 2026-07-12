@@ -8,6 +8,8 @@
   const TILE = GOL.TILE;
   const { alpha, mix } = GOL.color;
 
+  const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
+
   const adventure = {
     t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
     sprites: null, player: null, cam: null, fx: null,
@@ -48,6 +50,8 @@
       });
       // foreground curtains that soften when the wanderer steps behind them
       this.occs = (L.occluders || []).map((o) => ({ o, fade: 1 }));
+      // the memory stone, if this world remembers an earlier surah
+      this.memState = L.memory ? { woken: false, hintT: 0 } : null;
       L.movers = this.movers;
       const stPre = GOL.store.level(L.surahId);
       this.blossomState = L.blossom ? { x: L.blossom.x, y: L.blossom.y, taken: false, everFound: stPre.blossom } : null;
@@ -285,6 +289,34 @@
           GOL.audio.sfx('blossom');
           this.fx.burst(B.x, B.y, '#F0C878', 26);
           this.fx.spawn('ring', B.x, B.y, { color: '#FFE9A8', size: 30 });
+        }
+      }
+
+      // the memory stone: an old surah's Grand Gem wakes it — the surah
+      // sounds again and the garden answers. Without the gem it only
+      // shimmers, a promise for later.
+      if (this.memState && !this.memState.woken && this.L.memory) {
+        const m = this.L.memory;
+        const d = Math.hypot(pl.x - m.x, (pl.y - 16) - (m.y - 30));
+        const hasGem = GOL.store.data.grand && GOL.store.data.grand[m.surahId];
+        if (d < 46) {
+          if (hasGem) {
+            this.memState.woken = true;
+            GOL.audio.sfx('blossom');
+            this.fx.burst(m.x, m.y - 30, '#F0C878', 24);
+            this.fx.spawn('ring', m.x, m.y - 30, { color: '#FFE9A8', size: 34 });
+            this.bloomAround(m.x);
+            const s = window.GOL_DATA.surahs.find((x) => x.id === m.surahId);
+            if (s && !GOL.DEBUG) GOL.audio.playSurah(s, {});
+            const st = GOL.store.level(m.surahId);
+            st.heardFull = (st.heardFull || 0) + 1;
+            GOL.store.save();
+            GOL.stamp('v3memory');
+          } else if (this.t > this.memState.hintT) {
+            this.memState.hintT = this.t + 3;
+            GOL.audio.sfx('hint');
+            this.fx.spawn('ring', m.x, m.y - 30, { color: '#FFF6DC', size: 16 });
+          }
         }
       }
 
@@ -608,6 +640,15 @@
         const sx = Math.max(0, Math.floor(cam.x) - 8);
         const sw = Math.min(this.terrain.width - sx, cam.viewW + 16);
         ctx.drawImage(this.terrain, sx, 0, sw, this.terrain.height, sx, 0, sw, this.terrain.height);
+        // belt-and-suspenders: the terrain is only painted down to L.h*TILE, so
+        // if the camera ever shows below that edge (rounding, a tall phone),
+        // let the earth simply continue instead of revealing the sky gradient.
+        const worldBottom = L.h * TILE;
+        const showBelow = cam.y + cam.viewH + 40;
+        if (showBelow > worldBottom) {
+          ctx.fillStyle = GOL.color.shade(P.soilDark || P.soil, 0.35);
+          ctx.fillRect(sx, worldBottom, sw, showBelow - worldBottom);
+        }
       }
       for (const w of this.waterRects) GOL.drawWater(ctx, w.x, w.y, w.w, w.h, t, P);
 
@@ -620,6 +661,8 @@
         this.drawProp(ctx, p, t, P);
       }
 
+      // the memory stone, holding a place for an earlier surah's Grand Gem
+      if (L.memory) this.drawMemoryStone(ctx, L.memory, t);
       // the campfire (sleeping until every gem is found)
       if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t);
       // the shrine door, revealed by the ember light
@@ -768,6 +811,48 @@
         for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 30, b.icon ? b.icon() : b.iconName);
       }
       GOL.drawVignette(ctx, W, H, 0.14);
+    },
+
+    // A weathered standing stone with a star-shaped setting. Woken, it holds
+    // the earlier surah's Grand Gem, shining; unwoken it waits — and if the
+    // child already carries that gem, the setting breathes with invitation.
+    drawMemoryStone(ctx, m, t) {
+      const woken = this.memState && this.memState.woken;
+      const hasGem = GOL.store.data.grand && GOL.store.data.grand[m.surahId];
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.fillStyle = alpha('#3E5340', 0.16);
+      ctx.beginPath(); ctx.ellipse(1, 2, 20, 6, 0, 0, Math.PI * 2); ctx.fill();
+      const g = ctx.createLinearGradient(0, -56, 0, 0);
+      g.addColorStop(0, '#EAE0C6');
+      g.addColorStop(1, '#CBBC97');
+      ctx.fillStyle = g;
+      GOL.roundRect(ctx, -15, -56, 30, 56, 10);
+      ctx.fill();
+      ctx.strokeStyle = alpha('#AB9C78', 0.8);
+      ctx.lineWidth = 1.8;
+      GOL.roundRect(ctx, -15, -56, 30, 56, 10);
+      ctx.stroke();
+      // the setting
+      GOL.star8Path(ctx, 0, -34, 10, Math.PI / 8);
+      if (woken) {
+        ctx.fillStyle = alpha('#FFE9A8', 0.7);
+        ctx.fill();
+        GOL.drawGem(ctx, 0, -34, 9, GRAND, t, { phase: 2, glow: 0.9 });
+      } else {
+        const invite = hasGem ? 0.35 + 0.3 * Math.sin(t * 2.6) : 0.15;
+        ctx.fillStyle = alpha('#B98A3E', invite);
+        ctx.fill();
+        ctx.strokeStyle = alpha('#B98A3E', 0.55);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        if (hasGem) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.3 + 0.25 * Math.sin(t * 2.6));
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0, -34, 16 + Math.sin(t * 2.6) * 2, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+      ctx.restore();
     },
 
     drawCampfire(ctx, x, y, t) {

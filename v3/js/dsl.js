@@ -12,6 +12,7 @@
       w, h, tiles,
       gems: [], props: [], creatures: [], waterfalls: [],
       seeds: [], pads: [], moverDefs: [], occluders: [], blossomPos: null,
+      memoryPos: null,
       startPos: null, campfirePos: null, doorPos: null,
       set(x, y, v) { if (x >= 0 && x < w && y >= 0 && y < h) tiles[y * w + x] = v; },
       get(x, y) { return x < 0 || x >= w || y < 0 || y >= h ? 0 : tiles[y * w + x]; },
@@ -86,6 +87,13 @@
         this.moverDefs.push({ kind: 'raft', x0: (x0 + 0.5) * TILE, x1: (x1 + 0.5) * TILE, y: (row + 0.4) * TILE, hw: 56, speed: speed || 64 });
         return b;
       },
+      // a memory stone: an ancient setting shaped for an earlier surah's
+      // Grand Gem. A child who carries that gem wakes it — the whole surah
+      // sounds again and the garden blooms (spaced repetition as discovery)
+      memory(x, surahId) {
+        this.memoryPos = { x: (x + 0.5) * TILE, y: this.surface(x) * TILE, surahId };
+        return b;
+      },
       // a foreground curtain (cave dark, hanging leaves) that softens when
       // the wanderer steps behind it — secrets live inside
       occluder(x0, x1, y0, y1, color) {
@@ -147,6 +155,7 @@
       props: b.props, creatures: b.creatures, waterfalls: b.waterfalls,
       seeds: b.seeds, pads: b.pads, moverDefs: b.moverDefs, blossom: b.blossomPos,
       occluders: b.occluders,
+      memory: b.memoryPos,
       start: b.startPos, campfire: b.campfirePos, door: b.doorPos,
       // per-prototype flavor hooks (all optional):
       //   weather: 'rain' — rain that thins as restoration rises
