@@ -38,6 +38,9 @@
     if (!w) return false;
     if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldDone(n)) return true;
+    // a grown-up opened this surah straight away (grown-ups page) — it stays
+    // open, but earns no Grand Gem, so the dashboard stays honest
+    if (w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId)) return true;
     const seq = GOL.orderedWorlds();
     const i = seq.findIndex((x) => x.n === n);
     for (let j = i - 1; j >= 0; j--) {

@@ -57,10 +57,73 @@
       this.t = 0;
       if (GOL.audio && GOL.audio.stopAmbience) GOL.audio.stopAmbience();
     },
+    // Geometry for the "open a level" chooser — a centred modal (the table
+    // already fills a landscape phone, so this rides over it, the way the
+    // title's tuning panel does). One chip per grown world, wrapped to the
+    // panel's width. Shared by update (hit-testing) and draw so the two never
+    // drift; chip widths use a fixed text estimate that draw reuses exactly.
+    pickerLayout(W, H) {
+      const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
+        .filter((w) => w.build); // only worlds a child can actually play
+      const pw = Math.min(560, W - 60);
+      const px = W / 2 - pw / 2;
+      const pad = 22, chipH = 30, gapX = 8, gapY = 8, headH = 46;
+      const ix = px + pad, iw = pw - pad * 2;
+      let x = ix, rowI = 0;
+      const chips = [];
+      for (const w of worlds) {
+        const surah = (window.GOL_DATA && w.surahId != null)
+          ? window.GOL_DATA.surahs.find((s) => s.id === w.surahId) : null;
+        const label = surah ? surah.englishName : ('world ' + w.n);
+        const cw = Math.round(label.length * 7.2 + 30);
+        if (x !== ix && x + cw > ix + iw) { x = ix; rowI++; } // wrap
+        chips.push({ label, cw, rowI, x, n: w.n, surahId: w.surahId, open: GOL.worldOpen(w.n) });
+        x += cw + gapX;
+      }
+      const rows = rowI + 1;
+      const panelH = headH + rows * chipH + (rows - 1) * gapY + 34;
+      const py = Math.max(20, H / 2 - panelH / 2);
+      const bodyTop = py + headH;
+      for (const c of chips) { c.y = bodyTop + c.rowI * (chipH + gapY); c.w = c.cw; c.h = chipH; }
+      return { px, py, pw, panelH, ix, headH, chips };
+    },
     update(dt, W, H) {
       this.t += dt;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.homeButton())];
+      // the "open a level" doorway — a quiet chip, top-right
+      const bw = 132, bh = 30;
+      this.pickBtn = { x: (W - sa.r) - 18 - bw, y: 18 + sa.t * 0.5, w: bw, h: bh };
+
+      if (this.pickerOpen) {
+        const chips = this.pickerLayout(W, H).chips;
+        for (const tap of GOL.Input.taps) {
+          if (tap.ui) continue;
+          tap.ui = true;
+          const c = chips.find((b) => tap.x >= b.x && tap.x <= b.x + b.w && tap.y >= b.y && tap.y <= b.y + b.h);
+          if (c) {
+            const d = GOL.store.data;
+            d.opened = d.opened || [];
+            if (c.surahId != null && !d.opened.includes(c.surahId)) { d.opened.push(c.surahId); GOL.store.save(); }
+            GOL.audio.unlock();
+            GOL.audio.sfx('unlockLevel');
+            GOL.go('adventure', { world: c.n });
+            return;
+          }
+          this.pickerOpen = false; // a tap outside the chips closes it
+          GOL.audio.sfx('tap');
+        }
+        return;
+      }
+
       GOL.hitButtons(GOL.Input.taps, this.buttons);
+      for (const tap of GOL.Input.taps) {
+        if (tap.ui) continue;
+        const b = this.pickBtn;
+        if (tap.x >= b.x && tap.x <= b.x + b.w && tap.y >= b.y && tap.y <= b.y + b.h) {
+          tap.ui = true; this.pickerOpen = true; GOL.audio.sfx('tap');
+        }
+      }
       // a calm page: swallow any stray taps so nothing slips through
       for (const tap of GOL.Input.taps) tap.ui = true;
     },
@@ -168,7 +231,40 @@
       GOL.text(ctx, 'tries per gem: 1.0 is perfect · listens per gem tell recall from by-ear · everything stays on this device',
         cx, wy + 20, { size: 10.5, weight: '600', color: alpha('#F5EDD4', 0.42), shadow: false });
 
+      // the "open a level" doorway, top-right
+      if (this.pickBtn) {
+        const b = this.pickBtn;
+        GOL.roundRect(ctx, b.x, b.y, b.w, b.h, 9);
+        ctx.fillStyle = 'rgba(245,237,212,0.12)';
+        ctx.fill();
+        ctx.strokeStyle = alpha('#F5EDD4', 0.4);
+        ctx.lineWidth = 1.3; ctx.stroke();
+        GOL.text(ctx, 'open a level ▸', b.x + b.w / 2, b.y + b.h / 2,
+          { size: 12, weight: '800', color: alpha('#F5EDD4', 0.9), shadow: false });
+      }
+
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.iconName);
+
+      // the chooser modal — over everything else, so it reads clearly
+      if (this.pickerOpen) {
+        ctx.fillStyle = 'rgba(20,30,24,0.62)';
+        ctx.fillRect(0, 0, W, H);
+        const p = this.pickerLayout(W, H);
+        GOL.drawPanel(ctx, p.px, p.py, p.pw, p.panelH, { radius: 20 });
+        GOL.text(ctx, 'open a level to play', W / 2, p.py + 24, { size: 15, weight: '800', color: INK });
+        for (const c of p.chips) {
+          GOL.roundRect(ctx, c.x, c.y, c.w, c.h, 9);
+          // still-closed worlds glow gold (the invitation); open ones sit quiet
+          ctx.fillStyle = c.open ? 'rgba(120,104,70,0.14)' : 'rgba(185,138,62,0.88)';
+          ctx.fill();
+          ctx.strokeStyle = c.open ? 'rgba(150,128,84,0.4)' : 'rgba(185,138,62,0.95)';
+          ctx.lineWidth = 1.4; ctx.stroke();
+          GOL.text(ctx, c.label, c.x + c.w / 2, c.y + c.h / 2,
+            { size: 12, weight: '800', color: c.open ? INK_SOFT : '#FFF8E8', shadow: false });
+        }
+        GOL.text(ctx, 'gold means still closed · tap a surah to open it and jump in · tap outside to close',
+          W / 2, p.py + p.panelH - 14, { size: 10.5, weight: '600', color: INK_SOFT, shadow: false });
+      }
     }
   };
   GOL.registerScene('grownups', grownups);
