@@ -64,9 +64,8 @@
       b.gem(8, 86, 11);
       b.prop('cypress', 83).prop('wall', 89, { n: 2 });
 
-      // MID-ROAD — a flat wayside where an old stone remembers An-Nas's Grand
-      // Gem; a small non-blocking discovery a step off the running line
-      b.memory(92, 114);
+      // MID-ROAD — a lantern-lit wayside rest
+      // (a memory stone lived here once — parked pending redesign)
       b.prop('lantern', 91).prop('lantern', 93).prop('flowers', 92, { v: 1 });
       b.seed(92, 11).seed(92, 10);
       b.creature('tortoise', 95, null, { range: 40 });

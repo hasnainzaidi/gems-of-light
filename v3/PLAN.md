@@ -265,6 +265,15 @@ pattern, never shown to the child:
   value"); P8's landmark ("fine but kinda random" — if landmarks return,
   they should be *meaningful*, e.g. the Wise Tree/shrine visible from afar,
   not an arbitrary tower).
+- **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
+  full recitation of an *earlier* surah, mid-collection of the *current*
+  one, fires by accident and collides two surahs — very confusing. The
+  engine hook (`b.memory`, adventure's stone) stays dormant; no world uses
+  it. Redesign constraints for v2 of the idea: the callback must be
+  **deliberate** (an explicit act, not a walk-by), must **never overlap**
+  the current surah's collection (e.g. only wakeable after this world's
+  campfire, or in its own small side-chamber/scene), and should make WHICH
+  surah is about to sound legible before it starts.
 - **Arabic script may appear as ambient glow on collect, no transliteration,
   no meanings, no English text anywhere in play** — script exposure without
   required reading; also behind a toggle.

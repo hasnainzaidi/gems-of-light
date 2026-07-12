@@ -2,9 +2,7 @@
 // Al-Falaq's twin: refuge sought not in the dawn but among people. So this is
 // the liveliest garden yet — a lived-in village of low walls, a fountain
 // square, lantern-lit lanes and little houses to hop across. Six ayat, six
-// gems, walked left-to-right in surah order. And here the first memory stone
-// appears: an old setting that remembers Al-Falaq's Grand Gem, waiting up a
-// step in a walled dooryard for a child who carries that gem to wake it.
+// gems, walked left-to-right in surah order.
 (function () {
   const GOL = window.GOL;
 
@@ -38,11 +36,10 @@
       b.prop('cypress', 44).prop('flowers', 39);
       b.creature('tortoise', 36, null, { range: 60 });
 
-      // a walled dooryard, up one lantern-lit step off the lane — an old
-      // stone rests here that remembers Al-Falaq's Grand Gem (the memory
-      // stone; a child carrying that gem wakes the whole surah again)
+      // a walled dooryard, up one lantern-lit step off the lane
+      // (a memory stone lived here once — parked pending redesign; the
+      // proximity trigger collided with the surah being collected)
       b.stoneBlock(46, 49, 12, 12);
-      b.memory(47, 113);
       b.prop('wall', 45, { n: 2 }).prop('lantern', 46).prop('lantern', 49)
        .prop('flowers', 48, { v: 2 });
       b.seed(47, 10);
