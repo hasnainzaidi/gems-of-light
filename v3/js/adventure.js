@@ -785,11 +785,12 @@
       }
 
       // the found ayah, glowing softly in the air — script, not a card
+      // (drawn well below the gem band so the two never overlap)
       if (this.glowAr) {
         const g = this.glowAr;
         const k = Math.min(1, g.t / 0.6) * Math.min(1, (g.dur - g.t) / 0.9);
         ctx.globalAlpha = Math.max(0, k);
-        GOL.text(ctx, g.text, W / 2, H * 0.16, { size: Math.min(30, W * 0.045), ar: true, weight: '400', color: '#FFFBEE' });
+        GOL.text(ctx, g.text, W / 2, H * 0.32, { size: Math.min(30, W * 0.045), ar: true, weight: '400', color: '#FFFBEE' });
         ctx.globalAlpha = 1;
       }
 

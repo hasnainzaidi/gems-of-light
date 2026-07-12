@@ -188,6 +188,15 @@ for (const tgt of targets) {
     }
   }
   for (const wf of L.waterfalls) if (wf.h <= 0) errs.push('degenerate waterfall at ' + wf.x);
+  // a raft must ride ABOVE the waterline: its deck row in air, water beneath
+  // (a deck row inside the water bounces the rider into the rescue — w3 bug)
+  for (const m of L.moverDefs || []) {
+    if (m.kind !== 'raft') continue;
+    const row = Math.floor(m.y / TILE);
+    for (let x = Math.floor(m.x0 / TILE); x <= Math.floor(m.x1 / TILE); x++) {
+      if (get(x, row) === 3) { errs.push('raft deck is underwater at ' + x + ',' + row + ' — use the row above the water surface'); break; }
+    }
+  }
   for (const p of L.pads || []) {
     if (!seen.has(p.tx + ',' + p.ty)) errs.push('bounce blossom unreachable at ' + p.tx);
     for (let dy = 1; dy <= 5; dy++) if (get(p.tx, p.ty - dy) !== 0) errs.push('bounce blossom lacks sky at ' + p.tx + ' (-' + dy + ')');

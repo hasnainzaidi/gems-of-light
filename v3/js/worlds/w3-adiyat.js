@@ -43,7 +43,7 @@
       b.prop('cypress', 34).prop('flowers', 43, { v: 1 });
 
       b.water(48, 58, 13);
-      b.raft(49, 57, 13); // ends its run at each bank — step off, step on
+      b.raft(49, 57, 12); // rides just above the waterline; ends its run at each bank
       b.gem(5, 53, 11);
       b.prop('olive', 46).prop('flowers', 60);
       b.creature('tortoise', 62, null, { range: 50 });

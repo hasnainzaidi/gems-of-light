@@ -63,6 +63,22 @@
       };
       canvas.addEventListener('pointerup', up);
       canvas.addEventListener('pointercancel', up);
+      // iOS can drop a pointerup entirely (edge swipes, notification banners,
+      // a finger sliding off-screen), leaving a zombie pointer that steers
+      // the thumbstick forever. Mirror the release on window, and clear
+      // everything whenever the page loses the user's attention.
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
+      const clearAll = () => {
+        this.pointers.clear();
+        this.drag = null;
+        this._jumpQueued = false;
+        this._keys = {};
+        this._syncKeys();
+      };
+      window.addEventListener('blur', clearAll);
+      window.addEventListener('pagehide', clearAll);
+      document.addEventListener('visibilitychange', () => { if (document.hidden) clearAll(); });
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     },
     releases: [],
