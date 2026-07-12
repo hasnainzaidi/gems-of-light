@@ -54,12 +54,15 @@ One `v3/js/` module set, shared by all ten prototypes:
 - On collect: the ayah is recited, the gem flies to a small orbit around the
   player (the growing collection is the progress UI — no counters, no text),
   and the world visibly responds (§3.5).
-- **Ambient echo (new, flagged for testing):** while a gem remains uncollected,
-  its ayah softly hums from its direction — quiet, heavily spaced, distance-
-  attenuated, always ducking under real recitation. The philosophy doc asks
-  whether this feels calming or repetitive, so it ships behind a tunable
-  (`?echo=off|near|world`, plus interval/volume knobs) so we can A/B it in
-  the same build.
+- **Ambient echo (tested → off by default):** the idea was that while a gem
+  remains uncollected its ayah softly hums from its direction, gently calling
+  the child toward it. Playtested (2026-07-12) as **confusing/random** — it
+  fires on a timer with no clear cause, and collecting a gem cuts off an
+  in-progress echo then re-recites, which reads as a glitch. Verdict: the
+  recitation should be **collect-triggered only** (which it already is). The
+  ambient echo now defaults `off`; the tuning panel keeps `near`/`world` for
+  future experiments, but the philosophy doc's "world gently calling" idea did
+  not survive first contact in this form.
 - No ayah card. Optionally the Arabic words glow briefly in-world as the gem
   is collected (script exposure without required reading) — also a tunable.
 
@@ -239,8 +242,9 @@ pattern, never shown to the child:
 
 - **Same surah (Al-Falaq) across all ten** — isolates the level-design
   variable, which is the brief's actual question.
-- **Ambient echo ships as a tunable, default gentle-near** — the philosophy
-  doc explicitly asks for this to be tested, not assumed.
+- **Ambient echo defaults off** (playtested 2026-07-12) — recitation is
+  collect-triggered; the wandering echo read as random. Toggle kept in the
+  tuning panel for future experiments. See §3.1.
 - **Arabic script may appear as ambient glow on collect, no transliteration,
   no meanings, no English text anywhere in play** — script exposure without
   required reading; also behind a toggle.

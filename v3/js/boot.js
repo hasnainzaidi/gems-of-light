@@ -9,25 +9,31 @@
   // ------------------------------------------------------------ tunables --
   const q = new URLSearchParams(location.search);
   GOL.DEBUG = q.get('debug') === '1';
+  // The ayah recites when its gem is collected (see adventure.collect). The
+  // *ambient* echo — an uncollected ayah softly calling from its direction —
+  // playtested as confusing/random, so it's off by default; the tuning panel
+  // still exposes near/world for further experiments.
   GOL.V3 = {
     proto: parseInt(q.get('p') || '5', 10),
-    echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'near',
+    echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off',
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null
   };
   // the in-app tuning panel persists its choices; a URL param still wins as
-  // an explicit override for that key
+  // an explicit override for that key. CFG_V lets a default change (like the
+  // echo one above) reset a stale persisted echo instead of stranding it.
+  const CFG_V = 2;
   try {
     const saved = JSON.parse(localStorage.getItem('gemsOfLight.v3cfg') || '{}');
-    if (!q.has('echo') && saved.echo) GOL.V3.echo = saved.echo;
+    if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows }));
     } catch (e) { /* ignore */ }
   };
 
