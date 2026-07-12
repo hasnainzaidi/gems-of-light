@@ -7,6 +7,12 @@
 //   M    back to the world map                E  warp to the arch
 //   hold Shift — sprint
 //
+// Deep links (handy from a phone, where there's no keyboard for the hotkeys
+// above): add &level=<key-or-number> or &world=<0|1|2> alongside debug=1.
+//   ?debug=1&level=alaq   — jump straight into World Three's finale
+//   ?debug=1&level=12     — same thing, by flat index into GOL.LEVELS
+//   ?debug=1&world=2      — open World Three's map instead of a level
+//
 (function () {
   const GOL = window.GOL;
   const qs = (window.location && window.location.search) || '';
@@ -67,6 +73,32 @@
       this.panelNode = nLocal;
       GOL.audio.sfx('land');
     };
+  }
+
+  // ------------------------------------------------------- deep links -----
+  // Same idea as the 1–6 hotkeys, but reachable with just a URL — no
+  // keyboard needed, so it works from a phone. GOL.go isn't defined yet
+  // (main.js hasn't run), so wait a couple frames for it, then navigate
+  // once and get out of the way.
+  const params = new URLSearchParams(qs);
+  const levelParam = params.get('level');
+  const worldParam = params.get('world');
+  if (levelParam !== null || worldParam !== null) {
+    const tryNavigate = () => {
+      if (!GOL.go) { requestAnimationFrame(tryNavigate); return; }
+      if (levelParam !== null) {
+        let idx = GOL.LEVELS.findIndex((l) => l.key === levelParam);
+        if (idx === -1 && /^\d+$/.test(levelParam)) idx = +levelParam;
+        if (idx >= 0 && idx < GOL.LEVELS.length) {
+          GOL.go('level', { index: idx });
+        } else {
+          console.warn('[debug] unknown level "' + levelParam + '" — falling back to the title screen');
+        }
+      } else {
+        GOL.go('map', { world: +worldParam });
+      }
+    };
+    requestAnimationFrame(tryNavigate);
   }
 
   // --------------------------------------------------------- hotkeys ------
