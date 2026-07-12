@@ -9,6 +9,15 @@ around it: V1's *collect → echo ritual → listening gate → extra modes* bec
 V3's single, invariant loop — **Adventure → Campfire → Shrine → Grand Gem** —
 and everything instructional, textual, or quiz-shaped is removed.
 
+> **Status (2026-07-12):** the prototype phase this plan describes is
+> COMPLETE — all ten prototypes built, playtested, and reviewed
+> (`reviews/p1–p10.md`), and their verdicts distilled into the real game:
+> worlds W1–W4, the Remembering, journey tracker, grown-ups page, knowledge
+> telemetry. §§1–6 and §8 are kept as the design record; current truth for
+> *what exists* is `git log` + the directory itself, and the roadmap for the
+> next twelve worlds is `WORLDS-PLAN.md`. §9 (git) and §10 (decisions log)
+> remain live and current.
+
 ---
 
 ## 1. What V1 gives us (keep, mostly as-is)
@@ -40,7 +49,10 @@ dialogue teaching, no required reading, no text tutorials):
 - **Toasts, parchment ayah cards with transliteration/meaning text,
   instructional UI** — no reading required.
 - **World map, ways-in panel, moons, grown-ups page** — not needed for the
-  prototype phase. (Silent local instrumentation stays; see §6.)
+  prototype phase. (Silent local instrumentation stays; see §7.)
+  *Later superseded in v3-native form:* the journey tracker (worlds.js) is the
+  map, Remembering Moons are the moons, and `grownups.js` is the grown-ups
+  page — all rebuilt to v3's wordless philosophy, none of them v1 code.
 
 Nothing is deleted from the repo — V1 keeps running at the root. V3 lives in
 `v3/` the way V2 lives in `v2/`.
@@ -108,7 +120,7 @@ One `v3/js/` module set, shared by all ten prototypes:
   birds return, water starts flowing, light breaks through. Built on existing
   props/particles/palette-lerp; each prototype declares its own flavor.
 
-## 4. The ten prototypes
+## 4. The ten prototypes ✅ (all built, playtested, reviewed — `reviews/`)
 
 All ten preserve Adventure → Campfire → Shrine → Grand Gem exactly. **Same
 surah in all ten** (recommend **Al-Falaq** — 5 ayat, a meaty shrine, audio
@@ -177,26 +189,32 @@ Orientation stays landscape (side-scrolling wants width); P2 Vertical Climb
 is the natural place to prototype a portrait variant later if phones make
 landscape feel cramped.
 
-## 6. Directory shape
+## 6. Directory shape (as built — differs from the original sketch)
 
 ```
 v3/
-  index.html            prototype picker (dev-facing, plain list of 10)
+  index.html            entry point (title, journey, versioned ?v= script tags)
   js/
     core/               engine.js, art.js, audio.js, props.js, actors.js  (adapted from v1)
-    flow.js             the world state machine: adventure → campfire → shrine → grand gem
-    adventure.js        the playable level (from level.js, stripped of ritual/text)
-    campfire.js         the resting scene (new)
-    shrine.js           one-socket-at-a-time restoration (new)
-    echo.js             ambient ayah echo, fully tunable (new)
-    restore.js          environmental restoration stages (new)
-    data.js             surah data (shared with v1 where possible)
-    prototypes/         p1.js … p10.js — one recipe file each + theme decl
-  reviews/
-    TEMPLATE.md         the brief's 5 evaluation questions
-    p1.md … p10.md      filled in after playtesting each
-  tools/                check-levels + test-flow adapted to the v3 flow
-PLAN.md                 this file
+    boot.js             boot, render loop, scene transitions, safe areas, tunables, RECITERS
+    ui.js               scene registry, shared UI helpers, title screen
+    dsl.js              level-recipe builder (from v1 levels.js) + campfire/door/memory spots
+    adventure.js        the playable world — INCLUDES the campfire phase and
+                        restoration stages (no separate flow/campfire/echo/restore
+                        modules; the flow lives in boot's scene registry)
+    shrine.js           one-socket-at-a-time recall; also hosts the dream-shrine
+                        (the Remembering)
+    worlds.js           the journey: world registry, unlock chain, journey disc
+    worlds/             wN-<key>.js — one shippable surah world per file
+    prototypes/         p1.js … p10.js — the ten experiments (kept for reference)
+    grownups.js         press-and-hold star page: pilot-study view of the local save
+  reviews/              TEMPLATE.md + p1.md … p10.md (all filled in)
+  tools/check.mjs       reachability/invariant checker — every world must pass
+  PLAN.md               this file (design record + live decisions log)
+  GRAMMARS.md           the three world grammars — how to build a new world
+  WORLDS-PLAN.md        roadmap for the twelve Level 1–2 surah worlds
+Surah data lives at repo root (js/data.js), shared with live v1 — additive
+changes only. Abdul Basit audio: audio/basit/SSSAAA.mp3.
 ```
 
 ## 7. Instrumentation (silent, local-only)
@@ -218,20 +236,17 @@ pattern, never shown to the child:
 - session length, campfire skipped-early or watched-through
 - echo setting in effect (so A/B results are attributable)
 
-## 8. Order of work
+## 8. Order of work ✅ all four phases complete (2026-07-12)
 
-1. **Vertical slice** — extract `v3/js/core/`, build flow.js + adventure +
-   campfire + shrine + grand gem on the P5 Cozy layout with Al-Falaq,
-   end-to-end playable on iPad. Everything after this is content.
-2. **Harness** — picker page, query-param tunables, instrumentation,
-   v3 debug hotkeys, adapted reachability checker.
-3. **Prototypes in reuse order** — P1, P9, P10, P3 (recipe-only), then the
-   feature-bearing five: P2 (tall camera), P7 (progress-driven palette),
-   P4 (raft), P6 (occluders), P8 (landmark).
-4. **Reviews** — playtest each, fill `reviews/pN.md` (emotion optimized for,
-   what worked, what distracted from memorization, does it scale to 30–40
-   surahs, what carries forward), with the P9-vs-P10 comparison the brief
-   calls out.
+1. ✅ **Vertical slice** — P5 Cozy + Al-Falaq, the whole loop end-to-end.
+2. ✅ **Harness** — title picker, tunables, instrumentation, debug hotkeys,
+   `tools/check.mjs`.
+3. ✅ **Prototypes** — all ten, built by parallel agents, checker-green.
+4. ✅ **Reviews** — `reviews/p1–p10.md` filled; verdicts distilled into §10
+   and into the game itself (worlds W1–W4, the Remembering, return loop).
+
+**Current order of work → `WORLDS-PLAN.md`** (twelve Level 1–2 surah worlds
+in six playtest-gated waves; Wave 0 = content pipeline).
 
 ## 9. Git workflow (kept deliberately simple)
 
@@ -318,3 +333,7 @@ pattern, never shown to the child:
 - **v3 save is separate** (`gemsOfLight.v3`) — a child's V1 garden is never
   touched by prototype churn.
 - **V1 stays live at the repo root**; v3 deploys under `/v3` like v2 does.
+- **Levels 1–2 world roadmap (2026-07-12):** twelve new surah worlds planned
+  in `WORLDS-PLAN.md` — per-world sketches, wave order, and its own decision
+  log (data-driven unlock order, engine-aimed memory stones, shrine-chunking
+  gate before any 12+ ayah surah).
