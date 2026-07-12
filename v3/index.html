@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Gems of Light — v3 prototypes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="Gems of Light v3 prototype worlds — adventure, campfire, shrine, grand gem." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#2E4032" />
+  <link rel="icon" href="../icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="../icons/icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: #2E4032;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+    }
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      touch-action: none;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <noscript><p style="color:#F5EDD4;font-family:sans-serif;text-align:center;padding:2rem">Gems of Light needs JavaScript to bloom.</p></noscript>
+  <script src="../js/data.js"></script>
+  <script src="js/core/art.js"></script>
+  <script src="js/core/props.js"></script>
+  <script src="js/core/actors.js"></script>
+  <script src="js/core/audio.js"></script>
+  <script src="js/core/engine.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/dsl.js"></script>
+  <script src="js/prototypes/p5.js"></script>
+  <script src="js/adventure.js"></script>
+  <script src="js/shrine.js"></script>
+  <script src="js/boot.js"></script>
+</body>
+</html>
