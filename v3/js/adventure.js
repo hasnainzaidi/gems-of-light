@@ -172,11 +172,10 @@
         pl.y = L.campfire.y;
         pl.lastSafe = { x: pl.x, y: pl.y };
         // (cam is null — the first update snaps it onto the player)
-        // the stone re-arms if the old Grand Gem is still carried; entering
-        // the dream again is allowed (the moon just won't double-wax)
-        if (this.memState && L.memory && GOL.store.data.grand && GOL.store.data.grand[L.memory.surahId]) {
-          this.memState.phase = 'armed';
-        }
+        // STONES DISARMED (PLAN §10 verdict 2026-07-12): even ember-gated,
+        // the dream doorway inside the current world read as an interruption.
+        // The doorway is moving to the old world's own shrine; until then the
+        // stone stays plain scenery. (Was: re-arm if the Grand Gem is held.)
       }
 
       const st = GOL.store.level(L.surahId);
@@ -564,21 +563,24 @@
           this.fireT = 0;
           this.echoI = -1;
           GOL.audio.startAmbience('quiet');
-          // THE WORLD ECHOES only on this surah's FIRST learning (no Grand Gem
-          // for it yet), and only when the tuning row asks for it. Replays and
-          // 'off' get the tight single recitation — nothing ever silent.
+          // YOUR TURN (playtest 2026-07-12: the world-echo replay felt broken
+          // and laborious with the shrine right after — killed). On this
+          // surah's FIRST learning (no Grand Gem yet), and when the tuning
+          // row asks, each ayah is followed by a soft chime opening a short
+          // breath — the wordless invitation to say it: listening rings
+          // ripple from the child, the script stays aglow, the just-heard
+          // gem pulses. The chime marks the pause as intentional (bare
+          // silence read as a stall in the echo-breath playtest). Replays
+          // and 'off' keep the tight single recitation.
           const firstLearn = !(GOL.store.data.grand && GOL.store.data.grand[L.surahId]);
-          const echoing = firstLearn && GOL.V3.campEcho === 'gentle';
+          const turn = firstLearn && GOL.V3.campTurn === 'chime';
           if (GOL.DEBUG) {
             setTimeout(() => { if (this.phase === 'campfire') this.openDoor(); }, 800);
-          } else if (echoing) {
-            // each ayah at full voice, then the same ayah soft off the hills;
-            // during that echo the world listens (rings from the child, the
-            // script aglow, the just-heard gem pulsing, a mild flame swell)
+          } else if (turn) {
             GOL.audio.playSurah(L.surah, {
-              echoVol: 0.3,
+              breath: 2.2,
               onVerse: (i) => { this.reciteI = i; this.echoI = -1; this.setCampAr(i); },
-              onEcho: (i) => { this.echoI = i; this.setCampAr(i); },
+              onBreath: (i) => { this.echoI = i; GOL.audio.sfx('yourTurn'); },
               onend: () => { this.echoI = -1; if (this.phase === 'campfire') this.openDoor(); }
             });
           } else {
@@ -623,14 +625,10 @@
       GOL.store.save();
       GOL.audio.sfx('door');
       GOL.audio.startAmbience('garden');
-      // arm the memory stone now, and only now — if the child carries the
-      // named Grand Gem it will glow a soft invitation; without it, it stays
-      // plain stone forever (no shimmer, no hint)
-      if (this.memState && this.memState.phase === 'inert') {
-        const m = this.L.memory;
-        const hasGem = m && GOL.store.data.grand && GOL.store.data.grand[m.surahId];
-        if (hasGem) this.memState.phase = 'armed';
-      }
+      // STONES DISARMED (PLAN §10 verdict 2026-07-12): the ember-phase
+      // arming is gone — the Remembering's doorway is moving to the old
+      // world's own shrine. The stone remains as quiet scenery (its
+      // machinery below stays for whatever the redesign keeps).
     },
     // the seated echo shows the current ayah's script as ambient glow (the
     // same idiom as collect); refreshed at each full voice and each echo

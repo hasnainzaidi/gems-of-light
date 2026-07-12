@@ -29,10 +29,12 @@
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
     reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit',
-    // THE WORLD ECHOES at the campfire on a surah's FIRST learning: each ayah
-    // returns soft while listening rings ripple from the seated child. 'gentle'
-    // by default; 'off' gives the tight single recitation. (PLAN §9)
-    campEcho: ['off', 'gentle'].includes(q.get('campEcho')) ? q.get('campEcho') : 'gentle'
+    // YOUR TURN at the campfire on a surah's FIRST learning: after each ayah
+    // a soft chime opens a short breath — the wordless invitation to say it —
+    // while listening rings ripple from the seated child. 'chime' by default;
+    // 'off' gives the tight single recitation. (Supersedes the world-echo,
+    // which playtested as broken/laborious — PLAN §10.)
+    campTurn: ['off', 'chime'].includes(q.get('turn')) ? q.get('turn') : 'chime'
   };
   // the in-app tuning panel persists its choices; a URL param still wins as
   // an explicit override for that key. CFG_V lets a default change (like the
@@ -44,12 +46,13 @@
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
     if (!q.has('reciter') && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
-    // campEcho is a plain toggle: a missing saved key just keeps the default
-    if (!q.has('campEcho') && (saved.campEcho === 'off' || saved.campEcho === 'gentle')) GOL.V3.campEcho = saved.campEcho;
+    // campTurn is a plain toggle: a missing saved key just keeps the default
+    // (an old saved campEcho key is simply ignored — that experiment is gone)
+    if (!q.has('turn') && (saved.campTurn === 'off' || saved.campTurn === 'chime')) GOL.V3.campTurn = saved.campTurn;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, campEcho: GOL.V3.campEcho }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, campTurn: GOL.V3.campTurn }));
     } catch (e) { /* ignore */ }
   };
 

@@ -293,6 +293,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   `campfire echo: off/gentle` (default gentle) so it can be A/B'd with the
   nieces. Fallback if they fidget: remove, and let the mic feature carry
   voice production later.
+  **KILLED in turn (playtested 2026-07-12):** the echo replay felt broken
+  and heavy-handed — doubling every ayah is laborious with the shrine
+  right after. Superseded by **YOUR TURN**: after each ayah a soft chime
+  opens a short (2.2s) breath — the chime marks the pause as an
+  invitation (fixing what sank the silent breath), listening rings ripple
+  from the child, the script stays aglow, the just-heard gem pulses. No
+  re-recitation, ~2s per ayah instead of ~2x. First learning only;
+  tuning row `your turn: off/chime` (default chime, `?turn=`).
 - **Playtest positives to protect**: the campfire being *earned* (unlit until
   every gem is found), and the flowers blooming where a gem is collected.
 - **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear
@@ -318,6 +326,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   dream:true. Entry contract: GOL.go('shrine', { memory: { surahId,
   returnWorld } }); completion returns via GOL.go('adventure', { world:
   returnWorld, resume: 'ember' }).
+  **VERDICT (playtested 2026-07-12): still not right.** Even ember-gated,
+  another surah sounding inside the current world's space reads as an
+  interruption — the stone idea has now failed twice in different forms.
+  The lesson: the remembering must happen where the OLD surah lives, not
+  inside the current walk. Redesign direction: return to a completed
+  world to revitalize its own gem at its own shrine (shape being chosen;
+  stones disarmed meanwhile). The dream-shrine scene, Remembering Moons,
+  and once-a-day wax all survive — only the doorway moves.
 - **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
   full recitation of an *earlier* surah, mid-collection of the *current*
   one, fires by accident and collides two surahs — very confusing. The
