@@ -42,6 +42,110 @@ window.GOL_DATA = {
       ]
     },
     {
+      "id": 109,
+      "slug": "kafirun",
+      "arabicName": "الكافرون",
+      "englishName": "Al-Kafirun",
+      "meaningName": "The Disbelievers",
+      "kidIntro": "This surah teaches a gentle kind of honesty — it's alright for people to believe different things, and you can be kind to everyone while staying true to your own faith.",
+      "story": {
+        "title": "To each, their own way",
+        "pages": [
+          "Long ago in Makkah, some people asked the Prophet Muhammad, peace be upon him, if he would worship their idols for just one day, and they would worship Allah the next. It seemed like a fair trade to them.",
+          "But Allah sent down this surah with a clear, gentle answer for him to say: I do not worship what you worship, and you do not worship what I worship.",
+          "It wasn't said with anger — it was said kindly and honestly, the way you might say: I love what I love, and you love what you love, and that is alright.",
+          "The surah ends with a simple, peaceful line: to you is your way, and to me is mine. We can still be neighbors, still be kind, and still be true to what we believe."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "قُلْ يَـٰٓأَيُّهَا ٱلْكَـٰفِرُونَ",
+          "tr": "qul yāayyuhā l-kāfirūna",
+          "meaning": "Say: O you who do not believe,"
+        },
+        {
+          "n": 2,
+          "ar": "لَآ أَعْبُدُ مَا تَعْبُدُونَ",
+          "tr": "lā aʿbudu mā taʿbudūna",
+          "meaning": "I do not worship what you worship,"
+        },
+        {
+          "n": 3,
+          "ar": "وَلَآ أَنتُمْ عَـٰبِدُونَ مَآ أَعْبُدُ",
+          "tr": "walā antum ʿābidūna mā aʿbudu",
+          "meaning": "and you do not worship what I worship,"
+        },
+        {
+          "n": 4,
+          "ar": "وَلَآ أَنَا۠ عَابِدٌ مَّا عَبَدتُّمْ",
+          "tr": "walā anā ʿābidun mā ʿabadttum",
+          "meaning": "and I will not worship the way you worship,"
+        },
+        {
+          "n": 5,
+          "ar": "وَلَآ أَنتُمْ عَـٰبِدُونَ مَآ أَعْبُدُ",
+          "tr": "walā antum ʿābidūna mā aʿbudu",
+          "meaning": "and you will not worship the way I worship."
+        },
+        {
+          "n": 6,
+          "ar": "لَكُمْ دِينُكُمْ وَلِىَ دِينِ",
+          "tr": "lakum dīnukum waliya dīni",
+          "meaning": "To you is your way, and to me is mine."
+        }
+      ]
+    },
+    {
+      "id": 111,
+      "slug": "masad",
+      "arabicName": "المسد",
+      "englishName": "Al-Masad",
+      "meaningName": "The Palm Fiber",
+      "kidIntro": "This surah tells the true story of a Prophet who was treated unkindly by his own uncle, and how Allah comforted him with a simple truth: unkindness never truly wins.",
+      "story": {
+        "title": "Kindness outlasts unkindness",
+        "pages": [
+          "The Prophet Muhammad, peace be upon him, had an uncle named Abu Lahab. Instead of being warm and loving like family should be, he was often unkind and tried to stop people from hearing the Prophet's gentle message.",
+          "He had plenty of money and power, and he used them to be unkind — but this surah reminds us that no amount of wealth can ever truly help someone whose heart is unkind.",
+          "His wife helped him in his unkindness too, carrying thorny branches to scatter in the Prophet's path just to hurt him. But hurting others never really gets anyone anywhere good.",
+          "This little surah teaches a big lesson: money and power are not what matter most — a kind heart is. The Prophet, who stayed patient and gentle through it all, is loved by millions today."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "تَبَّتْ يَدَآ أَبِى لَهَبٍ وَتَبَّ",
+          "tr": "tabbat yadā abī lahabin watabba",
+          "meaning": "Ruined are the hands of Abu Lahab, and ruined is he."
+        },
+        {
+          "n": 2,
+          "ar": "مَآ أَغْنَىٰ عَنْهُ مَالُهُۥ وَمَا كَسَبَ",
+          "tr": "mā aghnā ʿanhu māluhu wamā kasaba",
+          "meaning": "Neither his wealth nor everything he worked for could help him."
+        },
+        {
+          "n": 3,
+          "ar": "سَيَصْلَىٰ نَارًا ذَاتَ لَهَبٍ",
+          "tr": "sayaṣlā nāran dhāta lahabin",
+          "meaning": "He will be met with a blazing fire,"
+        },
+        {
+          "n": 4,
+          "ar": "وَٱمْرَأَتُهُۥ حَمَّالَةَ ٱلْحَطَبِ",
+          "tr": "wa-im'ra-atuhu ḥammālata l-ḥaṭabi",
+          "meaning": "and so will his wife, who carried thorny branches to cause hurt,"
+        },
+        {
+          "n": 5,
+          "ar": "فِى جِيدِهَا حَبْلٌ مِّن مَّسَدٍۭ",
+          "tr": "fī jīdihā ḥablun min masadin",
+          "meaning": "with a twisted rope of palm fiber around her neck."
+        }
+      ]
+    },
+    {
       "id": 112,
       "slug": "ikhlas",
       "arabicName": "الإخلاص",
@@ -929,6 +1033,303 @@ window.GOL_DATA = {
           "ar": "سَلَـٰمٌ هِىَ حَتَّىٰ مَطْلَعِ ٱلْفَجْرِ",
           "tr": "salāmun hiya ḥattā maṭlaʿi l-fajri",
           "meaning": "Peace it is, all the way until the morning light."
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "slug": "lail",
+      "arabicName": "الليل",
+      "englishName": "Al-Lail",
+      "meaningName": "The Night",
+      "kidIntro": "This surah is a gentle promise: when you give and stay mindful of Allah, He makes your path easy — and that kind of ease is worth so much more than anything you gave away.",
+      "story": {
+        "title": "The two paths",
+        "pages": [
+          "This surah begins with a promise sworn on the night and the bright day, and on how Allah made us all different — male and female, each with our own path.",
+          "It talks about two kinds of people. One gives generously and stays close to Allah in his heart, trusting that good things are true and worth following.",
+          "For that gentle giver, Allah makes the easy way even easier. But someone who holds everything tightly, thinking they need no one else, finds their own way growing harder and harder.",
+          "The surah ends warmly: the person who gives — not to be repaid, but simply to seek Allah's pleasure — will soon feel deeply, wonderfully content."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "وَٱلَّيْلِ إِذَا يَغْشَىٰ",
+          "tr": "wa-al-layli idhā yaghshā",
+          "meaning": "By the night, when it covers everything in darkness,"
+        },
+        {
+          "n": 2,
+          "ar": "وَٱلنَّهَارِ إِذَا تَجَلَّىٰ",
+          "tr": "wal-nahāri idhā tajallā",
+          "meaning": "and the day, when it shines bright and clear,"
+        },
+        {
+          "n": 3,
+          "ar": "وَمَا خَلَقَ ٱلذَّكَرَ وَٱلْأُنثَىٰٓ",
+          "tr": "wamā khalaqa l-dhakara wal-unthā",
+          "meaning": "and by the One who made male and female,"
+        },
+        {
+          "n": 4,
+          "ar": "إِنَّ سَعْيَكُمْ لَشَتَّىٰ",
+          "tr": "inna saʿyakum lashattā",
+          "meaning": "truly, the ways people work are very different."
+        },
+        {
+          "n": 5,
+          "ar": "فَأَمَّا مَنْ أَعْطَىٰ وَٱتَّقَىٰ",
+          "tr": "fa-ammā man aʿṭā wa-ittaqā",
+          "meaning": "As for the one who gives and stays mindful of Allah,"
+        },
+        {
+          "n": 6,
+          "ar": "وَصَدَّقَ بِٱلْحُسْنَىٰ",
+          "tr": "waṣaddaqa bil-ḥus'nā",
+          "meaning": "and believes in what is good,"
+        },
+        {
+          "n": 7,
+          "ar": "فَسَنُيَسِّرُهُۥ لِلْيُسْرَىٰ",
+          "tr": "fasanuyassiruhu lil'yus'rā",
+          "meaning": "We will make the easy way easy for him."
+        },
+        {
+          "n": 8,
+          "ar": "وَأَمَّا مَنۢ بَخِلَ وَٱسْتَغْنَىٰ",
+          "tr": "wa-ammā man bakhila wa-is'taghnā",
+          "meaning": "But the one who holds on tightly and feels he needs no one,"
+        },
+        {
+          "n": 9,
+          "ar": "وَكَذَّبَ بِٱلْحُسْنَىٰ",
+          "tr": "wakadhaba bil-ḥus'nā",
+          "meaning": "and does not believe in what is good,"
+        },
+        {
+          "n": 10,
+          "ar": "فَسَنُيَسِّرُهُۥ لِلْعُسْرَىٰ",
+          "tr": "fasanuyassiruhu lil'ʿus'rā",
+          "meaning": "We will make the hard way hard for him."
+        },
+        {
+          "n": 11,
+          "ar": "وَمَا يُغْنِى عَنْهُ مَالُهُۥٓ إِذَا تَرَدَّىٰٓ",
+          "tr": "wamā yugh'nī ʿanhu māluhu idhā taraddā",
+          "meaning": "And his wealth will not help him at all when everything ends."
+        },
+        {
+          "n": 12,
+          "ar": "إِنَّ عَلَيْنَا لَلْهُدَىٰ",
+          "tr": "inna ʿalaynā lalhudā",
+          "meaning": "Truly, it is Allah's to show the right path,"
+        },
+        {
+          "n": 13,
+          "ar": "وَإِنَّ لَنَا لَلْـَٔاخِرَةَ وَٱلْأُولَىٰ",
+          "tr": "wa-inna lanā lalākhirata wal-ūlā",
+          "meaning": "and truly, both this life and the next belong to Him."
+        },
+        {
+          "n": 14,
+          "ar": "فَأَنذَرْتُكُمْ نَارًا تَلَظَّىٰ",
+          "tr": "fa-andhartukum nāran talaẓẓā",
+          "meaning": "So he warns of a blazing fire,"
+        },
+        {
+          "n": 15,
+          "ar": "لَا يَصْلَىٰهَآ إِلَّا ٱلْأَشْقَى",
+          "tr": "lā yaṣlāhā illā l-ashqā",
+          "meaning": "that only the most stubborn heart will enter,"
+        },
+        {
+          "n": 16,
+          "ar": "ٱلَّذِى كَذَّبَ وَتَوَلَّىٰ",
+          "tr": "alladhī kadhaba watawallā",
+          "meaning": "the one who denied the truth and turned away."
+        },
+        {
+          "n": 17,
+          "ar": "وَسَيُجَنَّبُهَا ٱلْأَتْقَى",
+          "tr": "wasayujannabuhā l-atqā",
+          "meaning": "But the caring, mindful one will be kept far from it,"
+        },
+        {
+          "n": 18,
+          "ar": "ٱلَّذِى يُؤْتِى مَالَهُۥ يَتَزَكَّىٰ",
+          "tr": "alladhī yu'tī mālahu yatazakkā",
+          "meaning": "the one who gives his wealth to grow pure,"
+        },
+        {
+          "n": 19,
+          "ar": "وَمَا لِأَحَدٍ عِندَهُۥ مِن نِّعْمَةٍ تُجْزَىٰٓ",
+          "tr": "wamā li-aḥadin ʿindahu min niʿ'matin tuj'zā",
+          "meaning": "not to pay anyone back for a favor,"
+        },
+        {
+          "n": 20,
+          "ar": "إِلَّا ٱبْتِغَآءَ وَجْهِ رَبِّهِ ٱلْأَعْلَىٰ",
+          "tr": "illā ib'tighāa wajhi rabbihi l-aʿlā",
+          "meaning": "but only to seek the Face of his Most High Lord."
+        },
+        {
+          "n": 21,
+          "ar": "وَلَسَوْفَ يَرْضَىٰ",
+          "tr": "walasawfa yarḍā",
+          "meaning": "And soon, he will be so very pleased."
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "slug": "duha",
+      "arabicName": "الضحى",
+      "englishName": "Ad-Duha",
+      "meaningName": "The Morning Brightness",
+      "kidIntro": "This surah is Allah's warm reminder to the Prophet during a quiet, worried time — I have not left you, and I am not upset with you — better days are always coming.",
+      "story": {
+        "title": "The quiet worry, and the answer",
+        "pages": [
+          "There was a quiet time when the angel Jibreel did not visit the Prophet Muhammad, peace be upon him, for a while, and he began to worry that Allah was upset with him.",
+          "Then Allah sent down this surah, swearing by the bright morning and the calm, settling night: I have not left you, and I am not displeased with you.",
+          "Allah reminded him of all the ways He had cared for him before — finding him an orphan and giving him a home, finding him unsure and showing him the way, finding him in need and making his heart rich.",
+          "So Allah gently tells him — and tells us too — never be hard on someone who has less, never turn away someone who asks for help, and always speak warmly about the good things you've been given."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "وَٱلضُّحَىٰ",
+          "tr": "wal-ḍuḥā",
+          "meaning": "By the morning, bright and warm,"
+        },
+        {
+          "n": 2,
+          "ar": "وَٱلَّيْلِ إِذَا سَجَىٰ",
+          "tr": "wa-al-layli idhā sajā",
+          "meaning": "and by the night, when it settles calm and still,"
+        },
+        {
+          "n": 3,
+          "ar": "مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ",
+          "tr": "mā waddaʿaka rabbuka wamā qalā",
+          "meaning": "your Lord has not left you, and He is not displeased with you."
+        },
+        {
+          "n": 4,
+          "ar": "وَلَلْـَٔاخِرَةُ خَيْرٌ لَّكَ مِنَ ٱلْأُولَىٰ",
+          "tr": "walalākhiratu khayrun laka mina l-ūlā",
+          "meaning": "And truly, what comes after will be even better for you than what came before."
+        },
+        {
+          "n": 5,
+          "ar": "وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰٓ",
+          "tr": "walasawfa yuʿ'ṭīka rabbuka fatarḍā",
+          "meaning": "And soon your Lord will give you so much that your heart is happy."
+        },
+        {
+          "n": 6,
+          "ar": "أَلَمْ يَجِدْكَ يَتِيمًا فَـَٔاوَىٰ",
+          "tr": "alam yajid'ka yatīman faāwā",
+          "meaning": "Did He not find you an orphan, and give you a home?"
+        },
+        {
+          "n": 7,
+          "ar": "وَوَجَدَكَ ضَآلًّا فَهَدَىٰ",
+          "tr": "wawajadaka ḍāllan fahadā",
+          "meaning": "Did He not find you unsure, and show you the way?"
+        },
+        {
+          "n": 8,
+          "ar": "وَوَجَدَكَ عَآئِلًا فَأَغْنَىٰ",
+          "tr": "wawajadaka ʿāilan fa-aghnā",
+          "meaning": "Did He not find you in need, and make your heart rich?"
+        },
+        {
+          "n": 9,
+          "ar": "فَأَمَّا ٱلْيَتِيمَ فَلَا تَقْهَرْ",
+          "tr": "fa-ammā l-yatīma falā taqhar",
+          "meaning": "So never be hard on an orphan,"
+        },
+        {
+          "n": 10,
+          "ar": "وَأَمَّا ٱلسَّآئِلَ فَلَا تَنْهَرْ",
+          "tr": "wa-ammā l-sāila falā tanhar",
+          "meaning": "and never turn away someone who asks for help,"
+        },
+        {
+          "n": 11,
+          "ar": "وَأَمَّا بِنِعْمَةِ رَبِّكَ فَحَدِّثْ",
+          "tr": "wa-ammā biniʿ'mati rabbika faḥaddith",
+          "meaning": "and always speak warmly about the good things your Lord has given you."
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "slug": "sharh",
+      "arabicName": "الشرح",
+      "englishName": "Ash-Sharh",
+      "meaningName": "The Relief",
+      "kidIntro": "This tiny surah is a big hug: Allah opened the Prophet's heart, lifted his heavy worries, and promises that after every hard time comes ease.",
+      "story": {
+        "title": "After every hardship, ease",
+        "pages": [
+          "Sometimes the Prophet Muhammad, peace be upon him, carried heavy worries in his heart. Allah asked him gently: Did We not open your heart wide, and lift the heavy weight that was pressing on you?",
+          "Allah also raised his name high. Today, the Prophet's name is spoken with love in prayers, five times a day, all around the world.",
+          "Then comes a promise, said twice so no one ever forgets it: with hardship comes ease. With hardship comes ease.",
+          "So the surah ends with gentle advice: when your work is done, turn to worship, and let your heart lean toward your Lord — that is where true rest is found."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "أَلَمْ نَشْرَحْ لَكَ صَدْرَكَ",
+          "tr": "alam nashraḥ laka ṣadraka",
+          "meaning": "Did We not open your heart wide for you?"
+        },
+        {
+          "n": 2,
+          "ar": "وَوَضَعْنَا عَنكَ وِزْرَكَ",
+          "tr": "wawaḍaʿnā ʿanka wiz'raka",
+          "meaning": "And We lifted the heavy weight from you,"
+        },
+        {
+          "n": 3,
+          "ar": "ٱلَّذِىٓ أَنقَضَ ظَهْرَكَ",
+          "tr": "alladhī anqaḍa ẓahraka",
+          "meaning": "the one that was pressing on your back,"
+        },
+        {
+          "n": 4,
+          "ar": "وَرَفَعْنَا لَكَ ذِكْرَكَ",
+          "tr": "warafaʿnā laka dhik'raka",
+          "meaning": "and We raised your name to be loved everywhere."
+        },
+        {
+          "n": 5,
+          "ar": "فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا",
+          "tr": "fa-inna maʿa l-ʿus'ri yus'ran",
+          "meaning": "So truly, with hardship comes ease —"
+        },
+        {
+          "n": 6,
+          "ar": "إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا",
+          "tr": "inna maʿa l-ʿus'ri yus'ran",
+          "meaning": "truly, with hardship comes ease."
+        },
+        {
+          "n": 7,
+          "ar": "فَإِذَا فَرَغْتَ فَٱنصَبْ",
+          "tr": "fa-idhā faraghta fa-inṣab",
+          "meaning": "So when your work is done, turn to worship,"
+        },
+        {
+          "n": 8,
+          "ar": "وَإِلَىٰ رَبِّكَ فَٱرْغَب",
+          "tr": "wa-ilā rabbika fa-ir'ghab",
+          "meaning": "and let your heart lean toward your Lord."
         }
       ]
     },
