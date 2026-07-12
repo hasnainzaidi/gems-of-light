@@ -19,7 +19,9 @@
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
 
     enter(params) {
-      const def = GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+      const def = params.world ? GOL.WORLDS3[params.world - 1]
+        : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+      this.worldN = params.world || null;
       const L = (this.L = GOL.buildPrototype(def));
       this.t = 0;
       this.paused = false;
@@ -543,7 +545,7 @@
           this.fx.spawn('sparkle', L.door.x + GOL.rnd(-40, 40), L.door.y - GOL.rnd(10, 170), { color: '#FFE9A8' });
         }
         if (L.door && Math.abs(pl.x - L.door.x) < 50 && Math.abs(pl.y - L.door.y) < 60) {
-          GOL.go('shrine', { proto: this.L.id });
+          GOL.go('shrine', { proto: this.L.id, world: this.worldN });
           return;
         }
       }

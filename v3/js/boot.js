@@ -4,7 +4,15 @@
 (function () {
   const GOL = window.GOL;
   GOL.VERSION = 'v3.0';
-  GOL.AUDIO_BASE = '../audio/'; // recitations live at the repo root
+  GOL.AUDIO_BASE = '../audio/'; // narration/voice files live at the repo root
+
+  // ------------------------------------------------------------ reciters --
+  // one voice at a time, chosen in the tuning panel; local files first,
+  // everyayah.com streaming as the fallback
+  GOL.RECITERS = {
+    basit: { name: 'Abdul Basit (Murattal)', local: '../audio/basit/', remote: 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/' },
+    alafasy: { name: 'Mishary Alafasy', local: '../audio/', remote: 'https://everyayah.com/data/Alafasy_128kbps/' }
+  };
 
   // ------------------------------------------------------------ tunables --
   const q = new URLSearchParams(location.search);
@@ -19,7 +27,8 @@
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
-    surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null
+    surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
+    reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit'
   };
   // the in-app tuning panel persists its choices; a URL param still wins as
   // an explicit override for that key. CFG_V lets a default change (like the
@@ -30,10 +39,11 @@
     if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
+    if (!q.has('reciter') && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter }));
     } catch (e) { /* ignore */ }
   };
 

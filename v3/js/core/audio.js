@@ -94,21 +94,28 @@
     key(surahId, n) {
       return String(surahId).padStart(3, '0') + String(n).padStart(3, '0');
     },
+    // the current reciter's paths (falls back to the legacy constants)
+    _reciter() {
+      return (GOL.RECITERS && GOL.V3 && GOL.RECITERS[GOL.V3.reciter]) ||
+        { local: (GOL.AUDIO_BASE || 'audio/'), remote: REMOTE };
+    },
     _el(key) {
-      if (!this._els[key]) {
-        const el = new Audio((GOL.AUDIO_BASE || 'audio/') + key + '.mp3');
+      const rec = this._reciter();
+      const ck = ((GOL.V3 && GOL.V3.reciter) || 'x') + ':' + key;
+      if (!this._els[ck]) {
+        const el = new Audio(rec.local + key + '.mp3');
         el.preload = 'auto';
         el._triedRemote = false;
         el.addEventListener('error', () => {
           if (!el._triedRemote) {
             el._triedRemote = true;
-            el.src = REMOTE + key + '.mp3';
+            el.src = rec.remote + key + '.mp3';
             el.load();
           }
         });
-        this._els[key] = el;
+        this._els[ck] = el;
       }
-      return this._els[key];
+      return this._els[ck];
     },
     preloadSurah(surah) {
       for (const v of surah.verses) this._el(this.key(surah.id, v.n));

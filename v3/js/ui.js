@@ -115,18 +115,25 @@
 
   // ================================================================ TITLE ==
   // Dev-facing doorway into the prototypes. Tap anywhere to begin.
+  const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
+
   const title = {
-    t: 0, fx: null, bd: null, buttons: [], settingsOpen: false,
-    enter() {
+    t: 0, fx: null, bd: null, buttons: [], settingsOpen: false, celebrateN: 0, celebrateT: 0,
+    enter(params) {
       this.t = 0;
       this.fx = GOL.makeFx();
       this.bd = buildBackdrop('falaq', 44);
       this.settingsOpen = false;
+      // coming home with a new Grand Gem: its world disc celebrates
+      this.celebrateN = (params && params.celebrate) || 0;
+      this.celebrateT = this.celebrateN ? 3.2 : 0;
+      if (this.celebrateN) GOL.audio.sfx('unlockLevel');
     },
     // The tuning rows and their segmented option buttons. One source of
     // geometry, used by both hit-testing and drawing.
     settingsSegs(W, H) {
       const rows = [
+        { label: 'reciter', opts: Object.keys(GOL.RECITERS || {}), get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } },
         { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
         { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } }
@@ -179,11 +186,34 @@
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
       this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
-      // one chip per registered prototype — all ten live in this build
-      const ids = Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b);
+      if (this.celebrateT > 0) {
+        this.celebrateT -= dt;
+        const wb = (this.worldBtns || [])[this.celebrateN - 1];
+        if (wb && Math.random() < dt * 12) {
+          this.fx.spawn('petal', wb.x + GOL.rnd(-50, 50), wb.y - 70, { color: Math.random() < 0.5 ? '#F5B8C4' : '#FFE9A8' });
+        }
+      }
+      // the journey: one disc per world
+      const worlds = GOL.WORLDS3 || [];
+      this.worldBtns = worlds.map((w, i) => ({
+        n: w.n, key: w.key,
+        open: GOL.worldOpen(w.n), done: GOL.worldDone(w.n), grown: !!w.build,
+        x: W / 2 + (i - (worlds.length - 1) / 2) * 120, y: H * 0.6, r: 36,
+        fn: () => {
+          if (GOL.worldOpen(w.n) && w.build) {
+            GOL.audio.unlock();
+            GOL.audio.sfx('unlockLevel');
+            GOL.go('adventure', { world: w.n });
+          } else {
+            GOL.audio.sfx('drift'); // still sleeping, or still growing
+          }
+        }
+      }));
+      // the prototype shelf lives on behind the debug flag (the lab)
+      const ids = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
       this.protoBtns = ids.map((id, i) => ({
         id, key: GOL.PROTOTYPES[id].key,
-        x: W / 2 + (i - (ids.length - 1) / 2) * 64, y: H * 0.64, r: 26,
+        x: W / 2 + (i - (ids.length - 1) / 2) * 64, y: H * 0.82, r: 26,
         fn: () => {
           GOL.audio.unlock();
           GOL.audio.sfx('unlockLevel');
@@ -205,12 +235,13 @@
       }
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
+      if (GOL.hitButtons(GOL.Input.taps, this.worldBtns)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns)) return;
       for (const tap of GOL.Input.taps) {
         if (!tap.ui && this.t > 0.5) {
           GOL.audio.unlock();
           GOL.audio.sfx('unlockLevel');
-          GOL.go('adventure', { proto: GOL.V3.proto });
+          GOL.go('adventure', { world: GOL.currentWorld() });
           return;
         }
       }
@@ -218,31 +249,63 @@
     draw(ctx, W, H) {
       const t = this.t;
       const gy = GOL.drawBackdrop(ctx, this.bd, W, H, t, t * 12, 0.8);
-      GOL.drawSprite(ctx, W / 2 - 120, gy + 22, {
+      GOL.drawSprite(ctx, W / 2 - 300, gy + 22, {
         vx: 0, vy: 0, grounded: true, facing: 1, t, idleT: 3,
         blink: Math.sin(t * 0.7) > 0.98, squashX: 1, squashY: 1, moving: false
       });
-      const gemY = gy - 80 + Math.sin(t * 1.3) * 8;
-      GOL.drawGem(ctx, W / 2 + 40, gemY, 32, GOL.GEMS[2], t, { phase: 1 });
-      GOL.drawFirefly(ctx, W / 2 + 40 + Math.cos(t * 0.9) * 70, gemY - 16 + Math.sin(t * 1.7) * 26, t, 1);
       this.fx.draw(ctx);
       const ty = H * 0.26;
       GOL.star8(ctx, W / 2 - 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
       GOL.star8(ctx, W / 2 + 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
       GOL.text(ctx, 'Gems of Light', W / 2, ty - 8, { size: Math.min(46, W * 0.06), weight: '800', color: INK });
       GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
-      const proto = GOL.PROTOTYPES[GOL.V3.proto];
-      GOL.text(ctx, 'v3 prototype ' + GOL.V3.proto + ' · ' + (proto ? proto.name : '?'), W / 2, ty + 68, { size: 13, weight: '700', color: INK_SOFT });
-      // the prototype shelf: every registered world, one chip each
+      // the journey discs: one per world — a Grand Gem once earned, a
+      // pulsing star when open, a closed bud while locked or still growing
+      for (const b of this.worldBtns || []) {
+        ctx.fillStyle = alpha('#3E5340', 0.18);
+        ctx.beginPath(); ctx.ellipse(b.x + 2, b.y + 30, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
+        const dg = ctx.createLinearGradient(b.x, b.y - 34, b.x, b.y + 34);
+        dg.addColorStop(0, b.open ? '#F5EDD4' : '#C9C2AC');
+        dg.addColorStop(1, b.open ? '#D8CBA6' : '#A8A28C');
+        ctx.fillStyle = dg;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = alpha(b.open ? GOLD : '#8C8672', 0.8);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 30, 0, Math.PI * 2); ctx.stroke();
+        if (b.done) {
+          GOL.drawGem(ctx, b.x, b.y, 16, GRAND, t, { phase: b.n, glow: 0.85 });
+        } else if (b.open && b.grown) {
+          const p = 0.7 + 0.3 * Math.sin(t * 2.4 + b.n);
+          GOL.star8Path(ctx, b.x, b.y, 14, Math.PI / 8);
+          ctx.fillStyle = alpha('#F0C878', 0.35 + 0.4 * p);
+          ctx.fill();
+          ctx.strokeStyle = alpha(GOLD, 0.9);
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
+          // a closed bud: locked worlds sleep dark, growing ones stir softly
+          const soft = b.open ? 1 : 0.55;
+          ctx.globalAlpha = soft;
+          ctx.fillStyle = '#96A382';
+          ctx.beginPath(); ctx.ellipse(b.x, b.y + 2, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#7E8F6E';
+          ctx.beginPath(); ctx.ellipse(b.x - 4.5, b.y + 3, 4.5, 10, 0.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(b.x + 4.5, b.y + 3, 4.5, 10, -0.5, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        GOL.text(ctx, b.key, b.x, b.y + 52, { size: 11, weight: '700', color: alpha('#FFFFFF', b.open ? 0.7 : 0.4) });
+      }
+      // Noor the firefly keeps watch over the world that waits next
+      const cur = (this.worldBtns || [])[GOL.currentWorld() - 1];
+      if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
+      // the prototype shelf (debug only)
       for (const b of this.protoBtns || []) {
-        const isDefault = b.id === GOL.V3.proto;
-        ctx.fillStyle = alpha('#FAF4E0', isDefault ? 0.95 : 0.72);
+        ctx.fillStyle = alpha('#FAF4E0', 0.72);
         ctx.beginPath(); ctx.arc(b.x, b.y, 24, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = alpha(GOLD, isDefault ? 0.95 : 0.45);
-        ctx.lineWidth = isDefault ? 2.6 : 1.6;
+        ctx.strokeStyle = alpha(GOLD, 0.45);
+        ctx.lineWidth = 1.6;
         ctx.beginPath(); ctx.arc(b.x, b.y, 22, 0, Math.PI * 2); ctx.stroke();
-        GOL.text(ctx, String(b.id), b.x, b.y + 1, { size: 17, weight: '800', color: isDefault ? INK : INK_SOFT });
-        GOL.text(ctx, b.key, b.x, b.y + 38, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.6) });
+        GOL.text(ctx, String(b.id), b.x, b.y + 1, { size: 17, weight: '800', color: INK_SOFT });
       }
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });

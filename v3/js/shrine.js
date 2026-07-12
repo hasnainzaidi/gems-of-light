@@ -18,7 +18,9 @@
     buttons: [], firstTry: 0,
 
     enter(params) {
-      const def = GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+      const def = params.world ? GOL.WORLDS3[params.world - 1]
+        : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+      this.worldN = params.world || null;
       const surahId = GOL.V3.surah || def.surahId;
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
@@ -161,7 +163,11 @@
         // one quiet tap, once the gem has fully formed, carries onward
         if (this.grandK >= 1) {
           for (const tap of GOL.Input.taps) {
-            if (!tap.ui && this.bloomT > 3.6) { tap.ui = true; GOL.go('title'); return; }
+            if (!tap.ui && this.bloomT > 3.6) {
+              tap.ui = true;
+              GOL.go('title', { celebrate: this.worldN });
+              return;
+            }
           }
         }
         this.bloomT += dt;
