@@ -116,7 +116,19 @@
       this.fx.update(dt);
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
+      // one chip per registered prototype — all ten live in this build
+      const ids = Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b);
+      this.protoBtns = ids.map((id, i) => ({
+        id, key: GOL.PROTOTYPES[id].key,
+        x: W / 2 + (i - (ids.length - 1) / 2) * 64, y: H * 0.64, r: 26,
+        fn: () => {
+          GOL.audio.unlock();
+          GOL.audio.sfx('unlockLevel');
+          GOL.go('adventure', { proto: id });
+        }
+      }));
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
+      if (GOL.hitButtons(GOL.Input.taps, this.protoBtns)) return;
       for (const tap of GOL.Input.taps) {
         if (!tap.ui && this.t > 0.5) {
           GOL.audio.unlock();
@@ -144,6 +156,17 @@
       GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
       const proto = GOL.PROTOTYPES[GOL.V3.proto];
       GOL.text(ctx, 'v3 prototype ' + GOL.V3.proto + ' · ' + (proto ? proto.name : '?'), W / 2, ty + 68, { size: 13, weight: '700', color: INK_SOFT });
+      // the prototype shelf: every registered world, one chip each
+      for (const b of this.protoBtns || []) {
+        const isDefault = b.id === GOL.V3.proto;
+        ctx.fillStyle = alpha('#FAF4E0', isDefault ? 0.95 : 0.72);
+        ctx.beginPath(); ctx.arc(b.x, b.y, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = alpha(GOLD, isDefault ? 0.95 : 0.45);
+        ctx.lineWidth = isDefault ? 2.6 : 1.6;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 22, 0, Math.PI * 2); ctx.stroke();
+        GOL.text(ctx, String(b.id), b.x, b.y + 1, { size: 17, weight: '800', color: isDefault ? INK : INK_SOFT });
+        GOL.text(ctx, b.key, b.x, b.y + 38, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.6) });
+      }
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);

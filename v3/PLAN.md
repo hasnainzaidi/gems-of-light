@@ -216,7 +216,26 @@ pattern, never shown to the child:
    surahs, what carries forward), with the P9-vs-P10 comparison the brief
    calls out.
 
-## 9. Decisions taken (flag if you disagree)
+## 9. Git workflow (kept deliberately simple)
+
+- **`main` is the live site** — every push deploys to playgemsoflight.com.
+  Only merge what a child could play today.
+- **`v3-prototypes` is where all v3 work happens** — every prototype, one
+  branch. Prototypes are *files* (`js/prototypes/pN.js`), not branches: they
+  must coexist so they can be compared in one build from the title-screen
+  picker (or `?p=N`).
+- **One commit per finished idea** ("P2 vertical climb recipe", "raft
+  mover"), so any single idea can be reverted later without disturbing the
+  rest.
+- **Combining winners is code work, not Git work**: winning mechanics live
+  in shared modules (palette driver, occluders, movers) that any recipe can
+  use; a "combined" world is just a new recipe using several of them, and
+  losing prototypes are deleted files.
+- Optional: a short-lived branch off `v3-prototypes` for a genuinely risky
+  engine experiment, merged back or deleted within a few days. Nothing
+  longer-lived than that.
+
+## 10. Decisions taken (flag if you disagree)
 
 - **Same surah (Al-Falaq) across all ten** — isolates the level-design
   variable, which is the brief's actual question.
