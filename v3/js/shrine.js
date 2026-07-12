@@ -40,6 +40,11 @@
       this.reciteGem = null;
       this.firstTry = 0;
       this._socketMissed = false;
+      // knowledge telemetry: the shrine can be brute-forced, so completion
+      // alone means little — tries-per-gem and listens-per-gem tell the truth
+      this.missTotal = 0;
+      this.listens = 0;
+      this.runHints = 0;
 
       // the gems arrive as themselves (they were gathered in the open);
       // shuffled so the cloud never spells the answer. Listening — a tap,
@@ -152,6 +157,13 @@
           st.completed = true;
           st.shrineDone = (st.shrineDone || 0) + 1;
           st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
+          st.shrineRuns = st.shrineRuns || [];
+          st.shrineRuns.push({
+            at: Date.now(), sockets: this.gems.length,
+            firstTry: this.firstTry, misses: this.missTotal,
+            listens: this.listens, hints: this.runHints
+          });
+          if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
           GOL.store.save();
           GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
         }
@@ -191,6 +203,7 @@
               this.heldGem = g;
               if (!g.listenedThisHold) {
                 g.listenedThisHold = true;
+                this.listens++;
                 GOL.audio.playVerse(this.surahId, g.ayah, null);
               }
             }
@@ -208,6 +221,7 @@
           if (GOL.dist(tap.x, tap.y, g.x, g.y) < 42) {
             tap.ui = true;
             g.pulse = 1;
+            this.listens++;
             GOL.audio.playVerse(this.surahId, g.ayah, null);
             this.fx.spawn('ring', g.x, g.y, { color: GOL.GEMS[(g.ayah - 1) % 7].glow, size: 22 });
             break;
@@ -224,6 +238,7 @@
           else {
             // not its place yet — it floats home, unbothered
             this.miss++;
+            this.missTotal++;
             this._socketMissed = true;
             const st = GOL.store.level(this.surahId);
             st.misorders = st.misorders || {};
@@ -245,6 +260,7 @@
           if (g && this.heldGem !== g) {
             const st = GOL.store.level(this.surahId);
             st.hintsUsed = (st.hintsUsed || 0) + 1;
+            this.runHints++;
             GOL.store.save();
             this.place(g, this.sockets[this.placed]);
           }

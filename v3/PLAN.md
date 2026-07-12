@@ -201,6 +201,14 @@ PLAN.md                 this file
 
 ## 7. Instrumentation (silent, local-only)
 
+**Knowledge metric (2026-07-12):** the shrine is brute-forceable, so
+completion alone proves nothing. `st.shrineRuns` records each run's
+first-try count, total misses, listens, and hints; the honest signals are
+**tries per gem** ((sockets+misses)/sockets, 1.0 = perfect) and **listens
+per gem** (low = recall, higher = recognition-by-ear — both legitimate,
+different depths of knowing). `st.shrineFirstTry` is a max-of-runs and can
+be flattered by one lucky run — prefer shrineRuns.
+
 To answer the brief's questions with data, not vibes — reusing V1's `stamp`
 pattern, never shown to the child:
 
