@@ -30,20 +30,33 @@
   // sub-branch (native prompt vs. manual steps) is decided each frame because
   // beforeinstallprompt can fire after this scene is already on screen.
   const q = new URLSearchParams(location.search);
+  // Pure classifier, kept UA-in/branch-out so it's testable without a real
+  // device: every iOS UA contains "Safari" (even Chrome/Firefox/Edge-on-iOS,
+  // which wrap WebKit and tack their own token on top), so a naive /Safari/
+  // test misreports them as real Safari. We must check the OTHER browsers'
+  // tokens (CriOS, FxiOS, ...) before falling through to "real Safari".
+  // Exposed on GOL for console/unit testing — not part of the render path.
+  function classifyIOSBrowser(ua) {
+    if (/CriOS/i.test(ua)) return 'iosChrome'; // Chrome on iOS: A2HS works (iOS 16.4+), share sits top-right
+    // Firefox / Edge / Opera on iOS: A2HS support is inconsistent — route to Safari
+    if (/FxiOS|EdgiOS|OPiOS|OPT\//i.test(ua)) return 'iosInApp';
+    // known in-app webview embedders, or WebKit with no "Safari" token at all
+    const inApp = /(Instagram|FBAN|FBAV|FB_IAB|GSA|Line|Twitter|Snapchat|Pinterest|TikTok|MicroMessenger|wv\))/i.test(ua) || !/Safari/i.test(ua);
+    return inApp ? 'iosInApp' : 'ios';
+  }
   function detectOS() {
-    const forced = q.get('installPlatform'); // dev/phone override: ios|iosInApp|android|desktop
-    if (forced === 'ios' || forced === 'iosInApp' || forced === 'android' || forced === 'desktop') return forced;
+    const forced = q.get('installPlatform'); // dev/phone override: ios|iosChrome|iosInApp|android|desktop
+    if (forced === 'ios' || forced === 'iosChrome' || forced === 'iosInApp' || forced === 'android' || forced === 'desktop') return forced;
     const ua = navigator.userAgent || '';
     const iPadOS = navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+    // require an actual iOS device signal FIRST — desktop Chrome/Edge UAs
+    // also contain "Safari", so without this gate they'd misclassify as iOS.
     const isIOS = /iPad|iPhone|iPod/.test(ua) || iPadOS;
-    if (isIOS) {
-      // an in-app webview: a known embedder token, or WebKit without "Safari"
-      const inApp = /(Instagram|FBAN|FBAV|FB_IAB|GSA|Line|Twitter|Snapchat|Pinterest|TikTok|MicroMessenger)/i.test(ua) || !/Safari/i.test(ua);
-      return inApp ? 'iosInApp' : 'ios';
-    }
+    if (isIOS) return classifyIOSBrowser(ua);
     if (/Android/i.test(ua)) return 'android';
     return 'desktop';
   }
+  GOL.classifyIOSBrowser = classifyIOSBrowser; // console-testable, not used in draw/update
   const FORCED_ANDROID = q.get('installPlatform') === 'android';
 
   // ------------------------------------------------------------ palette -----
@@ -228,6 +241,13 @@
           { n: '3', glyph: 'appicon', text: 'Open it from the home screen' }
         ];
       }
+      if (branch === 'iosChrome') {
+        return [
+          { n: '1', glyph: 'share', text: 'Tap Share, top right' },
+          { n: '2', glyph: 'plusrow', text: 'Add to Home Screen' },
+          { n: '3', glyph: 'appicon', text: 'Open Gems of Light from your home screen' }
+        ];
+      }
       if (branch === 'androidSteps') {
         return [
           { n: '1', glyph: 'dots', text: 'Open the browser menu' },
@@ -241,6 +261,7 @@
     resolveBranch() {
       const os = this.os;
       if (os === 'ios') return 'ios';
+      if (os === 'iosChrome') return 'iosChrome';
       if (os === 'iosInApp') return 'iosInApp';
       if (os === 'android') return (deferredPrompt || FORCED_ANDROID) ? 'androidPrompt' : 'androidSteps';
       return 'desktop';
@@ -265,6 +286,7 @@
         rowH = Math.max(44, Math.min(66, (H * 0.60) / Math.max(3, n)));
         cardH = 14 + n * rowH + 14;
         if (branch === 'ios' || branch === 'iosInApp') note = 'Share sits at the bottom of Safari on iPhone';
+        else if (branch === 'iosChrome') note = 'Share sits at the top of Chrome on iPhone';
       }
 
       const headBlock = 52;
