@@ -62,6 +62,11 @@
       // the memory stone, if this world remembers an earlier surah. It stays
       // 'inert' scenery through roam/settle/campfire and only 'arms' at the
       // ember phase — the deliberate, never-mid-collection redesign (PLAN §9).
+      // An unaimed stone (b.memory(x) with no surah) is aimed here by the
+      // journey: the completed surah whose dream is longest ago (never-
+      // dreamed counts as oldest; ties fall to the earliest-learned). With
+      // nothing yet completed it stays plain stone — no shimmer, no hint.
+      if (L.memory && !L.memory.surahId) L.memory.surahId = this.chooseMemorySurah(L.surahId);
       this.memState = L.memory ? { phase: 'inert', dwell: 0, travel: 0, from: null, litT: 0 } : null;
       L.movers = this.movers;
       const stPre = GOL.store.level(L.surahId);
@@ -632,6 +637,26 @@
     setCampAr(i) {
       const v = this.L.surah.verses[i];
       if (v && GOL.V3.arabic) this.glowAr = { text: v.ar, t: 0, dur: 7 };
+    },
+
+    // which surah should this world's unaimed stone remember? The completed
+    // one (Grand Gem earned) that has gone longest without a dream — read
+    // from st.shrineRuns' dream entries. Never-dreamed surahs count as
+    // oldest; among those, journey order breaks the tie (earliest learned
+    // first). The current world's own surah never remembers itself.
+    chooseMemorySurah(currentId) {
+      const grand = GOL.store.data.grand || {};
+      const seq = GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean);
+      let best = null, bestAt = Infinity;
+      for (const w of seq) {
+        if (!w.surahId || w.surahId === currentId || !grand[w.surahId]) continue;
+        let last = 0;
+        for (const r of GOL.store.level(w.surahId).shrineRuns || []) {
+          if (r.dream && r.at > last) last = r.at;
+        }
+        if (last < bestAt) { bestAt = last; best = w.surahId; }
+      }
+      return best;
     },
 
     // THE REMEMBERING (PLAN §9). Awake only in the ember phase. Armed, the

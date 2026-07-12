@@ -80,7 +80,7 @@
       GOL.text(ctx, 'How the garden is growing', cx, topY, { size: 19, weight: '800', color: '#F5EDD4' });
 
       // the main parchment table
-      const worlds = (GOL.WORLDS3 || []).filter(Boolean);
+      const worlds = GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean);
       const rows = worlds.length;
       const headH = 30, rowH = 40;
       const px = L + 18, pw = (R - L) - 36;

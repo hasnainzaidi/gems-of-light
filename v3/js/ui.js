@@ -215,13 +215,14 @@
       this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
       if (this.celebrateT > 0) {
         this.celebrateT -= dt;
-        const wb = (this.worldBtns || [])[this.celebrateN - 1];
+        const wb = (this.worldBtns || []).find((b) => b.n === this.celebrateN);
         if (wb && Math.random() < dt * 12) {
           this.fx.spawn('petal', wb.x + GOL.rnd(-50, 50), wb.y - 70, { color: Math.random() < 0.5 ? '#F5B8C4' : '#FFE9A8' });
         }
       }
-      // the journey: one disc per world
-      const worlds = GOL.WORLDS3 || [];
+      // the journey: one disc per world, laid out in journey order (which is
+      // GOL.WORLD_ORDER, not file order — see worlds.js)
+      const worlds = GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []);
       this.worldBtns = worlds.map((w, i) => ({
         n: w.n, key: w.key, surahId: w.surahId,
         open: GOL.worldOpen(w.n), done: GOL.worldDone(w.n), grown: !!w.build,
@@ -445,11 +446,11 @@
       }
       // Noor the firefly rests beside the garden that misses its child, else
       // keeps watch over the world that waits next
-      const missB = this.missN ? (this.worldBtns || [])[this.missN - 1] : null;
+      const missB = this.missN ? (this.worldBtns || []).find((b) => b.n === this.missN) : null;
       if (missB) {
         GOL.drawFirefly(ctx, missB.x + 34 + Math.sin(t * 1.3) * 10, missB.y - 40 + Math.sin(t * 2.2) * 7, t, 1.25);
       } else {
-        const cur = (this.worldBtns || [])[GOL.currentWorld() - 1];
+        const cur = (this.worldBtns || []).find((b) => b.n === GOL.currentWorld());
         if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
       }
       // the prototype shelf (debug only)

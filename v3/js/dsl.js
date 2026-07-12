@@ -89,9 +89,12 @@
       },
       // a memory stone: an ancient setting shaped for an earlier surah's
       // Grand Gem. A child who carries that gem wakes it — the whole surah
-      // sounds again and the garden blooms (spaced repetition as discovery)
+      // sounds again and the garden blooms (spaced repetition as discovery).
+      // surahId is optional: named, the stone always remembers that surah
+      // (W2's falaq stone); omitted, the journey aims it at whichever
+      // completed surah has gone longest un-remembered (adventure.enter)
       memory(x, surahId) {
-        this.memoryPos = { x: (x + 0.5) * TILE, y: this.surface(x) * TILE, surahId };
+        this.memoryPos = { x: (x + 0.5) * TILE, y: this.surface(x) * TILE, surahId: surahId || null };
         return b;
       },
       // a foreground curtain (cave dark, hanging leaves) that softens when
