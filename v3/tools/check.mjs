@@ -178,7 +178,9 @@ for (const tgt of targets) {
     }
     if (!ok) errs.push('memory stone unreachable');
     for (let dy = 1; dy <= 2; dy++) if (get(mx, my - dy) !== 0) errs.push('memory stone lacks air at -' + dy);
-    if (!window.GOL_DATA.surahs.find((s) => s.id === L.memory.surahId)) errs.push('memory stone names unknown surah ' + L.memory.surahId);
+    // an unaimed stone (surahId null) is valid — the engine aims it at the
+    // least-recently-remembered completed surah (adventure.enter)
+    if (L.memory.surahId != null && !window.GOL_DATA.surahs.find((s) => s.id === L.memory.surahId)) errs.push('memory stone names unknown surah ' + L.memory.surahId);
   }
 
   for (const p of L.props) {

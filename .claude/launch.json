@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8437"],
       "port": 8437
+    },
+    {
+      "name": "gems-static-alt",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8438"],
+      "port": 8438
     }
   ]
 }
