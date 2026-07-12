@@ -28,7 +28,11 @@
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
-    reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit'
+    reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit',
+    // THE WORLD ECHOES at the campfire on a surah's FIRST learning: each ayah
+    // returns soft while listening rings ripple from the seated child. 'gentle'
+    // by default; 'off' gives the tight single recitation. (PLAN §9)
+    campEcho: ['off', 'gentle'].includes(q.get('campEcho')) ? q.get('campEcho') : 'gentle'
   };
   // the in-app tuning panel persists its choices; a URL param still wins as
   // an explicit override for that key. CFG_V lets a default change (like the
@@ -40,10 +44,12 @@
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
     if (!q.has('reciter') && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
+    // campEcho is a plain toggle: a missing saved key just keeps the default
+    if (!q.has('campEcho') && (saved.campEcho === 'off' || saved.campEcho === 'gentle')) GOL.V3.campEcho = saved.campEcho;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, campEcho: GOL.V3.campEcho }));
     } catch (e) { /* ignore */ }
   };
 

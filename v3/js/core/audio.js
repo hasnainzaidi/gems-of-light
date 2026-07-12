@@ -166,16 +166,38 @@
       return h;
     },
     // Recite a whole surah, verse by verse. cb.onVerse(i) fires before each
-    // ayah. cb.breath sets the pause (seconds) BETWEEN ayat — default 0.42s,
-    // the old value; the campfire lengthens it so a child can echo aloud.
-    // cb.onBreath(i) fires as each such pause begins, carrying the index of the
-    // ayah just heard (a wordless "your turn").
+    // ayah at full voice. cb.breath sets the pause (seconds) BETWEEN ayat —
+    // default 0.42s; cb.onBreath(i) fires as each pause begins (a wordless
+    // "your turn"). The breath/onBreath mechanism is retained but unused by
+    // the campfire, which now uses THE WORLD ECHOES instead:
+    //
+    // cb.echoVol (e.g. 0.3) — when set, after each ayah finishes at full voice
+    // the SAME ayah plays again SOFT (an echo off the hills) before the normal
+    // gap and the next ayah; the final ayah is echoed too. cb.onEcho(i) fires
+    // as each echo begins. Nothing is ever silent — talqeen modeled, not asked
+    // for. When echoVol is absent, behavior is exactly as before (breath path).
     playSurah(surah, cb) {
       this.stopSpeak();
       this.stopRecitation();
       const breathMs = (cb && cb.breath != null ? cb.breath : 0.42) * 1000;
+      const echoVol = cb && cb.echoVol != null ? cb.echoVol : null;
       const seq = { i: 0, stopped: false, el: null };
       this._seq = seq;
+      // the same ayah returning soft, then the normal gap into the next
+      const echoStep = (heard) => {
+        if (seq.stopped) return;
+        const v = surah.verses[heard];
+        if (cb && cb.onEcho) cb.onEcho(heard);
+        const h = this._verse(surah.id, v.n, () => {
+          seq.i++;
+          const last = seq.i >= surah.verses.length;
+          setTimeout(step, last ? 420 : breathMs);
+        }, true);
+        // _verse resets el.volume = 1 at start; drop it to the echo now that
+        // playback has begun (same trick echoVerse uses)
+        h.el.volume = Math.max(0.05, Math.min(1, echoVol));
+        seq.el = h.el;
+      };
       const step = () => {
         if (seq.stopped) return;
         if (seq.i >= surah.verses.length) {
@@ -187,7 +209,8 @@
         const v = surah.verses[seq.i];
         if (cb && cb.onVerse) cb.onVerse(seq.i);
         const h = this._verse(surah.id, v.n, () => {
-          const heard = seq.i; // the ayah just finished
+          const heard = seq.i; // the ayah just finished at full voice
+          if (echoVol != null) { echoStep(heard); return; }
           seq.i++;
           const last = seq.i >= surah.verses.length;
           // the breath (and its "your turn") sits between ayat, never after

@@ -267,6 +267,17 @@ pattern, never shown to the child:
   wordlessly. Orbit kept for the campfire ceremony only.
 - **Rafts are ferries** (playtested 2026-07-12) — bank-to-bank ping-pong;
   the respawn-at-start drift read as a glitch.
+- **Campfire echo-breath REPLACED by "the world echoes"** (playtested
+  2026-07-12): the 2.4s silent breath read as "the recording got stuck" —
+  an invitation made of silence pattern-matches to a stall. New design
+  (approved): after each ayah at the campfire, the same ayah immediately
+  plays again SOFT (an echo off the hills, ~0.3 vol) while listening rings
+  ripple from the seated child and the ayah's script glows — talqeen
+  modeled, nothing ever silent. Gated to the world's FIRST completion
+  (replays get the tight single recitation) and to a new tuning row
+  `campfire echo: off/gentle` (default gentle) so it can be A/B'd with the
+  nieces. Fallback if they fidget: remove, and let the mic feature carry
+  voice production later.
 - **Playtest positives to protect**: the campfire being *earned* (unlit until
   every gem is found), and the flowers blooming where a gem is collected.
 - **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear
