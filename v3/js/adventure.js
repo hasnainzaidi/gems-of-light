@@ -41,8 +41,11 @@
       this.pads = L.pads.map((p) => ({ x: p.x, y: p.y, squish: 0, sqV: 0 }));
       this.movers = L.moverDefs.map((m) => {
         if (m.kind === 'h') return { kind: 'h', x0: m.x0, x1: m.x1, x: (m.x0 + m.x1) / 2, y: m.y, hw: m.hw, speed: m.speed, phase: m.phase, dx: 0, dip: 0, t: 0 };
+        if (m.kind === 'raft') return { kind: 'raft', x0: m.x0, x1: m.x1, x: m.x0, y: m.y, hw: m.hw, speed: m.speed, dx: 0, dip: 0, t: 0 };
         return { kind: 'v', x: m.x, y0: m.y0, y1: m.y1, y: (m.y0 + m.y1) / 2, hw: m.hw, speed: m.speed, phase: m.phase, dx: 0, dip: 0, t: 0 };
       });
+      // foreground curtains that soften when the wanderer steps behind them
+      this.occs = (L.occluders || []).map((o) => ({ o, fade: 1 }));
       L.movers = this.movers;
       const stPre = GOL.store.level(L.surahId);
       this.blossomState = L.blossom ? { x: L.blossom.x, y: L.blossom.y, taken: false, everFound: stPre.blossom } : null;
@@ -214,6 +217,13 @@
           const nx = mid + Math.sin(m.t * m.speed * Math.PI * 2 + m.phase) * amp;
           m.dx = nx - m.x;
           m.x = nx;
+        } else if (m.kind === 'raft') {
+          // steady downstream drift; at the far bank it slips back upstream
+          // (riders should already have stepped off — end raft runs AT a bank)
+          let nx = m.x + m.speed * dt;
+          if (nx > m.x1) { nx = m.x0; m.dx = 0; m.dip = 1; }
+          else m.dx = nx - m.x;
+          m.x = nx;
         } else {
           const mid = (m.y0 + m.y1) / 2, amp = (m.y1 - m.y0) / 2;
           m.y = mid + Math.sin(m.t * m.speed * Math.PI * 2 + m.phase) * amp;
@@ -282,6 +292,15 @@
       }
       if (Math.random() < dt * 0.4) {
         this.fx.spawn('leaf', this.cam.x + Math.random() * viewW, this.cam.y - 10, { color: mix(this.P.leafLight, this.P.leaf, Math.random()) });
+      }
+      // rain thins as the world is restored — the storm gives way to sunrise
+      if (L.weather === 'rain') {
+        const strength = 1 - this.restoreK;
+        for (let i = 0; i < 2; i++) {
+          if (strength > 0.03 && Math.random() < dt * 70 * strength) {
+            this.fx.spawn('rain', this.cam.x + Math.random() * (viewW + 120) - 40, this.cam.y - 10, {});
+          }
+        }
       }
 
       let nearWater = 0;
@@ -576,6 +595,10 @@
       }
       for (const w of this.waterRects) GOL.drawWater(ctx, w.x, w.y, w.w, w.h, t, P);
 
+      // the prototype's own landmark (a great tree, lighthouse, ruin…),
+      // drawn behind the props so life gathers in front of it
+      if (L.drawLandmark) L.drawLandmark(ctx, t, P, L);
+
       for (const p of L.props) {
         if (p.x < cam.x - 220 || p.x > cam.x + cam.viewW + 220) continue;
         this.drawProp(ctx, p, t, P);
@@ -648,12 +671,42 @@
 
       if (this.fly) GOL.drawFirefly(ctx, this.fly.x, this.fly.y, this.t + 2, this.fly.mode === 'guide' ? 1.25 : 1);
       this.fx.draw(ctx);
+
+      // foreground curtains: opaque until the wanderer steps behind them
+      for (const s of this.occs || []) {
+        const o = s.o;
+        const inside = pl && pl.x > o.x - 26 && pl.x < o.x + o.w + 26 && pl.y > o.y - 12 && pl.y < o.y + o.h + 44;
+        s.fade += ((inside ? 0.12 : 1) - s.fade) * 0.1;
+        if (o.x + o.w < cam.x - 60 || o.x > cam.x + cam.viewW + 60) continue;
+        ctx.save();
+        ctx.globalAlpha = 0.96 * s.fade;
+        ctx.fillStyle = o.color;
+        GOL.roundRect(ctx, o.x, o.y, o.w, o.h, 26);
+        ctx.fill();
+        // a soft organic fringe so the curtain reads as foliage/rock, not UI
+        const r = GOL.rng(Math.floor(o.x));
+        for (let i = 0; i < o.w / 30; i++) {
+          const fx = o.x + 8 + r() * (o.w - 16);
+          ctx.beginPath();
+          ctx.arc(fx, o.y + (r() < 0.5 ? 4 : o.h - 4), 12 + r() * 16, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       ctx.restore();
 
       // night thinning into dawn as the world is restored
       if (this.endP && dawnK < 1) {
         ctx.fillStyle = alpha('#25333E', 0.26 * (1 - dawnK));
         ctx.fillRect(0, 0, W, H);
+      }
+      // the storm's grey veil, lifting with every gem
+      if (L.weather === 'rain') {
+        const k = 1 - this.restoreK;
+        if (k > 0.01) {
+          ctx.fillStyle = alpha('#2E3B48', 0.2 * k);
+          ctx.fillRect(0, 0, W, H);
+        }
       }
       // campfire hush
       if (this.phase === 'settle' || this.phase === 'campfire') {

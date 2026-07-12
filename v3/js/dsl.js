@@ -11,7 +11,7 @@
     const b = {
       w, h, tiles,
       gems: [], props: [], creatures: [], waterfalls: [],
-      seeds: [], pads: [], moverDefs: [], blossomPos: null,
+      seeds: [], pads: [], moverDefs: [], occluders: [], blossomPos: null,
       startPos: null, campfirePos: null, doorPos: null,
       set(x, y, v) { if (x >= 0 && x < w && y >= 0 && y < h) tiles[y * w + x] = v; },
       get(x, y) { return x < 0 || x >= w || y < 0 || y >= h ? 0 : tiles[y * w + x]; },
@@ -80,6 +80,18 @@
         this.moverDefs.push({ kind: 'v', x: (x + 0.5) * TILE, y0: (row0 + 0.4) * TILE, y1: (row1 + 0.4) * TILE, hw: 46, speed: 0.3, phase: phase || 0 });
         return b;
       },
+      // a raft drifting steadily downstream (x0 → x1), then slipping back to
+      // begin again — end its run AT a bank so riders simply step off
+      raft(x0, x1, row, speed) {
+        this.moverDefs.push({ kind: 'raft', x0: (x0 + 0.5) * TILE, x1: (x1 + 0.5) * TILE, y: (row + 0.4) * TILE, hw: 56, speed: speed || 64 });
+        return b;
+      },
+      // a foreground curtain (cave dark, hanging leaves) that softens when
+      // the wanderer steps behind it — secrets live inside
+      occluder(x0, x1, y0, y1, color) {
+        this.occluders.push({ x: x0 * TILE, y: y0 * TILE, w: (x1 - x0 + 1) * TILE, h: (y1 - y0 + 1) * TILE, color: color || '#2E4032' });
+        return b;
+      },
       waterfall(x, rowTop) {
         let y1 = rowTop;
         while (y1 < h && this.get(x, y1) === 0) y1++;
@@ -134,7 +146,13 @@
       gems: b.gems.sort((a, g) => a.ayah - g.ayah),
       props: b.props, creatures: b.creatures, waterfalls: b.waterfalls,
       seeds: b.seeds, pads: b.pads, moverDefs: b.moverDefs, blossom: b.blossomPos,
+      occluders: b.occluders,
       start: b.startPos, campfire: b.campfirePos, door: b.doorPos,
+      // per-prototype flavor hooks (all optional):
+      //   weather: 'rain' — rain that thins as restoration rises
+      //   drawLandmark(ctx, t, P, L) — a huge fixture drawn in world space
+      weather: def.weather || null,
+      drawLandmark: def.drawLandmark || null,
       surface: (x) => b.surface(x)
     };
   };

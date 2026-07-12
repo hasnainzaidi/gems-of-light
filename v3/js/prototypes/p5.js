@@ -36,7 +36,7 @@
       b.bounce(45);
       b.gem(4, 45, 8);
       b.seed(45, 11).seed(45, 9);
-      b.blossom(49, 7); // the hidden Rahma blossom, up where only the curious go
+      b.blossom(46, 6); // the hidden Rahma blossom, straight up off the bounce
 
       // gentle steps to the last gem
       b.slab(53, 54, 11).slab(56, 57, 9);

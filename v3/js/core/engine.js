@@ -386,6 +386,9 @@
           case 'petal': // celebration petals, falling like soft rain
             Object.assign(p, { vx: rnd(-26, 26), vy: rnd(10, 46), life: rnd(2.2, 4), size: rnd(3, 5.5), color: o.color || '#F5B8C4', grav: 8, sway: rnd(0.8, 1.8), swayA: rnd(14, 30), petal: true, spin: rnd(1, 3) });
             break;
+          case 'rain': // gentle rain — thin streaks, never a storm's anger
+            Object.assign(p, { vx: rnd(-24, -12), vy: rnd(360, 460), life: rnd(0.9, 1.4), size: rnd(7, 12), color: o.color || '#BFD4DC', grav: 0, line: true });
+            break;
         }
         this.list.push(p);
       },
@@ -416,6 +419,17 @@
             continue;
           }
           ctx.globalAlpha = Math.min(1, k * 1.6) * 0.9;
+          if (p.line) {
+            ctx.strokeStyle = p.color;
+            ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+            ctx.globalAlpha = Math.min(1, k * 1.6) * 0.45;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            continue;
+          }
           if (p.petal) {
             ctx.save();
             ctx.translate(p.x, p.y);
