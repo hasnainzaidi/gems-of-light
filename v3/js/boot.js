@@ -144,7 +144,8 @@
   // straight to the title. install.js owns the scene; this is just the fork.
   let gated = false;
   try {
-    const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) ||
+    const standalone = (window.matchMedia &&
+      (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) ||
       navigator.standalone === true;
     gated = !standalone && !GOL.DEBUG && q.get('install') !== '0' &&
       sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;

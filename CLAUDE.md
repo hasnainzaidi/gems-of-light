@@ -7,11 +7,16 @@ current state.
 
 ## The three eras in this repo
 
-- **v1** (repo root: `index.html`, `js/`) — the original game, live at
-  playgemsoflight.com. Untouched by v3 work; leave it be.
+- **v3 IS THE ROOT GAME (since 2026-07-12):** root `index.html` loads
+  `v3/js/*` — playgemsoflight.com serves v3; the same build also answers at
+  `/v3/` (the dev URL). Root `sw.js` (network-first; mp3s cache-first) and
+  root `manifest.webmanifest` belong to v3.
+- **v1** (`v1/index.html` + engine files still at root `js/`) — the original
+  game, ARCHIVED at /v1/ (a `<base href="../">` page; its save untouched).
+  Root `js/data.js` is SHARED v1↔v3 — additive changes only.
 - **v2** (`v2/`) — earlier standalone level prototypes + the recitation-
   checker lab (`RECITATION-CHECKER-PLAN.md`, `qrc-lab.html`) — relevant when
-  voice input work begins.
+  voice input work begins. Archived in place at /v2/.
 - **v3** (`v3/`) — THE ACTIVE GAME. One core loop per world/surah:
   ordered gem collection → earned campfire (full recitation, echo-breaths) →
   shrine (one-socket recall) → Grand Gem → next world unlocks. Plus: the

@@ -1,0 +1,14 @@
+{
+  "name": "Gems of Light — the first garden",
+  "short_name": "Gems v1",
+  "description": "A gentle garden platformer for learning short surahs — collect glowing ayah-gems and set them in order.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#2E4032",
+  "theme_color": "#2E4032",
+  "icons": [
+    { "src": "../icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

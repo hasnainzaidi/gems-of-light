@@ -253,7 +253,9 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 ## 9. Git workflow (kept deliberately simple)
 
 - **`main` is the live site** — every push deploys to playgemsoflight.com.
-  Only merge what a child could play today.
+  Only merge what a child could play today. **Since 2026-07-12 the root URL
+  IS v3** (root index.html loads v3/js/*; v1 archived at /v1/, v2 at /v2/);
+  bump root sw.js CACHE whenever main changes.
 - **`v3-prototypes` is where all v3 work happens** — every prototype, one
   branch. Prototypes are *files* (`js/prototypes/pN.js`), not branches: they
   must coexist so they can be compared in one build from the title-screen
