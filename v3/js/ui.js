@@ -167,7 +167,10 @@
         { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
         { label: 'your turn', opts: ['off', 'chime'], get: () => GOL.V3.campTurn, set: (v) => { GOL.V3.campTurn = v; } },
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
-        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } }
+        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } },
+        // the on-device door into debug (no URL editing on a phone) — persists
+        // until switched off; ?debug=1 still wins as an explicit override
+        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); } }
       ];
       const pw = Math.min(400, W - 60);
       const px = W / 2 - pw / 2;

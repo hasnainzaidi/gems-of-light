@@ -50,10 +50,12 @@
     // campTurn is a plain toggle: a missing saved key just keeps the default
     // (an old saved campEcho key is simply ignored — that experiment is gone)
     if (!q.has('turn') && (saved.campTurn === 'off' || saved.campTurn === 'chime')) GOL.V3.campTurn = saved.campTurn;
+    // debug toggled from the tuning panel persists; ?debug=1 stays the boss
+    if (!q.has('debug') && saved.debug != null) GOL.DEBUG = !!saved.debug;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, campTurn: GOL.V3.campTurn }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, campTurn: GOL.V3.campTurn, debug: GOL.DEBUG }));
     } catch (e) { /* ignore */ }
   };
 
@@ -110,8 +112,11 @@
 
   // ------------------------------------------------------ debug hotkeys ---
   // G: collect / place the next thing · E: warp to campfire/door · M: title
-  if (GOL.DEBUG) {
+  // (registered always, gated at press time — debug can now be toggled from
+  // the tuning panel mid-session, not only at boot via ?debug=1)
+  {
     addEventListener('keydown', (e) => {
+      if (!GOL.DEBUG) return;
       const s = current;
       if (!s) return;
       if (e.key === 'g' || e.key === 'G') { if (s.debugCollectAll) s.debugCollectAll(); }
