@@ -17,6 +17,7 @@
   // ------------------------------------------------------------ tunables --
   const q = new URLSearchParams(location.search);
   GOL.DEBUG = q.get('debug') === '1';
+  GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
   // playtested as confusing/random, so it's off by default; the tuning panel
@@ -132,11 +133,25 @@
     GOL.sceneName = name;
     current.enter(params || {});
   }
-  switchTo('title');
+  // PWA SOFT GATE (approved 2026-07-12): an un-installed browser visit meets
+  // the install invitation before the game — home-screen real estate matters
+  // too much on a phone to leave to chance. Installed (standalone) launches,
+  // debug, ?install=0, and grown-ups who held through it this session all go
+  // straight to the title. install.js owns the scene; this is just the fork.
+  let gated = false;
+  try {
+    const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) ||
+      navigator.standalone === true;
+    gated = !standalone && !GOL.DEBUG && q.get('install') !== '0' &&
+      sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;
+  } catch (e) { /* private mode etc: play on */ }
+  switchTo(gated ? 'install' : 'title');
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();
   let frameCount = 0;
+  // ?fps=1 readout state (rolling second: average fps + worst frame)
+  let fpsAcc = 0, fpsN = 0, fpsWorst = 0, fpsShown = '', fpsFrameStart = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     frameCount++;
@@ -179,6 +194,20 @@
     }
     if (GOL.DEBUG) {
       GOL.text(ctx, 'DEBUG', W - 8 - (GOL.SAFE.r || 0), H - 10, { size: 10, weight: '800', color: 'rgba(220,80,60,0.9)', align: 'right', shadow: false });
+    }
+    // ?fps=1 — an on-device frame-time readout for judder hunts: shows the
+    // rolling average AND the worst frame of the last second (spikes are what
+    // the eye reads as judder; averages hide them). Dev-only, never for kids.
+    if (GOL.FPS) {
+      fpsAcc += dt; fpsN++;
+      const ms = (now - fpsFrameStart);
+      if (ms > fpsWorst) fpsWorst = ms;
+      fpsFrameStart = now;
+      if (fpsAcc >= 1) {
+        fpsShown = Math.round(fpsN / fpsAcc) + 'fps · worst ' + fpsWorst.toFixed(0) + 'ms';
+        fpsAcc = 0; fpsN = 0; fpsWorst = 0;
+      }
+      if (fpsShown) GOL.text(ctx, fpsShown, W / 2, 14, { size: 11, weight: '800', color: 'rgba(220,80,60,0.9)', shadow: false });
     }
     GOL.Input.endFrame();
   }
