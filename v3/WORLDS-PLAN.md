@@ -158,17 +158,16 @@ until the previous wave's worlds have been played by the nieces. 2–3 worlds
 per wave; one bad assumption copied into twelve recipes is the expensive
 failure mode.
 
-- **Wave 0 — content pipeline (no recipes).**
+- **Wave 0 — content pipeline (no recipes).** ✅ done 2026-07-12.
   1. `js/data.js`: add the five missing surahs — 92, 93, 94, 109, 111
      (Uthmani text fetched from a canonical source, never from memory;
      verse counts 21/11/8/6/5). The other seven already have entries.
   2. `audio/basit/`: fetch Abdul Basit per-ayah mp3s for all 12 surahs
      (87 files), verify sizes/format.
   3. This doc + GRAMMARS.md memory-stone correction.
-- **Wave 1 — plumbing + first recipes.** Orchestrator: engine-aimed
-  `b.memory(x)`, data-driven unlock order. Then two recipe-only worlds in
-  parallel: **Kawthar (B)** and **Ad-Duha (K)** — one tiny, one palette-led.
-  → playtest.
+- **Wave 1 — plumbing + first recipes.** ✅ built 2026-07-12 (plumbing,
+  checker unaimed-stone fix, w5-kawthar, w6-duha — all checker-green and
+  browser-verified). **→ awaiting the nieces' playtest before Wave 2.**
 - **Wave 2 — the golden pair + the grove.** **Al-Asr (C)**, **Quraish (D)**
   (both P7-palette variants), **Al-Masad (F)** (palm props). → playtest.
 - **Wave 3 — the meaningful landmark + the reflection.** **Al-Ikhlas (A)**
