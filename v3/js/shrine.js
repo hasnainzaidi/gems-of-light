@@ -11,11 +11,37 @@
 
   const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
 
+  // THE STANZA SHRINE (WORLDS-PLAN §1): long surahs are recalled in maqati'
+  // (thematic stanzas), one at a time. A world may declare `stanzas: [4,7,5,5]`
+  // (run lengths summing to the ayah count). No declaration + ≤12 ayat = a
+  // single stanza = exactly today's shrine (regression-free). Over 12 with no
+  // declaration, auto-chunk into balanced groups of ≤7 as a safety net.
+  function autoChunk(n) {
+    const groups = Math.ceil(n / 7);
+    const base = Math.floor(n / groups), rem = n % groups;
+    const arr = [];
+    for (let i = 0; i < groups; i++) arr.push(base + (i < rem ? 1 : 0));
+    return arr;
+  }
+  function computeStanzas(n, declared) {
+    if (Array.isArray(declared) && declared.length &&
+        declared.every((x) => Number.isInteger(x) && x > 0)) {
+      const sum = declared.reduce((a, b) => a + b, 0);
+      if (sum === n) return declared.slice(); // valid declaration
+    }
+    // invalid / absent declaration: fall back, never crash
+    if (n > 12) return autoChunk(n);
+    return [n];
+  }
+
   const shrine = {
     t: 0, L: null, P: null, bd: null, fx: null,
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
     phase: 'place', bloomT: 0, grandK: 0, lightK: 0, reciteGem: null,
     buttons: [], firstTry: 0,
+    // stanza chunking: the shrine holds one stanza at a time
+    stanzas: null, stanzaRanges: null, stanzaIdx: 0, stanzaStart: 0,
+    stanzaInT: 999, mergeT: 0, totalSockets: 0,
     // DREAM MODE (the Remembering): reconstructing an EARLIER surah from
     // memory. Set when params.memory is present; absent = the normal shrine.
     dream: false, memory: null, moonT: 0, moonFrom: 0, moonTo: 0, moonK: 0, moonRise: 0,
@@ -68,19 +94,28 @@
       this.listens = 0;
       this.runHints = 0;
 
-      // the gems arrive as themselves (they were gathered in the open);
-      // shuffled so the cloud never spells the answer. Listening — a tap,
-      // or picking one up — is how the child knows which ayah each holds.
-      const order = this.surah.verses.map((v) => v.n);
-      const rng = GOL.rng(Date.now() % 100000);
-      for (let i = order.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        [order[i], order[j]] = [order[j], order[i]];
-      }
-      this.gems = order.map((ayah, i) => ({
-        ayah, i, x: 0, y: 0, homeX: 0, homeY: 0,
-        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0
-      }));
+      // stanza chunking: split the surah into maqati'. A normal short surah
+      // is one stanza (regression-free). Dreams find their declaration on the
+      // remembered world's def; the live shrine on its own def.
+      const totalAyat = this.surah.verses.length;
+      const declared = this.dream
+        ? (GOL.WORLDS3.find((w) => w && w.surahId === surahId) || {}).stanzas
+        : (def && def.stanzas);
+      this.stanzas = computeStanzas(totalAyat, declared);
+      this.stanzaRanges = [];
+      let acc = 0;
+      for (const len of this.stanzas) { this.stanzaRanges.push({ start: acc, len }); acc += len; }
+      this.totalSockets = totalAyat;
+      this.stanzaIdx = 0;
+      this.stanzaStart = 0;
+      this.stanzaInT = 999; // the first stanza is already present (no fade-up)
+      this.mergeT = 0;
+      this._mergeChimed = false;
+      // debug-accelerated runs never record telemetry (meaningless) and open
+      // on the FINAL stanza with only the last gem left to place
+      this._debugAccel = !!GOL.DEBUG;
+      if (this._debugAccel) this.debugPrefill();
+      else this.buildStanzaGems(0);
 
       GOL.audio.startAmbience('quiet');
       GOL.audio.preloadSurah(this.surah);
@@ -151,7 +186,26 @@
       const n = this.gems.length;
       this.lightK += ((this.placed / n) - this.lightK) * Math.min(1, dt * 2);
 
-      if (this.phase === 'place') this.updatePlace(dt, W, H);
+      if (this.phase === 'place') { this.stanzaInT += dt; this.updatePlace(dt, W, H); }
+      else if (this.phase === 'merge') {
+        // a completed stanza compresses into one bright star on the crest,
+        // a soft chime, a short wordless breath, then the next stanza drifts in
+        this.mergeT += dt;
+        const target = this.crestStarPos(this.stanzaIdx, W, H);
+        for (const g of this.gems) {
+          g.x += (target.x - g.x) * Math.min(1, dt * 6);
+          g.y += (target.y - g.y) * Math.min(1, dt * 6);
+        }
+        if (!this._mergeChimed && this.mergeT > 0.4) {
+          this._mergeChimed = true;
+          GOL.audio.sfx('praise');
+          this.fx.spawn('ring', target.x, target.y, { color: '#FFE9A8', size: 26 });
+          for (let i = 0; i < 6; i++) {
+            this.fx.spawn('sparkle', target.x + GOL.rnd(-24, 24), target.y + GOL.rnd(-24, 24), { color: '#FFF6DC' });
+          }
+        }
+        if (this.mergeT > 1.7) this.advanceStanza(W, H);
+      }
       else if (this.phase === 'bloom') {
         this.bloomT += dt;
         // the gems spiral into the tree's heart
@@ -182,13 +236,17 @@
           st.completed = true;
           st.shrineDone = (st.shrineDone || 0) + 1;
           st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
-          st.shrineRuns = st.shrineRuns || [];
-          st.shrineRuns.push({
-            at: Date.now(), sockets: this.gems.length,
-            firstTry: this.firstTry, misses: this.missTotal,
-            listens: this.listens, hints: this.runHints
-          });
-          if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+          // debug-accelerated runs are meaningless — never record them
+          if (!this._debugAccel) {
+            st.shrineRuns = st.shrineRuns || [];
+            st.shrineRuns.push({
+              at: Date.now(), sockets: this.totalSockets,
+              firstTry: this.firstTry, misses: this.missTotal,
+              listens: this.listens, hints: this.runHints,
+              stanzas: this.stanzaRanges.length
+            });
+            if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+          }
           GOL.store.save();
           GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
         }
@@ -241,7 +299,80 @@
       }
     },
 
-    neededAyah() { return this.placed + 1; },
+    // within the current stanza: the next ayah the open socket wants
+    neededAyah() { return this.stanzaStart + this.placed + 1; },
+    isLastStanza() { return this.stanzaIdx >= this.stanzaRanges.length - 1; },
+
+    // the gems for one stanza arrive as themselves (gathered in the open),
+    // shuffled so the fan never spells the answer. Listening — a tap or a
+    // pick-up — is how the child knows which ayah each holds.
+    buildStanzaGems(k) {
+      const { start, len } = this.stanzaRanges[k];
+      const order = [];
+      for (let i = 0; i < len; i++) order.push(start + 1 + i);
+      const rng = GOL.rng(Date.now() % 100000);
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      this.gems = order.map((ayah, i) => ({
+        ayah, i, x: 0, y: 0, homeX: 0, homeY: 0,
+        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0
+      }));
+      this.stanzaStart = start;
+      this.placed = 0;
+      this.miss = 0;
+      this.autoT = 0;
+      this.heldGem = null;
+      this.reciteGem = null;
+    },
+
+    // debug acceleration: open on the final stanza with every prior stanza
+    // already merged (crest stars lit) and every gem of this stanza placed
+    // except the last — silently, no recitations, no per-gem ceremonies.
+    debugPrefill() {
+      const L = this.stanzaRanges.length;
+      this.stanzaIdx = L - 1;
+      this.buildStanzaGems(L - 1);
+      const { start, len } = this.stanzaRanges[L - 1];
+      const lastAyah = start + len;
+      this.gems.filter((g) => g.ayah !== lastAyah)
+        .sort((a, b) => a.ayah - b.ayah)
+        .forEach((g, idx) => { g.placed = idx; });
+      this.placed = len - 1; // one socket open, one gem waiting in the fan
+    },
+
+    // where stanza k's crest star sits — a row centered over the tree, one
+    // slot per stanza boundary (the last stanza blooms instead), left-to-right
+    crestStarPos(k, W, H) {
+      const total = Math.max(1, this.stanzaRanges.length - 1);
+      const y = H * 0.30;
+      const spacing = Math.min(52, (W * 0.5) / total);
+      return { x: W / 2 + (k - (total - 1) / 2) * spacing, y };
+    },
+
+    // a stanza (not the last) is whole: begin the merge-to-crest ceremony
+    beginMerge() {
+      this.phase = 'merge';
+      this.mergeT = 0;
+      this._mergeChimed = false;
+    },
+
+    // the next stanza's gems drift in from the freshly formed crest star,
+    // its sockets fade up (stanzaInT), and recall resumes within it
+    advanceStanza(W, H) {
+      const from = this.crestStarPos(this.stanzaIdx, W, H);
+      this.stanzaIdx++;
+      this.buildStanzaGems(this.stanzaIdx);
+      this.stanzaInT = 0;
+      this.layout(W, H); // seed homeX/homeY so the drift has a destination
+      for (const g of this.gems) {
+        g.x = from.x + GOL.rnd(-22, 22);
+        g.y = from.y + GOL.rnd(-12, 12);
+        g.drift = { t: 0, fromX: g.x, fromY: g.y };
+      }
+      this.phase = 'place';
+    },
 
     updatePlace(dt, W, H) {
       const Input = GOL.Input;
@@ -340,7 +471,8 @@
         this.fx.spawn('petal', socket.x + GOL.rnd(-40, 40), socket.y - GOL.rnd(20, 60), { color: Math.random() < 0.5 ? '#F5B8C4' : '#FFE9A8' });
       }
       this.reciteGem = g;
-      if (this.placed >= this.gems.length) {
+      const stanzaDone = this.placed >= this.gems.length;
+      if (stanzaDone && this.isLastStanza()) {
         // the shrine is whole — the last ayah rings out, then the Tree answers
         GOL.audio.playVerse(this.surahId, g.ayah, () => {
           if (this.phase === 'place') {
@@ -350,6 +482,11 @@
           }
         });
         if (GOL.DEBUG) { this.phase = 'bloom'; this.bloomT = 0; }
+      } else if (stanzaDone) {
+        // a stanza is whole (not the last): its final ayah rings, then it
+        // compresses into a crest star and the next stanza drifts in
+        if (!GOL.DEBUG) GOL.audio.playVerse(this.surahId, g.ayah, null);
+        this.beginMerge();
       } else if (!GOL.DEBUG) {
         GOL.audio.playVerse(this.surahId, g.ayah, null);
       }
@@ -395,13 +532,17 @@
       // but never d.grand, st.completed, nor a v3grandGem stamp
       st.shrineDone = (st.shrineDone || 0) + 1;
       st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
-      st.shrineRuns = st.shrineRuns || [];
-      st.shrineRuns.push({
-        at: Date.now(), sockets: this.gems.length,
-        firstTry: this.firstTry, misses: this.missTotal,
-        listens: this.listens, hints: this.runHints, dream: true
-      });
-      if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      // debug-accelerated runs are meaningless — never record them
+      if (!this._debugAccel) {
+        st.shrineRuns = st.shrineRuns || [];
+        st.shrineRuns.push({
+          at: Date.now(), sockets: this.totalSockets,
+          firstTry: this.firstTry, misses: this.missTotal,
+          listens: this.listens, hints: this.runHints, dream: true,
+          stanzas: this.stanzaRanges.length
+        });
+        if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      }
       GOL.store.save();
       GOL.stamp('v3remember');
     },
@@ -434,6 +575,9 @@
       this.drawTree(ctx, lay.treeX, lay.treeY + 46, t,
         this.dream ? 0 : (this.phase !== 'place' ? 1 : this.lightK), this.dream);
 
+      // completed stanzas, compressed to bright stars along the crest
+      this.drawCrestStars(ctx, W, H, t);
+
       // light flows along the restored steps
       if (this.lightK > 0.01 && this.sockets.length > 1) {
         ctx.strokeStyle = alpha('#FFE9A8', 0.4 + 0.15 * Math.sin(t * 2.4));
@@ -453,9 +597,12 @@
       this.sockets.forEach((s, i) => {
         if (i > this.placed && this.phase === 'place') return; // still sleeping in the stone
         const isActive = i === this.placed && this.phase === 'place';
-        const appear = isActive ? Math.min(1, (this.t % 1000) * 0 + 1) : 1;
+        // a new stanza's sockets fade up gently (stanzaInT); older ones are 1
+        const sf = this.phase === 'place' ? Math.min(1, this.stanzaInT / 0.6) : 1;
+        ctx.save();
+        ctx.globalAlpha = sf;
         // stone setting
-        ctx.fillStyle = alpha(P.stoneDark, 0.28 * appear);
+        ctx.fillStyle = alpha(P.stoneDark, 0.28);
         ctx.beginPath(); ctx.ellipse(s.x, s.y + 16, 22, 7, 0, 0, Math.PI * 2); ctx.fill();
         GOL.star8Path(ctx, s.x, s.y, isActive ? 15 + Math.sin(t * 3) * 1.5 : 13, Math.PI / 8);
         const filled = this.gems.some((g) => g.placed === i);
@@ -472,6 +619,7 @@
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(s.x, s.y, 26 + Math.sin(t * 2.6) * 3, 0, Math.PI * 2); ctx.stroke();
         }
+        ctx.restore();
       });
 
       // gems (the bloom block below owns them once the spiral begins)
@@ -495,6 +643,13 @@
       if (this.phase === 'bloom') {
         for (const g of this.gems) {
           GOL.drawGem(ctx, g.x, g.y, 13, GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase });
+        }
+      }
+      // a stanza's gems shrink as they converge into their crest star
+      if (this.phase === 'merge') {
+        const shrink = 1 - GOL.ease.inOut(Math.min(1, this.mergeT / 1.2));
+        for (const g of this.gems) {
+          GOL.drawGem(ctx, g.x, g.y, Math.max(2, 13 * shrink), GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase, glow: 0.8 });
         }
       }
       if (this.phase === 'done') {
@@ -542,6 +697,36 @@
         ctx.fillStyle = alpha('#FFF6DC', Math.max(0, tw));
         ctx.beginPath(); ctx.arc(sx, sy, rad, 0, Math.PI * 2); ctx.fill();
       }
+    },
+
+    // Completed stanzas ride the crest as bright accumulated stars (no numbers,
+    // progress read at a glance). The one currently merging grows in.
+    drawCrestStars(ctx, W, H, t) {
+      if (!this.stanzaRanges || this.stanzaRanges.length < 2) return;
+      const done = this.stanzaIdx; // stanzas 0..done-1 are already whole
+      for (let k = 0; k < done; k++) {
+        const p = this.crestStarPos(k, W, H);
+        this.drawCrestStar(ctx, p.x, p.y, 1, t, k);
+      }
+      if (this.phase === 'merge') {
+        const p = this.crestStarPos(this.stanzaIdx, W, H);
+        this.drawCrestStar(ctx, p.x, p.y, GOL.ease.out(Math.min(1, this.mergeT / 1.4)), t, this.stanzaIdx);
+      }
+    },
+    drawCrestStar(ctx, x, y, k, t, seed) {
+      if (k <= 0.01) return;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 2.4 + seed * 1.3);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 28 * k);
+      g.addColorStop(0, alpha('#FFE9A8', 0.5 * k));
+      g.addColorStop(1, alpha('#FFE9A8', 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(x, y, 28 * k, 0, Math.PI * 2); ctx.fill();
+      GOL.star8Path(ctx, x, y, (7 + 3 * k) * (0.9 + 0.15 * pulse), Math.PI / 8);
+      ctx.fillStyle = alpha('#FFF6DC', (0.7 + 0.22 * pulse) * k);
+      ctx.fill();
+      ctx.strokeStyle = alpha('#D9A44A', 0.9 * k);
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
     },
 
     // The Wise Tree. k = 0 (asleep) .. 1 (in blossom). `muted` = the dream's
