@@ -22,8 +22,10 @@
     echoI: -1, memState: null,
 
     enter(params) {
+      // every entry names its world now (the ten-prototype lab retired
+      // 2026-07-12; GOL.PROTOTYPES stays as the registry mechanism only)
       const def = params.world ? GOL.WORLDS3[params.world - 1]
-        : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+        : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it

@@ -206,7 +206,9 @@ v3/
                         (the Remembering)
     worlds.js           the journey: world registry, unlock chain, journey disc
     worlds/             wN-<key>.js — one shippable surah world per file
-    prototypes/         p1.js … p10.js — the ten experiments (kept for reference)
+    (prototypes/ retired 2026-07-12 — the ten experiment recipes live in git
+    history; their verdicts are in §10 and reviews/. Debug unlocks every
+    grown world instead, which is the same lab with real content.)
     grownups.js         press-and-hold star page: pilot-study view of the local save
   reviews/              TEMPLATE.md + p1.md … p10.md (all filled in)
   tools/check.mjs       reachability/invariant checker — every world must pass
@@ -354,6 +356,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 - **v3 save is separate** (`gemsOfLight.v3`) — a child's V1 garden is never
   touched by prototype churn.
 - **V1 stays live at the repo root**; v3 deploys under `/v3` like v2 does.
+- **Prototypes retired, debug is the lab (2026-07-12):** the ten prototype
+  files and the title shelf are deleted (git history keeps them; reviews/
+  and §10 keep the verdicts). Debug — now toggleable from the tuning
+  panel — unlocks every grown world for direct play instead.
 - **Levels 1–2 world roadmap (2026-07-12):** twelve new surah worlds planned
   in `WORLDS-PLAN.md` — per-world sketches, wave order, and its own decision
   log (data-driven unlock order, engine-aimed memory stones, shrine-chunking

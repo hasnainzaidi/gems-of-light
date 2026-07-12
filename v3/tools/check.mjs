@@ -45,7 +45,8 @@ const targets = [];
 if (only) targets.push({ kind: 'p', id: only });
 else if (onlyWorld) targets.push({ kind: 'w', id: onlyWorld });
 else {
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) targets.push({ kind: 'p', id });
+  // (the ten prototypes retired 2026-07-12 — worlds are the only default
+  // targets now; `check.mjs pN` still errors helpfully if asked for one)
   (GOL.WORLDS3 || []).forEach((w) => { if (w && w.build) targets.push({ kind: 'w', id: w.n }); });
 }
 

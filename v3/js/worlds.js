@@ -36,6 +36,7 @@
   GOL.worldOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
+    if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldDone(n)) return true;
     const seq = GOL.orderedWorlds();
     const i = seq.findIndex((x) => x.n === n);

@@ -1,6 +1,6 @@
 // Gems of Light v3 — boot.js
 // Boot, the render loop, soft scene transitions, safe-area measurement,
-// and the v3 tunables (?p= prototype, ?echo=, ?rows=, ?ar=, ?surah=, ?debug=1).
+// and the v3 tunables (?echo=, ?rows=, ?ar=, ?surah=, ?debug=1, ?fps=1).
 (function () {
   const GOL = window.GOL;
   GOL.VERSION = 'v3.0';
@@ -23,7 +23,6 @@
   // playtested as confusing/random, so it's off by default; the tuning panel
   // still exposes near/world for further experiments.
   GOL.V3 = {
-    proto: parseInt(q.get('p') || '5', 10),
     echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off',
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen

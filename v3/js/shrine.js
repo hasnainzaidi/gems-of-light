@@ -37,7 +37,7 @@
         this.worldN = null; // a dream earns no Grand Gem, opens no world
       } else {
         def = params.world ? GOL.WORLDS3[params.world - 1]
-          : GOL.PROTOTYPES[params.proto || GOL.V3.proto];
+          : GOL.PROTOTYPES[params.proto];
         this.worldN = params.world || null;
         surahId = GOL.V3.surah || def.surahId;
         palKey = def.endPalette || def.palette;
