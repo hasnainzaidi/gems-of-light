@@ -50,10 +50,16 @@ Nothing is deleted from the repo — V1 keeps running at the root. V3 lives in
 One `v3/js/` module set, shared by all ten prototypes:
 
 ### 3.1 Adventure (adapt `level.js`)
-- Wander, jump, collect Ayah Gems **in any order the level affords**.
-- On collect: the ayah is recited, the gem flies to a small orbit around the
-  player (the growing collection is the progress UI — no counters, no text),
-  and the world visibly responds (§3.5).
+- Wander, jump, collect Ayah Gems — **in surah order** (playtest 2026-07-12):
+  only the next ayah's gem is alight and collectable; later gems sleep dimly,
+  waiting their turn, and just sway if touched. The firefly always points at
+  the next one. (Superseded: "any order" — order-freedom read as working
+  against the sequence the child is meant to internalize.)
+- On collect: the ayah is recited, the gem flies home to a **wordless star
+  band** at the top of the screen (playtest: an orbit around the player hid
+  how many were found/left; the v1-style band answers it without numbers),
+  and the world visibly responds (§3.5). At the campfire the gathered gems
+  leave the band and circle the seated child for the recitation.
 - **Ambient echo (tested → off by default):** the idea was that while a gem
   remains uncollected its ayah softly hums from its direction, gently calling
   the child toward it. Playtested (2026-07-12) as **confusing/random** — it
@@ -245,6 +251,20 @@ pattern, never shown to the child:
 - **Ambient echo defaults off** (playtested 2026-07-12) — recitation is
   collect-triggered; the wandering echo read as random. Toggle kept in the
   tuning panel for future experiments. See §3.1.
+- **Gems collect in surah order** (playtested 2026-07-12) — sleeping-gem
+  visual language; see §3.1. This retires P9's order-freedom hypothesis
+  (its open *layout* remains a valid spatial test).
+- **Star-band tracker restored** (playtested 2026-07-12) — the player-orbit
+  as sole progress display hid collected/remaining; the band shows it
+  wordlessly. Orbit kept for the campfire ceremony only.
+- **Rafts are ferries** (playtested 2026-07-12) — bank-to-bank ping-pong;
+  the respawn-at-start drift read as a glitch.
+- **Playtest positives to protect**: the campfire being *earned* (unlit until
+  every gem is found), and the flowers blooming where a gem is collected.
+- **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear
+  value"); P8's landmark ("fine but kinda random" — if landmarks return,
+  they should be *meaningful*, e.g. the Wise Tree/shrine visible from afar,
+  not an arbitrary tower).
 - **Arabic script may appear as ambient glow on collect, no transliteration,
   no meanings, no English text anywhere in play** — script exposure without
   required reading; also behind a toggle.

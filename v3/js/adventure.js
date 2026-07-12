@@ -218,11 +218,12 @@
           m.dx = nx - m.x;
           m.x = nx;
         } else if (m.kind === 'raft') {
-          // steady downstream drift; at the far bank it slips back upstream
-          // (riders should already have stepped off — end raft runs AT a bank)
-          let nx = m.x + m.speed * dt;
-          if (nx > m.x1) { nx = m.x0; m.dx = 0; m.dip = 1; }
-          else m.dx = nx - m.x;
+          // a ferry: steady drift bank to bank, turning gently at each end
+          m.dir = m.dir || 1;
+          let nx = m.x + m.speed * dt * m.dir;
+          if (nx > m.x1) { nx = m.x1; m.dir = -1; m.dip = 0.6; }
+          else if (nx < m.x0) { nx = m.x0; m.dir = 1; m.dip = 0.6; }
+          m.dx = nx - m.x;
           m.x = nx;
         } else {
           const mid = (m.y0 + m.y1) / 2, amp = (m.y1 - m.y0) / 2;
@@ -314,19 +315,29 @@
       }
       GOL.audio.setWaterNearness(nearWater);
 
-      // gems: bob, sparkle when near, collect on touch
+      // gems wake in surah order: only the next ayah's gem is alight and
+      // collectable; the ones after it sleep dimly, waiting their turn.
+      // Touching a sleeping gem just sways it — no sound of blame.
+      const nextAyah = this.found.length + 1;
       L.gems.forEach((g, i) => {
         if (this.found.includes(g.ayah)) return;
         const gy = g.y + Math.sin(this.t * 1.7 + i * 1.3) * 5;
         const d = Math.hypot(pl.x - g.x, pl.y - 16 - gy);
         const gs = this.gemStates[i];
-        if (d < 250 && !gs.near) {
-          gs.near = true;
-          GOL.audio.sfx('nearby');
-          this.fx.spawn('ring', g.x, gy, { color: GOL.GEMS[(g.ayah - 1) % 7].glow, size: 22 });
-        } else if (d > 330) gs.near = false;
-        if (Math.random() < dt * 2) this.fx.spawn('sparkle', g.x + GOL.rnd(-14, 14), gy + GOL.rnd(-16, 16), { color: GOL.GEMS[(g.ayah - 1) % 7].light });
-        if (d < 44) this.collect(g, i);
+        gs.no = Math.max(0, (gs.no || 0) - dt);
+        if (g.ayah === nextAyah) {
+          if (d < 250 && !gs.near) {
+            gs.near = true;
+            GOL.audio.sfx('nearby');
+            this.fx.spawn('ring', g.x, gy, { color: GOL.GEMS[(g.ayah - 1) % 7].glow, size: 22 });
+          } else if (d > 330) gs.near = false;
+          if (Math.random() < dt * 2) this.fx.spawn('sparkle', g.x + GOL.rnd(-14, 14), gy + GOL.rnd(-16, 16), { color: GOL.GEMS[(g.ayah - 1) % 7].light });
+          if (d < 44) this.collect(g, i);
+        } else if (d < 44 && (!gs.noCd || this.t > gs.noCd)) {
+          gs.noCd = this.t + 1.6;
+          gs.no = 1;
+          GOL.audio.sfx('drift');
+        }
       });
 
       // ambient echo: the world softly calls toward an uncollected gem
@@ -342,6 +353,12 @@
           this.phase = 'settle';
           this.fireT = 0;
           GOL.Input.zones = null;
+          // the gathered ayat leave the band and come to sit with the child
+          this.orbit = this.found.slice().sort((a, b) => a - b).map((ayah, i) => ({
+            ayah, C: GOL.GEMS[(ayah - 1) % 7],
+            x: pl.x + GOL.rnd(-30, 30), y: pl.y - 140,
+            join: 0, angle: (i / this.found.length) * Math.PI * 2
+          }));
           GOL.stamp('v3campfire');
         }
       }
@@ -356,13 +373,11 @@
       this.echoT -= dt;
       if (this.echoT > 0) return;
       const pl = this.player;
-      let best = null, bd = 1e9;
-      for (const g of this.L.gems) {
-        if (this.found.includes(g.ayah)) continue;
-        const d = Math.hypot(g.x - pl.x, g.y - pl.y);
-        if (d < bd) { bd = d; best = g; }
-      }
+      // the world only ever calls toward the NEXT ayah's gem
+      const nextA = this.found.length + 1;
+      const best = this.L.gems.find((g) => g.ayah === nextA);
       if (!best) return;
+      const bd = Math.hypot(best.x - pl.x, best.y - pl.y);
       if (mode === 'near' && bd > 340) { this.echoT = 1.2; return; } // keep checking softly
       const vol = mode === 'near'
         ? 0.34 - 0.16 * Math.min(1, bd / 340)
@@ -386,8 +401,8 @@
       this.fx.burst(g.x, g.y, C.base, 16);
       this.fx.spawn('ring', g.x, g.y, { color: C.glow, size: 26 });
 
-      // the gem joins the child's orbit — the only progress display
-      this.orbit.push({ ayah: g.ayah, C, x: g.x, y: g.y, join: 0, angle: Math.random() * Math.PI * 2 });
+      // the gem flies home to the band — a trail of light marks the way
+      for (let k = 0; k < 8; k++) this.fx.spawn('trail', g.x + GOL.rnd(-8, 8), g.y + GOL.rnd(-8, 8), { color: C.base });
 
       // the world answers: flowers wake where the gem stood
       this.bloomAround(g.x);
@@ -444,12 +459,10 @@
       const f = this.fly, pl = this.player, L = this.L;
       f.t += dt;
       const allFound = this.found.length === L.gems.length;
-      let unfound = null, best = 1e9;
-      for (const g of L.gems) {
-        if (this.found.includes(g.ayah)) continue;
-        const d = Math.hypot(g.x - pl.x, g.y - pl.y);
-        if (d < best) { best = d; unfound = g; }
-      }
+      // the firefly always knows which ayah comes next
+      const nextA = this.found.length + 1;
+      let unfound = null;
+      for (const g of L.gems) if (g.ayah === nextA) { unfound = g; break; }
       // once everything is gathered, the firefly leads to the campfire
       const goal = unfound || (allFound && L.campfire && Math.abs(pl.x - L.campfire.x) > 90
         ? { x: L.campfire.x, y: L.campfire.y - 40 } : null);
@@ -538,6 +551,7 @@
     openDoor() {
       this.phase = 'ember';
       this.reciteI = -1;
+      this.orbit = []; // the ayat settle back into the child; the band holds them
       const st = GOL.store.level(this.L.surahId);
       st.heardFull = (st.heardFull || 0) + 1;
       GOL.store.save();
@@ -636,10 +650,20 @@
         }
       }
 
+      const nextA = this.found.length + 1;
       L.gems.forEach((g, i) => {
         if (this.found.includes(g.ayah)) return;
+        const gs = this.gemStates[i];
+        const wob = gs && gs.no ? Math.sin(t * 26) * 4 * gs.no : 0;
         const gy = g.y + Math.sin(t * 1.7 + i * 1.3) * 5;
-        GOL.drawGem(ctx, g.x, gy, 15, GOL.GEMS[(g.ayah - 1) % 7], t, { phase: i * 1.7 });
+        if (g.ayah === nextA) {
+          GOL.drawGem(ctx, g.x + wob, gy, 15, GOL.GEMS[(g.ayah - 1) % 7], t, { phase: i * 1.7 });
+        } else {
+          // asleep until its turn in the surah
+          ctx.globalAlpha = 0.5;
+          GOL.drawGem(ctx, g.x + wob, gy, 11, GOL.GEMS[(g.ayah - 1) % 7], t, { phase: i * 1.7, glow: 0.15 });
+          ctx.globalAlpha = 1;
+        }
       });
       for (const wf of L.waterfalls) GOL.drawWaterfall(ctx, wf.x, wf.y, 34, wf.h, t, P);
 
@@ -724,6 +748,12 @@
         ctx.globalAlpha = 1;
       }
 
+      // the gem band: collected ayat resting in their star settings — the
+      // wordless answer to "how many so far, how many to go"
+      if (this.phase === 'roam' || this.phase === 'ember') {
+        const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+        GOL.drawHudBand(ctx, W / 2, 12 + sa.t * 0.5, L.gems.length, this.found.map((a) => a - 1), t, Math.min(W - 260, 330));
+      }
       for (const b of this.buttons || []) {
         if (b.iconName === 'pause' || b.icon) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       }
