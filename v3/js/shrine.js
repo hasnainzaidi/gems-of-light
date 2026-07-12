@@ -211,7 +211,14 @@
           for (const tap of GOL.Input.taps) {
             if (tap.ui) continue;
             tap.ui = true;
-            GOL.go('adventure', { world: this.memory.returnWorld, resume: 'ember' });
+            // a dream entered from a world's ember returns to that ember;
+            // one entered from the journey's moon door drifts home to the
+            // journey, where the freshly waxed moon rests by its disc
+            if (this.memory.returnWorld) {
+              GOL.go('adventure', { world: this.memory.returnWorld, resume: 'ember' });
+            } else {
+              GOL.go('title');
+            }
             return;
           }
         }
@@ -359,11 +366,8 @@
     moonY(H) { return H * 0.42 + (1 - (this.moonRise || 0)) * H * 0.22; },
 
     // a local calendar-day key ('2026-07-12') — the once-a-day wax schedule
-    todayKey() {
-      const d = new Date();
-      const p = (n) => String(n).padStart(2, '0');
-      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-    },
+    // (shared with the journey's moon door via GOL.todayKey in ui.js)
+    todayKey() { return GOL.todayKey(); },
 
     // Enter the moon ceremony: NO Grand Gem, NO world unlock — only the OLD
     // surah's Remembering Moon waxes a quarter (capped at 1), at most once per

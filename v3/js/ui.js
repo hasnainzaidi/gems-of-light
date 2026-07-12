@@ -33,6 +33,14 @@
     ctx.restore();
   };
 
+  // a local calendar-day key ('2026-07-12') — the Remembering's once-a-day
+  // wax schedule (shared by the shrine ceremony and the journey's moon door)
+  GOL.todayKey = function () {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  };
+
   GOL.hitButtons = function (taps, buttons) {
     for (const t of taps) {
       if (t.ui) continue;
@@ -251,10 +259,29 @@
         }
       }
       if (this.missN) {
-        const mb = this.worldBtns[this.missN - 1];
+        const mb = this.worldBtns.find((b) => b.n === this.missN);
         if (mb && Math.random() < dt * 2.2) {
           this.fx.spawn('sparkle', mb.x + GOL.rnd(-26, 26), mb.y - GOL.rnd(-6, 30), { color: '#FFE9A8' });
         }
+      }
+      // THE REMEMBERING'S DOOR (PLAN §10 redesign): beside each completed
+      // disc, the Remembering Moon glows moonlit while it can still wax
+      // today; tapping the MOON (not the disc) carries the child straight
+      // into that surah's dream-shrine. Once waxed, the moon rests until
+      // tomorrow — the once-a-day rule IS the spaced-repetition schedule.
+      this.moonBtns = [];
+      for (const b of this.worldBtns) {
+        if (!b.done || b.surahId == null) continue;
+        const st = GOL.store.level(b.surahId);
+        if (st.moonWaxedDay === GOL.todayKey()) continue; // remembered today
+        this.moonBtns.push({
+          x: b.x - 28, y: b.y - 28, r: 17, surahId: b.surahId,
+          fn: () => {
+            GOL.audio.unlock();
+            GOL.audio.sfx('yourTurn');
+            GOL.go('shrine', { memory: { surahId: b.surahId, returnWorld: null } });
+          }
+        });
       }
       // the prototype shelf lives on behind the debug flag (the lab)
       const ids = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
@@ -299,6 +326,9 @@
       }
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
+      // the moon sits over its disc's shoulder — test it first so a tap on
+      // the moon dreams rather than re-entering the world
+      if (GOL.hitButtons(GOL.Input.taps, this.moonBtns || [])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.worldBtns)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns)) return;
       for (const tap of GOL.Input.taps) {
@@ -421,8 +451,18 @@
         }
         // the Remembering Moon, waxing with every dream remembered — it rests
         // at the disc's other brow (v1's map idiom; the blossom keeps the right)
-        if (b.done && st && (st.moon || 0) > 0.01) {
-          GOL.drawMoon(ctx, b.x - 28, b.y - 28, 9, st.moon, t, { glow: false });
+        if (b.done && st) {
+          // while the moon can still wax today it breathes a moonlit halo —
+          // the wordless invitation to dream (tap the moon, not the disc)
+          const inviting = (this.moonBtns || []).some((m) => m.surahId === b.surahId);
+          if (inviting) {
+            const br = 0.22 + 0.14 * Math.sin(t * 1.8);
+            ctx.fillStyle = alpha('#CFE0FF', br);
+            ctx.beginPath(); ctx.arc(b.x - 28, b.y - 28, 17 + Math.sin(t * 1.8) * 2, 0, Math.PI * 2); ctx.fill();
+          }
+          if (inviting || (st.moon || 0) > 0.01) {
+            GOL.drawMoon(ctx, b.x - 28, b.y - 28, 9, st.moon || 0, t, { glow: false });
+          }
         }
         // a freshly-earned world celebrates: a pulsing golden ring for ~3s
         if (this.celebrateT > 0 && b.n === this.celebrateN) {

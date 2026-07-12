@@ -330,10 +330,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   another surah sounding inside the current world's space reads as an
   interruption — the stone idea has now failed twice in different forms.
   The lesson: the remembering must happen where the OLD surah lives, not
-  inside the current walk. Redesign direction: return to a completed
-  world to revitalize its own gem at its own shrine (shape being chosen;
-  stones disarmed meanwhile). The dream-shrine scene, Remembering Moons,
-  and once-a-day wax all survive — only the doorway moves.
+  inside the current walk. **Redesign (approved + built 2026-07-12): THE
+  MOON IS THE DOOR.** On the journey, each completed disc's Remembering
+  Moon breathes a moonlit halo while it can still wax today; tapping the
+  MOON (not the disc) carries the child straight into that surah's
+  dream-shrine; the ceremony waxes the moon and drifts home to the
+  journey. Once waxed, the halo rests until tomorrow — the invitation
+  itself carries the once-a-day rhythm. No interruption is possible:
+  the dream never sounds inside another surah's world. Stones disarmed
+  (plain scenery); dream-shrine scene, moons, telemetry all reused.
 - **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
   full recitation of an *earlier* surah, mid-collection of the *current*
   one, fires by accident and collides two surahs — very confusing. The
