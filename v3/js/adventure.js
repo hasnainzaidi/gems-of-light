@@ -202,12 +202,8 @@
       // campfire and beyond -------------------------------------------------
       if (this.phase !== 'roam') { this.updateCampfire(dt, W, H); return; }
 
-      // input → movement (walk buttons hug the safe areas)
-      GOL.Input.zones = {
-        btnL: { x: 78 + sa.l, y: H - 74 - sa.b * 0.5, r: 62 },
-        btnR: { x: 208 + sa.l, y: H - 74 - sa.b * 0.5, r: 62 },
-        jumpX: W * 0.45
-      };
+      // input → movement (thumbstick + jump button, hugging the safe areas)
+      GOL.Input.zones = GOL.touchZones(W, H);
       GOL.Input.poll(W, H);
       GOL.Input.routeTapsToJump();
 
@@ -507,12 +503,7 @@
         this.doorK = Math.min(1, this.doorK + dt / 1.4);
         pl.idleT = 0;
         // wandering resumes; the door glows and waits
-        const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-        GOL.Input.zones = {
-          btnL: { x: 78 + sa.l, y: H - 74 - sa.b * 0.5, r: 62 },
-          btnR: { x: 208 + sa.l, y: H - 74 - sa.b * 0.5, r: 62 },
-          jumpX: W * 0.45
-        };
+        GOL.Input.zones = GOL.touchZones(W, H);
         GOL.Input.poll(W, H);
         GOL.Input.routeTapsToJump();
         GOL.updatePlayer(pl, L, GOL.Input, dt, this.fx);
@@ -684,7 +675,7 @@
         if (b.iconName === 'pause' || b.icon) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       }
       if (GOL.Input.touchMode && this.phase !== 'settle' && this.phase !== 'campfire') {
-        GOL.drawTouchControls(ctx, W, H, GOL.Input, false);
+        GOL.drawTouchControls(ctx, W, H, GOL.Input);
       }
       if (this.paused) {
         ctx.fillStyle = 'rgba(34,53,42,0.55)';

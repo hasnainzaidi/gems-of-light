@@ -68,6 +68,17 @@
     return { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'back', fn: () => GOL.go('title') };
   };
 
+  // Thumbstick + jump-button geometry, in one place so the input reader and
+  // the on-screen drawing always agree. Hugs the phone's safe areas.
+  GOL.touchZones = function (W, H) {
+    const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+    const y = H - 66 - sa.b * 0.5;
+    return {
+      stick: { x: 76 + sa.l, y, r: 50 },
+      jump: { x: W - 72 - sa.r, y, r: 46 }
+    };
+  };
+
   // menu backdrop (sky + hills + meadow floor), same as v1's
   function buildBackdrop(paletteKey, seed) {
     const P = GOL.PALETTES[paletteKey];
@@ -105,17 +116,69 @@
   // ================================================================ TITLE ==
   // Dev-facing doorway into the prototypes. Tap anywhere to begin.
   const title = {
-    t: 0, fx: null, bd: null, buttons: [],
+    t: 0, fx: null, bd: null, buttons: [], settingsOpen: false,
     enter() {
       this.t = 0;
       this.fx = GOL.makeFx();
       this.bd = buildBackdrop('falaq', 44);
+      this.settingsOpen = false;
+    },
+    // The tuning rows and their segmented option buttons. One source of
+    // geometry, used by both hit-testing and drawing.
+    settingsSegs(W, H) {
+      const rows = [
+        { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
+        { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
+        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } }
+      ];
+      const pw = Math.min(400, W - 60);
+      const px = W / 2 - pw / 2;
+      const top = H * 0.28;
+      const rowH = 44;
+      const out = [];
+      rows.forEach((row, ri) => {
+        const ry = top + 44 + ri * rowH;
+        const segAreaX = px + pw * 0.4;
+        const segAreaW = pw * 0.52;
+        const sw = (segAreaW - (row.opts.length - 1) * 6) / row.opts.length;
+        row.opts.forEach((opt, oi) => {
+          out.push({
+            x: segAreaX + oi * (sw + 6), y: ry - 15, w: sw, h: 30,
+            opt, active: row.get() === opt,
+            set: () => { row.set(opt); if (GOL.saveV3cfg) GOL.saveV3cfg(); }
+          });
+        });
+        row._lx = px + 18; row._ly = ry;
+      });
+      return { rows, out, pw, px, top, rowH };
+    },
+    drawSettings(ctx, W, H) {
+      ctx.fillStyle = 'rgba(34,53,42,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      const s = this.settingsSegs(W, H);
+      const panelH = 44 + s.rows.length * s.rowH + 24;
+      GOL.drawPanel(ctx, s.px, s.top, s.pw, panelH, { radius: 20 });
+      GOL.text(ctx, 'tuning', W / 2, s.top + 24, { size: 15, weight: '800', color: GOL.INK });
+      for (const row of s.rows) {
+        GOL.text(ctx, row.label, row._lx, row._ly, { size: 12.5, weight: '700', color: GOL.INK_SOFT, align: 'left' });
+      }
+      for (const seg of s.out) {
+        GOL.roundRect(ctx, seg.x, seg.y, seg.w, seg.h, 9);
+        ctx.fillStyle = seg.active ? 'rgba(185,138,62,0.9)' : 'rgba(120,104,70,0.14)';
+        ctx.fill();
+        ctx.strokeStyle = seg.active ? 'rgba(185,138,62,0.95)' : 'rgba(150,128,84,0.4)';
+        ctx.lineWidth = 1.4; ctx.stroke();
+        GOL.text(ctx, seg.opt, seg.x + seg.w / 2, seg.y + seg.h / 2, { size: 11.5, weight: '800', color: seg.active ? '#FFF8E8' : GOL.INK_SOFT });
+      }
+      GOL.text(ctx, 'tap a chip to change it · tap outside to close', W / 2, s.top + panelH - 13, { size: 10.5, weight: '600', color: GOL.INK_SOFT });
     },
     update(dt, W, H) {
       this.t += dt;
       this.fx.update(dt);
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
+      this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
       // one chip per registered prototype — all ten live in this build
       const ids = Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b);
       this.protoBtns = ids.map((id, i) => ({
@@ -127,6 +190,20 @@
           GOL.go('adventure', { proto: id });
         }
       }));
+      // the tuning panel owns all input while it is open
+      if (this.settingsOpen) {
+        const segs = this.settingsSegs(W, H).out;
+        for (const tap of GOL.Input.taps) {
+          if (tap.ui) continue;
+          tap.ui = true;
+          if (GOL.dist(tap.x, tap.y, this.gearBtn.x, this.gearBtn.y) < this.gearBtn.r) { GOL.audio.sfx('tap'); this.settingsOpen = false; break; }
+          const seg = segs.find((s) => tap.x >= s.x && tap.x <= s.x + s.w && tap.y >= s.y && tap.y <= s.y + s.h);
+          if (seg) { GOL.audio.sfx('tap'); seg.set(); }
+          else this.settingsOpen = false; // a tap outside closes it
+        }
+        return;
+      }
+      if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns)) return;
       for (const tap of GOL.Input.taps) {
@@ -170,8 +247,10 @@
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
+      if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
       const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
       GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
+      if (this.settingsOpen) this.drawSettings(ctx, W, H);
       GOL.drawVignette(ctx, W, H, 0.12);
     }
   };

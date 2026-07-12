@@ -443,6 +443,15 @@
       ctx.moveTo(x - s * 0.55, y + s * 0.12); ctx.lineTo(x + s * 0.4, y + s * 0.12);
       ctx.moveTo(x - s * 0.55, y + s * 0.48); ctx.lineTo(x + s * 0.1, y + s * 0.48);
       ctx.lineWidth = 1.6; ctx.stroke();
+    } else if (icon === 'sliders') {
+      // tuning knobs: two rails with a knob each
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 2; i++) {
+        const yy = y + (i === 0 ? -s * 0.5 : s * 0.5);
+        ctx.beginPath(); ctx.moveTo(x - s, yy); ctx.lineTo(x + s, yy); ctx.stroke();
+        ctx.fillStyle = '#7A6238';
+        ctx.beginPath(); ctx.arc(x + (i === 0 ? s * 0.35 : -s * 0.35), yy, s * 0.3, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (icon === 'check') {
       ctx.beginPath(); ctx.moveTo(x - s * 0.8, y + s * 0.05); ctx.lineTo(x - s * 0.15, y + s * 0.7); ctx.lineTo(x + s * 0.9, y - s * 0.6); ctx.stroke();
     } else if (icon === 'replay') {
@@ -466,35 +475,51 @@
   GOL.drawButton = drawButton;
 
   // Touch movement controls: two soft circles, and a jump hint on the right.
-  function drawTouchControls(ctx, W, H, input, showHint) {
+  // One thumbstick (bottom-left) and one jump button (bottom-right), read
+  // from input.zones. The nub leans the way the child is steering.
+  function drawTouchControls(ctx, W, H, input) {
+    const z = input.zones;
+    if (!z || !z.stick) return;
     ctx.save();
-    // hug the safe areas: island in the side insets, home bar in the bottom
-    const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-    const r = 52, y = H - 74 - sa.b * 0.5;
-    for (const side of [0, 1]) {
-      const x = 78 + sa.l + side * 130;
-      const active = side === 0 ? input.left : input.right;
-      ctx.fillStyle = 'rgba(250,244,224,' + (active ? 0.5 : 0.24) + ')';
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    const s = z.stick;
+    // the pad
+    ctx.fillStyle = 'rgba(250,244,224,0.16)';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(250,244,224,0.42)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r - 2, 0, Math.PI * 2); ctx.stroke();
+    // faint left/right chevrons on the rim
+    ctx.strokeStyle = 'rgba(250,244,224,0.28)';
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    for (const d of [-1, 1]) {
+      const cx = s.x + d * (s.r - 11);
+      ctx.beginPath();
+      ctx.moveTo(cx + d * 3, s.y - 6); ctx.lineTo(cx - d * 3, s.y); ctx.lineTo(cx + d * 3, s.y + 6);
+      ctx.stroke();
+    }
+    // the nub, leaning with the input
+    const dx = input.stickDX || 0;
+    const nx = s.x + dx * (s.r - 18);
+    const moving = Math.abs(dx) > 0.24;
+    ctx.fillStyle = 'rgba(250,244,224,' + (moving ? 0.62 : 0.4) + ')';
+    ctx.beginPath(); ctx.arc(nx, s.y, 19, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(90,74,46,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(nx, s.y, 19, 0, Math.PI * 2); ctx.stroke();
+    // the jump button
+    if (z.jump) {
+      const j = z.jump;
+      ctx.fillStyle = 'rgba(250,244,224,' + (input.jumpHeld ? 0.5 : 0.26) + ')';
+      ctx.beginPath(); ctx.arc(j.x, j.y, j.r, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = 'rgba(250,244,224,0.5)';
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, r - 3, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = 'rgba(90,74,46,' + (active ? 0.8 : 0.55) + ')';
-      const d = side === 0 ? -1 : 1;
+      ctx.beginPath(); ctx.arc(j.x, j.y, j.r - 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(90,74,46,' + (input.jumpHeld ? 0.85 : 0.6) + ')';
+      ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const a = j.r * 0.42;
       ctx.beginPath();
-      ctx.moveTo(x + d * 16, y); ctx.lineTo(x - d * 8, y - 16); ctx.lineTo(x - d * 8, y + 16);
-      ctx.closePath(); ctx.fill();
-    }
-    if (showHint) {
-      ctx.fillStyle = 'rgba(250,244,224,0.75)';
-      ctx.font = '600 15px Nunito, system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('tap this side to jump', W * 0.75, H - 40);
-      const hx = W * 0.75, hy = H - 86;
-      ctx.strokeStyle = 'rgba(250,244,224,0.8)';
-      ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx, hy + 14); ctx.lineTo(hx, hy - 10); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(hx - 7, hy - 2); ctx.lineTo(hx, hy - 12); ctx.lineTo(hx + 7, hy - 2); ctx.stroke();
+      ctx.moveTo(j.x - a, j.y + a * 0.5); ctx.lineTo(j.x, j.y - a * 0.7); ctx.lineTo(j.x + a, j.y + a * 0.5);
+      ctx.stroke();
     }
     ctx.restore();
   }

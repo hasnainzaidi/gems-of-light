@@ -39,6 +39,7 @@
       canvas.addEventListener('pointerdown', (e) => {
         canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
         const p = pos(e);
+        p.sx = p.x; p.sy = p.y; // remember where this touch began (for the thumbstick)
         this.touchMode = e.pointerType !== 'mouse';
         this.pointers.set(e.pointerId, p);
         if (!this.drag) this.drag = { id: e.pointerId, x: p.x, y: p.y, startX: p.x, startY: p.y };
@@ -48,6 +49,8 @@
       canvas.addEventListener('pointermove', (e) => {
         if (!this.pointers.has(e.pointerId)) return;
         const p = pos(e);
+        const prev = this.pointers.get(e.pointerId);
+        p.sx = prev.sx; p.sy = prev.sy; // carry the touch's origin forward
         this.pointers.set(e.pointerId, p);
         if (this.drag && this.drag.id === e.pointerId) { this.drag.x = p.x; this.drag.y = p.y; }
       });
@@ -72,25 +75,32 @@
     queueJump() { this._jumpQueued = true; },
     consumeJump() { const j = this._jumpQueued; this._jumpQueued = false; return j; },
     // Per-frame: resolve movement state from keys + touch zones.
+    // zones = { stick:{x,y,r}, jump:{x,y,r} }. The thumbstick reads horizontal
+    // lean; a touch that began on the pad keeps steering even if it slides off.
     poll(W, H) {
       let left = this._kbLeft || false, right = this._kbRight || false, jumpHeld = this._kbJump || false;
-      if (this.zones) {
+      this.stickDX = 0;
+      const z = this.zones;
+      if (z && z.stick) {
         for (const [, p] of this.pointers) {
-          const z = this.zones;
-          if (dist(p.x, p.y, z.btnL.x, z.btnL.y) < z.btnL.r) left = true;
-          else if (dist(p.x, p.y, z.btnR.x, z.btnR.y) < z.btnR.r) right = true;
-          else if (p.x > z.jumpX) jumpHeld = true;
+          if (dist(p.sx != null ? p.sx : p.x, p.sy != null ? p.sy : p.y, z.stick.x, z.stick.y) < z.stick.r * 1.5) {
+            const dx = Math.max(-1, Math.min(1, (p.x - z.stick.x) / (z.stick.r - 12)));
+            this.stickDX = dx;
+            if (dx < -0.24) left = true;
+            else if (dx > 0.24) right = true;
+          } else if (z.jump && dist(p.x, p.y, z.jump.x, z.jump.y) < z.jump.r) {
+            jumpHeld = true; // holding the jump button sustains the rise
+          }
         }
       }
       this.left = left; this.right = right; this.jumpHeld = jumpHeld;
     },
-    // Taps that began this frame in the jump zone queue a jump (edge-trigger).
+    // A tap that begins on the jump button queues a jump (edge-trigger).
     routeTapsToJump() {
-      if (!this.zones) return;
+      const z = this.zones;
+      if (!z || !z.jump) return;
       for (const t of this.taps) {
-        const z = this.zones;
-        const onBtn = dist(t.x, t.y, z.btnL.x, z.btnL.y) < z.btnL.r || dist(t.x, t.y, z.btnR.x, z.btnR.y) < z.btnR.r;
-        if (!onBtn && t.x > z.jumpX && !t.ui) this.queueJump();
+        if (!t.ui && dist(t.x, t.y, z.jump.x, z.jump.y) < z.jump.r) { t.ui = true; this.queueJump(); }
       }
     },
     endFrame() { this.taps.length = 0; this.releases.length = 0; }

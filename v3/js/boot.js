@@ -17,6 +17,19 @@
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null
   };
+  // the in-app tuning panel persists its choices; a URL param still wins as
+  // an explicit override for that key
+  try {
+    const saved = JSON.parse(localStorage.getItem('gemsOfLight.v3cfg') || '{}');
+    if (!q.has('echo') && saved.echo) GOL.V3.echo = saved.echo;
+    if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
+    if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
+  } catch (e) { /* private mode: play on */ }
+  GOL.saveV3cfg = function () {
+    try {
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows }));
+    } catch (e) { /* ignore */ }
+  };
 
   // ----------------------------------------------------------- safe area --
   // measure env(safe-area-inset-*) with a probe div; the Dynamic Island sits
