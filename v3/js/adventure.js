@@ -62,8 +62,8 @@
       const width = widths[i];
       const cx = right - width / 2;
       const start = g.timings[i][0], end = g.timings[i][1];
-      const lit = audioTime <= start ? 0 : audioTime >= end ? 1
-        : (audioTime - start) / Math.max(0.04, end - start);
+      const done = audioTime >= end;
+      const active = !done && audioTime >= (i === 0 ? 0 : start);
 
       // All words are present from the beginning, giving the eyes somewhere
       // to travel before the voice reaches them.
@@ -73,18 +73,15 @@
       ctx.fillStyle = '#FFFBEE';
       ctx.fillText(words[i], cx, y);
 
-      if (lit > 0) {
-        // Reveal the illuminated copy across the spoken duration. Arabic is
-        // read right-to-left, so the clipping window grows from the right.
+      if (active || done) {
+        // A categorical color change is easier to follow than a pale partial
+        // fill: berry marks the word being heard now; completed words remain
+        // violet so the ayah visibly accumulates from right to left.
         ctx.save();
-        const pad = 5;
-        ctx.beginPath();
-        ctx.rect(right - width * lit - pad, y - size, width * lit + pad * 2, size * 2);
-        ctx.clip();
-        ctx.globalAlpha = fade * (0.86 + 0.14 * lit);
-        ctx.shadowColor = g.color || '#FFE9A8';
-        ctx.shadowBlur = lit < 1 ? 14 : 7;
-        ctx.fillStyle = '#FFE7A3';
+        ctx.globalAlpha = fade;
+        ctx.shadowColor = 'rgba(38,25,67,0.42)';
+        ctx.shadowBlur = 2;
+        ctx.fillStyle = active ? '#C94F73' : '#6840A8';
         ctx.fillText(words[i], cx, y);
         ctx.restore();
       }

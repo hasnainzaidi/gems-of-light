@@ -325,9 +325,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   where the ayah started mid-air and gameplay never stopped. (DEBUG speed-runs
   still skip the recitation, so the pause is a real-playtest-only beat.)
 - **AL-FALAQ WORD-FOLLOW PROTOTYPE (built 2026-07-12; awaiting playtest)** —
-  the full Uthmani ayah remains visible during W1's gem pause while its words
-  fill with the gem's light from right to left in time with the fixed Abdul
-  Basit Murattal recording. It is attention support, never a reading test:
+  the full Uthmani ayah remains visible during W1's gem pause while the current
+  word turns berry and completed words stay jewel-violet, in time with the
+  fixed Abdul Basit Murattal recording. It is attention support, never a
+  reading test:
   no transliteration, cursor, bouncing karaoke text, or prompt. All 23 word
   boundaries were hand-aligned against the exact local EveryAyah files
   (`js/worlds/w1-falaq-follow.js`, expected tolerance about 100–200ms) and are
