@@ -38,6 +38,7 @@
     t: 0, L: null, P: null, bd: null, fx: null,
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
     phase: 'place', bloomT: 0, grandK: 0, lightK: 0, reciteGem: null,
+    placementListening: false,
     buttons: [], firstTry: 0,
     // stanza chunking: the shrine holds one stanza at a time
     stanzas: null, stanzaRanges: null, stanzaIdx: 0, stanzaStart: 0,
@@ -84,6 +85,7 @@
       this.lightK = 0;
       this.heldGem = null;
       this.reciteGem = null;
+      this.placementListening = false;
       this.firstTry = 0;
       this.moonT = 0; this.moonFrom = 0; this.moonTo = 0; this.moonK = 0; this.moonRise = 0;
       this._dreamRecorded = false;
@@ -375,6 +377,10 @@
     },
 
     updatePlace(dt, W, H) {
+      // The just-placed ayah owns the shrine until it finishes. Without this
+      // lock a quick child can place the next gem, whose playVerse() stops the
+      // current recitation and clips the ayah they were meant to hear.
+      if (this.placementListening) return;
       const Input = GOL.Input;
       const active = this.sockets[this.placed]; // the one open socket
 
@@ -472,23 +478,26 @@
       }
       this.reciteGem = g;
       const stanzaDone = this.placed >= this.gems.length;
-      if (stanzaDone && this.isLastStanza()) {
-        // the shrine is whole — the last ayah rings out, then the Tree answers
-        GOL.audio.playVerse(this.surahId, g.ayah, () => {
-          if (this.phase === 'place') {
-            this.phase = 'bloom';
-            this.bloomT = 0;
-            GOL.audio.sfx('door');
-          }
-        });
-        if (GOL.DEBUG) { this.phase = 'bloom'; this.bloomT = 0; }
-      } else if (stanzaDone) {
-        // a stanza is whole (not the last): its final ayah rings, then it
-        // compresses into a crest star and the next stanza drifts in
-        if (!GOL.DEBUG) GOL.audio.playVerse(this.surahId, g.ayah, null);
-        this.beginMerge();
-      } else if (!GOL.DEBUG) {
-        GOL.audio.playVerse(this.surahId, g.ayah, null);
+      const afterAyah = () => {
+        this.placementListening = false;
+        this.reciteGem = null;
+        if (this.phase !== 'place') return;
+        if (stanzaDone && this.isLastStanza()) {
+          // the shrine is whole — only after the last ayah rings out does the
+          // Tree answer
+          this.phase = 'bloom';
+          this.bloomT = 0;
+          GOL.audio.sfx('door');
+        } else if (stanzaDone) {
+          // let the stanza's final ayah finish before its gems compress into
+          // the crest; the next stanza must never arrive over its recitation
+          this.beginMerge();
+        }
+      };
+      if (GOL.DEBUG) afterAyah();
+      else {
+        this.placementListening = true;
+        GOL.audio.playVerse(this.surahId, g.ayah, afterAyah);
       }
     },
 
@@ -595,8 +604,9 @@
       // sockets: only the restored ones and the single open one exist
       const n = this.gems.length;
       this.sockets.forEach((s, i) => {
-        if (i > this.placed && this.phase === 'place') return; // still sleeping in the stone
-        const isActive = i === this.placed && this.phase === 'place';
+        const listening = this.phase === 'place' && this.placementListening;
+        if ((i > this.placed || (listening && i >= this.placed)) && this.phase === 'place') return; // still sleeping in the stone
+        const isActive = i === this.placed && this.phase === 'place' && !listening;
         // a new stanza's sockets fade up gently (stanzaInT); older ones are 1
         const sf = this.phase === 'place' ? Math.min(1, this.stanzaInT / 0.6) : 1;
         ctx.save();
