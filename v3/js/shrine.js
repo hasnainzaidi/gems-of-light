@@ -70,6 +70,7 @@
         palKey = def.endPalette || def.palette;
         seed = 900 + def.id;
       }
+      this.practiceOnly = !!(this.worldN && GOL.worldPracticeOnly && GOL.worldPracticeOnly(this.worldN));
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
       this.P = GOL.PALETTES[palKey];
@@ -227,30 +228,7 @@
         }
         if (this.bloomT > 2.4) {
           if (this.dream) { this.beginRemembering(); return; }
-          this.phase = 'done';
-          this.grandK = 0;
-          GOL.audio.sfx('blossom');
-          const st = GOL.store.level(this.surahId);
-          const d = GOL.store.data;
-          d.grand = d.grand || {};
-          const first = !d.grand[this.surahId];
-          d.grand[this.surahId] = Date.now();
-          st.completed = true;
-          st.shrineDone = (st.shrineDone || 0) + 1;
-          st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
-          // debug-accelerated runs are meaningless — never record them
-          if (!this._debugAccel) {
-            st.shrineRuns = st.shrineRuns || [];
-            st.shrineRuns.push({
-              at: Date.now(), sockets: this.totalSockets,
-              firstTry: this.firstTry, misses: this.missTotal,
-              listens: this.listens, hints: this.runHints,
-              stanzas: this.stanzaRanges.length
-            });
-            if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
-          }
-          GOL.store.save();
-          GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+          this.finishRun();
         }
       } else if (this.phase === 'moon') {
         // THE REMEMBERING MOON — the dream's reward. It rises center-screen and
@@ -292,7 +270,7 @@
           for (const tap of GOL.Input.taps) {
             if (!tap.ui && this.bloomT > 3.6) {
               tap.ui = true;
-              GOL.go('title', { celebrate: this.worldN });
+              GOL.go('title', this.practiceOnly ? undefined : { celebrate: this.worldN });
               return;
             }
           }
@@ -304,6 +282,38 @@
     // within the current stanza: the next ayah the open socket wants
     neededAyah() { return this.stanzaStart + this.placed + 1; },
     isLastStanza() { return this.stanzaIdx >= this.stanzaRanges.length - 1; },
+
+    finishRun() {
+      this.phase = 'done';
+      this.grandK = 0;
+      GOL.audio.sfx('blossom');
+      const st = GOL.store.level(this.surahId);
+      const d = GOL.store.data;
+      d.grand = d.grand || {};
+      let first = false;
+      if (!this.practiceOnly) {
+        first = !d.grand[this.surahId];
+        d.grand[this.surahId] = Date.now();
+        st.completed = true;
+      }
+      // Practice is still real learning, so its knowledge telemetry remains
+      // useful; only the progression reward and completion stamp are withheld.
+      st.shrineDone = (st.shrineDone || 0) + 1;
+      st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
+      // debug-accelerated runs are meaningless — never record them
+      if (!this._debugAccel) {
+        st.shrineRuns = st.shrineRuns || [];
+        st.shrineRuns.push({
+          at: Date.now(), sockets: this.totalSockets,
+          firstTry: this.firstTry, misses: this.missTotal,
+          listens: this.listens, hints: this.runHints,
+          stanzas: this.stanzaRanges.length
+        });
+        if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      }
+      GOL.store.save();
+      if (!this.practiceOnly) GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+    },
 
     // the gems for one stanza arrive as themselves (gathered in the open),
     // shuffled so the fan never spells the answer. Listening — a tap or a
@@ -662,7 +672,7 @@
           GOL.drawGem(ctx, g.x, g.y, Math.max(2, 13 * shrink), GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase, glow: 0.8 });
         }
       }
-      if (this.phase === 'done') {
+      if (this.phase === 'done' && !this.practiceOnly) {
         const k = GOL.ease.out(this.grandK);
         const gy = lay.treeY - 60 - k * 8 + Math.sin(t * 1.4) * 5;
         GOL.drawGem(ctx, lay.treeX, gy, 14 + 30 * k, GRAND, t, { phase: 0.5 });
