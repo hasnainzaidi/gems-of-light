@@ -15,9 +15,9 @@
   // The child-facing journey is one ordered list of keys — pedagogy can be
   // retuned by editing this line alone; files and saves never move
   // (WORLDS-PLAN §1: roughly the traditional bottom-up path, warnings late).
-  GOL.WORLD_ORDER = ['falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
+  GOL.WORLD_ORDER = ['fatiha', 'falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
     'fil', 'duha', 'adiyat', 'sharh', 'qadr', 'kafirun', 'takathur',
-    'humazah', 'masad', 'lail', 'fatiha'];
+    'humazah', 'masad', 'lail'];
 
   // registered worlds in journey order; a key missing from the list keeps
   // its file order at the end (so nothing ever vanishes from the journey)

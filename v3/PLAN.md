@@ -422,8 +422,8 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   `16→17`); P13 recalls only the four stanza openings (`1,5,12,17`) to test a
   lighter first-session ending. No verdict is claimed until child observation.
   Test URLs, tradeoffs, and decision rules: `reviews/LONG-SURAH-LAB.md`.
-- **AL-FATIHA — THE STRAIGHT PATH (built 2026-07-13; awaiting child
-  playtest):** seven ayat stay in the normal short-surah loop — one continuous
+- **AL-FATIHA — THE STRAIGHT PATH (built + first-playtested 2026-07-13):**
+  seven ayat stay in the normal short-surah loop — one continuous
   ordered-gem walk, one earned full recitation, then all seven sockets in the
   shrine. No stanza or checkpoint machinery: those solve fatigue at 13+ ayat
   and would interrupt a surah this size. The world is one unmistakable
@@ -431,8 +431,11 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   spatial threshold after ayah 4 marks the turn from praise to direct address
   and request without adding a ceremony; ayah 7 rests on a broad still landing
   so its longer recitation is never crowded by another interaction. There is
-  no literal fork or wrong way. It joins the end of the current ordered journey
-  so existing children keep their established progression. Phone QA at
+  no literal fork or wrong way. **First verdict:** it feels quite easy and
+  repeats many established garden patterns; that familiarity is a strength at
+  the beginning, where the child is learning the game's language. Al-Fatiha is
+  now the first journey world. Existing completed worlds remain playable
+  because saves are keyed by surah, not journey position. Phone QA at
   852×393 caught the eighth disc pushing both ends of the journey half off the
   canvas; journey spacing now compresses within the safe width, keeping Falaq
   and Fatiha fully visible and tappable. All seven Abdul Basit ayat are local.
