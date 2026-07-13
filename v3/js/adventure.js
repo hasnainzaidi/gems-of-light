@@ -414,7 +414,9 @@
           this.orbit = this.found.slice().sort((a, b) => a - b).map((ayah, i) => ({
             ayah, C: GOL.GEMS[(ayah - 1) % 7],
             x: pl.x + GOL.rnd(-30, 30), y: pl.y - 140,
-            join: 0, angle: (i / this.found.length) * Math.PI * 2
+            // updateOrbit adds the per-gem spacing; start every gem from the
+            // same spin phase so even counts do not collapse into pairs.
+            join: 0, angle: 0
           }));
           GOL.stamp('v3campfire');
         }
