@@ -61,6 +61,7 @@
     t: 0, L: null, P: null, bd: null, fx: null,
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
     phase: 'place', bloomT: 0, grandK: 0, lightK: 0, reciteGem: null,
+    placementListening: false,
     buttons: [], firstTry: 0,
     // stanza chunking: the shrine holds one stanza at a time
     stanzas: null, stanzaRanges: null, stanzaIdx: 0, stanzaStart: 0,
@@ -97,6 +98,7 @@
       }
       this.longMode = (def && def.longMode) || null;
       this.storeId = (def && def.labSaveKey) || surahId;
+      this.practiceOnly = !!(this.worldN && GOL.worldPracticeOnly && GOL.worldPracticeOnly(this.worldN));
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
       this.P = GOL.PALETTES[palKey];
@@ -112,6 +114,7 @@
       this.lightK = 0;
       this.heldGem = null;
       this.reciteGem = null;
+      this.placementListening = false;
       this.firstTry = 0;
       this.moonT = 0; this.moonFrom = 0; this.moonTo = 0; this.moonK = 0; this.moonRise = 0;
       this._dreamRecorded = false;
@@ -284,31 +287,7 @@
         }
         if (this.bloomT > 2.4) {
           if (this.dream) { this.beginRemembering(); return; }
-          this.phase = 'done';
-          this.grandK = 0;
-          GOL.audio.sfx('blossom');
-          const st = GOL.store.level(this.storeId);
-          const d = GOL.store.data;
-          d.grand = d.grand || {};
-          const first = !d.grand[this.storeId];
-          d.grand[this.storeId] = Date.now();
-          st.completed = true;
-          if (this.longMode === 'night-camps') st.campReplayActive = false;
-          st.shrineDone = (st.shrineDone || 0) + 1;
-          st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
-          // debug-accelerated runs are meaningless — never record them
-          if (!this._debugAccel && !this._usedDebugAssist) {
-            st.shrineRuns = st.shrineRuns || [];
-            st.shrineRuns.push({
-              at: Date.now(), sockets: this.totalSockets,
-              firstTry: this.firstTry, misses: this.missTotal,
-              listens: this.listens, hints: this.runHints,
-              stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
-            });
-            if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
-          }
-          GOL.store.save();
-          GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+          this.finishRun();
         }
       } else if (this.phase === 'moon') {
         // THE REMEMBERING MOON — the dream's reward. It rises center-screen and
@@ -350,7 +329,7 @@
           for (const tap of GOL.Input.taps) {
             if (!tap.ui && this.bloomT > 3.6) {
               tap.ui = true;
-              GOL.go('title', { celebrate: this.worldN });
+              GOL.go('title', this.practiceOnly ? undefined : { celebrate: this.worldN });
               return;
             }
           }
@@ -365,6 +344,41 @@
       return range && range.ayahs ? range.ayahs[this.placed] : this.stanzaStart + this.placed + 1;
     },
     isLastStanza() { return this.stanzaIdx >= this.stanzaRanges.length - 1; },
+
+    finishRun() {
+      this.phase = 'done';
+      this.grandK = 0;
+      GOL.audio.sfx('blossom');
+      // lab prototypes save under their own key so experiments never touch
+      // the real surah's progress (storeId === surahId outside the lab)
+      const st = GOL.store.level(this.storeId || this.surahId);
+      const d = GOL.store.data;
+      d.grand = d.grand || {};
+      let first = false;
+      if (!this.practiceOnly) {
+        first = !d.grand[this.storeId || this.surahId];
+        d.grand[this.storeId || this.surahId] = Date.now();
+        st.completed = true;
+      }
+      if (this.longMode === 'night-camps') st.campReplayActive = false;
+      // Practice is still real learning, so its knowledge telemetry remains
+      // useful; only the progression reward and completion stamp are withheld.
+      st.shrineDone = (st.shrineDone || 0) + 1;
+      st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
+      // debug-accelerated or debug-assisted runs are meaningless — never record them
+      if (!this._debugAccel && !this._usedDebugAssist) {
+        st.shrineRuns = st.shrineRuns || [];
+        st.shrineRuns.push({
+          at: Date.now(), sockets: this.totalSockets,
+          firstTry: this.firstTry, misses: this.missTotal,
+          listens: this.listens, hints: this.runHints,
+          stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
+        });
+        if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      }
+      GOL.store.save();
+      if (!this.practiceOnly) GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+    },
 
     // the gems for one stanza arrive as themselves (gathered in the open),
     // shuffled so the fan never spells the answer. Listening — a tap or a
@@ -442,6 +456,10 @@
     },
 
     updatePlace(dt, W, H) {
+      // The just-placed ayah owns the shrine until it finishes. Without this
+      // lock a quick child can place the next gem, whose playVerse() stops the
+      // current recitation and clips the ayah they were meant to hear.
+      if (this.placementListening) return;
       const Input = GOL.Input;
       const active = this.sockets[this.placed]; // the one open socket
 
@@ -539,32 +557,32 @@
       }
       this.reciteGem = g;
       const stanzaDone = this.placed >= this.gems.length;
-      if (stanzaDone && this.checkpoint) {
-        const finish = () => {
-          if (this.phase !== 'place') return;
+      const afterAyah = () => {
+        this.placementListening = false;
+        this.reciteGem = null;
+        if (this.phase !== 'place') return;
+        if (stanzaDone && this.checkpoint) {
+          // a night camp's stanza is whole — bank it at the camp shrine
+          // (only after its final ayah rings out; the lock holds here too)
           this.phase = 'campComplete';
           this.mergeT = 0;
           this._mergeChimed = false;
-        };
-        GOL.audio.playVerse(this.surahId, g.ayah, finish);
-        if (this._debugAccel || this._usedDebugAssist) finish();
-      } else if (stanzaDone && this.isLastStanza()) {
-        // the shrine is whole — the last ayah rings out, then the Tree answers
-        GOL.audio.playVerse(this.surahId, g.ayah, () => {
-          if (this.phase === 'place') {
-            this.phase = 'bloom';
-            this.bloomT = 0;
-            GOL.audio.sfx('door');
-          }
-        });
-        if (this._debugAccel || this._usedDebugAssist) { this.phase = 'bloom'; this.bloomT = 0; }
-      } else if (stanzaDone) {
-        // a stanza is whole (not the last): its final ayah rings, then it
-        // compresses into a crest star and the next stanza drifts in
-        if (!this._debugAccel && !this._usedDebugAssist) GOL.audio.playVerse(this.surahId, g.ayah, null);
-        this.beginMerge();
-      } else if (!this._debugAccel && !this._usedDebugAssist) {
-        GOL.audio.playVerse(this.surahId, g.ayah, null);
+        } else if (stanzaDone && this.isLastStanza()) {
+          // the shrine is whole — only after the last ayah rings out does the
+          // Tree answer
+          this.phase = 'bloom';
+          this.bloomT = 0;
+          GOL.audio.sfx('door');
+        } else if (stanzaDone) {
+          // let the stanza's final ayah finish before its gems compress into
+          // the crest; the next stanza must never arrive over its recitation
+          this.beginMerge();
+        }
+      };
+      if (GOL.DEBUG || this._debugAccel || this._usedDebugAssist) afterAyah();
+      else {
+        this.placementListening = true;
+        GOL.audio.playVerse(this.surahId, g.ayah, afterAyah);
       }
     },
 
@@ -693,8 +711,9 @@
       // sockets: only the restored ones and the single open one exist
       const n = this.gems.length;
       this.sockets.forEach((s, i) => {
-        if (i > this.placed && this.phase === 'place') return; // still sleeping in the stone
-        const isActive = i === this.placed && this.phase === 'place';
+        const listening = this.phase === 'place' && this.placementListening;
+        if ((i > this.placed || (listening && i >= this.placed)) && this.phase === 'place') return; // still sleeping in the stone
+        const isActive = i === this.placed && this.phase === 'place' && !listening;
         // a new stanza's sockets fade up gently (stanzaInT); older ones are 1
         const sf = this.phase === 'place' ? Math.min(1, this.stanzaInT / 0.6) : 1;
         ctx.save();
@@ -762,7 +781,7 @@
           GOL.drawGem(ctx, g.x, g.y, Math.max(2, 13 * shrink), GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase, glow: 0.8 });
         }
       }
-      if (this.phase === 'done') {
+      if (this.phase === 'done' && !this.practiceOnly) {
         const k = GOL.ease.out(this.grandK);
         const gy = lay.treeY - 60 - k * 8 + Math.sin(t * 1.4) * 5;
         GOL.drawGem(ctx, lay.treeX, gy, 14 + 30 * k, GRAND, t, { phase: 0.5 });

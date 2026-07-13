@@ -29,24 +29,32 @@
     return GOL.WORLDS3.filter(Boolean).sort((a, b) => pos(a) - pos(b));
   };
 
-  // a world is open when it's first in the journey, already earned (a Grand
-  // Gem never re-locks, even if a new world is later planted before it), or
-  // the nearest PLAYABLE world before it in the journey gave its Grand Gem
-  // (still-growing buds don't gate the road)
-  GOL.worldOpen = function (n) {
+  // Natural journey access, deliberately separate from a grown-up's practice
+  // override. Only this path may award a progression Grand Gem.
+  GOL.worldProgressOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
-    if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldDone(n)) return true;
-    // a grown-up opened this surah straight away (grown-ups page) — it stays
-    // open, but earns no Grand Gem, so the dashboard stays honest
-    if (w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId)) return true;
     const seq = GOL.orderedWorlds();
     const i = seq.findIndex((x) => x.n === n);
     for (let j = i - 1; j >= 0; j--) {
       if (seq[j].build) return !!(GOL.store.data.grand && GOL.store.data.grand[seq[j].surahId]);
     }
     return true; // nothing playable stands before it
+  };
+  // A world is playable when naturally reached OR explicitly opened by a
+  // grown-up. The latter is practice access, not fabricated journey progress.
+  GOL.worldOpen = function (n) {
+    const w = GOL.WORLDS3[n - 1];
+    if (!w) return false;
+    if (GOL.DEBUG) return true; // the lab: every grown world is playable
+    if (GOL.worldProgressOpen(n)) return true;
+    return !!(w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
+  };
+  GOL.worldPracticeOnly = function (n) {
+    const w = GOL.WORLDS3[n - 1];
+    return !!(w && !GOL.worldProgressOpen(n) && w.surahId != null &&
+      GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
   };
   GOL.worldDone = function (n) {
     const w = GOL.WORLDS3[n - 1];
