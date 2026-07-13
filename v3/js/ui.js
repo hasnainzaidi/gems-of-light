@@ -419,24 +419,26 @@
           ctx.beginPath(); ctx.ellipse(b.x + 4.5, b.y + 3, 4.5, 10, -0.5, 0, Math.PI * 2); ctx.fill();
           ctx.globalAlpha = 1;
         }
-        // the open, still-growing world shows tiny star pips: one per ayah,
-        // filled gold for each gem already found, faint for those still veiled
+        // Keep long surahs from spilling into neighboring discs: the open,
+        // still-growing world shows its ayah total beside one star setting.
         if (b.open && !b.done && surah) {
           const total = surah.verses.length;
-          const got = st && st.found ? st.found.length : 0;
-          const pipR = 3.4, gap = 10;
-          const rowW = (total - 1) * gap;
+          const label = String(total);
+          const pipR = 3.4, gap = 4;
           const py = b.y + 46;
-          for (let p = 0; p < total; p++) {
-            const px = b.x - rowW / 2 + p * gap;
-            const filled = p < got;
-            GOL.star8Path(ctx, px, py, pipR, Math.PI / 8 + t * 0.2);
-            ctx.fillStyle = filled ? alpha('#FFE9A8', 0.95) : alpha('#FFFFFF', 0.16);
-            ctx.fill();
-            ctx.strokeStyle = filled ? alpha(GOLD, 0.9) : alpha('#FFFFFF', 0.32);
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
+          ctx.save();
+          ctx.font = '800 11px ' + GOL.fonts.ui;
+          const numberW = ctx.measureText(label).width;
+          ctx.restore();
+          const groupW = numberW + gap + pipR * 2;
+          const left = b.x - groupW / 2;
+          GOL.text(ctx, label, left, py, { size: 11, weight: '800', color: alpha('#FFFFFF', 0.72), align: 'left' });
+          GOL.star8Path(ctx, left + numberW + gap + pipR, py - 1, pipR, Math.PI / 8 + t * 0.2);
+          ctx.fillStyle = alpha('#FFFFFF', 0.22);
+          ctx.fill();
+          ctx.strokeStyle = alpha('#FFFFFF', 0.46);
+          ctx.lineWidth = 1;
+          ctx.stroke();
         }
         // the hidden Rahma blossom, once found, blooms gold at the disc's brow
         if (st && st.blossom) {

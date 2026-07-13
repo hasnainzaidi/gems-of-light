@@ -400,3 +400,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   angle twice, collapsing them into three perfectly overlapping pairs. Orbit
   gems now share one spin phase and receive their spacing once; even-count
   surahs display every gathered gem.
+- **JOURNEY STAR COUNTS (fixed 2026-07-13):** the journey disc used to draw
+  one tiny pip per ayah beneath every open world. That stayed neat for short
+  surahs but Al-Lail's 21 pips stretched across neighboring discs and broke
+  the map. Open, unfinished worlds now show the total ayah count beside one
+  vertically aligned eight-point star (`3 ★`, `21 ★`); completed worlds still
+  replace it with their Grand Gem. The contained count scales to long surahs
+  without turning the journey into a dense progress chart.
