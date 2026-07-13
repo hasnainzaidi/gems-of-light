@@ -11,7 +11,7 @@
     ctx: null, master: null, amb: null, sfxBus: null,
     windGain: null, waterGain: null,
     muted: false, unlocked: false,
-    _els: {}, _current: null, _birdTimer: 0, _birdsOn: false,
+    _verseEl: null, _current: null, _birdTimer: 0, _birdsOn: false,
     _seq: null,
 
     // -------------------------------------------------------------- boot --
@@ -99,30 +99,29 @@
       return (GOL.RECITERS && GOL.V3 && GOL.RECITERS[GOL.V3.reciter]) ||
         { local: (GOL.AUDIO_BASE || 'audio/'), remote: REMOTE };
     },
-    _el(key) {
-      const rec = this._reciter();
-      const ck = ((GOL.V3 && GOL.V3.reciter) || 'x') + ':' + key;
-      if (!this._els[ck]) {
-        const el = new Audio(rec.local + key + '.mp3');
+    // One reusable <audio> carries every recitation. Recitations are always
+    // serial (playVerse / playSurah go one ayah at a time; the ambient echo
+    // yields to them), so a single element is enough — and it keeps iOS from
+    // choking. The old per-ayah pool meant a 21-ayah surah (Al-Lail) spawned
+    // 21 media elements at once; iOS silently fails to load the last few, so
+    // the recitation went mute near the end — on ANY reciter. One reused
+    // element also stays "unlocked" once the first tap has blessed audio.
+    _verseAudio() {
+      if (!this._verseEl) {
+        const el = new Audio();
         el.preload = 'auto';
-        el._triedRemote = false;
-        el.addEventListener('error', () => {
-          if (!el._triedRemote) {
-            el._triedRemote = true;
-            el.src = rec.remote + key + '.mp3';
-            el.load();
-            // if a play was already in flight when the local file failed,
-            // resume it on the remote — otherwise the fallback loads but
-            // stays silent (the child pauses and hears nothing)
-            if (el._wantPlay) { const p = el.play(); if (p && p.catch) p.catch(() => {}); }
-          }
-        });
-        this._els[ck] = el;
+        this._verseEl = el;
       }
-      return this._els[ck];
+      return this._verseEl;
     },
+    // Warm the cache without holding media elements: a plain fetch lets the
+    // service worker (cache-first for mp3s) keep each ayah for instant — and
+    // offline — playback, with no element-count pressure.
     preloadSurah(surah) {
-      for (const v of surah.verses) this._el(this.key(surah.id, v.n));
+      const rec = this._reciter();
+      for (const v of surah.verses) {
+        try { fetch(rec.local + this.key(surah.id, v.n) + '.mp3').catch(() => {}); } catch (e) { /* ignore */ }
+      }
     },
     // Play one ayah. Always eventually calls onend (never blocks the child).
     playVerse(surahId, n, onend) {
@@ -142,32 +141,58 @@
     // The raw player. inSeq skips the stop/unduck so a running surah
     // recitation can call it verse after verse without ending itself.
     _verse(surahId, n, onend, inSeq) {
-      const el = this._el(this.key(surahId, n));
+      const rec = this._reciter();
+      const key = this.key(surahId, n);
+      const el = this._verseAudio();
+      // detach any listeners still bound from the previous ayah on this element
+      if (el._detach) el._detach();
       const h = { el, done: false, timer: null, guard: null };
       const finish = () => {
         if (h.done) return;
         h.done = true;
         clearTimeout(h.timer);
         clearTimeout(h.guard);
-        el._wantPlay = false;
-        el.removeEventListener('ended', finish);
+        if (el._detach) el._detach();
         if (this._current === h) this._current = null;
         if (!inSeq) this.duck(false);
         if (onend) onend();
       };
       h.finish = finish;
+      let triedRemote = false;
+      const onEnded = () => finish();
+      const onError = () => {
+        // local miss or a stalled load: fall back to the streaming reciter
+        // ONCE, and actually resume playback on it — otherwise the fallback
+        // loads but stays silent (the child pauses and hears nothing)
+        if (!triedRemote) {
+          triedRemote = true;
+          el.src = rec.remote + key + '.mp3';
+          el.load();
+          const p = el.play();
+          if (p && p.catch) p.catch(() => {});
+        } else {
+          finish();
+        }
+      };
+      el._detach = () => {
+        el.removeEventListener('ended', onEnded);
+        el.removeEventListener('error', onError);
+        el._detach = null;
+      };
+      el.addEventListener('ended', onEnded);
+      el.addEventListener('error', onError);
       el.muted = this.muted;
       el.volume = 1;
-      el.currentTime = 0;
-      el.addEventListener('ended', finish);
+      el.src = rec.local + key + '.mp3';
+      el.load();
+      try { el.currentTime = 0; } catch (e) { /* fresh src starts at 0 anyway */ }
       // if audio can't load at all (fully offline + streamed surah), move on
       h.timer = setTimeout(() => { if (el.paused || el.readyState < 2) finish(); }, 7000);
       // and nothing may stall the garden forever, no matter what
       h.guard = setTimeout(finish, 30000);
       this.duck(true);
-      el._wantPlay = true;
       const p = el.play();
-      if (p && p.catch) p.catch(() => { h.timer = setTimeout(finish, 2500); });
+      if (p && p.catch) p.catch(() => { /* real load failures surface via 'error' → remote */ });
       this._current = h;
       return h;
     },
@@ -240,6 +265,8 @@
         h.el.pause();
         h.done = true;
         clearTimeout(h.timer);
+        clearTimeout(h.guard);
+        if (h.el._detach) h.el._detach();
         this._current = null;
       }
       this.duck(false);
