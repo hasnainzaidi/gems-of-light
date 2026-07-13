@@ -19,7 +19,7 @@
     labSaveKey: 'lail-p14',
     stanzas: [4, 7, 5, 5],
     campShrines: [
-      { afterAyah: 4, x: 32, row: 54 },
+      { afterAyah: 4, x: 32, row: 54, approach: 'left' },
       { afterAyah: 11, x: 36, row: 35 },
       { afterAyah: 16, x: 34, row: 17 }
     ],

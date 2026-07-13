@@ -25,11 +25,11 @@ Gem.
 ## Child-facing flow
 
 The child climbs Al-Lail exactly as before, collecting the awake gems in order
-and pausing to hear each ayah. After ayah 4, the first ledge star wakes and
-breathes with light. Touching it opens a small shrine containing only gems 1–4.
-When those four are rebuilt, the child returns to that same ledge. Its star is
-now steadily bright, the lower stretch remains restored, and ayah 5 is the next
-awake gem above.
+and pausing to hear each ayah. After ayah 4, the first small stone gate opens
+and breathes with warm light. Walking through it opens a small shrine containing
+only gems 1–4. When those four are rebuilt, the child returns to that same
+ledge. Its gate remains physically open with a constellation shining above it,
+the lower stretch remains restored, and ayah 5 is the next awake gem above.
 
 The pattern repeats at the next two night camps. The second shrine carries ayah
 4 forward before 5–11; the third carries ayah 11 before 12–16. Each completed
@@ -52,8 +52,8 @@ ledge, collecting some gems beyond it, or leaving during a shrine does not mark
 that movement learned.
 
 On return, P14 restores every ayah through the latest completed camp, places
-the child at that camp's ledge, keeps its star lit, and wakes the next unlearned
-ayah. The child does not have to reclimb or recollect a completed movement.
+the child at that camp's ledge, keeps its constellation gate open, and wakes
+the next unlearned ayah. The child does not have to reclimb or recollect a completed movement.
 Partial progress after the last completed camp is intentionally discarded; the
 previous lit camp is the safe place to resume.
 

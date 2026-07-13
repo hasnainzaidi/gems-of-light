@@ -26,6 +26,7 @@
   const directShrine = q.get('shrine') === '1';
   const directFocus = q.get('focus') === '1';
   const directCamp = q.get('camp') ? Math.max(1, parseInt(q.get('camp'), 10)) : null;
+  const directGate = q.get('gate') ? Math.max(1, parseInt(q.get('gate'), 10)) : null;
   GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
@@ -162,6 +163,7 @@
     try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '')); } catch (e) { /* play on */ }
   }
   const directParams = directDef ? { proto: directProto, labFocus: directFocus } : null;
+  if (directParams && directGate) directParams.viewGate = directGate;
   if (directParams && directCamp && directDef.campShrines && directDef.campShrines[directCamp - 1]) {
     const c = directDef.campShrines[directCamp - 1];
     const start = directCamp === 1 ? 1 : directDef.campShrines[directCamp - 2].afterAyah;

@@ -200,6 +200,19 @@
           this.player.y = camp.row * TILE;
           this.player.lastSafe = { x: this.player.x, y: this.player.y };
         }
+        // Visual QA / focused design review: arrive a few steps before the
+        // requested ready gate without mutating its saved checkpoint state.
+        if (params.viewGate && L.campShrines[params.viewGate - 1]) {
+          const i = params.viewGate - 1, camp = L.campShrines[i];
+          this.campDone = i;
+          this.found = [];
+          for (let a = 1; a <= camp.afterAyah; a++) this.found.push(a);
+          this.restoreK = this.found.length / L.gems.length;
+          const side = camp.approach === 'left' ? -1 : 1;
+          this.player.x = (camp.x + 0.5) * TILE + side * 88;
+          this.player.y = camp.row * TILE;
+          this.player.lastSafe = { x: this.player.x, y: this.player.y };
+        }
       }
 
       if (resume) {
@@ -900,7 +913,11 @@
       const pl = this.player, L = this.L;
       const pending = this.pendingCamp();
       if (pending) {
-        pl.x = (pending.x + 0.5) * TILE;
+        const gateX = (pending.x + 0.5) * TILE;
+        // First E frames the doorway from a few steps away for inspection;
+        // a second E enters it. Both positions stay on the camp ledge.
+        const side = pending.approach === 'left' ? -1 : 1;
+        pl.x = Math.abs(pl.x - gateX) > 80 ? gateX + side * 88 : gateX;
         pl.y = pending.row * TILE;
         pl.vx = 0; pl.vy = 0; pl.grounded = true; pl.rescue = null;
         pl.lastSafe = { x: pl.x, y: pl.y };
@@ -976,7 +993,7 @@
       if (L.memory) this.drawMemoryStone(ctx, L.memory, t);
       // the campfire (sleeping until every gem is found)
       if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t);
-      if (L.campShrines) this.drawCampShrines(ctx, t);
+      if (L.campShrines) this.drawCampShrines(ctx, t, P);
       // the shrine door, revealed by the ember light
       if (L.door && this.doorK > 0) {
         GOL.drawArch(ctx, L.door.x, L.door.y, t, P, 0.18 * this.doorK + 0.06 * Math.sin(t * 1.8) * this.doorK, this.doorK * (0.5 + 0.3 * Math.sin(t * 2.2)));
@@ -1153,34 +1170,80 @@
       GOL.drawVignette(ctx, W, H, 0.14);
     },
 
-    // The existing lantern props mark the three ledges. These hovering stars
-    // turn them into readable checkpoints: dim ahead, breathing when ready,
-    // and steadily bright after that small shrine has been remembered.
-    drawCampShrines(ctx, t) {
+    // A small version of the final shrine doorway: unmistakably a place to
+    // enter, but modest enough that the summit arch remains the grand arrival.
+    // Closed ahead, warmly open when ready, constellation-lit once remembered.
+    drawCampShrines(ctx, t, P) {
       const camps = this.L.campShrines || [];
       for (let i = 0; i < camps.length; i++) {
         const c = Object.assign({ index: i }, camps[i]);
-        const p = this.campWorldPos(c);
+        const p = { x: (c.x + 0.5) * TILE, y: c.row * TILE };
         const done = i < this.campDone;
         const ready = i === this.campDone && this.found.length >= c.afterAyah;
         const pulse = 0.5 + 0.5 * Math.sin(t * 2.4 + i);
-        if (done || ready) {
-          const halo = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, 34 + pulse * 5);
-          halo.addColorStop(0, alpha('#FFE9A8', done ? 0.42 : 0.3 + pulse * 0.2));
-          halo.addColorStop(1, alpha('#FFE9A8', 0));
-          ctx.fillStyle = halo;
-          ctx.beginPath(); ctx.arc(p.x, p.y, 40, 0, Math.PI * 2); ctx.fill();
+        const open = done || ready;
+        const gateW = 92, gateH = 116, innerW = 48;
+        ctx.save();
+        // Portal recess first: deep blue while sleeping, unmistakable warm
+        // light once the child has earned entry.
+        const portal = ctx.createLinearGradient(0, p.y - gateH, 0, p.y);
+        portal.addColorStop(0, open ? alpha('#FFF6DC', 0.96) : alpha('#263947', 0.92));
+        portal.addColorStop(1, open ? alpha('#F0C878', 0.72) : alpha('#182A35', 0.96));
+        ctx.fillStyle = portal;
+        ctx.beginPath();
+        ctx.moveTo(p.x - innerW / 2, p.y);
+        ctx.lineTo(p.x - innerW / 2, p.y - 62);
+        ctx.quadraticCurveTo(p.x, p.y - 104, p.x + innerW / 2, p.y - 62);
+        ctx.lineTo(p.x + innerW / 2, p.y);
+        ctx.closePath(); ctx.fill();
+
+        // Closed wooden leaves make an unready gate legible from a distance.
+        if (!open) {
+          ctx.fillStyle = P.trunk;
+          ctx.fillRect(p.x - innerW / 2, p.y - 61, innerW / 2 - 1, 61);
+          ctx.fillRect(p.x + 1, p.y - 61, innerW / 2 - 1, 61);
+          ctx.strokeStyle = alpha(P.trunkDark, 0.8); ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y - 62); ctx.lineTo(p.x, p.y); ctx.stroke();
         }
-        GOL.star8Path(ctx, p.x, p.y, ready ? 11 + pulse * 2 : 9, Math.PI / 8);
-        ctx.fillStyle = done ? '#FFF6DC' : ready ? alpha('#FFE9A8', 0.72 + pulse * 0.25) : alpha('#E9DFC5', 0.18);
-        ctx.fill();
-        ctx.strokeStyle = done || ready ? alpha('#D9A44A', 0.9) : alpha('#AB9C78', 0.35);
-        ctx.lineWidth = ready ? 2 : 1.4; ctx.stroke();
+
+        // Heavy outlined pillars + curved lintel: architecture, not sparkle.
+        const stone = done ? GOL.color.tint(P.stone, 0.18) : P.stone;
+        ctx.fillStyle = stone;
+        ctx.strokeStyle = alpha(P.stoneDark, 0.92);
+        ctx.lineWidth = 3;
+        for (const x of [p.x - gateW / 2, p.x + gateW / 2 - 18]) {
+          GOL.roundRect(ctx, x, p.y - 82, 18, 82, 5); ctx.fill(); ctx.stroke();
+        }
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = alpha(P.stoneDark, 0.95); ctx.lineWidth = 20;
+        ctx.beginPath(); ctx.moveTo(p.x - 36, p.y - 70); ctx.quadraticCurveTo(p.x, p.y - gateH, p.x + 36, p.y - 70); ctx.stroke();
+        ctx.strokeStyle = stone; ctx.lineWidth = 14; ctx.stroke();
+        ctx.lineCap = 'butt';
+        GOL.star8Path(ctx, p.x, p.y - 91, 8 + (ready ? pulse * 1.5 : 0), Math.PI / 8);
+        ctx.fillStyle = open ? '#FFF6DC' : alpha('#B98A3E', 0.72); ctx.fill();
+        ctx.strokeStyle = alpha('#8F6D39', 0.9); ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.restore();
+
+        // The active doorway breathes a wide ground ring: this is the next
+        // destination, not another piece of scenery.
+        if (ready) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.38 + pulse * 0.4);
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.ellipse(p.x, p.y - 2, 44 + pulse * 5, 12 + pulse * 2, 0, 0, Math.PI * 2); ctx.stroke();
+          for (let k = 0; k < 3; k++) {
+            const a = t * 0.55 + k * Math.PI * 2 / 3;
+            ctx.fillStyle = alpha('#FFF6DC', 0.65 + 0.25 * Math.sin(t * 2 + k));
+            ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * 28, p.y - 52 + Math.sin(a) * 18, 2.5, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+
+        // A completed gate stays physically open and wears its stanza as a
+        // four-point constellation above the arch.
         if (done) {
           for (let k = 0; k < 4; k++) {
             const a = k * Math.PI / 2 + t * 0.12;
             ctx.fillStyle = alpha('#FFF6DC', 0.55 + 0.2 * Math.sin(t * 2 + k));
-            ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * 18, p.y + Math.sin(a) * 11, 1.8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x + Math.cos(a) * 18, p.y - 66 + Math.sin(a) * 11, 2.1, 0, Math.PI * 2); ctx.fill();
           }
         }
       }
