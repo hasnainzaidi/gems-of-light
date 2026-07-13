@@ -371,3 +371,8 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   three-tile-deep edge caught the hero's head even though the reachability
   checker connected the two platform endpoints. The summit now begins one
   tile past C3, matching W4 Al-Qadr's proven last-rung clearance.
+- **Campfire orbit spacing (playtested 2026-07-12):** Al-Nas showed only three
+  gems at the fire because six orbit objects were arranged with their index
+  angle twice, collapsing them into three perfectly overlapping pairs. Orbit
+  gems now share one spin phase and receive their spacing once; even-count
+  surahs display every gathered gem.
