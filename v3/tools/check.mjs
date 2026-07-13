@@ -226,4 +226,16 @@ for (const tgt of targets) {
 }
 
 if (!checked && !only) console.log('(no prototype files found)');
+
+// entry-point cache-version parity is a whole-repo invariant, so a full run
+// (no arg) also verifies root and /v3/ never drift out of sync.
+if (!arg) {
+  const { execFileSync } = require('child_process');
+  try {
+    execFileSync(process.execPath, [join(V3, 'tools', 'check-entry-parity.mjs')], { stdio: 'inherit' });
+  } catch (e) {
+    failures++;
+  }
+}
+
 process.exit(failures ? 1 : 0);
