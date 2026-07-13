@@ -305,6 +305,25 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   from the child, the script stays aglow, the just-heard gem pulses. No
   re-recitation, ~2s per ayah instead of ~2x. First learning only;
   tuning row `your turn: off/chime` (default chime, `?turn=`).
+  **KILLED ENTIRELY (2026-07-12):** the whole "your turn" campfire beat —
+  breath, per-ayah chime, listening rings, script-glow, gem-pulse, and its
+  tuning row / `?turn=` param — is gone. With the shrine's one-socket recall
+  immediately after, a pause at the campfire added no value; the campfire is
+  now just one tight, unbroken recitation of the surah before the door opens.
+  The focus-on-the-ayah moment moved to where it lands naturally: **the pause
+  at each gem's collection** (below). All of the your-turn code (setCampAr,
+  echoI, the stanza-cut breath map, the echo visuals) was removed with it.
+- **PAUSE AT EACH GEM (approved 2026-07-12)** — collecting a gem now holds
+  the game so the ayah can be *heard*, not skated past. If the child leapt to
+  reach the gem, gravity still brings them down (input is frozen, no walk/no
+  jump); the instant they land, the ayah begins and the Arabic script glows.
+  A small ceremonial touch so the hold feels special, not stalled: the
+  lightling softly shuts her eyes (two little smiling lashes), breathes
+  gently, and glimmers — sparkles drift up around her — while she listens.
+  Play resumes — and the script fades — only when the recitation ends. This
+  replaces the old collect behavior,
+  where the ayah started mid-air and gameplay never stopped. (DEBUG speed-runs
+  still skip the recitation, so the pause is a real-playtest-only beat.)
 - **Playtest positives to protect**: the campfire being *earned* (unlit until
   every gem is found), and the flowers blooming where a gem is collected.
 - **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear

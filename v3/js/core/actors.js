@@ -268,19 +268,30 @@
     const lookUp = Math.min(1, Math.max(0, (s.idleT || 0) - 2) / 0.6);   // it looks up when it rests
     const eyeY = -R * 1.15 - lookUp * 3.5;
     const eyeX = f * 4.2;
-    const blink = s.blink ? 0.12 : 1;
-    ctx.fillStyle = '#4A3B2A';
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.ellipse(eyeX + side * 5.4, eyeY, 2.5, 3.4 * blink, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    if (!s.blink) {
-      ctx.fillStyle = alpha('#FFFFFF', 0.95);
+    if (s.eyesClosed) {
+      // eyes softly shut, listening — two little smiling lashes (‿ ‿)
+      ctx.strokeStyle = '#4A3B2A';
+      ctx.lineWidth = 1.5; ctx.lineCap = 'round';
       for (const side of [-1, 1]) {
         ctx.beginPath();
-        ctx.arc(eyeX + side * 5.4 + 0.9, eyeY - 1.1 - lookUp, 0.95, 0, Math.PI * 2);
+        ctx.arc(eyeX + side * 5.4, eyeY - 1, 3, 0.18 * Math.PI, 0.82 * Math.PI);
+        ctx.stroke();
+      }
+    } else {
+      const blink = s.blink ? 0.12 : 1;
+      ctx.fillStyle = '#4A3B2A';
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(eyeX + side * 5.4, eyeY, 2.5, 3.4 * blink, 0, 0, Math.PI * 2);
         ctx.fill();
+      }
+      if (!s.blink) {
+        ctx.fillStyle = alpha('#FFFFFF', 0.95);
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(eyeX + side * 5.4 + 0.9, eyeY - 1.1 - lookUp, 0.95, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
     // cheeks

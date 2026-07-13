@@ -10,6 +10,10 @@
 
   const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
 
+  // a frozen controller: gravity still pulls, but no walk and no jump — used
+  // while a collected ayah plays so the child settles and holds still
+  const NEUTRAL = { left: false, right: false, jumpHeld: false, consumeJump() { return false; } };
+
   const adventure = {
     t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
     sprites: null, player: null, cam: null, fx: null,
@@ -19,7 +23,7 @@
     pads: null, movers: null, blossomState: null, fly: null,
     orbit: null, restoreK: 0, glowAr: null, echoT: 0,
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
-    echoI: -1, memState: null,
+    gemPause: null, memState: null,
 
     enter(params) {
       // every entry names its world now (the ten-prototype lab retired
@@ -27,15 +31,6 @@
       const def = params.world ? GOL.WORLDS3[params.world - 1]
         : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
-      // stanza worlds (WORLDS-PLAN §1): the campfire breathes at stanza ends.
-      // this.stanzaCuts holds the 0-based index of each stanza's LAST ayah
-      // (except the final stanza — the surah always ends cleanly)
-      this.stanzaCuts = null;
-      if (def && Array.isArray(def.stanzas) && def.stanzas.length > 1) {
-        this.stanzaCuts = new Set();
-        let acc = 0;
-        for (const n of def.stanzas.slice(0, -1)) { acc += n; this.stanzaCuts.add(acc - 1); }
-      }
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';
@@ -53,7 +48,7 @@
       this.fireT = 0;
       this.doorK = 0;
       this.reciteI = -1;
-      this.echoI = -1;
+      this.gemPause = null;
       this.restoreK = 0;
       this.glowAr = null;
       this.echoT = 5; // let the garden breathe before the first echo
@@ -256,6 +251,9 @@
 
       // campfire and beyond -------------------------------------------------
       if (this.phase !== 'roam') { this.updateCampfire(dt, W, H); return; }
+
+      // the held beat after collecting a gem — the child lands, then the ayah
+      if (this.gemPause) { this.updateGemPause(dt); return; }
 
       // input → movement (thumbstick + jump button, hugging the safe areas)
       GOL.Input.zones = GOL.touchZones(W, H);
@@ -467,9 +465,53 @@
       this.bloomAround(g.x);
 
       if (GOL.DEBUG) return; // speed runs skip the recitation
-      GOL.audio.playVerse(this.L.surahId, g.ayah, null);
-      const verse = this.L.surah.verses.find((v) => v.n === g.ayah);
-      if (verse && GOL.V3.arabic) this.glowAr = { text: verse.ar, t: 0, dur: 5.2 };
+      // A held beat for the ayah: gameplay stops so the child can settle and
+      // listen. The ayah does not begin until the wanderer is back on the
+      // ground (they may have leapt to reach the gem) — see updateGemPause.
+      this.gemPause = { ayah: g.ayah, stage: 'land' };
+    },
+
+    // The held beat after a gem is collected. First 'land': play is frozen
+    // (no walk, no jump) but gravity still carries the child down if they
+    // leapt for the gem. The moment they touch ground the ayah begins and we
+    // 'hold' — perfectly still, script aglow — until the recitation ends,
+    // then wandering resumes. The world keeps breathing throughout.
+    updateGemPause(dt) {
+      const L = this.L, pl = this.player, gp = this.gemPause;
+      this.fx.update(dt);
+      this.updateOrbit(dt);
+      GOL.updateCreatures(L, pl, dt, this.t);
+      GOL.updateCamera(this.cam, pl, dt);
+
+      if (gp.stage === 'land') {
+        // let momentum bleed off and gravity settle the child, ignoring input
+        GOL.updatePlayer(pl, L, NEUTRAL, dt, this.fx);
+        if (pl.grounded) {
+          gp.stage = 'hold';
+          pl.vx = 0; pl.moving = false; pl.idleT = 0;
+          // she settles: a soft halo of light blooms as her eyes close
+          this.fx.spawn('ring', pl.x, pl.y - 18, { color: '#FFF3C4', size: 30 });
+          for (let k = 0; k < 6; k++) this.fx.spawn('sparkle', pl.x + GOL.rnd(-16, 16), pl.y - 18 + GOL.rnd(-10, 10), { color: k % 2 ? '#FFE9A8' : '#FFF6DC' });
+          GOL.audio.playVerse(this.L.surahId, gp.ayah, () => {
+            if (this.gemPause !== gp) return;
+            this.gemPause = null;
+            // let the script fade out gently as wandering resumes
+            if (this.glowAr) this.glowAr.dur = Math.min(this.glowAr.dur, this.glowAr.t + 0.9);
+          });
+          // dur is a ceiling only — the script really ends with the ayah above
+          const verse = this.L.surah.verses.find((v) => v.n === gp.ayah);
+          if (verse && GOL.V3.arabic) this.glowAr = { text: verse.ar, t: 0, dur: 30 };
+        }
+      } else {
+        // hold: still and listening, the ayah filling the air. She glimmers —
+        // little sparkles drift up around her while the words are spoken.
+        pl.t += dt;
+        pl.idleT += dt;
+        pl.vx = 0; pl.moving = false;
+        if (Math.random() < dt * 6) {
+          this.fx.spawn('sparkle', pl.x + GOL.rnd(-22, 22), pl.y - GOL.rnd(4, 40), { color: Math.random() < 0.5 ? '#FFF3C4' : '#FFE9A8' });
+        }
+      }
     },
 
     // restoration: a few flowers and a butterfly bloom near a found gem's home
@@ -574,36 +616,15 @@
         if (this.fireT > 1.6) {
           this.phase = 'campfire';
           this.fireT = 0;
-          this.echoI = -1;
           GOL.audio.startAmbience('quiet');
-          // YOUR TURN (playtest 2026-07-12: the world-echo replay felt broken
-          // and laborious with the shrine right after — killed). On this
-          // surah's FIRST learning (no Grand Gem yet), and when the tuning
-          // row asks, each ayah is followed by a soft chime opening a short
-          // breath — the wordless invitation to say it: listening rings
-          // ripple from the child, the script stays aglow, the just-heard
-          // gem pulses. The chime marks the pause as intentional (bare
-          // silence read as a stall in the echo-breath playtest). Replays
-          // and 'off' keep the tight single recitation.
-          const firstLearn = !(GOL.store.data.grand && GOL.store.data.grand[L.surahId]);
-          const turn = firstLearn && GOL.V3.campTurn === 'chime';
+          // One tight recitation of the whole surah — a single voice per ayah
+          // at the normal gap. The old "your turn" pause/breath (with its
+          // listening rings and per-ayah chime) was cut 2026-07-12: with the
+          // shrine's one-socket recall right after, it added no value. The
+          // focus-on-the-ayah beat now lives at each gem's collection instead.
           if (GOL.DEBUG) {
             setTimeout(() => { if (this.phase === 'campfire') this.openDoor(); }, 800);
-          } else if (turn) {
-            // stanza worlds: the long "your turn" breath opens only at
-            // stanza ends (21 chimes would be the laborious echo reborn);
-            // within a stanza the ayat flow at the normal tight gap.
-            // Short worlds (no stanzas): every ayah gets its breath, as before.
-            const cuts = this.stanzaCuts;
-            const breathes = (i) => !cuts || cuts.has(i);
-            GOL.audio.playSurah(L.surah, {
-              breathFor: (i) => (breathes(i) ? 2.2 : 0.42),
-              onVerse: (i) => { this.reciteI = i; this.echoI = -1; this.setCampAr(i); },
-              onBreath: (i) => { if (breathes(i)) { this.echoI = i; GOL.audio.sfx('yourTurn'); } },
-              onend: () => { this.echoI = -1; if (this.phase === 'campfire') this.openDoor(); }
-            });
           } else {
-            // the tight recitation: one voice per ayah, no echo, no long breath
             GOL.audio.playSurah(L.surah, {
               onVerse: (i) => { this.reciteI = i; },
               onend: () => { if (this.phase === 'campfire') this.openDoor(); }
@@ -648,12 +669,6 @@
       // arming is gone — the Remembering's doorway is moving to the old
       // world's own shrine. The stone remains as quiet scenery (its
       // machinery below stays for whatever the redesign keeps).
-    },
-    // the seated echo shows the current ayah's script as ambient glow (the
-    // same idiom as collect); refreshed at each full voice and each echo
-    setCampAr(i) {
-      const v = this.L.surah.verses[i];
-      if (v && GOL.V3.arabic) this.glowAr = { text: v.ar, t: 0, dur: 7 };
     },
 
     // which surah should this world's unaimed stone remember? The completed
@@ -814,11 +829,6 @@
     // -------------------------------------------------------------- draw --
     draw(ctx, W, H) {
       const L = this.L, t = this.t, cam = this.cam || { x: 0, y: 0, viewW: W, viewH: H };
-      // the world echoes: while the just-heard ayah returns soft, the flame
-      // swells only mildly (~1.15×) — the echo carries the invitation now, not
-      // the fire — and the just-heard gem brightens with it
-      const echoOn = this.phase === 'campfire' && this.echoI >= 0;
-      const echoSw = echoOn ? (0.5 + 0.5 * Math.sin(t * 2.2)) * 0.5 : 0;
       let P = this.P;
       const dawnK = this.endP ? this.restoreK : 0;
       if (this.endP) P = GOL.lerpPal(this.P, this.endP, dawnK);
@@ -870,7 +880,7 @@
       // the memory stone, holding a place for an earlier surah's Grand Gem
       if (L.memory) this.drawMemoryStone(ctx, L.memory, t);
       // the campfire (sleeping until every gem is found)
-      if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t, echoSw);
+      if (L.campfire) this.drawCampfire(ctx, L.campfire.x, L.campfire.y, t);
       // the shrine door, revealed by the ember light
       if (L.door && this.doorK > 0) {
         GOL.drawArch(ctx, L.door.x, L.door.y, t, P, 0.18 * this.doorK + 0.06 * Math.sin(t * 1.8) * this.doorK, this.doorK * (0.5 + 0.3 * Math.sin(t * 2.2)));
@@ -918,25 +928,24 @@
       });
       for (const wf of L.waterfalls) GOL.drawWaterfall(ctx, wf.x, wf.y, 34, wf.h, t, P);
 
-      // the wanderer (seated and peaceful during the campfire)
+      // the wanderer (seated and peaceful during the campfire; eyes softly
+      // shut, breathing, while an earned ayah fills the air at collection)
       const pl = this.player;
       const seated = this.phase === 'settle' || this.phase === 'campfire';
-      // the world listens: while the ayah echoes, rings ripple out FROM THE
-      // SEATED CHILD (v1's idiom) — 3 staggered rings, warm, breathing alpha
-      if (echoOn) {
-        const cy = pl.y - 20; // around the child's chest, where the voice rests
-        for (let i = 0; i < 3; i++) {
-          const rk = (t * 0.5 + i / 3) % 1;
-          ctx.strokeStyle = alpha('#FFE9A8', 0.34 * (1 - rk));
-          ctx.lineWidth = 2.2;
-          ctx.beginPath(); ctx.arc(pl.x, cy, 16 + rk * 58, 0, Math.PI * 2); ctx.stroke();
-        }
-      }
+      const holding = this.gemPause && this.gemPause.stage === 'hold';
+      const still = seated || holding;
+      // eyes softly shut while she listens — at each ayah's collection (hold)
+      // and while the whole surah is recited at the campfire. Not during
+      // 'settle', when she's still drifting to her seat.
+      const listening = holding || this.phase === 'campfire';
+      const breath = holding ? Math.sin(pl.t * 1.8) * 0.03 : 0;
       GOL.drawSprite(ctx, pl.x, pl.y, {
-        vx: seated ? 0 : pl.vx, vy: pl.vy, grounded: true, facing: pl.facing,
-        t: pl.t, idleT: seated ? 3.5 : pl.idleT, blink: pl.blink,
-        squashX: seated ? 1.06 : pl.squashX, squashY: seated ? 0.94 : pl.squashY,
-        moving: seated ? false : pl.moving
+        vx: still ? 0 : pl.vx, vy: pl.vy, grounded: true, facing: pl.facing,
+        t: pl.t, idleT: seated ? 3.5 : holding ? Math.max(2.6, pl.idleT) : pl.idleT, blink: pl.blink,
+        squashX: seated ? 1.06 : holding ? 1 + breath : pl.squashX,
+        squashY: seated ? 0.94 : holding ? 1 - breath : pl.squashY,
+        moving: still ? false : pl.moving,
+        eyesClosed: listening
       });
 
       // the orbit of gathered ayat
@@ -945,15 +954,13 @@
         const behind = Math.sin(o.angle + (i / Math.max(1, n)) * Math.PI * 2) < 0;
         const r = (seated || this.phase === 'campfire' ? 12 : 8) * (0.7 + 0.3 * o.join);
         const lit = this.reciteI >= 0 && this.L.surah.verses[this.reciteI] && this.L.surah.verses[this.reciteI].n === o.ayah;
-        // during the echo, the just-heard ayah's gem pulses brighter still
-        const onEcho = echoSw > 0 && this.echoI >= 0 && this.L.surah.verses[this.echoI] && this.L.surah.verses[this.echoI].n === o.ayah;
         if (lit) {
           ctx.strokeStyle = alpha(o.C.glow, 0.65 + 0.3 * Math.sin(t * 4));
           ctx.lineWidth = 2.4;
-          ctx.beginPath(); ctx.arc(o.x, o.y, r + 9 + (onEcho ? echoSw * 6 : 0), 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(o.x, o.y, r + 9, 0, Math.PI * 2); ctx.stroke();
         }
         ctx.globalAlpha = behind ? 0.72 : 1;
-        GOL.drawGem(ctx, o.x, o.y, (lit ? r + 3 : r) + (onEcho ? echoSw * 4 : 0), o.C, t, { phase: i * 1.3, glow: lit ? 1 : 0.55 });
+        GOL.drawGem(ctx, o.x, o.y, lit ? r + 3 : r, o.C, t, { phase: i * 1.3, glow: lit ? 1 : 0.55 });
         ctx.globalAlpha = 1;
       });
 
@@ -1118,9 +1125,9 @@
       }
     },
 
-    drawCampfire(ctx, x, y, t, swell) {
+    drawCampfire(ctx, x, y, t) {
       const lit = this.phase !== 'roam' || this.found.length === this.L.gems.length;
-      const sw = swell || 0; // breath swell: the flame grows ~1.3× — "your turn"
+      const sw = 0;
       ctx.save();
       ctx.translate(x, y);
       // ring of stones
