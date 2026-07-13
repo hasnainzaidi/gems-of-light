@@ -324,6 +324,17 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   replaces the old collect behavior,
   where the ayah started mid-air and gameplay never stopped. (DEBUG speed-runs
   still skip the recitation, so the pause is a real-playtest-only beat.)
+- **AL-FALAQ WORD-FOLLOW PROTOTYPE (built 2026-07-12; awaiting playtest)** —
+  the full Uthmani ayah remains visible during W1's gem pause while its words
+  fill with the gem's light from right to left in time with the fixed Abdul
+  Basit Murattal recording. It is attention support, never a reading test:
+  no transliteration, cursor, bouncing karaoke text, or prompt. All 23 word
+  boundaries were hand-aligned against the exact local EveryAyah files
+  (`js/worlds/w1-falaq-follow.js`, expected tolerance about 100–200ms) and are
+  deliberately disabled for other reciters and surahs; those retain the
+  whole-ayah glow. Expansion waits on a child playtest: watch whether eyes
+  follow the illumination and whether mouthing/repetition increases without
+  being requested.
 - **Playtest positives to protect**: the campfire being *earned* (unlit until
   every gem is found), and the flowers blooming where a gem is collected.
 - **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear

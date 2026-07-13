@@ -14,6 +14,86 @@
   // while a collected ayah plays so the child settles and holds still
   const NEUTRAL = { left: false, right: false, jumpHeld: false, consumeJump() { return false; } };
 
+  // Paint one ayah as a quiet RTL read-along. The complete Arabic stays
+  // visible, while light travels through each word from right to left using
+  // timestamps from the world's own fixed recitation. Keeping the shaping
+  // inside whole words preserves Arabic ligatures and diacritics; we never
+  // split the script into individual letters.
+  function drawFollowAyah(ctx, g, W, H, fade) {
+    const words = g.words;
+    if (!words || !words.length || !g.timings || g.timings.length !== words.length) return false;
+
+    const sa = GOL.SAFE || { l: 0, r: 0 };
+    const maxW = Math.max(260, Math.min(620, W - sa.l - sa.r - 190));
+    let size = Math.min(32, H * 0.082, W * 0.045);
+    ctx.save();
+    ctx.direction = 'rtl';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '400 ' + size + 'px ' + GOL.fonts.ar;
+    let gap = Math.max(8, ctx.measureText(' ').width * 1.15);
+    let widths = words.map((word) => ctx.measureText(word).width);
+    let total = widths.reduce((sum, width) => sum + width, 0) + gap * (words.length - 1);
+    if (total > maxW) {
+      size = Math.max(23, size * maxW / total);
+      ctx.font = '400 ' + size + 'px ' + GOL.fonts.ar;
+      gap = Math.max(7, ctx.measureText(' ').width * 1.15);
+      widths = words.map((word) => ctx.measureText(word).width);
+      total = widths.reduce((sum, width) => sum + width, 0) + gap * (words.length - 1);
+    }
+
+    const y = H * 0.31;
+    let right = W / 2 + total / 2;
+    const audioTime = g.audio && g.audio.el && Number.isFinite(g.audio.el.currentTime)
+      ? g.audio.el.currentTime : 0;
+
+    // Restoration makes W1's sky very bright by its final gems. A borderless
+    // dusk aura keeps delicate tashkeel legible without turning the ayah into
+    // a card or panel.
+    const aura = ctx.createRadialGradient(W / 2, y, 8, W / 2, y, total / 2 + 64);
+    aura.addColorStop(0, 'rgba(31,48,48,0.3)');
+    aura.addColorStop(0.72, 'rgba(31,48,48,0.16)');
+    aura.addColorStop(1, 'rgba(31,48,48,0)');
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = aura;
+    ctx.fillRect(W / 2 - total / 2 - 70, y - size * 1.25, total + 140, size * 2.5);
+
+    for (let i = 0; i < words.length; i++) {
+      const width = widths[i];
+      const cx = right - width / 2;
+      const start = g.timings[i][0], end = g.timings[i][1];
+      const lit = audioTime <= start ? 0 : audioTime >= end ? 1
+        : (audioTime - start) / Math.max(0.04, end - start);
+
+      // All words are present from the beginning, giving the eyes somewhere
+      // to travel before the voice reaches them.
+      ctx.globalAlpha = fade * 0.52;
+      ctx.shadowColor = 'rgba(20,34,33,0.72)';
+      ctx.shadowBlur = 5;
+      ctx.fillStyle = '#FFFBEE';
+      ctx.fillText(words[i], cx, y);
+
+      if (lit > 0) {
+        // Reveal the illuminated copy across the spoken duration. Arabic is
+        // read right-to-left, so the clipping window grows from the right.
+        ctx.save();
+        const pad = 5;
+        ctx.beginPath();
+        ctx.rect(right - width * lit - pad, y - size, width * lit + pad * 2, size * 2);
+        ctx.clip();
+        ctx.globalAlpha = fade * (0.86 + 0.14 * lit);
+        ctx.shadowColor = g.color || '#FFE9A8';
+        ctx.shadowBlur = lit < 1 ? 14 : 7;
+        ctx.fillStyle = '#FFE7A3';
+        ctx.fillText(words[i], cx, y);
+        ctx.restore();
+      }
+      right -= width + gap;
+    }
+    ctx.restore();
+    return true;
+  }
+
   const adventure = {
     t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
     sprites: null, player: null, cam: null, fx: null,
@@ -33,6 +113,8 @@
         : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
       this.protoN = params.proto || null;
+      this.ayahFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
+        ? GOL.WORD_FOLLOW[GOL.V3.reciter][def.surahId] : null;
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';
@@ -548,7 +630,7 @@
           // she settles: a soft halo of light blooms as her eyes close
           this.fx.spawn('ring', pl.x, pl.y - 18, { color: '#FFF3C4', size: 30 });
           for (let k = 0; k < 6; k++) this.fx.spawn('sparkle', pl.x + GOL.rnd(-16, 16), pl.y - 18 + GOL.rnd(-10, 10), { color: k % 2 ? '#FFE9A8' : '#FFF6DC' });
-          GOL.audio.playVerse(this.L.surahId, gp.ayah, () => {
+          const audio = GOL.audio.playVerse(this.L.surahId, gp.ayah, () => {
             if (this.gemPause !== gp) return;
             this.gemPause = null;
             // let the script fade out gently as wandering resumes
@@ -556,7 +638,20 @@
           });
           // dur is a ceiling only — the script really ends with the ayah above
           const verse = this.L.surah.verses.find((v) => v.n === gp.ayah);
-          if (verse && GOL.V3.arabic) this.glowAr = { text: verse.ar, t: 0, dur: 30 };
+          if (verse && GOL.V3.arabic) {
+            const follow = this.ayahFollow && this.ayahFollow.verses
+              ? this.ayahFollow.verses[gp.ayah] : null;
+            const words = follow ? follow.map((word) => word.text) : verse.ar.trim().split(/\s+/);
+            // If the timing source and canonical Quran text ever disagree,
+            // fall back to the existing whole-ayah glow instead of lighting
+            // the wrong word.
+            const timings = follow && words.join(' ') === verse.ar
+              ? follow.map((word) => [word.from, word.to]) : null;
+            this.glowAr = {
+              text: verse.ar, words, timings,
+              audio, color: GOL.GEMS[(gp.ayah - 1) % 7].glow, t: 0, dur: 30
+            };
+          }
         }
       } else {
         // hold: still and listening, the ayah filling the air. She glimmers —
@@ -1128,9 +1223,12 @@
       if (this.glowAr) {
         const g = this.glowAr;
         const k = Math.min(1, g.t / 0.6) * Math.min(1, (g.dur - g.t) / 0.9);
-        ctx.globalAlpha = Math.max(0, k);
-        GOL.text(ctx, g.text, W / 2, H * 0.32, { size: Math.min(30, W * 0.045), ar: true, weight: '400', color: '#FFFBEE' });
-        ctx.globalAlpha = 1;
+        const fade = Math.max(0, k);
+        if (!drawFollowAyah(ctx, g, W, H, fade)) {
+          ctx.globalAlpha = fade;
+          GOL.text(ctx, g.text, W / 2, H * 0.32, { size: Math.min(30, W * 0.045), ar: true, weight: '400', color: '#FFFBEE' });
+          ctx.globalAlpha = 1;
+        }
       }
 
       // the gem band: collected ayat resting in their star settings — the
