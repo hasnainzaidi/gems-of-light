@@ -366,3 +366,8 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   in `WORLDS-PLAN.md` — per-world sketches, wave order, and its own decision
   log (data-driven unlock order, engine-aimed memory stones, shrine-chunking
   gate before any 12+ ayah surah).
+- **Al-Lail summit headroom (playtested 2026-07-12):** the final C2→C3 jump
+  was blocked by the carved-stone summit sharing C3's rightmost column; its
+  three-tile-deep edge caught the hero's head even though the reachability
+  checker connected the two platform endpoints. The summit now begins one
+  tile past C3, matching W4 Al-Qadr's proven last-rung clearance.

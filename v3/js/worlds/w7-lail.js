@@ -79,7 +79,11 @@
       b.slab(9, 13, 8);   // C3
       // the broad flat summit cap of carved stone under full stars — nothing
       // floats above the campfire/door columns so b.surface lands on the cap
-      b.stoneBlock(13, 34, 5, 7);
+      // Start one tile past C3's right edge. Sharing x=13 made the solid cap
+      // hang directly over the final rung, so the hero's head hit its
+      // underside before the jump could crest (the checker models endpoints,
+      // not the intervening jump arc). W4's proven summit uses this clearance.
+      b.stoneBlock(14, 34, 5, 7);
 
       // BEAT — 21 gems, one per ayah, gathered IN ORDER as the night deepens,
       // each a rung higher than the last (heights strictly ascending)
