@@ -422,3 +422,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   `16→17`); P13 recalls only the four stanza openings (`1,5,12,17`) to test a
   lighter first-session ending. No verdict is claimed until child observation.
   Test URLs, tradeoffs, and decision rules: `reviews/LONG-SURAH-LAB.md`.
+- **JOURNEY STAR COUNTS (fixed 2026-07-13):** the journey disc used to draw
+  one tiny pip per ayah beneath every open world. That stayed neat for short
+  surahs but Al-Lail's 21 pips stretched across neighboring discs and broke
+  the map. Open, unfinished worlds now show the total ayah count beside one
+  eight-point star (`3 ★`, `21 ★`); completed worlds still replace it with
+  their Grand Gem. The contained count scales to long surahs without turning
+  the journey into a dense progress chart.
