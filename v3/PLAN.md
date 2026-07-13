@@ -385,11 +385,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   in `WORLDS-PLAN.md` — per-world sketches, wave order, and its own decision
   log (data-driven unlock order, engine-aimed memory stones, shrine-chunking
   gate before any 12+ ayah surah).
-- **Al-Lail summit headroom (playtested 2026-07-12):** the final C2→C3 jump
-  was blocked by the carved-stone summit sharing C3's rightmost column; its
-  three-tile-deep edge caught the hero's head even though the reachability
-  checker connected the two platform endpoints. The summit now begins one
-  tile past C3, matching W4 Al-Qadr's proven last-rung clearance.
+- **Al-Lail summit headroom (playtested twice 2026-07-12):** the final C2→C3
+  jump was blocked by the carved-stone summit catching the hero's head even
+  though the reachability checker connected the platform endpoints. The first
+  fix (cap x13→x14) was too narrow: it passed one edge-start simulation but a
+  centered phone jump still failed, as the second playtest showed. The final
+  route gives C3 a broad open-ceiling porch (through x17), adds a one-way crest
+  rung, and begins solid summit stone at x18. Actual-physics trials succeed
+  from every tested C2 starting position with an ordinary held jump.
 - **Campfire orbit spacing (playtested 2026-07-12):** Al-Nas showed only three
   gems at the fire because six orbit objects were arranged with their index
   angle twice, collapsing them into three perfectly overlapping pairs. Orbit

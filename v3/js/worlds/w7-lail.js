@@ -76,14 +76,15 @@
       // ── STANZA 4 · THE GIVER PLEASED (vv17–21) — the last rungs ──
       b.slab(19, 23, 14); // C1
       b.slab(14, 18, 11); // C2
-      b.slab(9, 13, 8);   // C3
+      // C3 reaches back over C2 as a broad, open-ceiling landing porch. The
+      // one-way crest rung above it cannot catch the hero's head while rising.
+      b.slab(9, 17, 8);   // C3
+      b.slab(13, 17, 6);  // C4 — forgiving final rung onto the summit
       // the broad flat summit cap of carved stone under full stars — nothing
       // floats above the campfire/door columns so b.surface lands on the cap
-      // Start one tile past C3's right edge. Sharing x=13 made the solid cap
-      // hang directly over the final rung, so the hero's head hit its
-      // underside before the jump could crest (the checker models endpoints,
-      // not the intervening jump arc). W4's proven summit uses this clearance.
-      b.stoneBlock(14, 34, 5, 7);
+      // Start after the porch/rung. The earlier x14 fix only cleared C3's edge;
+      // it still roofed C2 and required a narrow pre-walk timing window.
+      b.stoneBlock(18, 34, 5, 7);
 
       // BEAT — 21 gems, one per ayah, gathered IN ORDER as the night deepens,
       // each a rung higher than the last (heights strictly ascending)
