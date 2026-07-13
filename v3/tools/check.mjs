@@ -168,6 +168,28 @@ for (const tgt of targets) {
     errs.push('door should stand a few tiles past the campfire (walk onward after the recitation)');
   }
 
+  // Resumable camp shrines are real gates, so their metadata must describe a
+  // strictly rising, reachable sequence before the final ayah/campfire.
+  if (L.campShrines && L.campShrines.length) {
+    let prevAyah = 0;
+    for (let i = 0; i < L.campShrines.length; i++) {
+      const c = L.campShrines[i];
+      if (!Number.isInteger(c.afterAyah) || c.afterAyah <= prevAyah || c.afterAyah >= verses) {
+        errs.push(`camp shrine ${i + 1} has invalid afterAyah ${c.afterAyah}`);
+      }
+      if (!Number.isInteger(c.x) || c.x < 0 || c.x >= L.w || !Number.isInteger(c.row) || c.row < 1 || c.row >= L.h) {
+        errs.push(`camp shrine ${i + 1} has invalid position ${c.x},${c.row}`);
+      } else {
+        const ck = c.x + ',' + c.row;
+        if (!nodes.has(ck)) errs.push(`camp shrine ${i + 1} not standable at ${ck}`);
+        if (!seen.has(ck)) errs.push(`camp shrine ${i + 1} unreachable at ${ck}`);
+      }
+      const start = i === 0 ? 1 : prevAyah;
+      if (c.afterAyah - start + 1 <= 0) errs.push(`camp shrine ${i + 1} has empty recall range`);
+      prevAyah = c.afterAyah;
+    }
+  }
+
   // the memory stone (a callback to an earlier surah) must be reachable
   if (L.memory) {
     const mx = Math.floor(L.memory.x / TILE);

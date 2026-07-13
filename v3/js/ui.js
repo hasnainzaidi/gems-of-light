@@ -295,7 +295,13 @@
         y: H * 0.82, r: 27,
         // These adult-facing lab buttons skip the identical 21-gem climb and
         // open the complete point of difference: the shrine recall task.
-        fn: () => { GOL.audio.unlock(); GOL.audio.sfx('unlockLevel'); GOL.go('shrine', { proto: id, labFocus: true }); }
+        fn: () => {
+          GOL.audio.unlock(); GOL.audio.sfx('unlockLevel');
+          // P14's experiment lives along the mountain, so it must begin in
+          // the adventure. P11–P13 still jump to their shrine-only difference.
+          if (GOL.PROTOTYPES[id].longMode === 'night-camps') GOL.go('adventure', { proto: id });
+          else GOL.go('shrine', { proto: id, labFocus: true });
+        }
       }));
       // the tuning panel owns all input while it is open
       if (this.settingsOpen) {

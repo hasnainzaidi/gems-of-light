@@ -21,9 +21,11 @@
   // Long-surah labs need the debug doorway without the usual one-gem shrine
   // shortcut. `full=1` keeps the complete recall round for real playtests.
   GOL.DEBUG_ACCEL = GOL.DEBUG && q.get('full') !== '1';
-  const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : null;
+  const directLab = q.get('lab') ? parseInt(q.get('lab'), 10) : null;
+  const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : directLab;
   const directShrine = q.get('shrine') === '1';
   const directFocus = q.get('focus') === '1';
+  const directCamp = q.get('camp') ? Math.max(1, parseInt(q.get('camp'), 10)) : null;
   GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
@@ -148,9 +150,24 @@
     gated = !standalone && !GOL.DEBUG && q.get('install') !== '0' &&
       sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;
   } catch (e) { /* private mode etc: play on */ }
-  const directDef = GOL.DEBUG && directProto && GOL.PROTOTYPES[directProto];
+  const directDef = (GOL.DEBUG || !!directLab) && directProto && GOL.PROTOTYPES[directProto];
+  // A targeted clean start for prototype playtests. It never touches real
+  // world progress, and removes itself from the URL so a later refresh resumes
+  // normally instead of resetting again.
+  if (directDef && directLab && q.get('fresh') === '1' && directDef.labSaveKey) {
+    delete GOL.store.data.levels[directDef.labSaveKey];
+    if (GOL.store.data.grand) delete GOL.store.data.grand[directDef.labSaveKey];
+    GOL.store.save();
+    q.delete('fresh');
+    try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '')); } catch (e) { /* play on */ }
+  }
   const directParams = directDef ? { proto: directProto, labFocus: directFocus } : null;
-  switchTo(directDef ? ((directShrine || directFocus) ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directParams);
+  if (directParams && directCamp && directDef.campShrines && directDef.campShrines[directCamp - 1]) {
+    const c = directDef.campShrines[directCamp - 1];
+    const start = directCamp === 1 ? 1 : directDef.campShrines[directCamp - 2].afterAyah;
+    directParams.checkpoint = { index: directCamp - 1, start, len: c.afterAyah - start + 1, afterAyah: c.afterAyah };
+  }
+  switchTo(directDef ? ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directParams);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();

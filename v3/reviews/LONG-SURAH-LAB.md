@@ -37,6 +37,21 @@ The three numbered buttons on the debug title screen now use these focused
 entries too. The original full-adventure URLs above remain available when the
 whole-session pacing is what you want to test.
 
+## P14 Night Camps — the journey experiment
+
+P14 changes the climb itself, so its button starts at the valley. For a real
+morning playtest—with normal recitation and no debug acceleration—open:
+
+`http://localhost:8437/v3/?lab=14&fresh=1`
+
+`fresh=1` clears only P14's isolated lab progress once, then removes itself
+from the address so ordinary refreshes continue from the latest lit camp.
+
+The first three stanza boundaries become resumable ledge shrines. After the
+last five new ayat, the summit still gives the earned full-surah recitation,
+then a fourth small boundary-linked shrine forms the Grand Gem. There is no
+additional 21-gem final shrine.
+
 ## What each build asserts
 
 | Build | Recall task | Assertion | Main risk |

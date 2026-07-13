@@ -171,6 +171,8 @@
       stanzas: Array.isArray(def.stanzas) ? def.stanzas.slice() : null,
       longMode: def.longMode || null,
       labSaveKey: def.labSaveKey || null,
+      campShrines: Array.isArray(def.campShrines)
+        ? def.campShrines.map((c) => Object.assign({}, c)) : null,
       surface: (x) => b.surface(x)
     };
   };
