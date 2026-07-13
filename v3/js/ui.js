@@ -285,9 +285,16 @@
           }
         });
       }
-      // (the ten-prototype shelf retired 2026-07-12 — the experiments live in
-      // git history and their verdicts in PLAN §10; debug now unlocks every
-      // grown world instead, which is the same lab with real content)
+      // Debug-only experiment shelf. Production worlds remain the main lab;
+      // active, explicitly registered experiments sit lower as numbered
+      // lanterns so competing mechanics can coexist in one build.
+      const protoIds = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
+      this.protoBtns = protoIds.map((id, i) => ({
+        id, key: GOL.PROTOTYPES[id].key,
+        x: W / 2 + (i - (protoIds.length - 1) / 2) * 74,
+        y: H * 0.82, r: 27,
+        fn: () => { GOL.audio.unlock(); GOL.audio.sfx('unlockLevel'); GOL.go('adventure', { proto: id }); }
+      }));
       // the tuning panel owns all input while it is open
       if (this.settingsOpen) {
         const segs = this.settingsSegs(W, H).out;
@@ -324,6 +331,7 @@
       // the moon dreams rather than re-entering the world
       if (GOL.hitButtons(GOL.Input.taps, this.moonBtns || [])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.worldBtns)) return;
+      if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
       for (const tap of GOL.Input.taps) {
         if (!tap.ui && this.t > 0.5) {
           GOL.audio.unlock();
@@ -487,7 +495,17 @@
         if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
       }
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
-      GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
+      for (const b of this.protoBtns || []) {
+        ctx.fillStyle = alpha('#273C35', 0.82);
+        ctx.beginPath(); ctx.arc(b.x, b.y, 25, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = alpha('#FFE9A8', 0.75);
+        ctx.lineWidth = 2; ctx.stroke();
+        GOL.text(ctx, String(b.id - 10), b.x, b.y, { size: 16, weight: '800', color: '#FFF6DC' });
+        GOL.text(ctx, b.key, b.x, b.y + 39, { size: 9.5, weight: '700', color: alpha('#FFFFFF', 0.72) });
+      }
+      if (!(this.protoBtns && this.protoBtns.length)) {
+        GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
+      }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
       // the grown-ups doorway: a small quiet star, held to open

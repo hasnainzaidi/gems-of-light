@@ -1,6 +1,7 @@
 // Gems of Light v3 — boot.js
 // Boot, the render loop, soft scene transitions, safe-area measurement,
 // and the v3 tunables (?echo=, ?rows=, ?ar=, ?surah=, ?debug=1, ?fps=1).
+// Debug labs may be opened directly with ?debug=1&proto=N.
 (function () {
   const GOL = window.GOL;
   GOL.VERSION = 'v3.0';
@@ -17,6 +18,11 @@
   // ------------------------------------------------------------ tunables --
   const q = new URLSearchParams(location.search);
   GOL.DEBUG = q.get('debug') === '1';
+  // Long-surah labs need the debug doorway without the usual one-gem shrine
+  // shortcut. `full=1` keeps the complete recall round for real playtests.
+  GOL.DEBUG_ACCEL = GOL.DEBUG && q.get('full') !== '1';
+  const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : null;
+  const directShrine = q.get('shrine') === '1';
   GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
@@ -141,7 +147,8 @@
     gated = !standalone && !GOL.DEBUG && q.get('install') !== '0' &&
       sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;
   } catch (e) { /* private mode etc: play on */ }
-  switchTo(gated ? 'install' : 'title');
+  const directDef = GOL.DEBUG && directProto && GOL.PROTOTYPES[directProto];
+  switchTo(directDef ? (directShrine ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directDef ? { proto: directProto } : null);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();

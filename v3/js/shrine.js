@@ -34,6 +34,24 @@
     return [n];
   }
 
+  // Three long-surah lab assertions share the same forgiving shrine. The
+  // control keeps thematic stanza recall. "bridges" repeats the previous
+  // stanza's last ayah at the front of the next set, directly rehearsing the
+  // seam chunking can weaken. "constellations" asks only for the four stanza
+  // openings in order: a deliberately lighter macro-structure task.
+  function computeRanges(n, stanzas, mode) {
+    const base = [];
+    let start = 0;
+    for (const len of stanzas) { base.push({ start, len }); start += len; }
+    if (mode === 'bridges') {
+      return base.map((r, i) => i === 0 ? r : { start: r.start - 1, len: r.len + 1, bridge: true });
+    }
+    if (mode === 'constellations') {
+      return [{ start: 0, len: base.length, ayahs: base.map((r) => r.start + 1), macro: true }];
+    }
+    return base;
+  }
+
   const shrine = {
     t: 0, L: null, P: null, bd: null, fx: null,
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
@@ -69,6 +87,8 @@
         palKey = def.endPalette || def.palette;
         seed = 900 + def.id;
       }
+      this.longMode = (def && def.longMode) || null;
+      this.storeId = (def && def.labSaveKey) || surahId;
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
       this.P = GOL.PALETTES[palKey];
@@ -102,10 +122,8 @@
         ? (GOL.WORLDS3.find((w) => w && w.surahId === surahId) || {}).stanzas
         : (def && def.stanzas);
       this.stanzas = computeStanzas(totalAyat, declared);
-      this.stanzaRanges = [];
-      let acc = 0;
-      for (const len of this.stanzas) { this.stanzaRanges.push({ start: acc, len }); acc += len; }
-      this.totalSockets = totalAyat;
+      this.stanzaRanges = computeRanges(totalAyat, this.stanzas, this.longMode);
+      this.totalSockets = this.stanzaRanges.reduce((sum, r) => sum + r.len, 0);
       this.stanzaIdx = 0;
       this.stanzaStart = 0;
       this.stanzaInT = 999; // the first stanza is already present (no fade-up)
@@ -113,7 +131,7 @@
       this._mergeChimed = false;
       // debug-accelerated runs never record telemetry (meaningless) and open
       // on the FINAL stanza with only the last gem left to place
-      this._debugAccel = !!GOL.DEBUG;
+      this._debugAccel = GOL.DEBUG_ACCEL == null ? !!GOL.DEBUG : !!GOL.DEBUG_ACCEL;
       if (this._debugAccel) this.debugPrefill();
       else this.buildStanzaGems(0);
 
@@ -228,11 +246,11 @@
           this.phase = 'done';
           this.grandK = 0;
           GOL.audio.sfx('blossom');
-          const st = GOL.store.level(this.surahId);
+          const st = GOL.store.level(this.storeId);
           const d = GOL.store.data;
           d.grand = d.grand || {};
-          const first = !d.grand[this.surahId];
-          d.grand[this.surahId] = Date.now();
+          const first = !d.grand[this.storeId];
+          d.grand[this.storeId] = Date.now();
           st.completed = true;
           st.shrineDone = (st.shrineDone || 0) + 1;
           st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
@@ -243,7 +261,7 @@
               at: Date.now(), sockets: this.totalSockets,
               firstTry: this.firstTry, misses: this.missTotal,
               listens: this.listens, hints: this.runHints,
-              stanzas: this.stanzaRanges.length
+              stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
             });
             if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
           }
@@ -300,16 +318,19 @@
     },
 
     // within the current stanza: the next ayah the open socket wants
-    neededAyah() { return this.stanzaStart + this.placed + 1; },
+    neededAyah() {
+      const range = this.stanzaRanges[this.stanzaIdx];
+      return range && range.ayahs ? range.ayahs[this.placed] : this.stanzaStart + this.placed + 1;
+    },
     isLastStanza() { return this.stanzaIdx >= this.stanzaRanges.length - 1; },
 
     // the gems for one stanza arrive as themselves (gathered in the open),
     // shuffled so the fan never spells the answer. Listening — a tap or a
     // pick-up — is how the child knows which ayah each holds.
     buildStanzaGems(k) {
-      const { start, len } = this.stanzaRanges[k];
-      const order = [];
-      for (let i = 0; i < len; i++) order.push(start + 1 + i);
+      const { start, len, ayahs, bridge, macro } = this.stanzaRanges[k];
+      const order = ayahs ? ayahs.slice() : [];
+      if (!ayahs) for (let i = 0; i < len; i++) order.push(start + 1 + i);
       const rng = GOL.rng(Date.now() % 100000);
       for (let i = order.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1));
@@ -317,7 +338,11 @@
       }
       this.gems = order.map((ayah, i) => ({
         ayah, i, x: 0, y: 0, homeX: 0, homeY: 0,
-        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0
+        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0,
+        // Lab-only wordless identities: the carried seam gem wears a thread
+        // halo; macro tokens wear four tiny constellation lights.
+        bridge: !!bridge && ayah === start + 1,
+        macro: !!macro
       }));
       this.stanzaStart = start;
       this.placed = 0;
@@ -334,8 +359,8 @@
       const L = this.stanzaRanges.length;
       this.stanzaIdx = L - 1;
       this.buildStanzaGems(L - 1);
-      const { start, len } = this.stanzaRanges[L - 1];
-      const lastAyah = start + len;
+      const { start, len, ayahs } = this.stanzaRanges[L - 1];
+      const lastAyah = ayahs ? ayahs[ayahs.length - 1] : start + len;
       this.gems.filter((g) => g.ayah !== lastAyah)
         .sort((a, b) => a.ayah - b.ayah)
         .forEach((g, idx) => { g.placed = idx; });
@@ -426,7 +451,7 @@
             this.miss++;
             this.missTotal++;
             this._socketMissed = true;
-            const st = GOL.store.level(this.surahId);
+            const st = GOL.store.level(this.storeId);
             st.misorders = st.misorders || {};
             st.misorders[g.ayah] = (st.misorders[g.ayah] || 0) + 1;
             GOL.store.save();
@@ -444,7 +469,7 @@
           this.autoT = 0;
           const g = this.gems.find((x) => x.ayah === this.neededAyah() && x.placed < 0);
           if (g && this.heldGem !== g) {
-            const st = GOL.store.level(this.surahId);
+            const st = GOL.store.level(this.storeId);
             st.hintsUsed = (st.hintsUsed || 0) + 1;
             this.runHints++;
             GOL.store.save();
@@ -516,7 +541,7 @@
       this._dreamRecorded = true;
       GOL.audio.sfx('blossom');
 
-      const st = GOL.store.level(this.surahId);
+      const st = GOL.store.level(this.storeId);
       this.moonFrom = st.moon || 0;
       const today = this.todayKey();
       if (st.moonWaxedDay !== today) {
@@ -539,7 +564,7 @@
           at: Date.now(), sockets: this.totalSockets,
           firstTry: this.firstTry, misses: this.missTotal,
           listens: this.listens, hints: this.runHints, dream: true,
-          stanzas: this.stanzaRanges.length
+          stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
         });
         if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
       }
@@ -636,7 +661,19 @@
           ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(g.x, g.y, 30 + Math.sin(t * 4) * 3, 0, Math.PI * 2); ctx.stroke();
         }
+        if (g.placed < 0 && g.bridge) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.35 + 0.22 * Math.sin(t * 2.8));
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(g.x, g.y, 27 + Math.sin(t * 2.8) * 2, 0, Math.PI * 2); ctx.stroke();
+        }
         GOL.drawGem(ctx, g.x, g.y, r + (g.pulse || 0) * 6, C, t, { phase: g.phase, glow: g.placed >= 0 ? 0.7 : 1 });
+        if (g.macro && g.placed < 0) {
+          for (let k = 0; k < 4; k++) {
+            const a = k * Math.PI / 2 + t * 0.18;
+            ctx.fillStyle = alpha('#FFF6DC', 0.62 + 0.2 * Math.sin(t * 2 + k));
+            ctx.beginPath(); ctx.arc(g.x + Math.cos(a) * 29, g.y + Math.sin(a) * 18, 2.2, 0, Math.PI * 2); ctx.fill();
+          }
+        }
       }
 
       // gems spiraling in the bloom are drawn above; the Grand Gem forms

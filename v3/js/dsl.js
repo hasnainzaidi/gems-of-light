@@ -165,6 +165,12 @@
       //   drawLandmark(ctx, t, P, L) — a huge fixture drawn in world space
       weather: def.weather || null,
       drawLandmark: def.drawLandmark || null,
+      // Debug-lab metadata. These are inert for ordinary worlds, but let a
+      // long-surah experiment reuse a real recipe without touching that
+      // world's progress or changing the shared adventure/shrine contract.
+      stanzas: Array.isArray(def.stanzas) ? def.stanzas.slice() : null,
+      longMode: def.longMode || null,
+      labSaveKey: def.labSaveKey || null,
       surface: (x) => b.surface(x)
     };
   };

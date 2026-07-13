@@ -35,6 +35,7 @@
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';
       const L = (this.L = GOL.buildPrototype(def));
+      this.storeId = L.labSaveKey || L.surahId;
       // coming back to a world whose Grand Gem is already earned pre-grows the
       // garden — the same clearing, remembered fuller, as a reward for return.
       // A dream round-trip is NOT a new visit: grow, but don't count it.
@@ -75,7 +76,7 @@
       if (L.memory && !L.memory.surahId) L.memory.surahId = this.chooseMemorySurah(L.surahId);
       this.memState = L.memory ? { phase: 'inert', dwell: 0, travel: 0, from: null, litT: 0 } : null;
       L.movers = this.movers;
-      const stPre = GOL.store.level(L.surahId);
+      const stPre = GOL.store.level(this.storeId);
       this.blossomState = L.blossom ? { x: L.blossom.x, y: L.blossom.y, taken: false, everFound: stPre.blossom } : null;
       this.fly = { x: L.start.x - 40, y: L.start.y - 90, vx: 0, vy: 0, mode: 'follow', pulseT: 0, t: Math.random() * 7 };
 
@@ -184,7 +185,7 @@
         // stone stays plain scenery. (Was: re-arm if the Grand Gem is held.)
       }
 
-      const st = GOL.store.level(L.surahId);
+      const st = GOL.store.level(this.storeId);
       st.lastPlayed = Date.now();
       GOL.store.save();
       GOL.stamp('v3walkStart');
@@ -327,7 +328,7 @@
       if (B && !B.taken) {
         if (Math.abs(pl.x - B.x) < 44 && Math.abs(pl.y - 16 - B.y) < 48) {
           B.taken = true;
-          const st = GOL.store.level(L.surahId);
+          const st = GOL.store.level(this.storeId);
           st.blossom = true;
           GOL.store.save();
           GOL.audio.sfx('blossom');
@@ -449,7 +450,7 @@
     collect(g, i) {
       const C = GOL.GEMS[(g.ayah - 1) % 7];
       this.found.push(g.ayah);
-      const st = GOL.store.level(this.L.surahId);
+      const st = GOL.store.level(this.storeId);
       st.found = st.found || [];
       if (!st.found.includes(g.ayah)) { st.found.push(g.ayah); st.found.sort((a, b) => a - b); }
       GOL.store.save();
@@ -660,7 +661,7 @@
       this.phase = 'ember';
       this.reciteI = -1;
       this.orbit = []; // the ayat settle back into the child; the band holds them
-      const st = GOL.store.level(this.L.surahId);
+      const st = GOL.store.level(this.storeId);
       st.heardFull = (st.heardFull || 0) + 1;
       GOL.store.save();
       GOL.audio.sfx('door');
@@ -783,8 +784,9 @@
     // A resume (waking from the dream) still grows, but doesn't count a visit.
     applyReplayGrowth(L, resume) {
       const grand = GOL.store.data.grand;
-      if (!grand || !grand[L.surahId]) return;
-      const st = GOL.store.level(L.surahId);
+      const grandKey = L.labSaveKey || L.surahId;
+      if (!grand || !grand[grandKey]) return;
+      const st = GOL.store.level(grandKey);
       if (!resume) {
         st.replays = (st.replays || 0) + 1;
         GOL.store.save();
@@ -817,8 +819,14 @@
     },
     debugWarp() {
       const pl = this.player, L = this.L;
+      // A second E during the earned-fire ceremony skips its timer. This is
+      // debug-only and makes long-surah shrine comparisons practical in the
+      // embedded browser, whose animation clock advances mainly on input.
+      if (this.phase === 'settle' || this.phase === 'campfire') this.openDoor();
       const spot = this.phase === 'ember' && L.door ? L.door : L.campfire;
-      pl.x = spot.x - 70;
+      // At the open door, land inside its 50px entry radius; the old -70
+      // offset made the documented second E warp stop just outside it.
+      pl.x = spot.x - (this.phase === 'ember' ? 40 : 70);
       pl.y = spot.y;
       pl.vx = 0; pl.vy = 0;
       pl.grounded = true;

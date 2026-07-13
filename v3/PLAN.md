@@ -395,3 +395,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   angle twice, collapsing them into three perfectly overlapping pairs. Orbit
   gems now share one spin phase and receive their spacing once; even-count
   surahs display every gathered gem.
+- **AL-LAIL LONG-SURAH LAB (built, not yet child-playtested):** three isolated
+  debug prototypes now compare the production stanza approach against two
+  explicit alternatives while holding the mountain and audio constant. P11 is
+  the `[4,7,5,5]` control; P12 overlaps the three stanza seams (`4→5`, `11→12`,
+  `16→17`); P13 recalls only the four stanza openings (`1,5,12,17`) to test a
+  lighter first-session ending. No verdict is claimed until child observation.
+  Test URLs, tradeoffs, and decision rules: `reviews/LONG-SURAH-LAB.md`.
