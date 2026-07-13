@@ -44,8 +44,12 @@
 
     const y = H * 0.31;
     let right = W / 2 + total / 2;
-    const audioTime = g.audio && g.audio.el && Number.isFinite(g.audio.el.currentTime)
+    let audioTime = g.audio && g.audio.el && Number.isFinite(g.audio.el.currentTime)
       ? g.audio.el.currentTime : 0;
+    if (g.scaleTimings && g.sourceDuration && g.audio && g.audio.el &&
+        Number.isFinite(g.audio.el.duration) && g.audio.el.duration > 0) {
+      audioTime *= g.sourceDuration / g.audio.el.duration;
+    }
 
     // Restoration makes W1's sky very bright by its final gems. A borderless
     // dusk aura keeps delicate tashkeel legible without turning the ayah into
@@ -110,8 +114,15 @@
         : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
       this.protoN = params.proto || null;
-      this.ayahFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
+      const exactFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
         ? GOL.WORD_FOLLOW[GOL.V3.reciter][def.surahId] : null;
+      const prototypeFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW.basit
+        ? GOL.WORD_FOLLOW.basit[def.surahId] : null;
+      // Never make the experiment silently disappear because a grown-up had
+      // another reciter saved. Exact tables win; otherwise the prototype's
+      // Basit word map is proportionally fitted to the selected recording.
+      this.ayahFollow = exactFollow || prototypeFollow;
+      this.ayahFollowScaled = !exactFollow && !!prototypeFollow;
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';
@@ -646,7 +657,11 @@
               ? follow.map((word) => [word.from, word.to]) : null;
             this.glowAr = {
               text: verse.ar, words, timings,
-              audio, color: GOL.GEMS[(gp.ayah - 1) % 7].glow, t: 0, dur: 30
+              audio, color: GOL.GEMS[(gp.ayah - 1) % 7].glow,
+              scaleTimings: this.ayahFollowScaled,
+              sourceDuration: this.ayahFollow && this.ayahFollow.audioDurations
+                ? this.ayahFollow.audioDurations[gp.ayah - 1] : null,
+              t: 0, dur: 30
             };
           }
         }

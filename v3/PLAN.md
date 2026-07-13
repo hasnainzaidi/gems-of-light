@@ -331,9 +331,12 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   reading test:
   no transliteration, cursor, bouncing karaoke text, or prompt. All 23 word
   boundaries were hand-aligned against the exact local EveryAyah files
-  (`js/worlds/w1-falaq-follow.js`, expected tolerance about 100–200ms) and are
-  deliberately disabled for other reciters and surahs; those retain the
-  whole-ayah glow. Expansion waits on a child playtest: watch whether eyes
+  (`js/worlds/w1-falaq-follow.js`, expected tolerance about 100–200ms).
+  Abdul Basit and Alafasy each have exact tables; any future selected reciter
+  proportionally fits the Basit word map to its audio duration so the
+  experiment never silently becomes an all-white ayah. Other surahs
+  retain the whole-ayah glow. Expansion waits on a child playtest: watch
+  whether eyes
   follow the illumination and whether mouthing/repetition increases without
   being requested.
 - **Playtest positives to protect**: the campfire being *earned* (unlit until

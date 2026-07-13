@@ -48,4 +48,48 @@
       ]
     }
   };
+
+  // The game's legacy local files are the EveryAyah Alafasy_128kbps set.
+  // These boundaries were independently aligned to those exact recordings;
+  // they are not scaled copies of Abdul Basit's performance.
+  GOL.WORD_FOLLOW.alafasy = GOL.WORD_FOLLOW.alafasy || {};
+  GOL.WORD_FOLLOW.alafasy[113] = {
+    provenance: 'hand-aligned: EveryAyah Alafasy_128kbps',
+    audioDurations: [3.4743, 3.6310, 5.0416, 6.0081, 5.6686],
+    verses: {
+      1: [
+        { text: 'قُلْ', from: 0.00, to: 0.36 },
+        { text: 'أَعُوذُ', from: 0.36, to: 1.28 },
+        { text: 'بِرَبِّ', from: 1.28, to: 2.32 },
+        { text: 'ٱلْفَلَقِ', from: 2.32, to: 3.22 }
+      ],
+      2: [
+        { text: 'مِن', from: 0.00, to: 0.45 },
+        { text: 'شَرِّ', from: 0.45, to: 1.82 },
+        { text: 'مَا', from: 1.82, to: 2.48 },
+        { text: 'خَلَقَ', from: 2.48, to: 3.16 }
+      ],
+      3: [
+        { text: 'وَمِن', from: 0.00, to: 0.45 },
+        { text: 'شَرِّ', from: 0.45, to: 1.55 },
+        { text: 'غَاسِقٍ', from: 1.55, to: 2.84 },
+        { text: 'إِذَا', from: 2.84, to: 3.48 },
+        { text: 'وَقَبَ', from: 3.48, to: 4.56 }
+      ],
+      4: [
+        { text: 'وَمِن', from: 0.00, to: 0.45 },
+        { text: 'شَرِّ', from: 0.45, to: 1.55 },
+        { text: 'ٱلنَّفَّـٰثَـٰتِ', from: 1.55, to: 4.18 },
+        { text: 'فِى', from: 4.18, to: 4.48 },
+        { text: 'ٱلْعُقَدِ', from: 4.48, to: 5.54 }
+      ],
+      5: [
+        { text: 'وَمِن', from: 0.00, to: 0.45 },
+        { text: 'شَرِّ', from: 0.45, to: 1.45 },
+        { text: 'حَاسِدٍ', from: 1.45, to: 2.72 },
+        { text: 'إِذَا', from: 2.72, to: 3.38 },
+        { text: 'حَسَدَ', from: 3.38, to: 4.48 }
+      ]
+    }
+  };
 })();
