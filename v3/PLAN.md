@@ -446,14 +446,3 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   eight-point star (`3 ★`, `21 ★`); completed worlds still replace it with
   their Grand Gem. The contained count scales to long surahs without turning
   the journey into a dense progress chart.
-- **LIVING CONSTELLATIONS LAB (P15 built 2026-07-13; awaiting child
-  playtest):** twenty simulated surah worlds test a real hierarchy above the
-  journey rather than shrinking or paginating it. The far view holds four
-  five-world constellations; tapping a completed or active figure flies inward
-  to a roomy five-disc path using the journey's existing Grand Gem, stepping-
-  stone, bud, Noor, and Remembering Moon language. Grand Gems illuminate the
-  larger figure, and a completed constellation grows the light-path onward.
-  The overview's moonlit haze resolves to one exact Moon only in the close
-  view. P15 is presentation-only: no real worlds launch and no production save
-  state is read or changed. Direct lab: `?lab=15`. Hypothesis, observation
-  questions, and keep/reject rule: `reviews/constellation-p15.md`.

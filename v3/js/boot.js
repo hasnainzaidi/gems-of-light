@@ -169,7 +169,7 @@
     const start = directCamp === 1 ? 1 : directDef.campShrines[directCamp - 2].afterAyah;
     directParams.checkpoint = { index: directCamp - 1, start, len: c.afterAyah - start + 1, afterAyah: c.afterAyah };
   }
-  switchTo(directDef ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure')) : (gated ? 'install' : 'title'), directParams);
+  switchTo(directDef ? ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directParams);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();

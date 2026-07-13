@@ -305,11 +305,9 @@
         // open the complete point of difference: the shrine recall task.
         fn: () => {
           GOL.audio.unlock(); GOL.audio.sfx('unlockLevel');
-          const def = GOL.PROTOTYPES[id];
-          if (def.scene) { GOL.go(def.scene, { proto: id }); return; }
           // P14's experiment lives along the mountain, so it must begin in
           // the adventure. P11–P13 still jump to their shrine-only difference.
-          if (def.longMode === 'night-camps') GOL.go('adventure', { proto: id });
+          if (GOL.PROTOTYPES[id].longMode === 'night-camps') GOL.go('adventure', { proto: id });
           else GOL.go('shrine', { proto: id, labFocus: true });
         }
       }));
