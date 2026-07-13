@@ -446,3 +446,20 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   eight-point star (`3 ★`, `21 ★`); completed worlds still replace it with
   their Grand Gem. The contained count scales to long surahs without turning
   the journey into a dense progress chart.
+- **THE SKY ABOVE THE PATH LAB (P16 built 2026-07-13; awaiting child
+  playtest):** the journey's answer to twenty surahs is a second ALTITUDE,
+  not a second screen. The path below only ever holds the chapter being
+  learned (five discs, today's language); finished chapters live overhead as
+  constellation figures of Grand-Gem stars — the stanza-crest compression
+  story one scale larger. Completing a chapter's last world runs the
+  ascension (gems lift, join star to star, the figure's light wakes the next
+  chapter's discs); tapping a sky figure brings those worlds back down for a
+  visit while the learning chapter waits dimly above with Noor beside it.
+  No zoom, both altitudes always visible — the hierarchy cannot read as a
+  menu opening a menu (P15's failure mode; that flight-based two-scale lab
+  was built and reverted the same morning, `git show 05bf455`). Chapter
+  membership would be contiguous runs of `WORLD_ORDER` (`CHAPTERS = [5, 5,
+  6]`, the stanza pattern one scale up). P16 is presentation-only: no real
+  worlds launch, no production save state is read or changed. Direct lab:
+  `?lab=16`. Hypothesis, observation questions, and keep/reject rule:
+  `reviews/sky-path-p16.md`.
