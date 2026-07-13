@@ -233,10 +233,18 @@
       // the journey: one disc per world, laid out in journey order (which is
       // GOL.WORLD_ORDER, not file order — see worlds.js)
       const worlds = GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []);
+      // Keep the first and last discs inside the phone-safe canvas. Seven
+      // worlds fit the old fixed 120px stride; the eighth would put both end
+      // discs half off-screen at 852px, leaving Fatiha barely tappable. The
+      // 56px edge reserve also keeps moons, blooms, and celebration rings in.
+      const journeyCx = sa.l + (W - sa.l - sa.r) / 2;
+      const journeyGap = worlds.length > 1
+        ? Math.min(120, Math.max(0, W - sa.l - sa.r - 112) / (worlds.length - 1))
+        : 0;
       this.worldBtns = worlds.map((w, i) => ({
         n: w.n, key: w.key, surahId: w.surahId,
         open: GOL.worldOpen(w.n), done: GOL.worldDone(w.n), grown: !!w.build,
-        x: W / 2 + (i - (worlds.length - 1) / 2) * 120, y: H * 0.6, r: 36,
+        x: journeyCx + (i - (worlds.length - 1) / 2) * journeyGap, y: H * 0.6, r: 36,
         fn: () => {
           if (GOL.worldOpen(w.n) && w.build) {
             GOL.audio.unlock();

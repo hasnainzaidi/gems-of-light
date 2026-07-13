@@ -106,6 +106,10 @@ then the quiet campfire clearing and door.
 | 2 | An-Nas (114) | nas | Cozy Garden |
 | 3 | Al-'Adiyat (100) | adiyat | River Road |
 | 4 | Al-Qadr (97) | qadr | The Climb |
+| 5 | Al-Kawthar (108) | kawthar | River Road |
+| 6 | Ad-Duha (93) | duha | Cozy Garden |
+| 7 | Al-Lail (92) | lail | The Climb |
+| 8 | Al-Fatiha (1) | fatiha | Cozy Garden / Guided Path |
 
 New world: pick the grammar that fits the surah's character, copy its recipe,
 keep every invariant, and run `node v3/tools/check.mjs wN` until it is ✓.

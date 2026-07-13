@@ -17,7 +17,7 @@
   // (WORLDS-PLAN §1: roughly the traditional bottom-up path, warnings late).
   GOL.WORLD_ORDER = ['falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
     'fil', 'duha', 'adiyat', 'sharh', 'qadr', 'kafirun', 'takathur',
-    'humazah', 'masad', 'lail'];
+    'humazah', 'masad', 'lail', 'fatiha'];
 
   // registered worlds in journey order; a key missing from the list keeps
   // its file order at the end (so nothing ever vanishes from the journey)
