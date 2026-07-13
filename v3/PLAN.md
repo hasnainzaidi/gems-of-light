@@ -390,9 +390,11 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   though the reachability checker connected the platform endpoints. The first
   fix (cap x13→x14) was too narrow: it passed one edge-start simulation but a
   centered phone jump still failed, as the second playtest showed. The final
-  route gives C3 a broad open-ceiling porch (through x17), adds a one-way crest
-  rung, and begins solid summit stone at x18. Actual-physics trials succeed
-  from every tested C2 starting position with an ordinary held jump.
+  route gives C3 a broad open-ceiling porch (through x20), places the one-way
+  crest rung safely to its right, and does not begin solid summit stone until
+  x22 — four full tiles past C2. The jump to gem 19 now has visibly open sky,
+  not merely enough measured clearance. Actual-physics trials succeed from
+  every tested C2 starting position with an ordinary held jump.
 - **Campfire orbit spacing (playtested 2026-07-12):** Al-Nas showed only three
   gems at the fire because six orbit objects were arranged with their index
   angle twice, collapsing them into three perfectly overlapping pairs. Orbit
