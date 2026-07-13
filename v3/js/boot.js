@@ -23,6 +23,7 @@
   GOL.DEBUG_ACCEL = GOL.DEBUG && q.get('full') !== '1';
   const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : null;
   const directShrine = q.get('shrine') === '1';
+  const directFocus = q.get('focus') === '1';
   GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
@@ -148,7 +149,8 @@
       sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;
   } catch (e) { /* private mode etc: play on */ }
   const directDef = GOL.DEBUG && directProto && GOL.PROTOTYPES[directProto];
-  switchTo(directDef ? (directShrine ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directDef ? { proto: directProto } : null);
+  const directParams = directDef ? { proto: directProto, labFocus: directFocus } : null;
+  switchTo(directDef ? ((directShrine || directFocus) ? 'shrine' : 'adventure') : (gated ? 'install' : 'title'), directParams);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();

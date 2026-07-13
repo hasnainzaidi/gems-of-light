@@ -19,6 +19,24 @@ last-gem shortcut. For shrine-only inspection, append `&shrine=1`. The three
 numbered lantern buttons also appear at the bottom of the title screen when
 debug is on.
 
+## Focused comparison — skip the identical climb
+
+These links open at the first place the prototypes actually differ and always
+show the complete experiment rather than debug's last-gem shortcut:
+
+- P11 focused shrine: `http://localhost:8437/v3/?debug=1&proto=11&focus=1`
+- P12 focused shrine: `http://localhost:8437/v3/?debug=1&proto=12&focus=1`
+- P13 focused shrine: `http://localhost:8437/v3/?debug=1&proto=13&focus=1`
+
+P11 and P12 open on the second stanza because that is their first meaningful
+difference: P11 offers seven gems (5–11), while P12 brings ayah 4 back as an
+eighth, haloed bridge into 5–11. P13 opens on its complete four-token macro
+task (the stanza openings 1, 5, 12, and 17).
+
+The three numbered buttons on the debug title screen now use these focused
+entries too. The original full-adventure URLs above remain available when the
+whole-session pacing is what you want to test.
+
 ## What each build asserts
 
 | Build | Recall task | Assertion | Main risk |

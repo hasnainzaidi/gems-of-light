@@ -293,7 +293,9 @@
         id, key: GOL.PROTOTYPES[id].key,
         x: W / 2 + (i - (protoIds.length - 1) / 2) * 74,
         y: H * 0.82, r: 27,
-        fn: () => { GOL.audio.unlock(); GOL.audio.sfx('unlockLevel'); GOL.go('adventure', { proto: id }); }
+        // These adult-facing lab buttons skip the identical 21-gem climb and
+        // open the complete point of difference: the shrine recall task.
+        fn: () => { GOL.audio.unlock(); GOL.audio.sfx('unlockLevel'); GOL.go('shrine', { proto: id, labFocus: true }); }
       }));
       // the tuning panel owns all input while it is open
       if (this.settingsOpen) {

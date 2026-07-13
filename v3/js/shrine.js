@@ -131,9 +131,20 @@
       this._mergeChimed = false;
       // debug-accelerated runs never record telemetry (meaningless) and open
       // on the FINAL stanza with only the last gem left to place
-      this._debugAccel = GOL.DEBUG_ACCEL == null ? !!GOL.DEBUG : !!GOL.DEBUG_ACCEL;
+      // Focused prototype links must show the complete experimental task even
+      // though they use debug as the doorway. Ordinary debug keeps its fast
+      // final-gem shortcut.
+      this._debugAccel = params.labFocus ? false
+        : (GOL.DEBUG_ACCEL == null ? !!GOL.DEBUG : !!GOL.DEBUG_ACCEL);
       if (this._debugAccel) this.debugPrefill();
-      else this.buildStanzaGems(0);
+      else if (params.labFocus && this.longMode !== 'constellations' && this.stanzaRanges.length > 1) {
+        // The control and bridge experiment differ for the first time at the
+        // second stanza. Open there immediately: P11 shows 5–11; P12 shows
+        // the carried boundary gem 4 alongside 5–11. One crest star makes it
+        // clear that an earlier movement is already complete.
+        this.stanzaIdx = 1;
+        this.buildStanzaGems(1);
+      } else this.buildStanzaGems(0);
 
       GOL.audio.startAmbience('quiet');
       GOL.audio.preloadSurah(this.surah);
