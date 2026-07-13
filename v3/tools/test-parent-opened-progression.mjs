@@ -25,8 +25,14 @@ const GOL = {
 };
 const context = vm.createContext({ window: { GOL }, console, Math, Date, setTimeout, clearTimeout });
 vm.runInContext(fs.readFileSync(path.resolve(here, '../js/worlds.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.resolve(here, '../js/worlds/w8-fatiha.js'), 'utf8'), context);
 for (const w of GOL.WORLDS3.filter(Boolean)) w.build = () => {};
 vm.runInContext(fs.readFileSync(path.resolve(here, '../js/shrine.js'), 'utf8'), context);
+
+// Al-Fatiha is the gentle onboarding world for a fresh journey. Reordering is
+// save-safe because completion remains keyed by surah id, never list position.
+assert.equal(GOL.orderedWorlds()[0].key, 'fatiha');
+assert.equal(GOL.currentWorld(), 8);
 
 // A grown-up may open W2 before W1 is earned, but that is practice access.
 GOL.store.data.opened.push(114);

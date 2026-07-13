@@ -34,6 +34,29 @@
     return [n];
   }
 
+  // Three long-surah lab assertions share the same forgiving shrine. The
+  // control keeps thematic stanza recall. "bridges" repeats the previous
+  // stanza's last ayah at the front of the next set, directly rehearsing the
+  // seam chunking can weaken. "constellations" asks only for the four stanza
+  // openings in order: a deliberately lighter macro-structure task.
+  function computeRanges(n, stanzas, mode) {
+    const base = [];
+    let start = 0;
+    for (const len of stanzas) { base.push({ start, len }); start += len; }
+    if (mode === 'bridges') {
+      return base.map((r, i) => i === 0 ? r : { start: r.start - 1, len: r.len + 1, bridge: true });
+    }
+    if (mode === 'constellations') {
+      return [{ start: 0, len: base.length, ayahs: base.map((r) => r.start + 1), macro: true }];
+    }
+    if (mode === 'night-camps') {
+      // The first three movements were recalled on the mountain. The summit
+      // shrine is only the last movement, carried in by verse 16 as its seam.
+      return [{ start: 15, len: n - 15, bridge: true }];
+    }
+    return base;
+  }
+
   const shrine = {
     t: 0, L: null, P: null, bd: null, fx: null,
     gems: null, placed: 0, heldGem: null, miss: 0, autoT: 0,
@@ -46,6 +69,7 @@
     // DREAM MODE (the Remembering): reconstructing an EARLIER surah from
     // memory. Set when params.memory is present; absent = the normal shrine.
     dream: false, memory: null, moonT: 0, moonFrom: 0, moonTo: 0, moonK: 0, moonRise: 0,
+    checkpoint: null, protoN: null,
 
     enter(params) {
       // A dream is a memory, not a place: the OLD surah, drawn from its own
@@ -53,6 +77,8 @@
       // exactly the normal shrine (regression-free).
       this.dream = !!(params.memory && params.memory.surahId);
       this.memory = this.dream ? params.memory : null;
+      this.checkpoint = params.checkpoint || null;
+      this.protoN = params.proto || null;
 
       let def, surahId, palKey, seed;
       if (this.dream) {
@@ -70,6 +96,8 @@
         palKey = def.endPalette || def.palette;
         seed = 900 + def.id;
       }
+      this.longMode = (def && def.longMode) || null;
+      this.storeId = (def && def.labSaveKey) || surahId;
       this.practiceOnly = !!(this.worldN && GOL.worldPracticeOnly && GOL.worldPracticeOnly(this.worldN));
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
@@ -96,6 +124,7 @@
       this.missTotal = 0;
       this.listens = 0;
       this.runHints = 0;
+      this._usedDebugAssist = false;
 
       // stanza chunking: split the surah into maqati'. A normal short surah
       // is one stanza (regression-free). Dreams find their declaration on the
@@ -105,10 +134,15 @@
         ? (GOL.WORLDS3.find((w) => w && w.surahId === surahId) || {}).stanzas
         : (def && def.stanzas);
       this.stanzas = computeStanzas(totalAyat, declared);
-      this.stanzaRanges = [];
-      let acc = 0;
-      for (const len of this.stanzas) { this.stanzaRanges.push({ start: acc, len }); acc += len; }
-      this.totalSockets = totalAyat;
+      this.stanzaRanges = computeRanges(totalAyat, this.stanzas, this.longMode);
+      if (this.checkpoint) {
+        this.stanzaRanges = [{
+          start: this.checkpoint.start - 1,
+          len: this.checkpoint.len,
+          bridge: this.checkpoint.index > 0
+        }];
+      }
+      this.totalSockets = this.stanzaRanges.reduce((sum, r) => sum + r.len, 0);
       this.stanzaIdx = 0;
       this.stanzaStart = 0;
       this.stanzaInT = 999; // the first stanza is already present (no fade-up)
@@ -116,9 +150,20 @@
       this._mergeChimed = false;
       // debug-accelerated runs never record telemetry (meaningless) and open
       // on the FINAL stanza with only the last gem left to place
-      this._debugAccel = !!GOL.DEBUG;
+      // Focused prototype links must show the complete experimental task even
+      // though they use debug as the doorway. Ordinary debug keeps its fast
+      // final-gem shortcut.
+      this._debugAccel = (params.labFocus || this.checkpoint) ? false
+        : (GOL.DEBUG_ACCEL == null ? !!GOL.DEBUG : !!GOL.DEBUG_ACCEL);
       if (this._debugAccel) this.debugPrefill();
-      else this.buildStanzaGems(0);
+      else if (params.labFocus && this.longMode !== 'constellations' && this.stanzaRanges.length > 1) {
+        // The control and bridge experiment differ for the first time at the
+        // second stanza. Open there immediately: P11 shows 5–11; P12 shows
+        // the carried boundary gem 4 alongside 5–11. One crest star makes it
+        // clear that an earlier movement is already complete.
+        this.stanzaIdx = 1;
+        this.buildStanzaGems(1);
+      } else this.buildStanzaGems(0);
 
       GOL.audio.startAmbience('quiet');
       GOL.audio.preloadSurah(this.surah);
@@ -209,6 +254,20 @@
         }
         if (this.mergeT > 1.7) this.advanceStanza(W, H);
       }
+      else if (this.phase === 'campComplete') {
+        this.mergeT += dt;
+        const target = { x: W / 2, y: H * 0.3 };
+        for (const g of this.gems) {
+          g.x += (target.x - g.x) * Math.min(1, dt * 6);
+          g.y += (target.y - g.y) * Math.min(1, dt * 6);
+        }
+        if (!this._mergeChimed && this.mergeT > 0.35) {
+          this._mergeChimed = true;
+          GOL.audio.sfx('praise');
+          this.fx.spawn('ring', target.x, target.y, { color: '#FFE9A8', size: 30 });
+        }
+        if (this.mergeT > 1.55) this.finishCampShrine();
+      }
       else if (this.phase === 'bloom') {
         this.bloomT += dt;
         // the gems spiral into the tree's heart
@@ -280,34 +339,40 @@
     },
 
     // within the current stanza: the next ayah the open socket wants
-    neededAyah() { return this.stanzaStart + this.placed + 1; },
+    neededAyah() {
+      const range = this.stanzaRanges[this.stanzaIdx];
+      return range && range.ayahs ? range.ayahs[this.placed] : this.stanzaStart + this.placed + 1;
+    },
     isLastStanza() { return this.stanzaIdx >= this.stanzaRanges.length - 1; },
 
     finishRun() {
       this.phase = 'done';
       this.grandK = 0;
       GOL.audio.sfx('blossom');
-      const st = GOL.store.level(this.surahId);
+      // lab prototypes save under their own key so experiments never touch
+      // the real surah's progress (storeId === surahId outside the lab)
+      const st = GOL.store.level(this.storeId || this.surahId);
       const d = GOL.store.data;
       d.grand = d.grand || {};
       let first = false;
       if (!this.practiceOnly) {
-        first = !d.grand[this.surahId];
-        d.grand[this.surahId] = Date.now();
+        first = !d.grand[this.storeId || this.surahId];
+        d.grand[this.storeId || this.surahId] = Date.now();
         st.completed = true;
       }
+      if (this.longMode === 'night-camps') st.campReplayActive = false;
       // Practice is still real learning, so its knowledge telemetry remains
       // useful; only the progression reward and completion stamp are withheld.
       st.shrineDone = (st.shrineDone || 0) + 1;
       st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
-      // debug-accelerated runs are meaningless — never record them
-      if (!this._debugAccel) {
+      // debug-accelerated or debug-assisted runs are meaningless — never record them
+      if (!this._debugAccel && !this._usedDebugAssist) {
         st.shrineRuns = st.shrineRuns || [];
         st.shrineRuns.push({
           at: Date.now(), sockets: this.totalSockets,
           firstTry: this.firstTry, misses: this.missTotal,
           listens: this.listens, hints: this.runHints,
-          stanzas: this.stanzaRanges.length
+          stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
         });
         if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
       }
@@ -319,9 +384,9 @@
     // shuffled so the fan never spells the answer. Listening — a tap or a
     // pick-up — is how the child knows which ayah each holds.
     buildStanzaGems(k) {
-      const { start, len } = this.stanzaRanges[k];
-      const order = [];
-      for (let i = 0; i < len; i++) order.push(start + 1 + i);
+      const { start, len, ayahs, bridge, macro } = this.stanzaRanges[k];
+      const order = ayahs ? ayahs.slice() : [];
+      if (!ayahs) for (let i = 0; i < len; i++) order.push(start + 1 + i);
       const rng = GOL.rng(Date.now() % 100000);
       for (let i = order.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1));
@@ -329,7 +394,11 @@
       }
       this.gems = order.map((ayah, i) => ({
         ayah, i, x: 0, y: 0, homeX: 0, homeY: 0,
-        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0
+        phase: Math.random() * 7, placed: -1, drift: null, pulse: 0,
+        // Lab-only wordless identities: the carried seam gem wears a thread
+        // halo; macro tokens wear four tiny constellation lights.
+        bridge: !!bridge && ayah === start + 1,
+        macro: !!macro
       }));
       this.stanzaStart = start;
       this.placed = 0;
@@ -346,8 +415,8 @@
       const L = this.stanzaRanges.length;
       this.stanzaIdx = L - 1;
       this.buildStanzaGems(L - 1);
-      const { start, len } = this.stanzaRanges[L - 1];
-      const lastAyah = start + len;
+      const { start, len, ayahs } = this.stanzaRanges[L - 1];
+      const lastAyah = ayahs ? ayahs[ayahs.length - 1] : start + len;
       this.gems.filter((g) => g.ayah !== lastAyah)
         .sort((a, b) => a.ayah - b.ayah)
         .forEach((g, idx) => { g.placed = idx; });
@@ -442,7 +511,7 @@
             this.miss++;
             this.missTotal++;
             this._socketMissed = true;
-            const st = GOL.store.level(this.surahId);
+            const st = GOL.store.level(this.storeId);
             st.misorders = st.misorders || {};
             st.misorders[g.ayah] = (st.misorders[g.ayah] || 0) + 1;
             GOL.store.save();
@@ -460,7 +529,7 @@
           this.autoT = 0;
           const g = this.gems.find((x) => x.ayah === this.neededAyah() && x.placed < 0);
           if (g && this.heldGem !== g) {
-            const st = GOL.store.level(this.surahId);
+            const st = GOL.store.level(this.storeId);
             st.hintsUsed = (st.hintsUsed || 0) + 1;
             this.runHints++;
             GOL.store.save();
@@ -492,7 +561,13 @@
         this.placementListening = false;
         this.reciteGem = null;
         if (this.phase !== 'place') return;
-        if (stanzaDone && this.isLastStanza()) {
+        if (stanzaDone && this.checkpoint) {
+          // a night camp's stanza is whole — bank it at the camp shrine
+          // (only after its final ayah rings out; the lock holds here too)
+          this.phase = 'campComplete';
+          this.mergeT = 0;
+          this._mergeChimed = false;
+        } else if (stanzaDone && this.isLastStanza()) {
           // the shrine is whole — only after the last ayah rings out does the
           // Tree answer
           this.phase = 'bloom';
@@ -504,16 +579,38 @@
           this.beginMerge();
         }
       };
-      if (GOL.DEBUG) afterAyah();
+      if (GOL.DEBUG || this._debugAccel || this._usedDebugAssist) afterAyah();
       else {
         this.placementListening = true;
         GOL.audio.playVerse(this.surahId, g.ayah, afterAyah);
       }
     },
 
+    finishCampShrine() {
+      if (!this.checkpoint) return;
+      const cp = this.checkpoint;
+      this.checkpoint = null; // one-shot guard while the scene fades
+      const st = GOL.store.level(this.storeId);
+      st.campDone = Math.max(st.campDone || 0, cp.index + 1);
+      if (!this._debugAccel && !this._usedDebugAssist) {
+        st.campShrineRuns = st.campShrineRuns || [];
+        st.campShrineRuns.push({
+          at: Date.now(), camp: cp.index + 1, start: cp.start,
+          sockets: cp.len, firstTry: this.firstTry, misses: this.missTotal,
+          listens: this.listens, hints: this.runHints
+        });
+        if (st.campShrineRuns.length > 20) st.campShrineRuns.splice(0, st.campShrineRuns.length - 20);
+      }
+      GOL.store.save();
+      GOL.stamp('v3campShrine');
+      GOL.go('adventure', { proto: this.protoN, resumeCheckpoint: cp.index + 1 });
+    },
+
     // debug: G places the next correct gem instantly (works in the dream too,
     // since dream mode shares the identical 'place' phase)
     debugCollectAll() {
+      this._usedDebugAssist = true;
+      if (this.phase === 'campComplete') { this.finishCampShrine(); return; }
       const g = this.gems.find((x) => x.ayah === this.neededAyah() && x.placed < 0);
       if (g && this.phase === 'place') this.place(g, this.sockets[this.placed]);
     },
@@ -535,7 +632,7 @@
       this._dreamRecorded = true;
       GOL.audio.sfx('blossom');
 
-      const st = GOL.store.level(this.surahId);
+      const st = GOL.store.level(this.storeId);
       this.moonFrom = st.moon || 0;
       const today = this.todayKey();
       if (st.moonWaxedDay !== today) {
@@ -552,13 +649,13 @@
       st.shrineDone = (st.shrineDone || 0) + 1;
       st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
       // debug-accelerated runs are meaningless — never record them
-      if (!this._debugAccel) {
+      if (!this._debugAccel && !this._usedDebugAssist) {
         st.shrineRuns = st.shrineRuns || [];
         st.shrineRuns.push({
           at: Date.now(), sockets: this.totalSockets,
           firstTry: this.firstTry, misses: this.missTotal,
           listens: this.listens, hints: this.runHints, dream: true,
-          stanzas: this.stanzaRanges.length
+          stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
         });
         if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
       }
@@ -656,7 +753,19 @@
           ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(g.x, g.y, 30 + Math.sin(t * 4) * 3, 0, Math.PI * 2); ctx.stroke();
         }
+        if (g.placed < 0 && g.bridge) {
+          ctx.strokeStyle = alpha('#FFE9A8', 0.35 + 0.22 * Math.sin(t * 2.8));
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(g.x, g.y, 27 + Math.sin(t * 2.8) * 2, 0, Math.PI * 2); ctx.stroke();
+        }
         GOL.drawGem(ctx, g.x, g.y, r + (g.pulse || 0) * 6, C, t, { phase: g.phase, glow: g.placed >= 0 ? 0.7 : 1 });
+        if (g.macro && g.placed < 0) {
+          for (let k = 0; k < 4; k++) {
+            const a = k * Math.PI / 2 + t * 0.18;
+            ctx.fillStyle = alpha('#FFF6DC', 0.62 + 0.2 * Math.sin(t * 2 + k));
+            ctx.beginPath(); ctx.arc(g.x + Math.cos(a) * 29, g.y + Math.sin(a) * 18, 2.2, 0, Math.PI * 2); ctx.fill();
+          }
+        }
       }
 
       // gems spiraling in the bloom are drawn above; the Grand Gem forms
@@ -666,7 +775,7 @@
         }
       }
       // a stanza's gems shrink as they converge into their crest star
-      if (this.phase === 'merge') {
+      if (this.phase === 'merge' || this.phase === 'campComplete') {
         const shrink = 1 - GOL.ease.inOut(Math.min(1, this.mergeT / 1.2));
         for (const g of this.gems) {
           GOL.drawGem(ctx, g.x, g.y, Math.max(2, 13 * shrink), GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase, glow: 0.8 });

@@ -324,6 +324,21 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   replaces the old collect behavior,
   where the ayah started mid-air and gameplay never stopped. (DEBUG speed-runs
   still skip the recitation, so the pause is a real-playtest-only beat.)
+- **AL-FALAQ WORD-FOLLOW PROTOTYPE (built 2026-07-12; awaiting playtest)** —
+  the full Uthmani ayah remains visible during W1's gem pause while the current
+  word turns berry and completed words stay jewel-violet, in time with the
+  fixed Abdul Basit Murattal recording. It is attention support, never a
+  reading test:
+  no transliteration, cursor, bouncing karaoke text, or prompt. All 23 word
+  boundaries were hand-aligned against the exact local EveryAyah files
+  (`js/worlds/w1-falaq-follow.js`, expected tolerance about 100–200ms).
+  Abdul Basit and Alafasy each have exact tables; any future selected reciter
+  proportionally fits the Basit word map to its audio duration so the
+  experiment never silently becomes an all-white ayah. Other surahs
+  retain the whole-ayah glow. Expansion waits on a child playtest: watch
+  whether eyes
+  follow the illumination and whether mouthing/repetition increases without
+  being requested.
 - **Playtest positives to protect**: the campfire being *earned* (unlit until
   every gem is found), and the flowers blooming where a gem is collected.
 - **Playtest doubts**: P6's occluder-veiled secrets ("feels weird — unclear
@@ -400,6 +415,30 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   angle twice, collapsing them into three perfectly overlapping pairs. Orbit
   gems now share one spin phase and receive their spacing once; even-count
   surahs display every gathered gem.
+- **AL-LAIL LONG-SURAH LAB (built, not yet child-playtested):** three isolated
+  debug prototypes now compare the production stanza approach against two
+  explicit alternatives while holding the mountain and audio constant. P11 is
+  the `[4,7,5,5]` control; P12 overlaps the three stanza seams (`4→5`, `11→12`,
+  `16→17`); P13 recalls only the four stanza openings (`1,5,12,17`) to test a
+  lighter first-session ending. No verdict is claimed until child observation.
+  Test URLs, tradeoffs, and decision rules: `reviews/LONG-SURAH-LAB.md`.
+- **AL-FATIHA — THE STRAIGHT PATH (built + first-playtested 2026-07-13):**
+  seven ayat stay in the normal short-surah loop — one continuous
+  ordered-gem walk, one earned full recitation, then all seven sockets in the
+  shrine. No stanza or checkpoint machinery: those solve fatigue at 13+ ayat
+  and would interrupt a surah this size. The world is one unmistakable
+  left-to-right garden path that opens into fuller morning light. A quiet
+  spatial threshold after ayah 4 marks the turn from praise to direct address
+  and request without adding a ceremony; ayah 7 rests on a broad still landing
+  so its longer recitation is never crowded by another interaction. There is
+  no literal fork or wrong way. **First verdict:** it feels quite easy and
+  repeats many established garden patterns; that familiarity is a strength at
+  the beginning, where the child is learning the game's language. Al-Fatiha is
+  now the first journey world. Existing completed worlds remain playable
+  because saves are keyed by surah, not journey position. Phone QA at
+  852×393 caught the eighth disc pushing both ends of the journey half off the
+  canvas; journey spacing now compresses within the safe width, keeping Falaq
+  and Fatiha fully visible and tappable. All seven Abdul Basit ayat are local.
 - **JOURNEY STAR COUNTS (fixed 2026-07-13):** the journey disc used to draw
   one tiny pip per ayah beneath every open world. That stayed neat for short
   surahs but Al-Lail's 21 pips stretched across neighboring discs and broke

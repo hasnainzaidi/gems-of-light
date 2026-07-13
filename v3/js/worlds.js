@@ -15,7 +15,7 @@
   // The child-facing journey is one ordered list of keys — pedagogy can be
   // retuned by editing this line alone; files and saves never move
   // (WORLDS-PLAN §1: roughly the traditional bottom-up path, warnings late).
-  GOL.WORLD_ORDER = ['falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
+  GOL.WORLD_ORDER = ['fatiha', 'falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
     'fil', 'duha', 'adiyat', 'sharh', 'qadr', 'kafirun', 'takathur',
     'humazah', 'masad', 'lail'];
 
