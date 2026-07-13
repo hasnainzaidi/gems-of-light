@@ -111,6 +111,10 @@
             el._triedRemote = true;
             el.src = rec.remote + key + '.mp3';
             el.load();
+            // if a play was already in flight when the local file failed,
+            // resume it on the remote — otherwise the fallback loads but
+            // stays silent (the child pauses and hears nothing)
+            if (el._wantPlay) { const p = el.play(); if (p && p.catch) p.catch(() => {}); }
           }
         });
         this._els[ck] = el;
@@ -145,6 +149,7 @@
         h.done = true;
         clearTimeout(h.timer);
         clearTimeout(h.guard);
+        el._wantPlay = false;
         el.removeEventListener('ended', finish);
         if (this._current === h) this._current = null;
         if (!inSeq) this.duck(false);
@@ -160,6 +165,7 @@
       // and nothing may stall the garden forever, no matter what
       h.guard = setTimeout(finish, 30000);
       this.duck(true);
+      el._wantPlay = true;
       const p = el.play();
       if (p && p.catch) p.catch(() => { h.timer = setTimeout(finish, 2500); });
       this._current = h;
