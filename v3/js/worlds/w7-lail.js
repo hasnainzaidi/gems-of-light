@@ -76,14 +76,16 @@
       // ── STANZA 4 · THE GIVER PLEASED (vv17–21) — the last rungs ──
       b.slab(19, 23, 14); // C1
       b.slab(14, 18, 11); // C2
-      b.slab(9, 13, 8);   // C3
+      // C3 overlaps all of C2 and continues well to the right: the jump to
+      // gem 19 has open sky, with no summit stone anywhere near its arc. Only
+      // after landing does a thin one-way rung lead onward to the summit.
+      b.slab(9, 20, 8);   // C3 — broad open-sky landing porch
+      b.slab(19, 21, 6);  // C4 — forgiving crest rung, safely to the right
       // the broad flat summit cap of carved stone under full stars — nothing
       // floats above the campfire/door columns so b.surface lands on the cap
-      // Start one tile past C3's right edge. Sharing x=13 made the solid cap
-      // hang directly over the final rung, so the hero's head hit its
-      // underside before the jump could crest (the checker models endpoints,
-      // not the intervening jump arc). W4's proven summit uses this clearance.
-      b.stoneBlock(14, 34, 5, 7);
+      // The solid wall begins four full tiles past C2's right edge. Earlier
+      // fixes kept this needlessly close; here the clearance is unmistakable.
+      b.stoneBlock(22, 34, 5, 7);
 
       // BEAT — 21 gems, one per ayah, gathered IN ORDER as the night deepens,
       // each a rung higher than the last (heights strictly ascending)
@@ -106,8 +108,8 @@
       b.gem(17, 21, 13); // and the most righteous will be spared it
       b.gem(18, 16, 10); // who gives his wealth to purify himself
       b.gem(19, 11, 7);  // owing no favor that must be repaid
-      b.gem(20, 17, 4);  // seeking only the face of his Lord, Most High
-      b.gem(21, 21, 4);  // "and he is going to be pleased"
+      b.gem(20, 21, 5);  // seeking only the face of his Lord, Most High
+      b.gem(21, 23, 4);  // "and he is going to be pleased"
 
       // the resting place and the shrine door, far apart on the flat summit
       b.campfire(26);
@@ -141,7 +143,7 @@
       b.seedArc(25, 19, 21, 13, 4, 2); // up to camp 3 → the last rungs
       b.seedArc(21, 13, 16, 10, 3, 1);
       b.seedArc(16, 10, 11, 7, 3, 1);
-      b.seedArc(11, 7, 17, 4, 4, 2); // C3 → the starred summit
+      b.seedArc(11, 7, 21, 5, 4, 0.5); // C3 → the open crest rung
       // the right arm of the fork, sparked so both ways read as passable
       b.seed(36, 51).seed(40, 49).seed(42, 47).seed(39, 45);
       // a first spark by the trailhead and one by the secret flank
