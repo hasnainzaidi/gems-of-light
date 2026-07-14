@@ -463,3 +463,25 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   worlds launch, no production save state is read or changed. Direct lab:
   `?lab=16`. Hypothesis, observation questions, and keep/reject rule:
   `reviews/sky-path-p16.md`.
+  **VERDICT (parent review 2026-07-14): the structure survives, the sky does
+  not.** The chapter/shape/fill-with-light pattern felt right, but a
+  constellation execution drags the whole map toward night — blues, purples,
+  darkness — against the game's light-green, open, light-filled identity.
+  The lesson: keep the pattern, move it out of the dark. Night stays where
+  it already belongs (the dream-shrine, the Remembering moons).
+- **THE GREAT GARDEN LAB (P17 built 2026-07-14; awaiting vibe check):** the
+  daylight home for P16's surviving structure — a charbagh, the classical
+  fourfold walled paradise garden, seen at storybook height in the game's
+  fullest morning palette (`fatiha`). Each chapter is a geometric flowerbed
+  with its own figure (eight-point star, quatrefoil, ring, crescent — the
+  shape identity constellations gave for free); every finished world is a
+  gem-hearted bloom in its bed; beds sit along one stone water channel, and
+  the water flows exactly as far as the journey has opened. Completing a
+  bed's last world runs the blooming (light traces the bed's figure, petals
+  burst, the wooden gate folds open, and the water runs on to wake the next
+  bed — which stays fully asleep until it arrives, P16's own rule). The
+  Remembering moon hangs as a REAL DAYTIME MOON, pale in the morning sky
+  over its finished bed — proof the moon-door idiom survives daylight.
+  Presentation-only like P16: simulated progress, no saves, no real worlds.
+  Direct lab: `?lab=17`. What to judge and against what:
+  `reviews/great-garden-p17.md`.
