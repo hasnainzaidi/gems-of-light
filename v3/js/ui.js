@@ -170,6 +170,9 @@
         // lever that actually matters on a wide phone: near = zoomed in / bigger
         // detail, wide = more world. On iPad (~15 cols) only 'near' binds.
         { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.maxCols <= 15 ? 'near' : GOL.V3.maxCols >= 17 ? 'wide' : 'mid'), set: (v) => { GOL.V3.maxCols = v === 'near' ? 14 : v === 'wide' ? 18 : 16; } },
+        // 'headroom' seats the sprite lower/higher in the view: more = sprite
+        // sits low, so less dead dirt below and more sky/canopy above.
+        { label: 'headroom', opts: ['less', 'mid', 'more'], get: () => (GOL.V3.groundBias <= 0.68 ? 'less' : GOL.V3.groundBias >= 0.78 ? 'more' : 'mid'), set: (v) => { GOL.V3.groundBias = v === 'less' ? 0.62 : v === 'more' ? 0.80 : 0.74; } },
         // the on-device door into debug (no URL editing on a phone) — persists
         // until switched off; ?debug=1 still wins as an explicit override
         { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); } }
