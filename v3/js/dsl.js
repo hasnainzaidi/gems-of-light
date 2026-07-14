@@ -12,7 +12,7 @@
       w, h, tiles,
       gems: [], props: [], creatures: [], waterfalls: [],
       seeds: [], pads: [], moverDefs: [], occluders: [], blossomPos: null,
-      memoryPos: null,
+      memoryPos: null, lightboxes: [],
       startPos: null, campfirePos: null, doorPos: null,
       set(x, y, v) { if (x >= 0 && x < w && y >= 0 && y < h) tiles[y * w + x] = v; },
       get(x, y) { return x < 0 || x >= w || y < 0 || y >= h ? 0 : tiles[y * w + x]; },
@@ -97,6 +97,15 @@
         this.memoryPos = { x: (x + 0.5) * TILE, y: this.surface(x) * TILE, surahId: surahId || null };
         return b;
       },
+      // a guiding-light box: a closed vessel that, opened, releases an orb of
+      // noor which flies ahead and kindles the seed trail into a lit path
+      // through the dark (adventure.js). Sits on the ground like the campfire;
+      // place one at the head of each dark stretch so the way is always shown.
+      lightbox(x) {
+        const s = this.surface(x);
+        this.lightboxes.push({ x: (x + 0.5) * TILE, y: s * TILE, tx: x, ty: s });
+        return b;
+      },
       // a foreground curtain (cave dark, hanging leaves) that softens when
       // the wanderer steps behind it — secrets live inside
       occluder(x0, x1, y0, y1, color) {
@@ -158,6 +167,11 @@
       props: b.props, creatures: b.creatures, waterfalls: b.waterfalls,
       seeds: b.seeds, pads: b.pads, moverDefs: b.moverDefs, blossom: b.blossomPos,
       occluders: b.occluders,
+      lightboxes: b.lightboxes,
+      // darkness intensity (0..1). A `night` world dims to near-black beyond
+      // the wanderer's own aura and the kindled path; dawn (restoration) lifts
+      // it as the ayat are gathered. Undeclared → ordinary daylit world.
+      night: def.night || 0,
       memory: b.memoryPos,
       start: b.startPos, campfire: b.campfirePos, door: b.doorPos,
       // per-prototype flavor hooks (all optional):

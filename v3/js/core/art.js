@@ -70,6 +70,22 @@
     // Daybreak Hollow — starts dusky; scenes lerp toward `falaqEnd` across the level.
     falaq: pal({ skyTop: '#7FA3AC', skyMid: '#A9C4B4', skyLow: '#E3C79C', sun: '#FFEFC2', hillFar: '#96B6A4', hillMid: '#7AA383', hillNear: '#5C9264', grass: '#6BAA60', grassLight: '#8FC77E', mist: '#DFDCC2' }),
     falaqEnd: pal({ skyTop: '#AFDCC4', skyMid: '#E5F2CC', skyLow: '#FBE9B4' }),
+    // The Settled Darkness — Al-Falaq's "ghāsiqin idhā waqab" (the night when
+    // it settles). A guiding-light passage: dusky-blue and hushed, it lerps
+    // toward `falaqEnd` (the daybreak, al-falaq) as the ayat are gathered. The
+    // adventure's darkness mask does the near/far seeing; this sets the mood.
+    falaqNoor: pal({
+      skyTop: '#26364C', skyMid: '#33475A', skyLow: '#5B5E6E',
+      sun: '#FFE9B4', sunGlow: '#B9A98A', cloud: '#5A6472', ray: '#8DA0B8',
+      hillFar: '#3C4E52', hillMid: '#324744', hillNear: '#2A3E36',
+      grass: '#3E6A48', grassLight: '#568B5C', grassDark: '#2F5238',
+      soil: '#6E5F4C', soilDark: '#4E4436', pebble: '#7C7360',
+      stone: '#8A8676', stoneShade: '#6C6A5C', stoneDark: '#4E4E44',
+      waterHi: '#5C9088', water: '#3E6E72', waterDeep: '#2A4E4E',
+      trunk: '#5E4C3C', trunkDark: '#453629',
+      leaf: '#3E6A50', leafLight: '#568B60', leafDark: '#2C5040',
+      mist: '#4A5460', gold: '#E7C079', goldDeep: '#C99A46'
+    }),
     // The Village Garden — lively, full green.
     nas: pal({ skyTop: '#A2D4C4', skyMid: '#D6ECC6', hillNear: '#67A96E', grass: '#76BC66' }),
     // The Garden Gate — radiant, the fullest morning.

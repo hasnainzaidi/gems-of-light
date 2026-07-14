@@ -36,6 +36,13 @@
     echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off',
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
+    maxCols: parseFloat(q.get('cols') || '16'), // horizontal FOV cap — stops wide phones zooming out (iPad's ~15 cols never hit it, so iPad is unchanged); 'near' (14) is one tap away and persists per device
+    // Vertical seat. Keep this LOW: the camera's bottom clamp (never show below
+    // the level floor) is what anchors the frame to the ground, and a tall view
+    // (iPad) always hits it. A high bias on a short phone view floats the camera
+    // OFF the clamp, leaving a big dead sky above the sprite that wrecks jumps.
+    // Low bias lets the clamp govern on every device — each self-frames.
+    groundBias: parseFloat(q.get('groundY') || '0.50'),
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
     reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit'
@@ -49,13 +56,15 @@
     if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
+    if (!q.has('cols') && saved.maxCols) GOL.V3.maxCols = saved.maxCols;
+    if (!q.has('groundY') && saved.groundBias) GOL.V3.groundBias = saved.groundBias;
     if (!q.has('reciter') && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
     // debug toggled from the tuning panel persists; ?debug=1 stays the boss
     if (!q.has('debug') && saved.debug != null) GOL.DEBUG = !!saved.debug;
   } catch (e) { /* private mode: play on */ }
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
+      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
     } catch (e) { /* ignore */ }
   };
 

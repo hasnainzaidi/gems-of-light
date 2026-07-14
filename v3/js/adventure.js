@@ -105,6 +105,7 @@
     orbit: null, restoreK: 0, glowAr: null, echoT: 0,
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
     gemPause: null, memState: null,
+    boxes: null, orb: null, darkBuf: null,
     protoN: null, campDone: 0, campEntering: false,
 
     enter(params) {
@@ -149,7 +150,10 @@
       this.glowAr = null;
       this.echoT = 5; // let the garden breathe before the first echo
 
-      this.seeds = L.seeds.map((s, i) => ({ x: s.x, y: s.y, taken: false, phase: i * 0.9 }));
+      // `lit` (0..1) is a seed's guiding-light kindling: an orb flying past
+      // sets it to 1, then it slowly expires — the charted path fading behind
+      // the light. Zero in daylit worlds, where it is simply never raised.
+      this.seeds = L.seeds.map((s, i) => ({ x: s.x, y: s.y, taken: false, phase: i * 0.9, lit: 0 }));
       this.seedCount = 0;
       this.seedChain = 0;
       this.seedChainT = 0;
@@ -161,6 +165,11 @@
       });
       // foreground curtains that soften when the wanderer steps behind them
       this.occs = (L.occluders || []).map((o) => ({ o, fade: 1 }));
+      // guiding-light boxes: closed until the wanderer reaches them, then each
+      // releases one orb of noor that kindles the path ahead. `this.orb` holds
+      // the single live orb (only one flies at a time). Inert in daylit worlds.
+      this.boxes = (L.lightboxes || []).map((bx) => ({ x: bx.x, y: bx.y, tx: bx.tx, open: 0, spent: false }));
+      this.orb = null;
       // the memory stone, if this world remembers an earlier surah. It stays
       // 'inert' scenery through roam/settle/campfire and only 'arms' at the
       // ember phase — the deliberate, never-mid-collection redesign (PLAN §9).
@@ -351,7 +360,15 @@
       this.t += dt;
       const L = this.L;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-      this.scale = H / (GOL.V3.rows * TILE);
+      // Height fits `rows` tile-rows; width would otherwise spill to whatever
+      // the aspect ratio allows — on a 2.17:1 phone that's ~25 columns at half
+      // the iPad's tile size, i.e. "zoomed out, detail lost". Cap the horizontal
+      // field of view at `maxCols` columns and take the more constraining fit:
+      // on a narrow iPad the height wins (unchanged); on a wide phone the width
+      // wins, zooming back in to legible tiles.
+      const fitH = H / (GOL.V3.rows * TILE);
+      const fitW = W / ((GOL.V3.maxCols || 99) * TILE);
+      this.scale = Math.max(fitH, fitW);
       const viewW = W / this.scale, viewH = H / this.scale;
       if (!this.cam) {
         this.cam = GOL.makeCamera(L, viewW, viewH);
@@ -480,6 +497,9 @@
       // no hint, cannot wake. It only arms after this world's campfire (the
       // 'ember' phase); see updateMemoryStone. This is the fix for the parked
       // v1 mechanic, whose walk-by trigger collided mid-collection (PLAN §9).
+
+      // the guiding light: open a box, release the orb, kindle the path
+      this.updateGuideLight(dt);
 
       this.updateFirefly(dt);
 
@@ -717,6 +737,90 @@
         o.x += (tx - o.x) * Math.min(1, dt * (o.join < 1 ? 2.2 : 6));
         o.y += (ty - o.y) * Math.min(1, dt * (o.join < 1 ? 2.2 : 6));
       });
+    },
+
+    // ------------------------------------------------- the guiding light --
+    // Al-Falaq's daybreak, made playable: through the settled darkness sit
+    // closed boxes of light. Reaching one opens it and frees an orb of noor
+    // that flies ahead along the seed trail toward the next ayah, kindling
+    // each seed it passes into a bright, then slowly expiring, lit path — the
+    // way shown, never forced. The child's own aura and Noor the firefly mean
+    // the dark never traps: the orb leads, it does not gate. Inert unless the
+    // world declares `night`.
+    updateGuideLight(dt) {
+      const L = this.L, pl = this.player;
+      // the kindled path expires gently behind the light (slower while the orb
+      // is still drawing it, so a segment reads as whole before it fades)
+      for (const s of this.seeds) {
+        if (s.lit > 0) s.lit = Math.max(0, s.lit - dt * (this.orb ? 0.12 : 0.26));
+      }
+      if (!L.night) return;
+
+      // opening a box: a deliberate-feeling arrival (grounded, close), but no
+      // button to hunt for — the vessel simply blooms as the child reaches it.
+      for (const bx of this.boxes) {
+        if (bx.spent) { bx.open = Math.min(1, bx.open + dt * 3); continue; }
+        if (!this.orb && !this.gemPause && pl.grounded &&
+            Math.abs(pl.x - bx.x) < 40 && Math.abs(pl.y - bx.y) < 56) {
+          bx.spent = true;
+          GOL.audio.sfx('blossom');
+          this.fx.spawn('ring', bx.x, bx.y - 20, { color: '#FFF3C4', size: 26 });
+          this.fx.spawn('ring', bx.x, bx.y - 20, { color: '#FFE9A8', size: 44 });
+          for (let i = 0; i < 12; i++) this.fx.spawn('sparkle', bx.x + GOL.rnd(-14, 14), bx.y - 20 + GOL.rnd(-12, 6), { color: i % 2 ? '#FFE9A8' : '#FFF6DC' });
+          this.orb = { x: bx.x, y: bx.y - 22, vx: 0, vy: 0, t: 0, life: 0, dissolve: 0 };
+        }
+      }
+
+      // the orb leads toward the same goal the firefly knows — the next ayah's
+      // gem, or the campfire once all are gathered — kindling seeds en route.
+      const orb = this.orb;
+      if (!orb) return;
+      orb.t += dt;
+      orb.life = Math.min(1, orb.life + dt * 3);
+
+      const goal = this.guideGoal();
+      if (orb.dissolve > 0 || !goal) {
+        // its task shown, the orb settles into the light it led to and fades
+        orb.dissolve += dt * 1.6;
+        if (Math.random() < dt * 20) this.fx.spawn('sparkle', orb.x + GOL.rnd(-8, 8), orb.y + GOL.rnd(-8, 8), { color: '#FFE9A8' });
+        if (orb.dissolve >= 1) this.orb = null;
+        return;
+      }
+
+      const gx = goal.x, gy = goal.y - 26;
+      const dx = gx - orb.x, dy = gy - orb.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const speed = 250; // outruns the child, so the path is drawn ahead
+      orb.vx += ((dx / d) * speed - orb.vx) * Math.min(1, dt * 4);
+      orb.vy += ((dy / d) * speed - orb.vy) * Math.min(1, dt * 4);
+      orb.x += orb.vx * dt;
+      orb.y += orb.vy * dt;
+
+      // kindle any seed the orb sweeps over, and drop a soft glimmer trail
+      for (const s of this.seeds) {
+        if (s.taken) continue;
+        if (Math.hypot(s.x - orb.x, s.y - orb.y) < 46) s.lit = 1;
+      }
+      if (Math.random() < dt * 26) this.fx.spawn('mote', orb.x + GOL.rnd(-6, 6), orb.y + GOL.rnd(-4, 8), { color: '#FFF3C4' });
+
+      // arrived at the goal: bloom, then dissolve into it
+      if (d < 34) {
+        orb.dissolve = 0.001;
+        this.fx.spawn('ring', gx, gy, { color: '#FFE9A8', size: 22 });
+      }
+    },
+
+    // where the guiding orb (and the firefly) should lead: the next unfound
+    // ayah's gem, or the campfire once the surah is whole
+    guideGoal() {
+      const L = this.L;
+      if (this.pendingCamp()) return this.campWorldPos(this.pendingCamp());
+      if (this.found.length < L.gems.length) {
+        const nextA = this.found.length + 1;
+        for (const g of L.gems) if (g.ayah === nextA) return { x: g.x, y: g.y };
+        return null;
+      }
+      return L.campfire ? { x: L.campfire.x, y: L.campfire.y } : null;
     },
 
     updateFirefly(dt) {
@@ -1122,8 +1226,24 @@
       }
       for (const s of this.seeds) {
         if (s.taken || s.x < cam.x - 60 || s.x > cam.x + cam.viewW + 60) continue;
-        GOL.drawSeed(ctx, s.x, s.y + Math.sin(t * 2.1 + s.phase) * 3, t, s.phase);
+        const sy = s.y + Math.sin(t * 2.1 + s.phase) * 3;
+        // a kindled seed glows a broad warm halo — the lit path through the dark
+        if (s.lit > 0.01) {
+          const rr = 15 + 22 * s.lit, k = 0.55 * s.lit * (0.82 + 0.18 * Math.sin(t * 4 + s.phase));
+          const hg = ctx.createRadialGradient(s.x, sy, 1, s.x, sy, rr);
+          hg.addColorStop(0, alpha('#FFF3C4', k));
+          hg.addColorStop(1, alpha('#FFE9A8', 0));
+          ctx.fillStyle = hg;
+          ctx.beginPath(); ctx.arc(s.x, sy, rr, 0, Math.PI * 2); ctx.fill();
+        }
+        GOL.drawSeed(ctx, s.x, sy, t, s.phase);
       }
+      // guiding-light boxes and the orb of noor they release
+      if (this.boxes) for (const bx of this.boxes) {
+        if (bx.x < cam.x - 90 || bx.x > cam.x + cam.viewW + 90) continue;
+        this.drawLightbox(ctx, bx, t);
+      }
+      if (this.orb) this.drawOrb(ctx, this.orb, t);
       if (this.blossomState && !this.blossomState.taken) {
         const B = this.blossomState;
         if (B.x > cam.x - 90 && B.x < cam.x + cam.viewW + 90) {
@@ -1210,8 +1330,13 @@
       }
       ctx.restore();
 
+      // the settled darkness — a night the guiding light and the coming dawn
+      // both push back. Draws its own night→daybreak lift, so the generic dawn
+      // veil below stands down for a `night` world.
+      if (L.night) this.drawDarkness(ctx, W, H);
+
       // night thinning into dawn as the world is restored
-      if (this.endP && dawnK < 1) {
+      if (!L.night && this.endP && dawnK < 1) {
         ctx.fillStyle = alpha('#25333E', 0.26 * (1 - dawnK));
         ctx.fillRect(0, 0, W, H);
       }
@@ -1244,26 +1369,36 @@
       }
 
       // the gem band: collected ayat resting in their star settings — the
-      // wordless answer to "how many so far, how many to go"
+      // wordless answer to "how many so far, how many to go". It lives at the
+      // BOTTOM now, over the dead subterranean strip the camera's bottom clamp
+      // leaves unusable, tucked into the gap between the thumbstick and the jump
+      // button (see §10). We derive its slot from touchZones so band and
+      // controls can never collide, and the band windows itself for long surahs.
       if (this.phase === 'roam' || this.phase === 'ember') {
-        const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+        const z = GOL.touchZones(W, H);
+        const gapL = z.stick.x + z.stick.r + 16;      // inner edge of the thumbstick
+        const gapR = z.jump.x - z.jump.r - 16;        // inner edge of the jump button
+        const bandCx = (gapL + gapR) / 2;
+        const bandMax = Math.max(120, gapR - gapL);
+        const bandY = z.stick.y - 26;                 // centre the 52px band on the controls' row
+        const starY = bandY - 15;                     // camp-progress pips ride just above
         if (L.campShrines && L.campShrines.length) {
           const start = this.campDone === 0 ? 1 : L.campShrines[this.campDone - 1].afterAyah + 1;
           const end = this.campDone < L.campShrines.length
             ? L.campShrines[this.campDone].afterAyah : L.gems.length;
           const foundHere = this.found.filter((a) => a >= start && a <= end).map((a) => a - start);
-          GOL.drawHudBand(ctx, W / 2, 12 + sa.t * 0.5, end - start + 1, foundHere, t, Math.min(W - 310, 260));
+          GOL.drawHudBand(ctx, bandCx, bandY, end - start + 1, foundHere, t, bandMax);
           const totalCamps = L.campShrines.length + 1;
-          const sx = W / 2 - (totalCamps - 1) * 15;
+          const sx = bandCx - (totalCamps - 1) * 15;
           for (let i = 0; i < totalCamps; i++) {
-            GOL.star8Path(ctx, sx + i * 30, 68 + sa.t * 0.5, 6.5, Math.PI / 8);
+            GOL.star8Path(ctx, sx + i * 30, starY, 6.5, Math.PI / 8);
             ctx.fillStyle = i < this.campDone ? '#FFF6DC' : alpha('#FFF6DC', 0.22);
             ctx.fill();
             ctx.strokeStyle = alpha('#D9A44A', i < this.campDone ? 0.9 : 0.35);
             ctx.lineWidth = 1.2; ctx.stroke();
           }
         } else {
-          GOL.drawHudBand(ctx, W / 2, 12 + sa.t * 0.5, L.gems.length, this.found.map((a) => a - 1), t, Math.min(W - 260, 330));
+          GOL.drawHudBand(ctx, bandCx, bandY, L.gems.length, this.found.map((a) => a - 1), t, bandMax);
         }
       }
       for (const b of this.buttons || []) {
@@ -1442,6 +1577,126 @@
         const gy = ms.from.y + ((m.y + socketY) - ms.from.y) * k - Math.sin(Math.PI * ms.travel) * 30;
         GOL.drawGem(ctx, gx, gy, 9, GRAND, t, { phase: 2, glow: 0.95 });
       }
+    },
+
+    // a closed box of light: a small lantern-chest sealed with a glowing seam,
+    // curiosity-inviting; once spent it stands open and empty, still warm.
+    drawLightbox(ctx, bx, t) {
+      const x = bx.x, y = bx.y, k = bx.open;
+      const glow = bx.spent ? 0.5 : 0.35 + 0.15 * Math.sin(t * 2.4);
+      ctx.save();
+      ctx.translate(x, y);
+      // ground halo
+      const halo = ctx.createRadialGradient(0, -12, 2, 0, -12, 30 + 16 * k);
+      halo.addColorStop(0, alpha('#FFE9A8', 0.4 * glow));
+      halo.addColorStop(1, alpha('#FFE9A8', 0));
+      ctx.fillStyle = halo;
+      ctx.beginPath(); ctx.arc(0, -12, 30 + 16 * k, 0, Math.PI * 2); ctx.fill();
+      // the box body
+      ctx.fillStyle = '#6C5A44';
+      GOL.roundRect(ctx, -12, -22, 24, 22, 5); ctx.fill();
+      ctx.strokeStyle = alpha('#3E3222', 0.8); ctx.lineWidth = 1.4;
+      GOL.roundRect(ctx, -12, -22, 24, 22, 5); ctx.stroke();
+      // gold banding
+      ctx.strokeStyle = alpha('#E7C079', 0.9); ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-12, -11); ctx.lineTo(12, -11); ctx.stroke();
+      // the lid: shut and seam-lit, or flung open once spent
+      const lidA = k * 1.5;
+      ctx.save();
+      ctx.translate(-12, -22);
+      ctx.rotate(-lidA);
+      ctx.fillStyle = '#7A6650';
+      GOL.roundRect(ctx, 0, -5, 24, 6, 3); ctx.fill();
+      ctx.strokeStyle = alpha('#E7C079', 0.9); ctx.lineWidth = 1.4;
+      GOL.roundRect(ctx, 0, -5, 24, 6, 3); ctx.stroke();
+      ctx.restore();
+      // the light seam / the light within
+      const seam = ctx.createLinearGradient(0, -20, 0, -8);
+      seam.addColorStop(0, alpha('#FFFBEA', (bx.spent ? 0.9 : 0.6) * (0.7 + 0.3 * Math.sin(t * 3))));
+      seam.addColorStop(1, alpha('#FFE9A8', 0.1));
+      ctx.fillStyle = seam;
+      GOL.roundRect(ctx, -9, -20, 18, 12, 3); ctx.fill();
+      if (!bx.spent) {
+        GOL.star8(ctx, 0, -13, 3.2 + Math.sin(t * 4) * 0.8, t * 0.6, alpha('#FFFBEA', 0.9));
+      }
+      ctx.restore();
+    },
+
+    // the released orb of noor — an angel of light, brighter and more radiant
+    // than the firefly, leading the way and trailing a warm shimmer
+    drawOrb(ctx, orb, t) {
+      const fade = (1 - orb.dissolve) * orb.life;
+      if (fade <= 0.01) return;
+      const puff = 1 + orb.dissolve * 0.8;
+      ctx.save();
+      ctx.translate(orb.x, orb.y);
+      const R = 20 * puff;
+      const halo = ctx.createRadialGradient(0, 0, 1, 0, 0, R);
+      halo.addColorStop(0, alpha('#FFFBEA', 0.85 * fade));
+      halo.addColorStop(0.5, alpha('#FFE9A8', 0.45 * fade));
+      halo.addColorStop(1, alpha('#FFE9A8', 0));
+      ctx.fillStyle = halo;
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+      // soft rays turning slowly — the "angel of light"
+      ctx.globalAlpha = fade * 0.55;
+      ctx.strokeStyle = alpha('#FFF6DC', 0.8); ctx.lineWidth = 1.4;
+      for (let i = 0; i < 6; i++) {
+        const a = t * 0.7 + i * Math.PI / 3;
+        const r0 = 5, r1 = 9 + Math.sin(t * 3 + i) * 2.5;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+        ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = fade;
+      const core = ctx.createRadialGradient(0.5, -0.5, 0.3, 0, 0, 5);
+      core.addColorStop(0, '#FFFFFF'); core.addColorStop(1, '#FFE9A8');
+      ctx.fillStyle = core;
+      ctx.beginPath(); ctx.arc(0, 0, 4.6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    },
+
+    // the settled darkness, punched through by every source of noor: the
+    // child's carried aura, the kindled path, the orb, the opened boxes, and
+    // the faint beacon of the next ayah. Lifts globally as the dawn breaks.
+    drawDarkness(ctx, W, H) {
+      const L = this.L;
+      const base = (L.night || 0) * (1 - Math.min(1, this.restoreK) * 0.9);
+      if (base < 0.02) return;
+      const cam = this.cam || { x: 0, y: 0 }, sc = this.scale || 1;
+      if (!this.darkBuf || this.darkBuf.width !== W || this.darkBuf.height !== H) {
+        this.darkBuf = GOL.paint.makeCanvas(W, H);
+      }
+      const d = this.darkBuf.getContext('2d');
+      d.setTransform(1, 0, 0, 1, 0, 0);
+      d.clearRect(0, 0, W, H);
+      d.globalCompositeOperation = 'source-over';
+      d.globalAlpha = Math.min(0.9, base);
+      d.fillStyle = '#0E1622';
+      d.fillRect(0, 0, W, H);
+      d.globalAlpha = 1;
+      d.globalCompositeOperation = 'destination-out';
+      const sx = (wx) => (wx - cam.x) * sc, sy = (wy) => (wy - cam.y) * sc;
+      const hole = (wx, wy, wr, strength) => {
+        const x = sx(wx), y = sy(wy), r = wr * sc;
+        if (x < -r || x > W + r || y < -r || y > H + r) return;
+        const g = d.createRadialGradient(x, y, 1, x, y, r);
+        g.addColorStop(0, 'rgba(0,0,0,' + strength + ')');
+        g.addColorStop(0.62, 'rgba(0,0,0,' + (strength * 0.42) + ')');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        d.fillStyle = g;
+        d.beginPath(); d.arc(x, y, r, 0, Math.PI * 2); d.fill();
+      };
+      const pl = this.player;
+      hole(pl.x, pl.y - 16, 150, 0.97); // the noor the child always carries
+      const goal = this.guideGoal();    // the next ayah, a faint findable beacon
+      if (goal) hole(goal.x, goal.y - 8, 62, 0.5);
+      for (const s of this.seeds) if (!s.taken && s.lit > 0.02) hole(s.x, s.y, 20 + 26 * s.lit, 0.9 * s.lit);
+      if (this.boxes) for (const bx of this.boxes) hole(bx.x, bx.y - 16, bx.spent ? 78 : 40, bx.spent ? 0.85 : 0.5);
+      if (this.orb && this.orb.dissolve < 1) hole(this.orb.x, this.orb.y, 128 * (1 - this.orb.dissolve), 0.98);
+      if (this.found.length === L.gems.length && L.campfire) hole(L.campfire.x, L.campfire.y - 20, 190, 0.95);
+      d.globalCompositeOperation = 'source-over';
+      ctx.drawImage(this.darkBuf, 0, 0, W, H);
     },
 
     drawCampfire(ctx, x, y, t) {
