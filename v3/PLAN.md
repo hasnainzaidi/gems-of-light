@@ -550,3 +550,25 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   persists per device (playtester's preference on phone). Verified headless at
   the Falaq bounce-gem jump (standing + apex). Shipped to `main` (sw.js CACHE
   v24→v25).
+- **GEM BAND MOVED TO THE BOTTOM + made self-windowing (2026-07-14; on
+  `claude/gem-drawer-reposition-7htqtg`).** With the zoom/clamp work above, the
+  low `groundBias` means the camera's bottom clamp always shows a strip of dead
+  **subterranean soil** below the floor — unusable play space. Meanwhile the
+  top-centre, where the wordless gem band lived, became a *critical* spot (the
+  action now reaches the top of the frame). So the band moves down into that
+  dead strip, tucked into the gap **between the thumbstick and the jump button**.
+  Its slot/width are derived from `GOL.touchZones` (bandCx = midpoint of the two
+  controls' inner edges; bandMax = that gap; bandY centres the 52px band on the
+  controls' row) so band and controls can never collide on any screen, and the
+  camp-progress pips ride just above it. **Scaling for long surahs (Al-Lail 21,
+  Al-'Alaq 19):** the narrower bottom gap can't hold every slot, so `drawHudBand`
+  now *windows*. If all slots fit it opens them to a comfortable gap; if not it
+  shows a window of full-size slots that follows the collection **frontier**
+  (centred on the next gem, clamped to the ends), with a little cluster of
+  shrinking dots trailing off each side — deep gem-gold gathered gems behind,
+  faint empty stars ahead. Still wordless, no numbers: the child feels "I've got
+  a bunch, and a bunch are waiting." Ordered collection makes the window a clean
+  gathered-then-empty reel. Verified headless (layout fits the control gap at
+  568–844px widths, windowing 7/11/15/21 slots) and by rendering the real
+  `drawHudBand` states to a screenshot. `check.mjs` all-green; sw.js CACHE
+  v27→v28.

@@ -359,22 +359,55 @@
   GOL.drawPanel = drawPanel;
   GOL.roundRect = rr;
 
-  // The band at the top of the screen where collected ayat come to rest.
+  // The band of collected ayat — the wordless answer to "how many so far, how
+  // many to go". It rests over the dead subterranean strip at the bottom of the
+  // screen, in the gap between the thumbstick and the jump button (maxW is that
+  // gap). For a short surah every slot shows at once. For a long one the gap
+  // can't hold them all, so the band becomes a WINDOW that follows the
+  // collection frontier: the slots around the next gem are shown full-size, and
+  // a little cluster of shrinking dots trails off each side — bright gathered
+  // gems behind (left), faint empty stars ahead (right). The child never sees a
+  // number, but always feels "I've got a bunch, and a bunch are still waiting".
+  // cx: centre x of the available gap; y: top of the band.
   // slots: total; found: array of gem indices collected (in ayah order 0-based).
   function drawHudBand(ctx, cx, y, slots, found, t, maxW) {
-    // the band squeezes gently for long surahs (Al-'Alaq carries 19 gems)
-    const gap = Math.max(22, Math.min(44, maxW ? (maxW - 34) / slots : 44));
-    const w = (slots - 1) * gap + 52, h = 52;
+    const h = 52, pad = 26;               // panel half-caps left/right of the slots
+    const idealGap = 40, minGap = 24, tailW = 30; // tail = the "more this way" cluster
+    const budget = maxW || 4000;
+    const foundArr = Array.isArray(found) ? found : [];
+    const isFound = (i) => foundArr.includes(i);
+    const fullW = (n, g) => (n - 1) * g + 2 * pad;
+
+    // Decide layout: everything at once, or a scrolling window.
+    let start = 0, vis = slots, gap = idealGap, tailL = false, tailR = false;
+    if (slots <= 1 || fullW(slots, minGap) <= budget) {
+      // it all fits — open the slots to the widest gap the gap will allow
+      gap = slots > 1 ? Math.min(idealGap, (budget - 2 * pad) / (slots - 1)) : idealGap;
+      gap = Math.max(minGap, gap);
+    } else {
+      // windowed: reserve a tail on each side, then fit as many slots as remain
+      const winBudget = budget - 2 * tailW;
+      vis = Math.max(3, Math.min(slots, Math.floor((winBudget - 2 * pad) / minGap) + 1));
+      gap = minGap;
+      const frontier = Math.max(0, Math.min(slots, foundArr.length)); // the next gem
+      start = Math.max(0, Math.min(slots - vis, frontier - Math.floor(vis / 2)));
+      tailL = start > 0;
+      tailR = start + vis < slots;
+    }
+
+    const winW = (vis - 1) * gap;
+    const x = cx - winW / 2 - pad, w = winW + 2 * pad;
     const gr = Math.min(10, gap * 0.36), sr = Math.min(8, gap * 0.3);
-    const x = cx - w / 2;
+    const sy = y + h / 2;
     drawPanel(ctx, x, y, w, h, { radius: 26, alpha: 0.82, plain: true });
-    for (let i = 0; i < slots; i++) {
-      const sx = x + 26 + i * gap;
-      const sy = y + h / 2;
-      if (found.includes(i)) {
-        drawGem(ctx, sx, sy, gr, GOL.GEMS[i % GOL.GEMS.length], t, { glow: 0.55, phase: i });
+
+    for (let wi = 0; wi < vis; wi++) {
+      const gi = start + wi;
+      const gx = cx - winW / 2 + wi * gap;
+      if (isFound(gi)) {
+        drawGem(ctx, gx, sy, gr, GOL.GEMS[gi % GOL.GEMS.length], t, { glow: 0.55, phase: gi });
       } else {
-        GOL.star8Path(ctx, sx, sy, sr, Math.PI / 8);
+        GOL.star8Path(ctx, gx, sy, sr, Math.PI / 8);
         ctx.fillStyle = 'rgba(120,104,70,0.14)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(150,128,84,0.35)';
@@ -382,7 +415,26 @@
         ctx.stroke();
       }
     }
-    return { x, y, w, h, slotX: (i) => x + 26 + i * gap, slotY: y + h / 2 };
+
+    // the tails: "more gathered this way" / "more waiting that way", wordless.
+    if (tailL) {
+      for (let k = 1; k <= 3; k++) {
+        ctx.fillStyle = 'rgba(201,150,64,' + (0.72 - k * 0.16) + ')'; // gem-gold, reads on the cream panel
+        ctx.beginPath();
+        ctx.arc(cx - winW / 2 - k * 6.5, sy, Math.max(1.6, 4.2 - k * 0.9), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    if (tailR) {
+      ctx.lineWidth = 1.2;
+      for (let k = 1; k <= 3; k++) {
+        ctx.strokeStyle = 'rgba(150,128,84,' + (0.32 - k * 0.07) + ')';
+        ctx.beginPath();
+        ctx.arc(cx + winW / 2 + k * 6.5, sy, Math.max(1.4, 3.6 - k * 0.8), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    return { x, y, w, h, slotX: (i) => cx - winW / 2 + (i - start) * gap, slotY: sy };
   }
   GOL.drawHudBand = drawHudBand;
 
