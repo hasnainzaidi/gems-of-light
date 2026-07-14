@@ -82,8 +82,8 @@
     const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
     const y = H - 66 - sa.b * 0.5;
     return {
-      stick: { x: 76 + sa.l, y, r: 50 },
-      jump: { x: W - 72 - sa.r, y, r: 46 }
+      stick: { x: 76 + sa.l, y, r: 58 },
+      jump: { x: W - 72 - sa.r, y, r: 54 }
     };
   };
 
