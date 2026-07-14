@@ -1369,26 +1369,36 @@
       }
 
       // the gem band: collected ayat resting in their star settings — the
-      // wordless answer to "how many so far, how many to go"
+      // wordless answer to "how many so far, how many to go". It lives at the
+      // BOTTOM now, over the dead subterranean strip the camera's bottom clamp
+      // leaves unusable, tucked into the gap between the thumbstick and the jump
+      // button (see §10). We derive its slot from touchZones so band and
+      // controls can never collide, and the band windows itself for long surahs.
       if (this.phase === 'roam' || this.phase === 'ember') {
-        const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+        const z = GOL.touchZones(W, H);
+        const gapL = z.stick.x + z.stick.r + 16;      // inner edge of the thumbstick
+        const gapR = z.jump.x - z.jump.r - 16;        // inner edge of the jump button
+        const bandCx = (gapL + gapR) / 2;
+        const bandMax = Math.max(120, gapR - gapL);
+        const bandY = z.stick.y - 26;                 // centre the 52px band on the controls' row
+        const starY = bandY - 15;                     // camp-progress pips ride just above
         if (L.campShrines && L.campShrines.length) {
           const start = this.campDone === 0 ? 1 : L.campShrines[this.campDone - 1].afterAyah + 1;
           const end = this.campDone < L.campShrines.length
             ? L.campShrines[this.campDone].afterAyah : L.gems.length;
           const foundHere = this.found.filter((a) => a >= start && a <= end).map((a) => a - start);
-          GOL.drawHudBand(ctx, W / 2, 12 + sa.t * 0.5, end - start + 1, foundHere, t, Math.min(W - 310, 260));
+          GOL.drawHudBand(ctx, bandCx, bandY, end - start + 1, foundHere, t, bandMax);
           const totalCamps = L.campShrines.length + 1;
-          const sx = W / 2 - (totalCamps - 1) * 15;
+          const sx = bandCx - (totalCamps - 1) * 15;
           for (let i = 0; i < totalCamps; i++) {
-            GOL.star8Path(ctx, sx + i * 30, 68 + sa.t * 0.5, 6.5, Math.PI / 8);
+            GOL.star8Path(ctx, sx + i * 30, starY, 6.5, Math.PI / 8);
             ctx.fillStyle = i < this.campDone ? '#FFF6DC' : alpha('#FFF6DC', 0.22);
             ctx.fill();
             ctx.strokeStyle = alpha('#D9A44A', i < this.campDone ? 0.9 : 0.35);
             ctx.lineWidth = 1.2; ctx.stroke();
           }
         } else {
-          GOL.drawHudBand(ctx, W / 2, 12 + sa.t * 0.5, L.gems.length, this.found.map((a) => a - 1), t, Math.min(W - 260, 330));
+          GOL.drawHudBand(ctx, bandCx, bandY, L.gems.length, this.found.map((a) => a - 1), t, bandMax);
         }
       }
       for (const b of this.buttons || []) {
