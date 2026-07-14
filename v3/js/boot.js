@@ -20,7 +20,13 @@
   GOL.DEBUG = q.get('debug') === '1';
   // Long-surah labs need the debug doorway without the usual one-gem shrine
   // shortcut. `full=1` keeps the complete recall round for real playtests.
-  GOL.DEBUG_ACCEL = GOL.DEBUG && q.get('full') !== '1';
+  // DEBUG_ACCEL (speed runs skip recitation + the one-gem shrine) must track
+  // DEBUG whenever it changes — from saved config below or the tuning panel
+  // mid-session — not just the boot-time ?debug=1. Derive it through this
+  // helper so the two flags never drift apart. `full=1` is a boot-only gate.
+  GOL.DEBUG_FULL = q.get('full') === '1';
+  GOL.applyDebug = function () { GOL.DEBUG_ACCEL = GOL.DEBUG && !GOL.DEBUG_FULL; };
+  GOL.applyDebug();
   const directLab = q.get('lab') ? parseInt(q.get('lab'), 10) : null;
   const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : directLab;
   const directShrine = q.get('shrine') === '1';
@@ -62,6 +68,7 @@
     // debug toggled from the tuning panel persists; ?debug=1 stays the boss
     if (!q.has('debug') && saved.debug != null) GOL.DEBUG = !!saved.debug;
   } catch (e) { /* private mode: play on */ }
+  GOL.applyDebug(); // saved debug may have flipped DEBUG on — resync DEBUG_ACCEL
   GOL.saveV3cfg = function () {
     try {
       localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
