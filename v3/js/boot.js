@@ -36,8 +36,13 @@
     echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off',
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
-    maxCols: parseFloat(q.get('cols') || '16'), // horizontal FOV cap — stops wide phones zooming out (iPad's ~15 cols never hit it)
-    groundBias: parseFloat(q.get('groundY') || '0.74'), // where the sprite sits vertically — higher = lower on screen, less subterranean dirt (0.74 ≈ iPad's clamped seat)
+    maxCols: parseFloat(q.get('cols') || '16'), // horizontal FOV cap — stops wide phones zooming out (iPad's ~15 cols never hit it, so iPad is unchanged); 'near' (14) is one tap away and persists per device
+    // Vertical seat. Keep this LOW: the camera's bottom clamp (never show below
+    // the level floor) is what anchors the frame to the ground, and a tall view
+    // (iPad) always hits it. A high bias on a short phone view floats the camera
+    // OFF the clamp, leaving a big dead sky above the sprite that wrecks jumps.
+    // Low bias lets the clamp govern on every device — each self-frames.
+    groundBias: parseFloat(q.get('groundY') || '0.50'),
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
     reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit'

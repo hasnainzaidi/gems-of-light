@@ -183,8 +183,9 @@ V1 was tuned iPad-first; V3 targets phones held in landscape. Concretely:
   2026-07-14** (see §10): height-only scaling let a wide phone spill to ~25
   columns at half the iPad's tile size, and its shorter view showed a thick
   dead-dirt band the iPad's clamp hid. The camera now also caps the
-  horizontal field of view (`GOL.V3.maxCols`, default 16) and seats the
-  sprite lower (`GOL.V3.groundBias`, default 0.74) — both tunable.
+  horizontal field of view (`GOL.V3.maxCols`, default 16) and keeps the
+  vertical seat low (`GOL.V3.groundBias`, default 0.50) so the bottom clamp
+  anchors the frame to the ground on every device — both tunable.
 - **Performance:** keep the DPR clamp at 2 (a 3× canvas on a 6.1" screen is
   wasted work); pre-composed terrain and prop sprites carry over unchanged.
 - **Testing:** playtests and headless QA run at 852×393; `tools/preview.mjs`
@@ -480,6 +481,24 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   visible. Shipped to `main` (sw.js CACHE v23→v24); a real-device pass is still
   the final word, and both levers stay tunable if a specific world wants a
   different feel.
+- **SPRITE SEAT — CORRECTION (fixed 2026-07-14, supersedes the seat half
+  above):** the `groundBias` default of 0.74 was wrong. Real-device feedback:
+  "too much headroom makes all the jumping scenes bad." The mistake was setting
+  the bias to 0.74 to *match iPad's number* — but iPad's tidy seat comes from
+  the camera's **bottom clamp** (`cam.y ≤ level.h·TILE − viewH`, never show
+  below the floor), which its tall view always hits, NOT from the bias. On a
+  short phone view a high bias floats the camera OFF the clamp, opening a dead
+  sky band above the sprite; the sprite crams against the bottom edge and jumps
+  launch into empty sky. **Correct model:** keep the bias LOW so the clamp
+  governs on every device — each then self-frames (iPad identical, phone
+  anchored to the ground with the jump target visible above). Default
+  `groundBias` 0.74 → **0.50**. The `headroom` control is now five fine steps in
+  the low range (`.50/.54/.58/.62/.66`, default .50) — the range that actually
+  varies — replacing the old less/mid/more that reached the bad 0.80. Camera
+  default stays mid (16) so iPad is untouched; `near` (14) is one tap and
+  persists per device (playtester's preference on phone). Verified headless at
+  the Falaq bounce-gem jump (standing + apex). Shipped to `main` (sw.js CACHE
+  v24→v25).
 - **THE GUIDING LIGHT — occlusion reframed as guidance (built 2026-07-14; on
   `claude/guiding-light-prototype-1vym54`, awaiting child playtest).** A
   requested new mechanic: the sprite opens a closed BOX OF LIGHT which releases
@@ -513,3 +532,21 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   gesture? If it lands, its natural shipping homes are the roadmap's guided-path
   surahs — At-Takathur's clutter-clearing (WORLDS-PLAN I) and Al-Kafirun's
   noor-lit road (E) — rather than a second Falaq.
+- **SPRITE SEAT — CORRECTION (fixed 2026-07-14, supersedes the seat half
+  above):** the `groundBias` default of 0.74 was wrong. Real-device feedback:
+  "too much headroom makes all the jumping scenes bad." The mistake was setting
+  the bias to 0.74 to *match iPad's number* — but iPad's tidy seat comes from
+  the camera's **bottom clamp** (`cam.y ≤ level.h·TILE − viewH`, never show
+  below the floor), which its tall view always hits, NOT from the bias. On a
+  short phone view a high bias floats the camera OFF the clamp, opening a dead
+  sky band above the sprite; the sprite crams against the bottom edge and jumps
+  launch into empty sky. **Correct model:** keep the bias LOW so the clamp
+  governs on every device — each then self-frames (iPad identical, phone
+  anchored to the ground with the jump target visible above). Default
+  `groundBias` 0.74 → **0.50**. The `headroom` control is now five fine steps in
+  the low range (`.50/.54/.58/.62/.66`, default .50) — the range that actually
+  varies — replacing the old less/mid/more that reached the bad 0.80. Camera
+  default stays mid (16) so iPad is untouched; `near` (14) is one tap and
+  persists per device (playtester's preference on phone). Verified headless at
+  the Falaq bounce-gem jump (standing + apex). Shipped to `main` (sw.js CACHE
+  v24→v25).
