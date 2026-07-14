@@ -351,7 +351,15 @@
       this.t += dt;
       const L = this.L;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-      this.scale = H / (GOL.V3.rows * TILE);
+      // Height fits `rows` tile-rows; width would otherwise spill to whatever
+      // the aspect ratio allows — on a 2.17:1 phone that's ~25 columns at half
+      // the iPad's tile size, i.e. "zoomed out, detail lost". Cap the horizontal
+      // field of view at `maxCols` columns and take the more constraining fit:
+      // on a narrow iPad the height wins (unchanged); on a wide phone the width
+      // wins, zooming back in to legible tiles.
+      const fitH = H / (GOL.V3.rows * TILE);
+      const fitW = W / ((GOL.V3.maxCols || 99) * TILE);
+      this.scale = Math.max(fitH, fitW);
       const viewW = W / this.scale, viewH = H / this.scale;
       if (!this.cam) {
         this.cam = GOL.makeCamera(L, viewW, viewH);

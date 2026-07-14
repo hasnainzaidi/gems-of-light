@@ -166,7 +166,10 @@
         { label: 'reciter', opts: Object.keys(GOL.RECITERS || {}), get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } },
         { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
-        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } },
+        // 'camera' drives the horizontal FOV cap (columns of world shown), the
+        // lever that actually matters on a wide phone: near = zoomed in / bigger
+        // detail, wide = more world. On iPad (~15 cols) only 'near' binds.
+        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.maxCols <= 15 ? 'near' : GOL.V3.maxCols >= 17 ? 'wide' : 'mid'), set: (v) => { GOL.V3.maxCols = v === 'near' ? 14 : v === 'wide' ? 18 : 16; } },
         // the on-device door into debug (no URL editing on a phone) — persists
         // until switched off; ?debug=1 still wins as an explicit override
         { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); } }
