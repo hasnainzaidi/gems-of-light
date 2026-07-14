@@ -179,7 +179,7 @@
           set: (v) => { GOL.V3.groundBias = { '50': 0.50, '54': 0.54, '58': 0.58, '62': 0.62, '66': 0.66 }[v]; } },
         // the on-device door into debug (no URL editing on a phone) — persists
         // until switched off; ?debug=1 still wins as an explicit override
-        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); } }
+        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); if (GOL.applyDebug) GOL.applyDebug(); } }
       ];
       const pw = Math.min(400, W - 60);
       const px = W / 2 - pw / 2;
