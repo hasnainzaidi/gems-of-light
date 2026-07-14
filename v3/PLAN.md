@@ -179,7 +179,12 @@ V1 was tuned iPad-first; V3 targets phones held in landscape. Concretely:
 - **Camera:** V1 scales the view so 13 tile-rows fill the screen height —
   on a phone that makes the world feel right but fingers cover more of it,
   so v3 exposes the rows-visible constant per prototype (P2 Vertical Climb
-  will want a wider view) and nudges the camera look-ahead up.
+  will want a wider view) and nudges the camera look-ahead up. **Revised
+  2026-07-14** (see §10): height-only scaling let a wide phone spill to ~25
+  columns at half the iPad's tile size, and its shorter view showed a thick
+  dead-dirt band the iPad's clamp hid. The camera now also caps the
+  horizontal field of view (`GOL.V3.maxCols`, default 16) and seats the
+  sprite lower (`GOL.V3.groundBias`, default 0.74) — both tunable.
 - **Performance:** keep the DPR clamp at 2 (a 3× canvas on a 6.1" screen is
   wasted work); pre-composed terrain and prop sprites carry over unchanged.
 - **Testing:** playtests and headless QA run at 852×393; `tools/preview.mjs`
@@ -446,3 +451,32 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   vertically aligned eight-point star (`3 ★`, `21 ★`); completed worlds still
   replace it with their Grand Gem. The contained count scales to long surahs
   without turning the journey into a dense progress chart.
+- **MOBILE CAMERA — FOV CAP + SPRITE SEAT (fixed 2026-07-14):** reported that
+  the game "looks great on iPad but too small / zoomed out on phone — a lot of
+  the beautiful detail is getting lost." Root cause: the camera fixed the
+  *vertical* framing (`GOL.V3.rows` ≈ 11.5 tile-rows tall) and let the *width*
+  spill to whatever the aspect ratio allowed. iPad (1.33:1) shows ~15 columns
+  at ~67px tiles; a phone (2.17:1) showed ~25 columns at ~34px — the child a
+  speck in a vast field. The near/mid/wide control only moved the row count,
+  which barely dents the width, so it "didn't work super well." **Fix:** take
+  the more-constraining of a height-fit and a new width-fit,
+  `scale = max(H/(rows·TILE), W/(maxCols·TILE))`, with `maxCols` default 16.
+  iPad's ~15 columns never reach the cap, so iPad is pixel-for-pixel unchanged;
+  a wide phone zooms back in to ~53px tiles / 16 columns. The near/mid/wide
+  camera control now drives this cap (14/16/18). Trade accepted: the phone
+  shows ~7.4 rows tall instead of 11.5 (the aspect ratios can't match both
+  axes) — the child stays framed at the seat below and drop-offs still read.
+  A second report — "reduce/cap the subterranean area, where the sprite walks"
+  — traced to the vertical anchor, hardcoded at 0.62 (sprite 62% down, ~38% of
+  the view dead dirt below). On iPad the shallow levels (3 dirt rows) hit the
+  bottom clamp, which incidentally seats the sprite ~0.74 down — that IS the
+  tidy iPad look. A shorter phone view never reaches the clamp, so it showed
+  the raw 0.62. **Fix:** the anchor is now `GOL.V3.groundBias` (default 0.74,
+  matching iPad's effective seat), with a `headroom` row in the tuning panel
+  (less 0.62 / mid 0.74 / more 0.80), a `?groundY=` override, and cfg
+  persistence — alongside the `?cols=` override for the FOV cap. Headless QA at
+  852×393 across Falaq (pond/ledge) and the tall Al-Lail (h=72) confirmed no
+  playability regression at the defaults: drops stay visible, gems above stay
+  visible. Shipped to `main` (sw.js CACHE v23→v24); a real-device pass is still
+  the final word, and both levers stay tunable if a specific world wants a
+  different feel.
