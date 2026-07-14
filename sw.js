@@ -5,7 +5,7 @@
 // CACHE-FIRST for recitations (.mp3) and fonts: immutable once heard —
 // a surah once played is a surah kept, even offline.
 // The /v1/ archive and /v2/ lab ride the same rules.
-const CACHE = 'gems-of-light-v27';
+const CACHE = 'gems-of-light-v28';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'
