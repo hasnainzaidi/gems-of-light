@@ -480,3 +480,36 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   visible. Shipped to `main` (sw.js CACHE v23→v24); a real-device pass is still
   the final word, and both levers stay tunable if a specific world wants a
   different feel.
+- **THE GUIDING LIGHT — occlusion reframed as guidance (built 2026-07-14; on
+  `claude/guiding-light-prototype-1vym54`, awaiting child playtest).** A
+  requested new mechanic: the sprite opens a closed BOX OF LIGHT which releases
+  an orb/angel of noor that flies ahead and kindles the noor-seed trail into a
+  bright, then slowly-expiring, lit path through the dark toward the next ayah.
+  This is P6's occluder darkness finally given the *meaningful* home §10 asked
+  for — the dark is not there to hide secrets (the verdict that sank P6) but so
+  a guiding light can reveal the way. Wedded to its surah: it prototypes on
+  **Al-Falaq**, "the daybreak," whose own words seek refuge in the Lord of the
+  dawn "from the evil of the darkness when it settles" — so the guiding light
+  *is* the daybreak breaking, and gathering the ayat lifts the night
+  (`falaqNoor` → `falaqEnd`) until the last gem is found in full dawn.
+  **Invariants held:** no text, no quiz, and crucially **no failure** — the
+  "expiring path" never traps. The child always carries a personal aura of
+  light, Noor the firefly still points the way, and physics/terrain are
+  unchanged; the darkness only softens *distant* seeing, and the boxes/dawn
+  carry the darkest stretch. Gems stay ordered; the orb leads to the same goal
+  the firefly knows. Ordered collection, the earned campfire, the hidden Rahma
+  blossom, and the ≥14-seed trail all remain (the trail is literally the path
+  the orb lights). **How it's wired:** `b.lightbox(x)` DSL primitive; a `night`
+  (0..1) world flag; adventure `updateGuideLight`/`drawDarkness` (a
+  destination-out light-mask punched by the child's aura, the kindled seeds,
+  the orb, opened boxes, and a faint next-ayah beacon; base darkness =
+  `night · (1 − restoreK·0.9)` so dawn lifts it globally). Lives in the debug
+  lab as `?proto=15&debug=1` on its own `labSaveKey` ('falaq-noor'), so it never
+  touches World One's real Al-Falaq Grand Gem. `check.mjs 15` green; a headless
+  logic harness confirms box-open → orb → seed-kindle → expire → dawn-lift and
+  that daylit worlds are wholly untouched. **Open questions for the nieces:**
+  does the "follow the light while it lasts" read as inviting rather than
+  anxious? Is opening-on-arrival (no button to hunt for) the right kid-simple
+  gesture? If it lands, its natural shipping homes are the roadmap's guided-path
+  surahs — At-Takathur's clutter-clearing (WORLDS-PLAN I) and Al-Kafirun's
+  noor-lit road (E) — rather than a second Falaq.
