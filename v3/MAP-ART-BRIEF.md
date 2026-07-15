@@ -31,18 +31,16 @@ those living things** (list in §6). You paint the world they live in.
 
 - **Morning, always.** Light-green, open, light-filled. The whole game
   lives in daylight — early gold morning through warm late afternoon.
-  Never night, never blue-dark, never gloomy. (A prior concept died
-  precisely because a starry night sky dragged the game's feel toward
-  darkness. The one moon in this game is a pale daytime moon, and the
-  engine draws it.)
-- **A place, not a diagram.** A second concept died because its regions
-  were four equal geometric beds in a row — it read as a chart. Your
-  landscape should feel *found*, not arranged: asymmetric, overlapping,
-  one continuous geography where regions flow into each other the way a
-  valley becomes an orchard becomes a hillside.
+  The one moon in this game is a pale daytime moon, resting in a bright
+  sky — and the engine draws it.
+- **A found landscape.** One continuous geography, asymmetric and
+  alive: regions flow into each other the way a valley becomes an
+  orchard becomes a hillside. The composition should feel discovered
+  rather than arranged — like a real place a child could imagine
+  walking into.
 - **The journey climbs toward the light.** Progression runs left → right
   and gently *upward* — rising terrain, terraces, a sense of ascent.
-  Depth and elevation are strongly encouraged; flatness is the enemy.
+  Depth, overlap, and elevation are strongly encouraged.
 - **Gouache storybook.** Flat-ish painterly shapes, soft edges, warm
   cream highlights — a children's picture book, not vector-corporate,
   not pixel art, not realism. The existing game is painted in code with
@@ -182,8 +180,9 @@ with real `cx/cy` — do not flatten or rasterize them away.
 3. We wire it into the live game within a day and review on an iPhone
    in landscape — the only screen that matters.
 
-**References available on request:** screenshots of the current game's
-worlds (the palette/gouache sensibility in motion), the three prior map
-prototypes with their verdicts (what "too dark," "too diagram," and
-"too much like a level" looked like), and the Super Mario World map as
-the structural — never stylistic — north star.
+**Reference folder (accompanies this brief):** screenshots of the
+game's own worlds — the palette and gouache sensibility in motion, the
+best guide to what the map should feel like it belongs to. For
+*structure* (never style), classic console overworld maps such as Super
+Mario World's are a useful touchstone: one continuous geography the
+player travels dot to dot.
