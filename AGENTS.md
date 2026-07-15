@@ -78,10 +78,11 @@ current state.
 
 ## Dev mechanics
 
-- Phone playtests happen on STAGING (Cloudflare Pages; URL recorded
-  here once the Cloudflare project is connected — expected
-  gems-of-light.pages.dev). Separate origin from prod, so it has its
-  own save + service worker.
+- Phone playtests happen on STAGING: https://gems-of-light.pages.dev/
+  (Cloudflare Pages, deploys `staging` on every push; build strips
+  files >25 MiB — Pages' limit — so the v2 lab's whisper model is
+  absent there). Separate origin from prod, so it has its own save +
+  service worker.
 - Local server (live co-design sessions only): `python3 -m http.server
   8437` at repo root; phone at
   http://hasnains-mac-mini.local:8437/v3/ (landscape).
