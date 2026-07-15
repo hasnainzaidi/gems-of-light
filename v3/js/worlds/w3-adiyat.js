@@ -33,7 +33,7 @@
       b.gem(3, 26, 8);
       b.seed(26, 7);
       b.prop('fruit', 30, { v: 1 }).prop('flowers', 24);
-      b.creature('tortoise', 32, null, { range: 60 });
+      b.creature('bird', 32);
 
       // BEAT TWO — the dry riverbed. First a shallow braid on stepping stones,
       // then a wider channel a small raft ferries across, bank to bank
@@ -46,7 +46,7 @@
       b.raft(49, 57, 12); // rides just above the waterline; ends its run at each bank
       b.gem(5, 53, 11);
       b.prop('olive', 46).prop('flowers', 60);
-      b.creature('tortoise', 62, null, { range: 50 });
+      b.creature('bird', 62);
 
       // BEAT THREE — the old caravan track: flat going between ruined low walls,
       // lantern-lit, three gems on the roadside stones
@@ -92,6 +92,10 @@
       b.blossom(121, 6); // the hidden Rahma blossom, straight up off the bounce
       b.prop('olive', 118).prop('flowers', 123);
 
+      // the completed surah releases into one clear, eastward run: wind at
+      // the child's back, then four quiet tiles before the fire
+      b.gallop(124, 133);
+
       // the campfire clearing, and the shrine door beyond it — calm and sparse.
       // A low stone step just before the fire holds an ancient setting that
       // remembers An-Nas's Grand Gem — wakeable only after this world's own
@@ -111,7 +115,11 @@
       b.seedRun(60, 64);
       b.seedRun(80, 90);
       b.seedRun(115, 119);
-      b.seedRun(124, 132);
+      b.seed(116, 10).seed(118, 11).seed(120, 11); // low sparks down the crest
+      // A normal row-13 seedRun hangs at row 11.6; these sit one row higher.
+      b.seed(124, 10.1).seed(126, 10.1).seed(128, 10.1)
+       .seed(130, 10.1).seed(132, 10.1);
+      b.creature('chargers', 0);
       b.creature('bird', 13).creature('bird', 33).creature('bird', 64)
        .creature('bird', 90).creature('bird', 108).creature('bird', 128)
        .creature('butterfly', 21, 6).creature('butterfly', 52, 7)
