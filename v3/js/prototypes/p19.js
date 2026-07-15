@@ -344,12 +344,22 @@
       this.kbdFollow = 0;
       this.kbdActHeld = false;
       this.railS = null;
+      this.spotS = null;
+      this.waypoints = null;
+      this.stepCool = 0;
+      this.dwell = null;
+      this.heroArrived = true; // no arrival event on scene entry/return
       loadAsset().then((map) => {
         this.map = map;
         REGIONS = map.regions;
-        // simulated journey: first island complete (moon waxed), second
-        // two worlds in, the rest asleep — every state reachable in the lab
-        this.progress = REGIONS.map((r, i) => (i === 0 ? r.count : i === 1 ? 2 : 0));
+        // every spot's position along the walk, and the flat waypoint
+        // ladder she steps between (r4.2: snap-to-waypoint walking)
+        this.spotS = map.spots.map((row) => row.map((sp) => nearestLength(map.walkSamples, sp)));
+        this.waypoints = this.spotS.flat().sort((a, b) => a - b);
+        // simulated journey: it BEGINS on island 1 (r4.2 verdict — the
+        // first island centered on load), two blooms in; everything else
+        // is reachable live by walking and blooming forward
+        this.progress = REGIONS.map((r, i) => (i === 0 ? 2 : 0));
         if (returnState) {
           // back from a world: the journey stands exactly where she left it
           this.progress = returnState.progress;
@@ -438,6 +448,30 @@
       GOL.audio.unlock();
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+    },
+
+    // Landing on a waypoint (r4.2 verdict): the NEW bloom opens its world
+    // immediately (bloom first; a completed island's wake ceremony takes
+    // precedence over entry); an old bloom arms the visible hesitation.
+    _onArrive() {
+      if (!this.map || !this.spotS || this.ceremony) return;
+      const a = this.activeRegion();
+      if (a != null && this.regionAwake(a)
+          && Math.abs(this.hero.s - this.spotS[a][this.progress[a]]) <= 2) {
+        this.pendingBloom = false;
+        this._doBloom();
+        if (!this.ceremony) this.enterWorld();
+        return;
+      }
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        if (!this.regionAwake(ri)) continue;
+        for (let j = 0; j < this.progress[ri]; j++) {
+          if (Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+            this.dwell = { t: 0, ri, j };
+            return;
+          }
+        }
+      }
     },
 
     // Keyboard navigation (r4 verdict): enter/space acts on whatever she
@@ -539,17 +573,12 @@
       if (this.hero) {
         // she travels the trail itself, never as the crow flies
         const d = this.hero.sT - this.hero.s;
-        if (Math.abs(d) > 1) {
-          this.hero.s += Math.sign(d) * Math.min(Math.abs(d), dt * 170);
-        } else if (this.pendingBloom) {
-          this.pendingBloom = false;
-          this._doBloom();
-        }
+        if (Math.abs(d) > 1) this.hero.s += Math.sign(d) * Math.min(Math.abs(d), dt * 170);
       }
+      const arrived = this.hero ? Math.abs(this.hero.sT - this.hero.s) <= 1 : true;
 
-      // Keyboard/touch walk (r4 verdicts): arrows or the on-screen buttons
-      // carry her along the trail (camera follows), stopping at the
-      // journey's breathing edge.
+      // Waypoint walk (r4.2 verdict): she STEPS spot to spot — a subtle
+      // snap, never resting between waypoints. Held input chains steps.
       const walkBtnsNow = this.walkButtons(W, H);
       if (this.hero && !this.ceremony) {
         const K = GOL.Input._keys || {};
@@ -561,20 +590,49 @@
             }
           }
         }
-        if (dir) {
+        this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
+        if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
           const a = this.activeRegion();
-          const maxS = a == null
-            ? this.map.walkSamples.len
-            : nearestLength(this.map.walkSamples, this.map.spots[a][this.progress[a]]);
-          this.hero.s = this.hero.sT = clamp(this.hero.s + dir * dt * 190, 0, maxS);
-          this.pendingBloom = false;
-          this.kbdFollow = 2.2;
+          const maxS = a == null ? this.map.walkSamples.len : this.spotS[a][this.progress[a]];
+          let target = null;
+          if (dir > 0) {
+            target = this.waypoints.find((s) => s > this.hero.sT + 2 && s <= maxS + 1);
+          } else {
+            for (const s of this.waypoints) if (s < this.hero.sT - 2) target = s;
+          }
+          if (target != null) {
+            this.hero.sT = target;
+            this.pendingBloom = false;
+            this.dwell = null;
+            this.stepCool = 0.12;
+            this.kbdFollow = 2.2;
+          }
         }
+        if (!arrived) this.kbdFollow = Math.max(this.kbdFollow, 0.8);
         const act = !!(K.Enter || K[' ']);
         if (act && !this.kbdActHeld) { this.kbdActHeld = true; this.kbdAct(); }
         else if (!act) this.kbdActHeld = false;
       }
       this.kbdFollow = Math.max(0, (this.kbdFollow || 0) - dt);
+
+      // Arrival semantics (r4.2 verdict): landing on the NEW bloom enters
+      // its world at once; resting on an old bloom hesitates visibly, then
+      // enters. Walking through never triggers.
+      if (this.hero && arrived && !this.heroArrived) {
+        this.heroArrived = true;
+        this._onArrive();
+      } else if (!arrived) {
+        this.heroArrived = false;
+        this.dwell = null;
+      }
+      if (this.dwell && !this.ceremony) {
+        this.dwell.t += dt;
+        if (this.dwell.t >= 1.0) {
+          this.dwell = null;
+          this.enterWorld();
+          return;
+        }
+      }
 
       const drag = GOL.Input.drag;
       const dragOnBtns = drag && walkBtnsNow &&
@@ -725,6 +783,15 @@
         const moving = Math.abs(this.hero.sT - this.hero.s) > 1;
         drawMapLightling(ctx, pos.x, pos.y, this.t, moving,
           ahead.x >= pos.x ? 1 : -1);
+        if (this.dwell) {
+          // the hesitation, visible: a ring closing in as entry nears
+          const k = clamp(this.dwell.t / 1.0, 0, 1);
+          ctx.strokeStyle = alpha('#FFE9A8', 0.25 + 0.55 * k);
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y + 2, 16 + (1 - k) * 14, 0, TAU);
+          ctx.stroke();
+        }
       }
       if (active != null && !this.ceremony) {
         const s = this.map.spots[active][this.progress[active]];

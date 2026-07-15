@@ -388,4 +388,23 @@ aside to stay clear of iconography). Engine goes contract-adaptive:
 region count read from the map itself (heart-4 present → 4×6, else
 3×8) so the live tree never breaks while art and engine land.
 
-**VERDICTS (pending): r4.2 — four islands — on the phone.**
+**R4.2 VERDICT (Hasnain, 2026-07-15, phone): five refinements —**
+1. **First island centered on initial load** — more negative sky at
+   the bottom-left so the camera can frame the valley without
+   clamping (same fit rule as the summit, applied to the start).
+   Lab sim also starts the journey ON island 1 now.
+2. **The seam softens:** the path no longer runs clearly off-canvas
+   after the last world — it FADES INTO A CLOUD past the summit.
+3. **Summit floating bars:** the low walls read as floating and
+   overlap trees — ground-flush at ground level or gone.
+4. **Snap-to-waypoint walking:** she steps spot to spot (subtle
+   snap), never resting at a random point on the path. Held input
+   chains steps; each step lands exactly on a waypoint.
+5. **Entering worlds (production-shaping call):** landing on the NEW
+   bloom (the breathing star) loads its world IMMEDIATELY — no tap.
+   Navigating BACK, stopping on an old bloom enters after a short
+   visible hesitation (~1s — long enough that walking through never
+   triggers). If a bloom completes an island, the wake ceremony
+   plays instead and entry waits for the next island's star.
+
+**VERDICTS (pending): r4.3 on the phone.**
