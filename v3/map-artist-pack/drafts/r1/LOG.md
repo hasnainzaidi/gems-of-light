@@ -184,4 +184,19 @@ exists — contract upgrades land together with (or behind) the art,
 never ahead of it. Both tracks stopped; engine WIP salvaged outside
 the repo; p19 + stub reverted; r3 loads as before.
 
+**Re-run (2026-07-15, after the false alarm): direction RECONFIRMED —
+"direction stands — go, sliver first."** New standing verdict from the
+same call: **the walk path must read as one natural, curvy/sinusoidal
+line** — pointy polyline direction-changes "don't make sense." (This
+extends r2's no-hard-kinks verdict from single corners to the whole
+path language: smooth continuous curvature everywhere, varied meander,
+never segment-and-corner.)
+
+Sliver spec (protocol: slivers before full maps): ONE finished island —
+the clover orchard, whose density is already the approved standard —
+floating in bright morning sky, its four-lobed pool as the fountain
+centerpiece the path curves around, full gouache. Two variations from
+one fresh agent, judged on the phone at 852×393 framing before any
+full map or harness work resumes. Output: `drafts/r4/sliver/`.
+
 **VERDICTS (pending):**
