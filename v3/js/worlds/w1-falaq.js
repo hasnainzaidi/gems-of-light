@@ -9,9 +9,9 @@
     id: 11, key: 'falaq', name: 'the daybreak',
     surahId: 113,
     palette: 'falaq', endPalette: 'falaqEnd', // dawn driven by restoration
-    w: 78, h: 16,
+    w: 84, h: 16,
     build(b) {
-      b.ground(0, 77, 13);
+      b.ground(0, 83, 13);
 
       // a flowered mound with the first gem
       b.block(10, 13, 12, 12);
@@ -42,20 +42,25 @@
       b.gem(5, 57, 7);
       b.prop('fruit', 51, { v: 1 }).prop('flowers', 59);
 
+      // A low eastward rise gives the restored gardens one quiet overlook:
+      // flowers underfoot, the broken dawn behind, and one waking bird.
+      b.slab(61, 63, 11).slab(64, 67, 10);
+      b.prop('flowers', 66, { v: 2 });
+
       // the campfire clearing, and the shrine door beyond it
-      b.campfire(66);
-      b.door(73);
-      b.prop('lantern', 63).prop('olive', 70);
+      b.campfire(73);
+      b.door(80);
+      b.prop('lantern', 70).prop('olive', 77);
 
       b.start(3);
       b.seedRun(4, 8);
       b.seedArc(29, 11, 35, 11, 5, 1); // over the pond
       b.seedRun(40, 43);
       b.seedRun(48, 52);
-      b.seedRun(59, 62);
-      b.creature('bird', 16).creature('bird', 43).creature('bird', 61)
+      b.seedRun(59, 69);
+      b.creature('bird', 16).creature('bird', 43).creature('bird', 67)
        .creature('butterfly', 21, 6).creature('butterfly', 47, 7)
-       .creature('butterfly', 68, 9);
+       .creature('butterfly', 75, 9);
     }
   });
 })();
