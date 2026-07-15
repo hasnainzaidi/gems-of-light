@@ -33,14 +33,25 @@ those living things** (list in §6). You paint the world they live in.
   lives in daylight — early gold morning through warm late afternoon.
   The one moon in this game is a pale daytime moon, resting in a bright
   sky — and the engine draws it.
+- **Seen from above, gently.** The map is viewed from the air at a soft
+  tilt — a bird gliding over the garden, seeing the tops *and* fronts
+  of things at once: the classic console-overworld camera. **The ground
+  plane is the picture.** Sky is at most a thin bright band along the
+  top edge, or absent entirely. This is the single most important
+  difference between the map and the game's side-scrolling levels: the
+  map never shares the levels' side-on viewpoint, never has a horizon
+  across the middle, never strings its scenery along one ground line.
 - **A found landscape.** One continuous geography, asymmetric and
   alive: regions flow into each other the way a valley becomes an
   orchard becomes a hillside. The composition should feel discovered
   rather than arranged — like a real place a child could imagine
-  walking into.
-- **The journey climbs toward the light.** Progression runs left → right
-  and gently *upward* — rising terrain, terraces, a sense of ascent.
-  Depth, overlap, and elevation are strongly encouraged.
+  walking into. The trail winds across the ground plane in every
+  direction — curves, switchbacks, doubling back — never a line with
+  scenery strung beside it.
+- **The journey climbs toward the light.** Progression runs from the
+  map's lower-left toward its upper-right — rising terraces, a sense
+  of ascent, the warmest light waiting highest. Depth, overlap, and
+  elevation are strongly encouraged.
 - **Gouache storybook.** Flat-ish painterly shapes, soft edges, warm
   cream highlights — a children's picture book, not vector-corporate,
   not pixel art, not realism. The existing game is painted in code with
@@ -56,7 +67,8 @@ those living things** (list in §6). You paint the world they live in.
 
 The map holds the journey's ~17 surahs in **three regions**, each a
 distinct, nameable place a five-year-old could point to ("the water
-one!"). Left to right, lowest to highest:
+one!"). They run from the map's lower-left to its upper-right, lowest
+to highest:
 
 1. **The Garden Valley** — where everything begins. Lowest ground,
    freshest morning gold. Its heart: **a spring** — the source of all
@@ -82,11 +94,11 @@ Each region needs, in whatever composition you choose:
 - **Its palette family** (§4) — regions read as different places partly
   because the light itself shifts across the map.
 
-**The open edge:** the right side of the map must not conclude. The
-trail exits the Courtyard Heights at a definite point on the right edge,
+**The open edge:** the upper-right of the map must not conclude. The
+trail exits the Courtyard Heights at a definite point on that edge,
 terrain continuing implied beyond the frame — the journey will someday
 grow (a future panel will be painted to join at this seam). No closing
-wall, no final peak, no framing vignette on the right.
+wall, no final peak, no framing vignette on the upper-right.
 
 ## 4. Color
 
@@ -121,15 +133,17 @@ from one family to the next across the seam, never a hard border.
 
 **Format:** SVG (1.1), a single file, one continuous artwork.
 
-**Canvas:** landscape strip, aspect ratio between **6:1 and 7:1** —
-e.g. a viewBox of `3000 × 460`. The game renders it full-bleed to the
-phone's height (852×393 landscape is the reference screen), so the strip
-equals roughly **three phone-screens of horizontal panning**. Keep
-important detail out of the outer ~3% top and bottom (device rounding).
+**Canvas:** a landscape rectangle around **2:1** — e.g. a viewBox of
+`1800 × 860`. The game's camera is a phone-screen window (852×393
+landscape is the reference screen) that pans across the artwork in
+BOTH directions, following the child — roughly two screens of
+explorable ground each way, traveled lower-left to upper-right. The
+whole canvas is ground (plus at most a thin sky band at the very top);
+keep important detail out of the outer ~3% of every edge.
 
-**Scale sanity:** on the phone your artwork displays at ~0.85× of a
-3000-unit-wide viewBox. The walking character is ~55 units tall at that
-scale; trail width, gates and steps should feel sized for her.
+**Scale sanity:** the artwork displays near 1:1 on the phone at an
+1800-unit-wide viewBox. The walking character is ~55 units tall; trail
+width, gates and steps should feel sized for her.
 
 **Named anchors — the contract that makes the map programmable.**
 Include these elements with exact ids. Anchor circles may be invisible
@@ -138,8 +152,8 @@ with real `cx/cy` — do not flatten or rasterize them away.
 
 | id | element | meaning |
 |---|---|---|
-| `walk` | one `<path>` | the full walking route, left edge → right edge, threading all three regions in journey order |
-| `stream` | one `<path>` | the watercourse's spine, spring → right edge (the ceremony's light travels along it, including up the water-stairs) |
+| `walk` | one `<path>` | the full walking route, lower-left → upper-right, threading all three regions in journey order |
+| `stream` | one `<path>` | the watercourse's spine, spring → upper-right (the ceremony's light travels along it, including up the water-stairs) |
 | `spot-R-N` | `<circle>` | surah positions: `spot-1-1`…`spot-1-7`, `spot-2-1`…`spot-2-7`, `spot-3-1`…`spot-3-7` — **seven per region** (we bind 5–6 now; spares are invisible until the journey grows). Place them on/near the walk path, ≥90 units apart, in walking order |
 | `heart-1/2/3` | `<circle>` | center of each region's geometric heart |
 | `gate-1/2` | `<circle>` | the wooden gate at each water-stair crest |

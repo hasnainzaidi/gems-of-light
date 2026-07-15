@@ -72,14 +72,15 @@
 <h2><span class="num">2</span>The feeling <span style="color:var(--ink-soft);font-size:16px">(most important section)</span></h2>
 <ul>
   <li><strong>Morning, always.</strong> Light-green, open, light-filled. The whole game lives in daylight — early gold morning through warm late afternoon. The one moon in this game is a pale daytime moon, resting in a bright sky — and the engine draws it.</li>
-  <li><strong>A found landscape.</strong> One continuous geography, asymmetric and alive: regions flow into each other the way a valley becomes an orchard becomes a hillside. The composition should feel discovered rather than arranged — like a real place a child could imagine walking into.</li>
-  <li><strong>The journey climbs toward the light.</strong> Progression runs left → right and gently <em>upward</em> — rising terrain, terraces, a sense of ascent. Depth, overlap, and elevation are strongly encouraged.</li>
+  <li><strong>Seen from above, gently.</strong> The map is viewed from the air at a soft tilt — a bird gliding over the garden, seeing the tops <em>and</em> fronts of things at once: the classic console-overworld camera. <strong>The ground plane is the picture.</strong> Sky is at most a thin bright band along the top edge, or absent entirely. This is the single most important difference between the map and the game's side-scrolling levels: the map never shares the levels' side-on viewpoint, never has a horizon across the middle, never strings its scenery along one ground line.</li>
+  <li><strong>A found landscape.</strong> One continuous geography, asymmetric and alive: regions flow into each other the way a valley becomes an orchard becomes a hillside. The composition should feel discovered rather than arranged — like a real place a child could imagine walking into. The trail winds across the ground plane in every direction — curves, switchbacks, doubling back — never a line with scenery strung beside it.</li>
+  <li><strong>The journey climbs toward the light.</strong> Progression runs from the map's lower-left toward its upper-right — rising terraces, a sense of ascent, the warmest light waiting highest. Depth, overlap, and elevation are strongly encouraged.</li>
   <li><strong>Gouache storybook.</strong> Flat-ish painterly shapes, soft edges, warm cream highlights — a children's picture book, not vector-corporate, not pixel art, not realism. The existing game is painted in code with this exact sensibility; your map should feel like the same hand.</li>
   <li><strong>Islamic garden vocabulary, worn lightly.</strong> The map's bones are the classical paradise garden: walled terraces, geometric flowerbeds, water channels, stepped water-stairs (chadars), cream stone, wooden gates, arches. Gardens, water, stone, and sky only — no figures, no faces, no text or lettering of any kind (including Arabic), no religious iconography. The geometry itself carries the heritage.</li>
 </ul>
 
 <h2><span class="num">3</span>The geography — three regions, one landscape</h2>
-<p>The map holds the journey's ~17 surahs in <strong>three regions</strong>, each a distinct, nameable place a five-year-old could point to (“the water one!”). Left to right, lowest to highest:</p>
+<p>The map holds the journey's ~17 surahs in <strong>three regions</strong>, each a distinct, nameable place a five-year-old could point to (“the water one!”). They run from the map's lower-left to its upper-right, lowest to highest:</p>
 
 <div class="region">
   <h3>1 · The Garden Valley <span class="tag">— where everything begins</span></h3>
@@ -102,7 +103,7 @@
   <li><strong>Its palette family</strong> (§4) — regions read as different places partly because the light itself shifts across the map.</li>
 </ul>
 
-<div class="callout"><strong>The open edge:</strong> the right side of the map must not conclude. The trail exits the Courtyard Heights at a definite point on the right edge, terrain continuing implied beyond the frame — the journey will someday grow, and a future panel will be painted to join at this seam. No closing wall, no final peak, no framing vignette on the right.</div>
+<div class="callout"><strong>The open edge:</strong> the upper-right of the map must not conclude. The trail exits the Courtyard Heights at a definite point on that edge, terrain continuing implied beyond the frame — the journey will someday grow, and a future panel will be painted to join at this seam. No closing wall, no final peak, no framing vignette on the upper-right.</div>
 
 <h2><span class="num">4</span>Color</h2>
 <p>These are the game's own palettes (it is literally painted from these values). You have artistic freedom <em>within</em> each family; these anchor the temperature of each region.</p>
@@ -142,15 +143,15 @@ deep ink-green <span class="pal" style="background:#3E5340"></span><code>#3E5340
 
 <h2><span class="num">5</span>Technical requirements</h2>
 <p><strong>Format:</strong> SVG (1.1), a single file, one continuous artwork.</p>
-<p><strong>Canvas:</strong> a landscape strip, aspect ratio between <strong>6:1 and 7:1</strong> — e.g. a viewBox of <code>3000 × 460</code>. The game renders it full-bleed to the phone's height (852×393 landscape is the reference screen), so the strip equals roughly <strong>three phone-screens of horizontal panning</strong>. Keep important detail out of the outer ~3% top and bottom (device rounding).</p>
-<p><strong>Scale sanity:</strong> on the phone your artwork displays at ~0.85× of a 3000-unit-wide viewBox. The walking character is ~55 units tall at that scale; trail width, gates and steps should feel sized for her.</p>
+<p><strong>Canvas:</strong> a landscape rectangle around <strong>2:1</strong> — e.g. a viewBox of <code>1800 × 860</code>. The game's camera is a phone-screen window (852×393 landscape is the reference screen) that pans across the artwork in <strong>both directions</strong>, following the child — roughly two screens of explorable ground each way, traveled lower-left to upper-right. The whole canvas is ground (plus at most a thin sky band at the very top); keep important detail out of the outer ~3% of every edge.</p>
+<p><strong>Scale sanity:</strong> the artwork displays near 1:1 on the phone at an 1800-unit-wide viewBox. The walking character is ~55 units tall; trail width, gates and steps should feel sized for her.</p>
 
 <p><strong>Named anchors — the contract that makes the map programmable.</strong> Include these elements with exact ids. Anchor circles may be invisible (<code>opacity="0"</code> is fine) but must survive export as <code>&lt;circle&gt;</code> elements with real <code>cx/cy</code> — do not flatten or rasterize them away.</p>
 
 <table>
   <tr><th>id</th><th>element</th><th>meaning</th></tr>
-  <tr><td><code>walk</code></td><td>one <code>&lt;path&gt;</code></td><td>the full walking route, left edge → right edge, threading all three regions in journey order</td></tr>
-  <tr><td><code>stream</code></td><td>one <code>&lt;path&gt;</code></td><td>the watercourse's spine, spring → right edge (the ceremony's light travels along it, including up the water-stairs)</td></tr>
+  <tr><td><code>walk</code></td><td>one <code>&lt;path&gt;</code></td><td>the full walking route, lower-left → upper-right, threading all three regions in journey order</td></tr>
+  <tr><td><code>stream</code></td><td>one <code>&lt;path&gt;</code></td><td>the watercourse's spine, spring → upper-right (the ceremony's light travels along it, including up the water-stairs)</td></tr>
   <tr><td><code>spot-R-N</code></td><td><code>&lt;circle&gt;</code></td><td>surah positions: <code>spot-1-1</code>…<code>spot-1-7</code>, <code>spot-2-1</code>…<code>spot-2-7</code>, <code>spot-3-1</code>…<code>spot-3-7</code> — <strong>seven per region</strong> (we bind 5–6 now; spares are invisible until the journey grows). Place them on or near the walk path, at least 90 units apart, in walking order</td></tr>
   <tr><td><code>heart-1/2/3</code></td><td><code>&lt;circle&gt;</code></td><td>center of each region's geometric heart</td></tr>
   <tr><td><code>gate-1/2</code></td><td><code>&lt;circle&gt;</code></td><td>the wooden gate at each water-stair crest</td></tr>
