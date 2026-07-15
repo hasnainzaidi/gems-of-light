@@ -511,3 +511,17 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   rests over the valley's finished heart. Presentation-only: simulated
   progress, no saves, no real worlds. Direct lab: `?lab=18`. Judge sheet:
   `reviews/terraced-valley-p18.md`.
+- **THE PAINTED JOURNEY LAB (P19 built 2026-07-14; awaiting phone verdict):**
+  P18's surviving geography is now a single lean artist-contract SVG
+  (`map-artist-pack/journey-map.svg`, 1800×860): a softly tilted aerial ground
+  plane carries Garden Valley from the lower-left through Orchard Rise to the
+  upper-right Courtyard Heights. Its winding path, stream, water layers,
+  foreground occluders, 21 future-proof world spots, three hearts, two gates,
+  and daytime-moon seat are all named for the engine. P19 pans in both axes,
+  rasterizes the static layers once, and performs the living language between
+  them — light-child, Noor, blooms/buds/next-star, moon, wake wash, and the
+  water ceremony — over simulated `[5,4,0]` progress only; no real save is
+  read or changed. The SVG deliberately keeps spare spots clear, paints no
+  gate doors or engine effects, and exits through an open upper-right seam for
+  later terrain. Direct lab: `?lab=19`. Art and judge sheet:
+  `map-artist-pack/journey-map.svg`, `reviews/painted-journey-p19.md`.
