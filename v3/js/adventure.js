@@ -1431,20 +1431,30 @@
       }
 
       // the gem band: collected ayat resting in their star settings — the
-      // wordless answer to "how many so far, how many to go". It lives at the
-      // BOTTOM now, over the dead subterranean strip the camera's bottom clamp
-      // leaves unusable, tucked into the gap between the thumbstick and the jump
-      // button (see §10). We derive its slot from touchZones so band and
-      // controls can never collide, and the band windows itself for long surahs.
+      // wordless answer to "how many so far, how many to go". It lives over the
+      // dead subterranean strip the camera's bottom clamp leaves unusable,
+      // tucked into the gap between the thumbstick and the jump button (see §10).
+      // Its X is derived from touchZones so band and controls can never collide,
+      // and the band windows itself for long surahs.
+      //
+      // Its Y is PINNED TO THE WORLD, not the screen (fixed 2026-07-14 §10): the
+      // band sits a fixed distance above the world's lowest edge, so it rests in
+      // its bottom slot only while the camera is on its bottom clamp (player
+      // grounded). When a jump pans the camera up, the subterranean soil — and
+      // the band with it — slides down off-screen instead of chasing the child
+      // and hiding the landing. Some airtime it simply isn't visible; that's the
+      // deal we accept for a tracker that never obscures play.
       if (this.phase === 'roam' || this.phase === 'ember') {
         const z = GOL.touchZones(W, H);
         const gapL = z.stick.x + z.stick.r + 16;      // inner edge of the thumbstick
         const gapR = z.jump.x - z.jump.r - 16;        // inner edge of the jump button
         const bandCx = (gapL + gapR) / 2;
         const bandMax = Math.max(120, gapR - gapL);
-        const bandY = z.stick.y - 26;                 // centre the 52px band on the controls' row
+        const worldBottomY = (L.h * TILE - cam.y) * this.scale; // screen y of the world's lowest edge
+        const bandY = worldBottomY - (H - z.stick.y) - 26;      // = z.stick.y-26 exactly when the camera is clamped
         const starY = bandY - 15;                     // camp-progress pips ride just above
-        if (L.campShrines && L.campShrines.length) {
+        if (bandY - 22 > H) { /* slid fully below the view — nothing to draw */ }
+        else if (L.campShrines && L.campShrines.length) {
           const start = this.campDone === 0 ? 1 : L.campShrines[this.campDone - 1].afterAyah + 1;
           const end = this.campDone < L.campShrines.length
             ? L.campShrines[this.campDone].afterAyah : L.gems.length;

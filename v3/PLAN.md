@@ -650,3 +650,16 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   Qariah…Ma'un, Summit = Qadr…Lail, the six night-and-dawn surahs).
   Engine reads the region shape from the map itself, so both cuts load.
   Detail: `map-artist-pack/drafts/r1/LOG.md` round 4.
+- **GEM BAND — PINNED TO THE WORLD, NOT THE SCREEN (fixed 2026-07-14).**
+  First cut pinned the band to the viewport bottom, so when a jump panned the
+  camera up the band stayed glued to the screen and hovered over the play area,
+  hiding the landing. Fix: anchor its Y to the world's subterranean depth — the
+  band sits a fixed distance above the world's lowest edge
+  (`bandY = (L.h·TILE − cam.y)·scale − (H − stick.y) − 26`), which equals the
+  old screen slot exactly when the camera rests on its bottom clamp (player
+  grounded) and slides the band down off-screen as the camera rises. Accepted
+  trade: during high airtime the tracker simply isn't visible — better than one
+  that obscures where you're about to land. X stays screen-fixed between the
+  controls; a cheap guard skips the draw once it's fully below the view.
+  Verified in-engine (Al-Lail) at clamped / +3.5-tile / +7-tile camera. sw.js
+  CACHE v29→v30.
