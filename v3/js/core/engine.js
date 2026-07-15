@@ -147,7 +147,8 @@
       squashX: 1, squashY: 1, sqVX: 0, sqVY: 0,
       lastSafe: { x, y },
       rescue: null, // water rescue tween
-      moving: false
+      moving: false,
+      gallopBoosted: false
     };
   }
   GOL.makePlayer = makePlayer;
@@ -161,6 +162,15 @@
   }
   GOL.tileAt = tileAt;
 
+  function inGallop(level, x) {
+    return !!(level.gallops && level.gallops.some((z) => x >= z.x0 && x <= z.x1));
+  }
+  function stopGallop(pl) {
+    if (!pl.gallopBoosted) return;
+    pl.gallopBoosted = false;
+    pl.vx = Math.max(-P.WALK, Math.min(P.WALK, pl.vx));
+  }
+
   function updatePlayer(pl, level, input, dt, fx) {
     pl.t += dt;
 
@@ -170,6 +180,7 @@
 
     // water rescue tween: being carried back to the bank
     if (pl.rescue) {
+      stopGallop(pl);
       const r = pl.rescue;
       r.t += dt / r.dur;
       const e = easeInOut(Math.min(1, r.t));
@@ -185,9 +196,13 @@
     let ax = 0;
     if (input.left && !input.right) { ax = -P.ACCEL; pl.facing = -1; }
     else if (input.right && !input.left) { ax = P.ACCEL; pl.facing = 1; }
+    const galloping = ax > 0 && pl.grounded && inGallop(level, pl.x);
+    if (pl.gallopBoosted && !galloping) stopGallop(pl);
+    else pl.gallopBoosted = galloping;
+    const gallopK = pl.gallopBoosted ? 1.5 : 1;
     if (ax !== 0) {
-      pl.vx += ax * dt;
-      pl.vx = Math.max(-P.WALK, Math.min(P.WALK, pl.vx));
+      pl.vx += ax * gallopK * dt;
+      pl.vx = Math.max(-P.WALK * gallopK, Math.min(P.WALK * gallopK, pl.vx));
     } else {
       const s = Math.sign(pl.vx);
       pl.vx -= s * P.DECEL * dt;
@@ -268,6 +283,12 @@
       }
       if (GOL.audio) GOL.audio.sfx('splash');
       pl.rescue = { t: 0, dur: 1.1, fromX: pl.x, fromY: pl.y, toX: pl.lastSafe.x, toY: pl.lastSafe.y };
+    }
+
+    // Integration can cross the strip edge, launch the child, or enter water.
+    // Gallop is a grounded in-zone feeling, so normalize it in this same tick.
+    if (pl.gallopBoosted && (!pl.grounded || pl.rescue || ax <= 0 || !inGallop(level, pl.x))) {
+      stopGallop(pl);
     }
 
     squashSpring(pl, dt);
@@ -377,9 +398,14 @@
         switch (type) {
           case 'dust':
             Object.assign(p, { vx: rnd(-30, 30), vy: rnd(-46, -8), life: rnd(0.35, 0.6), size: rnd(3, 6.5), color: o.color || '#EFE6C8', grav: 40 });
+            for (const k of ['vx', 'vy', 'life', 'size', 'grav', 'alpha']) if (o[k] != null) p[k] = o[k];
             break;
           case 'sparkle':
             Object.assign(p, { vx: rnd(-26, 26), vy: rnd(-48, -6), life: rnd(0.5, 1), size: rnd(1.5, 3.4), color: o.color || '#FFF3C4', grav: -12, star: true });
+            for (const k of ['vx', 'vy', 'life', 'size', 'grav', 'alpha']) if (o[k] != null) p[k] = o[k];
+            break;
+          case 'descentLight':
+            Object.assign(p, { vx: 0, vy: o.vy || 90, life: o.life || 4, size: rnd(3, 5), color: o.color || '#FFE9A8', grav: 0, sway: rnd(0.35, 0.7), swayA: rnd(8, 18), soft: true });
             break;
           case 'mote': // ambient pollen, drifts in the light
             Object.assign(p, { vx: rnd(-9, 9), vy: rnd(-7, -2), life: rnd(4, 8), size: rnd(1.2, 2.6), color: o.color || '#FFF6DC', grav: 0, sway: rnd(0.6, 1.6), swayA: rnd(2, 7) });
@@ -434,7 +460,15 @@
             ctx.stroke();
             continue;
           }
-          ctx.globalAlpha = Math.min(1, k * 1.6) * 0.9;
+          ctx.globalAlpha = Math.min(1, k * 1.6) * (p.alpha == null ? 0.9 : p.alpha);
+          if (p.soft) {
+            const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+            glow.addColorStop(0, p.color); glow.addColorStop(1, alpha(p.color, 0));
+            ctx.fillStyle = glow;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            continue;
+          }
           if (p.line) {
             ctx.strokeStyle = p.color;
             ctx.lineWidth = 1.2; ctx.lineCap = 'round';
@@ -509,6 +543,17 @@
         c.x += c.dir * 12 * dt;
         if (c.x > c.homeX + c.range) c.dir = -1;
         if (c.x < c.homeX - c.range) c.dir = 1;
+      } else if (c.type === 'chargers') {
+        if (c.sweep == null && c.rest == null) {
+          c.sweep = 0;
+          c.count = 3 + (c.phase > 3.5 ? 1 : 0);
+        } else if (c.sweep != null) {
+          c.sweep += dt / 8;
+          if (c.sweep >= 1) { c.sweep = null; c.rest = rnd(15, 25); }
+        } else {
+          c.rest -= dt;
+          if (c.rest <= 0) { c.rest = null; c.sweep = 0; }
+        }
       }
     }
   }

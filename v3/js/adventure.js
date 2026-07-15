@@ -104,7 +104,7 @@
     pads: null, movers: null, blossomState: null, fly: null,
     orbit: null, restoreK: 0, glowAr: null, echoT: 0,
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
-    gemPause: null, memState: null,
+    gemPause: null, memState: null, gallopFxT: 0,
     protoN: null, campDone: 0, campEntering: false,
 
     enter(params) {
@@ -148,6 +148,7 @@
       this.restoreK = 0;
       this.glowAr = null;
       this.echoT = 5; // let the garden breathe before the first echo
+      this.gallopFxT = 0;
 
       this.seeds = L.seeds.map((s, i) => ({ x: s.x, y: s.y, taken: false, phase: i * 0.9 }));
       this.seedCount = 0;
@@ -424,6 +425,7 @@
       }
 
       GOL.updatePlayer(this.player, L, GOL.Input, dt, this.fx);
+      this.updateGallopFx(dt);
 
       const pl = this.player;
       for (const p of this.pads) {
@@ -608,7 +610,13 @@
       for (let k = 0; k < 8; k++) this.fx.spawn('trail', g.x + GOL.rnd(-8, 8), g.y + GOL.rnd(-8, 8), { color: C.base });
 
       // the world answers: flowers wake where the gem stood
-      this.bloomAround(g.x);
+      this.bloomAround(g.x, { scale: this.L.bloomScale || 1 });
+      const ahead = this.L.bloomAhead;
+      if (ahead && g.ayah >= ahead.from) {
+        this.bloomAround(g.x, { offset: ahead.tiles, sound: false });
+      }
+      this.bloomBanks();
+      this.runGemFx(g);
 
       if (GOL.DEBUG_ACCEL) return; // speed runs skip the recitation
       // A held beat for the ayah: gameplay stops so the child can settle and
@@ -677,30 +685,76 @@
       }
     },
 
-    // restoration: a few flowers and a butterfly bloom near a found gem's home
-    bloomAround(x) {
+    // restoration: a few flowers and butterflies bloom around (or ahead of) a gem
+    bloomAround(x, opts = {}) {
       const L = this.L;
-      const tx = Math.floor(x / TILE);
+      const scale = Math.max(1, opts.scale || 1);
+      const centerX = x + (opts.offset || 0) * TILE;
+      const tx = Math.floor(centerX / TILE);
+      const sweep = scale >= 2 ? [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5] : [-2, -1, 1, 2, 3];
       let planted = 0;
-      for (const dx of [-2, -1, 1, 2, 3]) {
+      for (const dx of sweep) {
         const cx = tx + dx;
         if (cx < 1 || cx >= L.w - 1) continue;
         const s = L.surface(cx);
         if (s >= L.h) continue;
-        if (planted < 3 && Math.random() < 0.8) {
+        if (planted < 3 * scale && Math.random() < 0.8) {
           L.props.push({ type: 'flowers', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(Math.random() * 3), born: this.t });
-          this.fx.spawn('ring', (cx + 0.5) * TILE, s * TILE - 8, { color: '#F5B8C4', size: 10 });
+          this.fx.spawn('ring', (cx + 0.5) * TILE, s * TILE - 8, { color: '#F5B8C4', size: 10 * scale });
           planted++;
         }
       }
-      const s = L.surface(tx);
-      if (s < L.h) {
+      const butterflies = Math.min(2, Math.ceil(scale));
+      for (let i = 0; i < butterflies; i++) {
+        const bx = i ? centerX + GOL.rnd(-2, 2) * TILE : centerX;
+        const s = L.surface(Math.floor(bx / TILE));
+        if (s >= L.h) continue;
         L.creatures.push({
-          type: 'butterfly', x: x, y: (s - 2.4) * TILE, homeX: x, homeY: (s - 2.4) * TILE,
+          type: 'butterfly', x: bx, y: (s - 2.4) * TILE, homeX: bx, homeY: (s - 2.4) * TILE,
           phase: Math.random() * 7, t: 0, colA: ['#F0C878', '#E8896B', '#C9A8E0'][Math.floor(Math.random() * 3)], colB: '#F7EFDA'
         });
       }
-      GOL.audio.sfx('bloom');
+      if (opts.sound !== false) GOL.audio.sfx('bloom');
+    },
+
+    bloomBanks() {
+      for (const range of this.L.bloomBanks || []) {
+        const xs = [];
+        for (let x = Math.max(1, Math.ceil(range[0])); x <= Math.min(this.L.w - 2, Math.floor(range[1])); x++) {
+          if (this.L.surface(x) < this.L.h) xs.push(x);
+        }
+        if (!xs.length) continue;
+        const count = 2 + (Math.random() < 0.5 ? 1 : 0);
+        for (let i = 0; i < count; i++) {
+          const x = xs[Math.floor(Math.random() * xs.length)], s = this.L.surface(x);
+          this.L.props.push({ type: 'flowers', x: (x + 0.5) * TILE, y: s * TILE, v: Math.floor(Math.random() * 3), born: this.t });
+        }
+      }
+    },
+
+    runGemFx(g) {
+      if (!this.L.gemFx || this.L.gemFx[g.ayah] !== 'descentLights') return;
+      const cam = this.cam || { x: Math.max(0, this.player.x - 400), y: this.player.y - 500, viewW: 800 };
+      const n = 8 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const x = cam.x + GOL.rnd(20, Math.max(21, cam.viewW - 20));
+        const y = cam.y - GOL.rnd(20, 110), life = GOL.rnd(3.7, 4.3);
+        const ground = Math.max(this.player.y + 24, this.L.surface(Math.floor(x / TILE)) * TILE) - GOL.rnd(2, 14);
+        this.fx.spawn('descentLight', x, y, {
+          color: i % 2 ? '#FFE9A8' : '#FFF3C4', life, vy: (ground - y) / life
+        });
+      }
+    },
+
+    updateGallopFx(dt) {
+      const pl = this.player;
+      if (!pl.gallopBoosted) { this.gallopFxT = 0; return; }
+      this.gallopFxT -= dt;
+      if (this.gallopFxT > 0) return;
+      this.gallopFxT += 0.09;
+      const heelX = pl.x - 9;
+      this.fx.spawn('sparkle', heelX, pl.y - 5, { color: Math.random() < 0.5 ? '#E8896B' : '#F5D89A', vx: GOL.rnd(-58, -36), vy: GOL.rnd(-30, -12), life: 0.32, size: 2.5, grav: 45 });
+      this.fx.spawn('dust', heelX - 3, pl.y - 2, { vx: GOL.rnd(-24, -10), vy: GOL.rnd(-18, -6), life: 0.38, size: 4, alpha: 0.25 });
     },
 
     updateOrbit(dt) {
@@ -842,6 +896,7 @@
         GOL.Input.poll(W, H);
         GOL.Input.routeTapsToJump();
         GOL.updatePlayer(pl, L, GOL.Input, dt, this.fx);
+        this.updateGallopFx(dt);
         // the memory stone can now be woken — deliberately, off to the side
         this.updateMemoryStone(dt);
         if (Math.random() < dt * 8 && L.door) {
@@ -1066,6 +1121,11 @@
       };
       dstrips(this.strips, 1);
       if (this.strips2) dstrips(this.strips2, dawnK);
+      for (const c of L.creatures) {
+        if (c.type === 'chargers' && c.sweep != null) {
+          GOL.drawChargers(ctx, -90 + c.sweep * (W + 180), horizon - 72, t, P, c, this.scale);
+        }
+      }
 
       // ---- world space
       ctx.save();

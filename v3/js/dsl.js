@@ -11,7 +11,7 @@
     const b = {
       w, h, tiles,
       gems: [], props: [], creatures: [], waterfalls: [],
-      seeds: [], pads: [], moverDefs: [], occluders: [], blossomPos: null,
+      seeds: [], pads: [], moverDefs: [], gallops: [], occluders: [], blossomPos: null,
       memoryPos: null,
       startPos: null, campfirePos: null, doorPos: null,
       set(x, y, v) { if (x >= 0 && x < w && y >= 0 && y < h) tiles[y * w + x] = v; },
@@ -87,6 +87,11 @@
         this.moverDefs.push({ kind: 'raft', x0: (x0 + 0.5) * TILE, x1: (x1 + 0.5) * TILE, y: (row + 0.4) * TILE, hw: 56, speed: speed || 64 });
         return b;
       },
+      // a flat stretch where moving east feels like wind at the child's back
+      gallop(x0, x1) {
+        this.gallops.push({ x0: x0 * TILE, x1: (x1 + 1) * TILE });
+        return b;
+      },
       // a memory stone: an ancient setting shaped for an earlier surah's
       // Grand Gem. A child who carries that gem wakes it — the whole surah
       // sounds again and the garden blooms (spaced repetition as discovery).
@@ -156,7 +161,8 @@
       w: b.w, h: b.h, tiles: b.tiles,
       gems: b.gems.sort((a, g) => a.ayah - g.ayah),
       props: b.props, creatures: b.creatures, waterfalls: b.waterfalls,
-      seeds: b.seeds, pads: b.pads, moverDefs: b.moverDefs, blossom: b.blossomPos,
+      seeds: b.seeds, pads: b.pads, moverDefs: b.moverDefs, gallops: b.gallops,
+      blossom: b.blossomPos,
       occluders: b.occluders,
       memory: b.memoryPos,
       start: b.startPos, campfire: b.campfirePos, door: b.doorPos,
@@ -165,6 +171,10 @@
       //   drawLandmark(ctx, t, P, L) — a huge fixture drawn in world space
       weather: def.weather || null,
       drawLandmark: def.drawLandmark || null,
+      bloomScale: def.bloomScale,
+      bloomBanks: Array.isArray(def.bloomBanks) ? def.bloomBanks.map((r) => r.slice()) : null,
+      bloomAhead: def.bloomAhead ? Object.assign({}, def.bloomAhead) : null,
+      gemFx: def.gemFx ? Object.assign({}, def.gemFx) : null,
       // Debug-lab metadata. These are inert for ordinary worlds, but let a
       // long-surah experiment reuse a real recipe without touching that
       // world's progress or changing the shared adventure/shrine contract.

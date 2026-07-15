@@ -319,6 +319,35 @@
   GOL.buildHillStrip = buildHillStrip;
   GOL.drawStrip = drawStrip;
 
+  // A tiny far-horizon herd: atmosphere only, never a foreground creature.
+  function drawChargers(ctx, x, y, t, P, c, scale) {
+    const s = scale || 1;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = shade(P.hillFar, 0.22);
+    ctx.strokeStyle = shade(P.hillFar, 0.22);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(0.7, 1.1 * s);
+    for (let d = 0; d < 7; d++) {
+      ctx.beginPath();
+      ctx.arc(x - ((c.count || 3) * 22 + 8 + d * 7) * s, y - (d % 3) * 1.3 * s, (1.2 + d % 2) * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (let i = 0; i < (c.count || 3); i++) {
+      const hx = x - i * 22 * s, bob = Math.sin(t * 11 + i * 1.7) * 1.2 * s;
+      ctx.beginPath(); ctx.ellipse(hx, y - 7 * s + bob, 7.5 * s, 3.2 * s, -0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx + 7 * s, y - 11 * s + bob, 2.8 * s, 2 * s, -0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hx + 4 * s, y - 8 * s + bob); ctx.lineTo(hx + 6.5 * s, y - 11 * s + bob); ctx.stroke();
+      const stride = Math.sin(t * 14 + i) * 2.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(hx - 4 * s, y - 5 * s + bob); ctx.lineTo(hx - 5 * s - stride, y);
+      ctx.moveTo(hx + 3 * s, y - 5 * s + bob); ctx.lineTo(hx + 4 * s + stride, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  GOL.drawChargers = drawChargers;
+
   // ------------------------------------------------------------ tile atlas -
   // Ground autotiles keyed by exposure mask (up,right,down,left bits), plus
   // stone slabs and carved blocks. Everything pre-rendered per palette.
