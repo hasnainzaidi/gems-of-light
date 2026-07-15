@@ -73,7 +73,8 @@
   };
   GOL.homeButton = function () {
     const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-    return { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'back', fn: () => GOL.go('title') };
+    // home is the journey map once it has been visited; the title before
+    return { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'back', fn: () => GOL.go(GOL.homeScene || 'title') };
   };
 
   // Thumbstick + jump-button geometry, in one place so the input reader and
@@ -233,76 +234,6 @@
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
       this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
       this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
-      if (this.celebrateT > 0) {
-        this.celebrateT -= dt;
-        const wb = (this.worldBtns || []).find((b) => b.n === this.celebrateN);
-        if (wb && Math.random() < dt * 12) {
-          this.fx.spawn('petal', wb.x + GOL.rnd(-50, 50), wb.y - 70, { color: Math.random() < 0.5 ? '#F5B8C4' : '#FFE9A8' });
-        }
-      }
-      // the journey: one disc per world, laid out in journey order (which is
-      // GOL.WORLD_ORDER, not file order — see worlds.js)
-      const worlds = GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []);
-      // Keep the first and last discs inside the phone-safe canvas. Seven
-      // worlds fit the old fixed 120px stride; the eighth would put both end
-      // discs half off-screen at 852px, leaving Fatiha barely tappable. The
-      // 56px edge reserve also keeps moons, blooms, and celebration rings in.
-      const journeyCx = sa.l + (W - sa.l - sa.r) / 2;
-      const journeyGap = worlds.length > 1
-        ? Math.min(120, Math.max(0, W - sa.l - sa.r - 112) / (worlds.length - 1))
-        : 0;
-      this.worldBtns = worlds.map((w, i) => ({
-        n: w.n, key: w.key, surahId: w.surahId,
-        open: GOL.worldOpen(w.n), done: GOL.worldDone(w.n), grown: !!w.build,
-        x: journeyCx + (i - (worlds.length - 1) / 2) * journeyGap, y: H * 0.6, r: 36,
-        fn: () => {
-          if (GOL.worldOpen(w.n) && w.build) {
-            GOL.audio.unlock();
-            GOL.audio.sfx('unlockLevel');
-            GOL.go('adventure', { world: w.n });
-          } else {
-            GOL.audio.sfx('drift'); // still sleeping, or still growing
-          }
-        }
-      }));
-      // the garden that misses you: among DONE worlds, the one whose last
-      // visit is oldest and more than 20 hours ago. Its disc will breathe a
-      // soft golden ring and Noor comes to rest beside it (see draw()).
-      this.missN = 0;
-      {
-        let oldest = Infinity;
-        for (const b of this.worldBtns) {
-          if (!b.done || b.surahId == null) continue;
-          const st = GOL.store.level(b.surahId);
-          const lp = st.lastPlayed || 0;
-          if (Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) { oldest = lp; this.missN = b.n; }
-        }
-      }
-      if (this.missN) {
-        const mb = this.worldBtns.find((b) => b.n === this.missN);
-        if (mb && Math.random() < dt * 2.2) {
-          this.fx.spawn('sparkle', mb.x + GOL.rnd(-26, 26), mb.y - GOL.rnd(-6, 30), { color: '#FFE9A8' });
-        }
-      }
-      // THE REMEMBERING'S DOOR (PLAN §10 redesign): beside each completed
-      // disc, the Remembering Moon glows moonlit while it can still wax
-      // today; tapping the MOON (not the disc) carries the child straight
-      // into that surah's dream-shrine. Once waxed, the moon rests until
-      // tomorrow — the once-a-day rule IS the spaced-repetition schedule.
-      this.moonBtns = [];
-      for (const b of this.worldBtns) {
-        if (!b.done || b.surahId == null) continue;
-        const st = GOL.store.level(b.surahId);
-        if (st.moonWaxedDay === GOL.todayKey()) continue; // remembered today
-        this.moonBtns.push({
-          x: b.x - 28, y: b.y - 28, r: 17, surahId: b.surahId,
-          fn: () => {
-            GOL.audio.unlock();
-            GOL.audio.sfx('yourTurn');
-            GOL.go('shrine', { memory: { surahId: b.surahId, returnWorld: null } });
-          }
-        });
-      }
       // Debug-only experiment shelf. Production worlds remain the main lab;
       // active, explicitly registered experiments sit lower as numbered
       // lanterns so competing mechanics can coexist in one build.
@@ -356,16 +287,13 @@
       }
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
-      // the moon sits over its disc's shoulder — test it first so a tap on
-      // the moon dreams rather than re-entering the world
-      if (GOL.hitButtons(GOL.Input.taps, this.moonBtns || [])) return;
-      if (GOL.hitButtons(GOL.Input.taps, this.worldBtns)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
+      // any other tap begins: the journey map is the game's home page
       for (const tap of GOL.Input.taps) {
         if (!tap.ui && this.t > 0.5) {
           GOL.audio.unlock();
           GOL.audio.sfx('unlockLevel');
-          GOL.go('adventure', { world: GOL.currentWorld() });
+          GOL.go('journeyMap');
           return;
         }
       }
@@ -383,148 +311,6 @@
       GOL.star8(ctx, W / 2 + 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
       GOL.text(ctx, 'Gems of Light', W / 2, ty - 8, { size: Math.min(46, W * 0.06), weight: '800', color: INK });
       GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
-      // the winding path: little stepping stones stroll between the world
-      // discs, bright as far as the journey has opened, faint beyond
-      const wbs = this.worldBtns || [];
-      for (let i = 0; i < wbs.length - 1; i++) {
-        const a = wbs[i], c = wbs[i + 1];
-        const lit = c.open; // the stones onward glow once that world wakes
-        const steps = 4;
-        for (let s = 1; s <= steps; s++) {
-          const k = s / (steps + 1);
-          const px = a.x + (c.x - a.x) * k;
-          const py = a.y + 34 + Math.sin(k * Math.PI) * -12 + Math.sin(k * Math.PI * 2 + i) * 3;
-          // soft cast shadow, then the pale stone
-          ctx.fillStyle = alpha('#3E5340', lit ? 0.14 : 0.07);
-          ctx.beginPath(); ctx.ellipse(px + 1.5, py + 3, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
-          const sg = ctx.createLinearGradient(px, py - 5, px, py + 5);
-          sg.addColorStop(0, alpha('#F5EDD4', lit ? 0.92 : 0.32));
-          sg.addColorStop(1, alpha('#D8CBA6', lit ? 0.92 : 0.32));
-          ctx.fillStyle = sg;
-          ctx.beginPath(); ctx.ellipse(px, py, 8, 5, (s % 3 - 1) * 0.3, 0, Math.PI * 2); ctx.fill();
-          // a little dawn highlight on the lit stones
-          if (lit) {
-            ctx.fillStyle = alpha('#FFFBEA', 0.5);
-            ctx.beginPath(); ctx.ellipse(px - 2, py - 1.5, 3, 1.6, 0, 0, Math.PI * 2); ctx.fill();
-          }
-        }
-      }
-      // the journey discs: one per world — a Grand Gem once earned, a
-      // pulsing star when open, a closed bud while locked or still growing
-      for (const b of this.worldBtns || []) {
-        // this world's remembered story, read from the save
-        const st = (b.surahId != null && GOL.store) ? GOL.store.level(b.surahId) : null;
-        const surah = (b.surahId != null && window.GOL_DATA) ? window.GOL_DATA.surahs.find((s) => s.id === b.surahId) : null;
-        // done worlds grow a small arc of memory blooms, one per full hearing
-        if (b.done && st) {
-          const blooms = Math.min(5, st.heardFull || 0);
-          for (let f = 0; f < blooms; f++) {
-            const a = Math.PI + 0.5 + (blooms > 1 ? (f / (blooms - 1)) : 0.5) * (Math.PI - 1.0);
-            const fxp = b.x + Math.cos(a) * 46;
-            const fyp = b.y + 24 + Math.sin(a) * 22;
-            drawMapFlower(ctx, fxp, fyp, 5.5 + (f % 3), t + f, f % 2 ? '#F5B8C4' : '#F0C878');
-          }
-        }
-        ctx.fillStyle = alpha('#3E5340', 0.18);
-        ctx.beginPath(); ctx.ellipse(b.x + 2, b.y + 30, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
-        const dg = ctx.createLinearGradient(b.x, b.y - 34, b.x, b.y + 34);
-        dg.addColorStop(0, b.open ? '#F5EDD4' : '#C9C2AC');
-        dg.addColorStop(1, b.open ? '#D8CBA6' : '#A8A28C');
-        ctx.fillStyle = dg;
-        ctx.beginPath(); ctx.arc(b.x, b.y, 34, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = alpha(b.open ? GOLD : '#8C8672', 0.8);
-        ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(b.x, b.y, 30, 0, Math.PI * 2); ctx.stroke();
-        if (b.done) {
-          GOL.drawGem(ctx, b.x, b.y, 16, GRAND, t, { phase: b.n, glow: 0.85 });
-        } else if (b.open && b.grown) {
-          const p = 0.7 + 0.3 * Math.sin(t * 2.4 + b.n);
-          GOL.star8Path(ctx, b.x, b.y, 14, Math.PI / 8);
-          ctx.fillStyle = alpha('#F0C878', 0.35 + 0.4 * p);
-          ctx.fill();
-          ctx.strokeStyle = alpha(GOLD, 0.9);
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        } else {
-          // a closed bud: locked worlds sleep dark, growing ones stir softly
-          const soft = b.open ? 1 : 0.55;
-          ctx.globalAlpha = soft;
-          ctx.fillStyle = '#96A382';
-          ctx.beginPath(); ctx.ellipse(b.x, b.y + 2, 8, 12, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#7E8F6E';
-          ctx.beginPath(); ctx.ellipse(b.x - 4.5, b.y + 3, 4.5, 10, 0.5, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(b.x + 4.5, b.y + 3, 4.5, 10, -0.5, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-        // Keep long surahs from spilling into neighboring discs: the open,
-        // still-growing world shows its ayah total beside one star setting.
-        if (b.open && !b.done && surah) {
-          const total = surah.verses.length;
-          const label = String(total);
-          const pipR = 3.4, gap = 4;
-          const py = b.y + 46;
-          ctx.save();
-          ctx.font = '800 11px ' + GOL.fonts.ui;
-          const numberW = ctx.measureText(label).width;
-          ctx.restore();
-          const groupW = numberW + gap + pipR * 2;
-          const left = b.x - groupW / 2;
-          GOL.text(ctx, label, left, py, { size: 11, weight: '800', color: alpha('#FFFFFF', 0.72), align: 'left' });
-          GOL.star8Path(ctx, left + numberW + gap + pipR, py - 1, pipR, Math.PI / 8 + t * 0.2);
-          ctx.fillStyle = alpha('#FFFFFF', 0.22);
-          ctx.fill();
-          ctx.strokeStyle = alpha('#FFFFFF', 0.46);
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-        // the hidden Rahma blossom, once found, blooms gold at the disc's brow
-        if (st && st.blossom) {
-          GOL.drawRahmaBlossom(ctx, b.x + 28, b.y - 28, 6.5, t + b.n);
-        }
-        // the Remembering Moon, waxing with every dream remembered — it rests
-        // at the disc's other brow (v1's map idiom; the blossom keeps the right)
-        if (b.done && st) {
-          // while the moon can still wax today it breathes a moonlit halo —
-          // the wordless invitation to dream (tap the moon, not the disc)
-          const inviting = (this.moonBtns || []).some((m) => m.surahId === b.surahId);
-          if (inviting) {
-            const br = 0.22 + 0.14 * Math.sin(t * 1.8);
-            ctx.fillStyle = alpha('#CFE0FF', br);
-            ctx.beginPath(); ctx.arc(b.x - 28, b.y - 28, 17 + Math.sin(t * 1.8) * 2, 0, Math.PI * 2); ctx.fill();
-          }
-          if (inviting || (st.moon || 0) > 0.01) {
-            GOL.drawMoon(ctx, b.x - 28, b.y - 28, 9, st.moon || 0, t, { glow: false });
-          }
-        }
-        // a freshly-earned world celebrates: a pulsing golden ring for ~3s
-        if (this.celebrateT > 0 && b.n === this.celebrateN) {
-          const cp = 0.5 + 0.5 * Math.sin(t * 4.5);
-          const fade = Math.min(1, this.celebrateT / 0.8);
-          ctx.strokeStyle = alpha('#FFE9A8', (0.4 + 0.5 * cp) * fade);
-          ctx.lineWidth = 3.5;
-          ctx.beginPath(); ctx.arc(b.x, b.y, 40 + cp * 6, 0, Math.PI * 2); ctx.stroke();
-          ctx.strokeStyle = alpha(GOLD, 0.3 * fade);
-          ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.arc(b.x, b.y, 48 + cp * 4, 0, Math.PI * 2); ctx.stroke();
-        }
-        // a done garden long unheard breathes a soft golden ring — wordless
-        if (b.n === this.missN) {
-          const br = 0.35 + 0.3 * Math.sin(t * 2.2);
-          ctx.strokeStyle = alpha('#FFE9A8', br);
-          ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.arc(b.x, b.y, 38 + Math.sin(t * 2.2) * 3, 0, Math.PI * 2); ctx.stroke();
-        }
-        GOL.text(ctx, b.key, b.x, b.y + (b.open && !b.done && surah ? 62 : 52), { size: 11, weight: '700', color: alpha('#FFFFFF', b.open ? 0.7 : 0.4) });
-      }
-      // Noor the firefly rests beside the garden that misses its child, else
-      // keeps watch over the world that waits next
-      const missB = this.missN ? (this.worldBtns || []).find((b) => b.n === this.missN) : null;
-      if (missB) {
-        GOL.drawFirefly(ctx, missB.x + 34 + Math.sin(t * 1.3) * 10, missB.y - 40 + Math.sin(t * 2.2) * 7, t, 1.25);
-      } else {
-        const cur = (this.worldBtns || []).find((b) => b.n === GOL.currentWorld());
-        if (cur) GOL.drawFirefly(ctx, cur.x + Math.cos(t * 0.9) * 56, cur.y - 12 + Math.sin(t * 1.7) * 20, t, 1);
-      }
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       for (const b of this.protoBtns || []) {
         ctx.fillStyle = alpha('#273C35', 0.82);

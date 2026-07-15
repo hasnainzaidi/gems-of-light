@@ -329,7 +329,7 @@
           for (const tap of GOL.Input.taps) {
             if (!tap.ui && this.bloomT > 3.6) {
               tap.ui = true;
-              GOL.go('title', this.practiceOnly ? undefined : { celebrate: this.worldN });
+              GOL.go(GOL.homeScene || 'title', this.practiceOnly ? undefined : { celebrate: this.worldN });
               return;
             }
           }
