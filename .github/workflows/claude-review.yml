@@ -1,0 +1,76 @@
+name: Claude Auto Review
+
+# Reviews every pull request when it is opened or updated, using Anthropic's
+# official Claude Code action. Claude reads the diff, checks it against the
+# conventions in CLAUDE.md, and then EITHER approves the PR (nothing
+# significant found) OR posts its findings without approving (something worth
+# a human look). For a solo project this means: a green Claude approval = safe
+# to merge without reading; anything else = go look.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # post reviews / comments and approve
+      id-token: write # OIDC for the action
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Use ONE of the two auth methods below (see repo Settings ->
+          # Secrets). anthropic_api_key is the simplest; swap to
+          # claude_code_oauth_token if you set up OAuth instead.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are the sole reviewer for a solo developer who wants to merge
+            without reading every diff. Review this pull request carefully.
+
+            First, read CLAUDE.md (and AGENTS.md if present) at the repo root
+            and review the change AGAINST the conventions stated there. This is
+            a children's Quran-memorization platformer; the design philosophy
+            is strictly enforced (no text instruction, no quizzes, no
+            punishment, one core loop, ordered gem collection, wordless visual
+            language). Treat violations of those rules as significant.
+
+            Focus your review on:
+            - Correctness bugs and regressions
+            - Violations of the CLAUDE.md / AGENTS.md conventions and design
+              philosophy
+            - Security or data-safety issues (e.g. the shared v1<->v3
+              js/data.js must only change additively; save-data handling)
+            - Anything that would make the game unplayable for a child today
+
+            The PR branch is already checked out in the current working
+            directory. You may run the repo's own checks to inform your review,
+            e.g. `node v3/tools/check.mjs`.
+
+            DECISION RULE:
+            - If you find NOTHING significant, APPROVE the PR by running:
+                gh pr review "$PR NUMBER" --approve --body "<one short paragraph
+                summarizing what you checked and why it's safe to merge>"
+              (Replace the placeholder; put the PR number in.)
+            - If you find ANYTHING worth the developer's attention, DO NOT
+              approve. Instead use `gh pr comment` for a top-level summary of
+              what to look at, and
+              `mcp__github_inline_comment__create_inline_comment`
+              (with `confirmed: true`) to flag specific lines. Withholding
+              approval is the signal that a human should look.
+
+            Be concise. Only post GitHub comments/reviews - do not return the
+            review text as a chat message.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr review:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(node v3/tools/check.mjs),Bash(node tools/check-levels.mjs),Read,Grep,Glob"
