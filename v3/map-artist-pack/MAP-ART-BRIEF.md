@@ -41,13 +41,23 @@ those living things** (list in §6). You paint the world they live in.
   difference between the map and the game's side-scrolling levels: the
   map never shares the levels' side-on viewpoint, never has a horizon
   across the middle, never strings its scenery along one ground line.
-- **A found landscape.** One continuous geography, asymmetric and
-  alive: regions flow into each other the way a valley becomes an
-  orchard becomes a hillside. The composition should feel discovered
-  rather than arranged — like a real place a child could imagine
-  walking into. The trail winds across the ground plane in every
-  direction — curves, switchbacks, doubling back — never a line with
-  scenery strung beside it.
+  Use ONE consistent projection throughout — vertical edges stay
+  vertical, terrace faces show the same way everywhere — so the whole
+  build feels like a single carved model, never a collage of angles.
+- **One built garden — one object.** The entire map is a single
+  constructed thing: a terraced charbagh carved from stone and grass,
+  standing complete on a calm open plain, like a beloved hand-made
+  model seen from above. Every element belongs to the construction —
+  terraces are its floors, low walls its edges, the stream a
+  stone-edged channel cut into its surface, the trail a walkway paved
+  along it, trees planted in beds cut from its terraces. Nothing
+  floats free on open grass; if a shape could be removed without
+  leaving a hole in the structure, it does not belong. The whole
+  construction should read as one connected silhouette, and the quiet
+  plain around it is part of the composition — calm negative space,
+  not room for more parts. The trail still winds — curves,
+  switchbacks, varied spacing — but always as a built path through
+  the one structure.
 - **The journey climbs toward the light.** Progression runs from the
   map's lower-left toward its upper-right — rising terraces, a sense
   of ascent, the warmest light waiting highest. Depth, overlap, and
