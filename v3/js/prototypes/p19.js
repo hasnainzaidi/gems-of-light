@@ -322,6 +322,8 @@
       this.hero = null;
       this.spotPulse = null;
       this.pendingBloom = false;
+      this.kbdFollow = 0;
+      this.kbdActHeld = false;
       loadAsset().then((map) => {
         this.map = map;
         if (returnState) {
@@ -395,6 +397,53 @@
     // embedded browser's interaction-throttled canvas practical to inspect.
     debugCollectAll() { this.bloomAtStar(true); },
 
+    // The toggle: a bloomed spot is a door into the real game; home inside
+    // the world leads back here, journey intact. Shared by tap and keyboard.
+    enterWorld() {
+      returnState = {
+        progress: this.progress.slice(),
+        cam: { x: this.cam.x, y: this.cam.y },
+        heroS: this.hero.s
+      };
+      if (!origHomeButton) {
+        origHomeButton = GOL.homeButton;
+        GOL.homeButton = function () {
+          const btn = origHomeButton.apply(GOL, arguments);
+          btn.fn = () => GOL.go('paintedMapLab');
+          return btn;
+        };
+      }
+      GOL.audio.unlock();
+      if (GOL.audio) GOL.audio.sfx('unlockLevel');
+      GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+    },
+
+    // Keyboard navigation (r4 verdict): enter/space acts on whatever she
+    // stands beside — the breathing star blooms, a finished bloom opens
+    // its world.
+    kbdAct() {
+      if (!this.map || !this.hero) return;
+      const pos = pointAtSamples(this.map.walkSamples, this.hero.s);
+      const a = this.activeRegion();
+      if (a != null && this.regionAwake(a) && !this.pendingBloom) {
+        const star = this.map.spots[a][this.progress[a]];
+        if (GOL.dist(pos.x, pos.y, star.x, star.y) <= 40) {
+          this.bloomAtStar(false);
+          return;
+        }
+      }
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        if (!this.regionAwake(ri)) continue;
+        for (let j = 0; j < this.progress[ri]; j++) {
+          const b = this.map.spots[ri][j];
+          if (GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+            this.enterWorld();
+            return;
+          }
+        }
+      }
+    },
+
     mapScale(H) { return clamp(H / 393, 0.88, 1.12); },
 
     mapCamMax(W, H) {
@@ -417,6 +466,8 @@
         const a = nearestLength(this.map.walkSamples, this.map.hearts[ri]);
         const b = nearestLength(this.map.walkSamples, this.map.spots[ri + 1][0]);
         point = pointAtSamples(this.map.walkSamples, lerp(a, b, this.travelK()));
+      } else if (this.kbdFollow > 0 && this.hero) {
+        point = pointAtSamples(this.map.walkSamples, this.hero.s);
       } else {
         const ri = this.activeRegion();
         point = ri == null
@@ -456,6 +507,26 @@
           this._doBloom();
         }
       }
+
+      // Keyboard walk (r4 verdict): arrows carry her along the trail (the
+      // camera follows her), stopping at the journey's breathing edge.
+      if (this.hero && !this.ceremony) {
+        const K = GOL.Input._keys || {};
+        const dir = (K.ArrowRight || K.d || K.D ? 1 : 0) - (K.ArrowLeft || K.a || K.A ? 1 : 0);
+        if (dir) {
+          const a = this.activeRegion();
+          const maxS = a == null
+            ? this.map.walkSamples.len
+            : nearestLength(this.map.walkSamples, this.map.spots[a][this.progress[a]]);
+          this.hero.s = this.hero.sT = clamp(this.hero.s + dir * dt * 190, 0, maxS);
+          this.pendingBloom = false;
+          this.kbdFollow = 2.2;
+        }
+        const act = !!(K.Enter || K[' ']);
+        if (act && !this.kbdActHeld) { this.kbdActHeld = true; this.kbdAct(); }
+        else if (!act) this.kbdActHeld = false;
+      }
+      this.kbdFollow = Math.max(0, (this.kbdFollow || 0) - dt);
 
       const drag = GOL.Input.drag;
       if (drag && !this.ceremony) {
@@ -507,22 +578,7 @@
           for (let j = 0; j < this.progress[ri]; j++) {
             const b = this.map.spots[ri][j];
             if (GOL.dist(wx, wy, b.x, b.y) < 36) {
-              returnState = {
-                progress: this.progress.slice(),
-                cam: { x: this.cam.x, y: this.cam.y },
-                heroS: this.hero.s
-              };
-              if (!origHomeButton) {
-                origHomeButton = GOL.homeButton;
-                GOL.homeButton = function () {
-                  const btn = origHomeButton.apply(GOL, arguments);
-                  btn.fn = () => GOL.go('paintedMapLab');
-                  return btn;
-                };
-              }
-              GOL.audio.unlock();
-              if (GOL.audio) GOL.audio.sfx('unlockLevel');
-              GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+              this.enterWorld();
               return;
             }
           }
