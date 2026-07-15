@@ -1,8 +1,10 @@
 name: Checks
 
-# The merge gate: every PR (and every push to staging/main) must pass the
-# v3 level integrity checker before it can land. check.mjs with no args
-# verifies every world is completable and the root//v3/ builds stay in sync.
+# The merge gate: every PR (and every push to staging/main) must pass before
+# it can land. Absorbs the earlier ci.yml (2026-07-14): a JS syntax lint of
+# every source file plus ALL the hand-rolled checker scripts, which each
+# process.exit(1) on real regressions (unreachable gem, broken shrine lock,
+# entry-parity drift, parent-opened progression leaks, v1 level integrity).
 on:
   pull_request:
   push:
@@ -16,5 +18,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Lint (JS syntax check)
+        # No ESLint configured; `node --check` parses every source file and
+        # fails on syntax errors. Excludes vendored dirs.
+        run: |
+          set -e
+          files=$(find . \
+            -type f \( -name '*.js' -o -name '*.mjs' \) \
+            -not -path './node_modules/*' \
+            -not -path './v2/node_modules/*' \
+            -not -path './.git/*')
+          echo "Checking $(echo "$files" | wc -l) JS files..."
+          for f in $files; do
+            node --check "$f"
+          done
+          echo "All JS files parsed cleanly."
       - name: v3 level integrity checker
         run: node v3/tools/check.mjs
+      - name: v3 entry-cache parity
+        run: node v3/tools/check-entry-parity.mjs
+      - name: parent-opened progression stays practice-only
+        run: node v3/tools/test-parent-opened-progression.mjs
+      - name: shrine recitation lock
+        run: node v3/tools/test-shrine-recitation-lock.mjs
+      - name: v1 level integrity checker
+        run: node tools/check-levels.mjs
