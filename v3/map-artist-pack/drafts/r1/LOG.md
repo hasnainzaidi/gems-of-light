@@ -283,4 +283,24 @@ quite," three fixes:**
    projection. Everything flush with the ground gets the same
    foreshortening (vertical compression) as the island plate itself.
 
+**SLIVER VERDICT 6 (Hasnain, 2026-07-15, phone — on A6): PASS —
+"great. lets draw all three."** The sliver round CLOSES; A6 is the
+champion language tile. The full-map language, all demonstrated in
+one tile: round hull floating above the cloudline (no ground-shadow,
+receding decks below); quadrant-rule sweep with sustained curvature,
+entering/exiting centrally in diagonal quadrants; path-to-edge margin
+with the minor garden ≥2× it; fountain heart nestled in the sweep's
+elbow, walked-by, never touched; major garden = water + larger trees
++ parterres, minor garden = flowers + bushes; every ground-flush
+shape foreshortened to the plate's 2:1 with bottom-only thickness
+lips; calm restrained clouds; gouache, no text/filters.
+
+**Full-map draw commissioned (same artist session):** three A6-language
+islands, 1800×860, ascending lower-left → upper-right in the heavens
+(the ascension gradient separates them), sweeps ALTERNATING south-bow /
+north-bow / south-bow so the journey is one S-flow; hearts = star pool
+/ clover pool / octagon court; region palette families 1/2/3; bridges
+across open sky with gateway arches at far thresholds; contract v2
+anchors (8 spots per island, no stream); open upper-right seam.
+
 **VERDICTS (pending):**
