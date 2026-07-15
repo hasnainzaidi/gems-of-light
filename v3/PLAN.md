@@ -443,9 +443,9 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   one tiny pip per ayah beneath every open world. That stayed neat for short
   surahs but Al-Lail's 21 pips stretched across neighboring discs and broke
   the map. Open, unfinished worlds now show the total ayah count beside one
-  eight-point star (`3 ★`, `21 ★`); completed worlds still replace it with
-  their Grand Gem. The contained count scales to long surahs without turning
-  the journey into a dense progress chart.
+  vertically aligned eight-point star (`3 ★`, `21 ★`); completed worlds still
+  replace it with their Grand Gem. The contained count scales to long surahs
+  without turning the journey into a dense progress chart.
 - **THE SKY ABOVE THE PATH LAB (P16 built 2026-07-13; awaiting child
   playtest):** the journey's answer to twenty surahs is a second ALTITUDE,
   not a second screen. The path below only ever holds the chapter being
