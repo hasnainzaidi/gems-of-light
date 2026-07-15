@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artist Brief — The Journey Map of Gems of Light</title>
+<style>
+  :root {
+    --ink: #3E5340; --ink-soft: #6B7D66; --gold: #B98A3E;
+    --cream: #FDF9EE; --card: #FFFFFF; --line: #E4DCC6;
+  }
+  body {
+    margin: 0; background: var(--cream); color: var(--ink);
+    font: 17px/1.65 Georgia, 'Times New Roman', serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 34px; line-height: 1.2; margin: 0 0 4px; }
+  .sub { color: var(--ink-soft); font-style: italic; margin-bottom: 40px; }
+  h2 {
+    font-size: 24px; margin: 52px 0 14px; padding-top: 22px;
+    border-top: 2px solid var(--line);
+  }
+  h2 .num { color: var(--gold); margin-right: 10px; }
+  strong { color: var(--ink); }
+  em { color: inherit; }
+  ul { padding-left: 24px; }
+  li { margin: 9px 0; }
+  ol li { margin: 9px 0; }
+  code {
+    font: 14px/1.4 Menlo, Consolas, monospace; background: #F1EBD9;
+    padding: 1px 6px; border-radius: 4px; color: #6E5340;
+  }
+  table {
+    border-collapse: collapse; width: 100%; margin: 18px 0;
+    font-size: 15px;
+  }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: #F6F0DE; }
+  .pal {
+    display: inline-block; width: 15px; height: 15px; border-radius: 4px;
+    vertical-align: -2px; margin: 0 3px 0 6px; border: 1px solid rgba(62,83,64,.25);
+  }
+  .region {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 22px; margin: 16px 0;
+  }
+  .region h3 { margin: 0 0 8px; font-size: 19px; }
+  .region h3 .tag { color: var(--gold); font-weight: normal; font-style: italic; font-size: 16px; }
+  figure { margin: 26px 0; }
+  figure img {
+    width: 100%; border-radius: 12px; display: block;
+    box-shadow: 0 3px 14px rgba(62,83,64,.18);
+  }
+  figcaption { font-size: 14px; color: var(--ink-soft); margin-top: 8px; font-style: italic; }
+  .callout {
+    background: #F6F0DE; border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 22px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Artist Brief — The Journey Map of <em>Gems of Light</em></h1>
+<div class="sub">The hand-painted overworld for a gentle, wordless Quran-memorization game for children aged 5–8.</div>
+
+<h2><span class="num">1</span>What you are painting</h2>
+<p><strong>Gems of Light</strong> is a gentle, wordless platformer. Each short surah is a side-scrolling garden world: the child collects glowing gems (each gem is an ayah, heard aloud when gathered), earns a campfire recitation, and sets a Grand Gem into a shrine. The game speaks entirely through animation, light, and environment — no instructional text, no score, nothing that punishes.</p>
+<p>You are painting <strong>the map between those worlds</strong>: the place the child returns to after every session, where her whole journey is visible as one landscape — a continuous geography she travels point to point, as a warm storybook painting.</p>
+<p>The painting is the <em>stage</em>. The game engine performs on top of it: an animated little light-child walks your path, flowers bloom where surahs are finished, a star breathes where the journey currently waits, water sparkles, petals drift, a pale daytime moon glows. <strong>You paint none of those living things</strong> (see §6). You paint the world they live in.</p>
+
+<h2><span class="num">2</span>The feeling <span style="color:var(--ink-soft);font-size:16px">(most important section)</span></h2>
+<ul>
+  <li><strong>Morning, always.</strong> Light-green, open, light-filled. The whole game lives in daylight — early gold morning through warm late afternoon. The one moon in this game is a pale daytime moon, resting in a bright sky — and the engine draws it.</li>
+  <li><strong>A found landscape.</strong> One continuous geography, asymmetric and alive: regions flow into each other the way a valley becomes an orchard becomes a hillside. The composition should feel discovered rather than arranged — like a real place a child could imagine walking into.</li>
+  <li><strong>The journey climbs toward the light.</strong> Progression runs left → right and gently <em>upward</em> — rising terrain, terraces, a sense of ascent. Depth, overlap, and elevation are strongly encouraged.</li>
+  <li><strong>Gouache storybook.</strong> Flat-ish painterly shapes, soft edges, warm cream highlights — a children's picture book, not vector-corporate, not pixel art, not realism. The existing game is painted in code with this exact sensibility; your map should feel like the same hand.</li>
+  <li><strong>Islamic garden vocabulary, worn lightly.</strong> The map's bones are the classical paradise garden: walled terraces, geometric flowerbeds, water channels, stepped water-stairs (chadars), cream stone, wooden gates, arches. Gardens, water, stone, and sky only — no figures, no faces, no text or lettering of any kind (including Arabic), no religious iconography. The geometry itself carries the heritage.</li>
+</ul>
+
+<h2><span class="num">3</span>The geography — three regions, one landscape</h2>
+<p>The map holds the journey's ~17 surahs in <strong>three regions</strong>, each a distinct, nameable place a five-year-old could point to (“the water one!”). Left to right, lowest to highest:</p>
+
+<div class="region">
+  <h3>1 · The Garden Valley <span class="tag">— where everything begins</span></h3>
+  Lowest ground, freshest morning gold. Its heart: <strong>a spring</strong> — the source of all the map's water — held in an <strong>eight-point-star stone pool</strong>.
+</div>
+<div class="region">
+  <h3>2 · The Orchard Rise <span class="tag">— a terrace up</span></h3>
+  Fuller afternoon green, laden fruit trees, dappled warmth. Its heart: <strong>a quatrefoil clearing</strong> (four-lobed stone-edged bed).
+</div>
+<div class="region">
+  <h3>3 · The Courtyard Heights <span class="tag">— highest, warm honeyed stone</span></h3>
+  Long-light, low walls, arches, paving. Its heart: <strong>an octagonal court</strong>.
+</div>
+
+<p>Each region needs, in whatever composition you choose:</p>
+<ul>
+  <li><strong>A heart</strong> — the geometric landmark above. Its <em>shape</em> is the region's identity, like a constellation's figure rendered in stone and grass.</li>
+  <li><strong>A trail</strong> — the walking path, winding through the region past its surah-spots (anchors, §5). Curves, switchbacks and varied spacing welcome — never a straight line of evenly spaced dots.</li>
+  <li><strong>Water</strong> — one continuous watercourse threads all three regions, rising from the valley spring and connecting region to region via <strong>stepped water-stairs (chadars)</strong> climbing each terrace, with a small <strong>wooden gate</strong> at each crest. The engine reveals or hides water per region, so keep each region's water on its own layer (§5).</li>
+  <li><strong>Its palette family</strong> (§4) — regions read as different places partly because the light itself shifts across the map.</li>
+</ul>
+
+<div class="callout"><strong>The open edge:</strong> the right side of the map must not conclude. The trail exits the Courtyard Heights at a definite point on the right edge, terrain continuing implied beyond the frame — the journey will someday grow, and a future panel will be painted to join at this seam. No closing wall, no final peak, no framing vignette on the right.</div>
+
+<h2><span class="num">4</span>Color</h2>
+<p>These are the game's own palettes (it is literally painted from these values). You have artistic freedom <em>within</em> each family; these anchor the temperature of each region.</p>
+
+<p><strong>Region 1 — Garden Valley</strong> (fullest morning):<br>
+sky <span class="pal" style="background:#9ED2C6"></span><code>#9ED2C6</code> → <span class="pal" style="background:#DFF0C8"></span><code>#DFF0C8</code> → <span class="pal" style="background:#FBE7AE"></span><code>#FBE7AE</code> ·
+hills <span class="pal" style="background:#BCD8B2"></span><code>#BCD8B2</code> <span class="pal" style="background:#93C08D"></span><code>#93C08D</code> <span class="pal" style="background:#6FAD72"></span><code>#6FAD72</code> ·
+grass <span class="pal" style="background:#7CBF6B"></span><code>#7CBF6B</code> (light <span class="pal" style="background:#ACDE90"></span><code>#ACDE90</code>, dark <span class="pal" style="background:#5B9C52"></span><code>#5B9C52</code>) ·
+soil <span class="pal" style="background:#C4A981"></span><code>#C4A981</code> ·
+stone <span class="pal" style="background:#EAE0C6"></span><code>#EAE0C6</code> <span class="pal" style="background:#CBBC97"></span><code>#CBBC97</code> ·
+water <span class="pal" style="background:#BFE8DC"></span><code>#BFE8DC</code> <span class="pal" style="background:#8FCFC2"></span><code>#8FCFC2</code> <span class="pal" style="background:#57A79E"></span><code>#57A79E</code> ·
+gold <span class="pal" style="background:#F4CD7E"></span><code>#F4CD7E</code> ·
+mist <span class="pal" style="background:#F4EFD8"></span><code>#F4EFD8</code></p>
+
+<p><strong>Region 2 — Orchard Rise</strong> (afternoon, fruit on the bough):<br>
+sky <span class="pal" style="background:#A3CBAB"></span><code>#A3CBAB</code> → <span class="pal" style="background:#DCE8B4"></span><code>#DCE8B4</code> → <span class="pal" style="background:#F8DCA2"></span><code>#F8DCA2</code> ·
+hills <span class="pal" style="background:#B5CFA0"></span><code>#B5CFA0</code> <span class="pal" style="background:#8CB47F"></span><code>#8CB47F</code> <span class="pal" style="background:#699F63"></span><code>#699F63</code> ·
+grass <span class="pal" style="background:#7CB863"></span><code>#7CB863</code> (light <span class="pal" style="background:#A4D384"></span><code>#A4D384</code>) ·
+leaf <span class="pal" style="background:#6FAA58"></span><code>#6FAA58</code> <span class="pal" style="background:#98CB77"></span><code>#98CB77</code> <span class="pal" style="background:#4E8746"></span><code>#4E8746</code> ·
+trunk <span class="pal" style="background:#8A6B4F"></span><code>#8A6B4F</code> ·
+gold <span class="pal" style="background:#F2C46E"></span><code>#F2C46E</code></p>
+
+<p><strong>Region 3 — Courtyard Heights</strong> (late afternoon, warm stone):<br>
+sky <span class="pal" style="background:#B3C9A9"></span><code>#B3C9A9</code> → <span class="pal" style="background:#E7DFAE"></span><code>#E7DFAE</code> → <span class="pal" style="background:#F6CE92"></span><code>#F6CE92</code> ·
+stone <span class="pal" style="background:#F0E0BE"></span><code>#F0E0BE</code> <span class="pal" style="background:#D2BC90"></span><code>#D2BC90</code> <span class="pal" style="background:#B29768"></span><code>#B29768</code> ·
+grass <span class="pal" style="background:#8CB061"></span><code>#8CB061</code> (light <span class="pal" style="background:#B0CC80"></span><code>#B0CC80</code>) ·
+water <span class="pal" style="background:#C4E4D2"></span><code>#C4E4D2</code> <span class="pal" style="background:#8FC9B8"></span><code>#8FC9B8</code> ·
+gold <span class="pal" style="background:#F3C572"></span><code>#F3C572</code> <span class="pal" style="background:#DCA346"></span><code>#DCA346</code></p>
+
+<p><strong>Accents used by the living layer</strong> (avoid competing with them):
+Grand-Gem gold <span class="pal" style="background:#F0C878"></span><code>#F0C878</code> <span class="pal" style="background:#FFE9A8"></span><code>#FFE9A8</code> <span class="pal" style="background:#FFF6DC"></span><code>#FFF6DC</code>,
+bloom pink <span class="pal" style="background:#F5B8C4"></span><code>#F5B8C4</code>,
+warm cream <span class="pal" style="background:#FDF6E4"></span><code>#FDF6E4</code>,
+deep ink-green <span class="pal" style="background:#3E5340"></span><code>#3E5340</code>.</p>
+
+<p>Transitions between regions should be gradual — the sky and ground drift from one family to the next across the seam, never a hard border.</p>
+
+<h2><span class="num">5</span>Technical requirements</h2>
+<p><strong>Format:</strong> SVG (1.1), a single file, one continuous artwork.</p>
+<p><strong>Canvas:</strong> a landscape strip, aspect ratio between <strong>6:1 and 7:1</strong> — e.g. a viewBox of <code>3000 × 460</code>. The game renders it full-bleed to the phone's height (852×393 landscape is the reference screen), so the strip equals roughly <strong>three phone-screens of horizontal panning</strong>. Keep important detail out of the outer ~3% top and bottom (device rounding).</p>
+<p><strong>Scale sanity:</strong> on the phone your artwork displays at ~0.85× of a 3000-unit-wide viewBox. The walking character is ~55 units tall at that scale; trail width, gates and steps should feel sized for her.</p>
+
+<p><strong>Named anchors — the contract that makes the map programmable.</strong> Include these elements with exact ids. Anchor circles may be invisible (<code>opacity="0"</code> is fine) but must survive export as <code>&lt;circle&gt;</code> elements with real <code>cx/cy</code> — do not flatten or rasterize them away.</p>
+
+<table>
+  <tr><th>id</th><th>element</th><th>meaning</th></tr>
+  <tr><td><code>walk</code></td><td>one <code>&lt;path&gt;</code></td><td>the full walking route, left edge → right edge, threading all three regions in journey order</td></tr>
+  <tr><td><code>stream</code></td><td>one <code>&lt;path&gt;</code></td><td>the watercourse's spine, spring → right edge (the ceremony's light travels along it, including up the water-stairs)</td></tr>
+  <tr><td><code>spot-R-N</code></td><td><code>&lt;circle&gt;</code></td><td>surah positions: <code>spot-1-1</code>…<code>spot-1-7</code>, <code>spot-2-1</code>…<code>spot-2-7</code>, <code>spot-3-1</code>…<code>spot-3-7</code> — <strong>seven per region</strong> (we bind 5–6 now; spares are invisible until the journey grows). Place them on or near the walk path, at least 90 units apart, in walking order</td></tr>
+  <tr><td><code>heart-1/2/3</code></td><td><code>&lt;circle&gt;</code></td><td>center of each region's geometric heart</td></tr>
+  <tr><td><code>gate-1/2</code></td><td><code>&lt;circle&gt;</code></td><td>the wooden gate at each water-stair crest</td></tr>
+  <tr><td><code>moon</code></td><td><code>&lt;circle&gt;</code></td><td>where the daytime moon will hang, in open sky above the valley's heart</td></tr>
+  <tr><td><code>water-1/2/3</code></td><td><code>&lt;g&gt;</code> group</td><td>each region's painted water (channel fill, pool fill, stair-water), grouped per region so the engine can hide water in regions the journey hasn't reached. Paint the <em>beds and stonework</em> outside these groups — dry channels remain visible</td></tr>
+  <tr><td><code>over</code></td><td><code>&lt;g&gt;</code> group</td><td>anything the walking character should pass <em>behind</em> — bridge rails, arch fronts, a tree canopy overhanging the path. Everything else renders behind her</td></tr>
+</table>
+
+<p><strong>Export constraints:</strong></p>
+<ul>
+  <li>Preserve ids (Illustrator: Object IDs = layer names; Figma: “include id attribute”; Affinity: set element names, export SVG with names as ids).</li>
+  <li>No <code>&lt;text&gt;</code> elements anywhere.</li>
+  <li>No embedded raster images; no external references (fonts, links).</li>
+  <li>Flat fills and simple gradients only — <strong>no filters</strong> (blur, shadow effects), no masks if avoidable. The game rasterizes the SVG once on a phone; filters render slowly and inconsistently.</li>
+  <li>Keep it lean: ideally under ~1.5&nbsp;MB of SVG.</li>
+</ul>
+
+<h2><span class="num">6</span>What the engine draws — do NOT paint these</h2>
+<ul>
+  <li>The character (an animated glowing light-child) and her firefly guide</li>
+  <li>Flowers, blooms, buds and stars at the surah spots (paint the <em>ground</em> they grow from; leave the spots themselves clear)</li>
+  <li>Gems and Grand Gems</li>
+  <li>The moon itself (just leave sky at the <code>moon</code> anchor)</li>
+  <li>Gate <em>doors</em> (paint the open gateway or arch; the engine draws and animates the closed wooden doors on top)</li>
+  <li>Water sparkles, ripples, traveling light, petals, celebration effects</li>
+  <li>Any dimming of “not yet reached” regions (the engine washes those; paint the whole map fully awake and alive)</li>
+</ul>
+
+<h2><span class="num">7</span>Process</h2>
+<ol>
+  <li><strong>Rough pass first:</strong> a loose composition sketch (even pencil/photo) for sign-off on geography, path flow, region character, and the open edge — before any rendering.</li>
+  <li><strong>Final SVG</strong> with anchors per §5.</li>
+  <li>We wire it into the live game within a day and review on an iPhone in landscape — the only screen that matters.</li>
+</ol>
+
+<h2><span class="num">8</span>Reference — the game today</h2>
+<p>Screenshots of the live game: the palette and gouache sensibility in motion, and the best guide to what the map should feel like it belongs to. (For <em>structure</em> — never style — classic console overworld maps such as Super Mario World's are a useful touchstone: one continuous geography the player travels dot to dot.)</p>
+
+<figure>
+  <img src="reference/01-title-journey.png" alt="Title screen with the current journey row">
+  <figcaption>The title screen today — the little light-child, the morning meadow, and the placeholder journey row of discs that your painted map will replace.</figcaption>
+</figure>
+<figure>
+  <img src="reference/02-world-fatiha-garden.png" alt="Al-Fatiha garden world">
+  <figcaption>The Garden Gate (Al-Fatiha) — the game's fullest morning: radiant light, the gem band above, sleeping gems along the path.</figcaption>
+</figure>
+<figure>
+  <img src="reference/03-world-kawthar-spring.png" alt="Al-Kawthar spring world">
+  <figcaption>The Spring (Al-Kawthar) — fresh mint light and water; the watercourse vocabulary the map's stream should feel related to.</figcaption>
+</figure>
+<figure>
+  <img src="reference/04-world-duha-morning.png" alt="Ad-Duha morning world">
+  <figcaption>The Morning Brightness (Ad-Duha) — warm gold over green, lanterns and soft haze.</figcaption>
+</figure>
+<figure>
+  <img src="reference/05-world-adiyat-chargers.png" alt="Al-Adiyat world">
+  <figcaption>The Chargers (Al-Adiyat) — earthier warmth; the game's palette range stays gentle even at its most adventurous.</figcaption>
+</figure>
+<figure>
+  <img src="reference/06-world-falaq-daybreak.png" alt="Al-Falaq daybreak world">
+  <figcaption>The Daybreak (Al-Falaq) — dawn drifting toward gold across the level; the softest end of the game's light.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>
