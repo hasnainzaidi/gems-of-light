@@ -17,13 +17,15 @@
   const MAP_KEY = (new URLSearchParams(location.search).get('map') || 'final')
     .replace(/[^A-Za-z0-9_-]/g, '');
   const ASSET_URL = new URL(MAP_KEY === 'final'
-    ? '../../map-artist-pack/journey-map.svg?v=354'
-    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=354',
+    ? '../../map-artist-pack/journey-map.svg?v=355'
+    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=355',
   scriptUrl).href;
+  // Contract v2 (round 4): 8 spots per region — the adopted 8/8/8 cut of
+  // the 24-key WORLD_ORDER (Valley 1–8, Orchard 9–16, Heights 17–24).
   const REGIONS = [
-    { count: 5, bloom: '#F5B8C4' },
-    { count: 6, bloom: '#F2C46E' },
-    { count: 6, bloom: '#E7C6A0' }
+    { count: 8, bloom: '#F5B8C4' },
+    { count: 8, bloom: '#F2C46E' },
+    { count: 8, bloom: '#E7C6A0' }
   ];
   const GRAND = {
     base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC',
@@ -119,13 +121,14 @@
       // predictable even though the artist file only needs a viewBox.
       root.setAttribute('width', String(vb[2]));
       root.setAttribute('height', String(vb[3]));
+      // Contract v2: there is no stream — the map's only water is the three
+      // fountain hearts, and the ceremony's light travels the walk itself.
       requireElement(root, 'walk', 'path');
-      requireElement(root, 'stream', 'path');
       requireElement(root, 'over', 'g');
       for (let r = 1; r <= 3; r++) {
         requireElement(root, 'water-' + r, 'g');
         requireElement(root, 'heart-' + r, 'circle');
-        for (let n = 1; n <= 7; n++) requireElement(root, 'spot-' + r + '-' + n, 'circle');
+        for (let n = 1; n <= 8; n++) requireElement(root, 'spot-' + r + '-' + n, 'circle');
       }
       requireElement(root, 'gate-1', 'circle');
       requireElement(root, 'gate-2', 'circle');
@@ -137,12 +140,11 @@
       const spots = [];
       for (let r = 1; r <= 3; r++) {
         const row = [];
-        for (let n = 1; n <= 7; n++) row.push(circlePoint(root, 'spot-' + r + '-' + n));
+        for (let n = 1; n <= 8; n++) row.push(circlePoint(root, 'spot-' + r + '-' + n));
         spots.push(row);
       }
       const hearts = [1, 2, 3].map((r) => circlePoint(root, 'heart-' + r));
       const moon = circlePoint(root, 'moon');
-      const streamSamples = samplePath(requireElement(root, 'stream', 'path'), 3);
       const walkSamples = samplePath(requireElement(root, 'walk', 'path'), 3);
       root.removeAttribute('style');
       root.remove();
@@ -158,7 +160,7 @@
         imageFromRoot(layerRoot(root, 'over'))
       ]);
       return {
-        w: vb[2], h: vb[3], spots, hearts, moon, streamSamples, walkSamples,
+        w: vb[2], h: vb[3], spots, hearts, moon, walkSamples,
         images: { base: baseImg, water: [water1, water2, water3], over: overImg }
       };
     })();
@@ -195,6 +197,32 @@
     ctx.beginPath(); ctx.ellipse(x + 3, y - 10, 4, 7, -0.45, 0, TAU); ctx.fill();
     ctx.fillStyle = '#D7E3B7';
     ctx.beginPath(); ctx.ellipse(x, y - 13, 3.2, 5.5, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // Contract v2: an awake island's fountain PLAYS — the engine's living
+  // water over the artist's painted basin, gentle arcs and a soft sparkle.
+  // An asleep island keeps its dry basin (its water layer is hidden).
+  function drawFountain(ctx, x, y, t, a) {
+    if (a <= 0.02) return;
+    ctx.save();
+    ctx.globalAlpha *= a;
+    const glow = ctx.createRadialGradient(x, y - 4, 1, x, y - 4, 20);
+    glow.addColorStop(0, 'rgba(255,246,220,0.30)');
+    glow.addColorStop(1, 'rgba(255,246,220,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(x, y - 4, 20, 0, TAU); ctx.fill();
+    for (let i = 0; i < 7; i++) {
+      const k = (t * 0.55 + i / 7) % 1;
+      const dir = i % 2 ? 1 : -1;
+      const dx = dir * (2 + (i % 3) * 2.4) * k;
+      const dy = -14 * Math.sin(k * Math.PI) * (0.7 + (i % 3) * 0.15);
+      const fade = Math.sin(k * Math.PI);
+      ctx.fillStyle = alpha(i % 2 ? '#BFE8DC' : '#FFF6DC', 0.15 + 0.55 * fade);
+      ctx.beginPath();
+      ctx.ellipse(x + dx, y - 3 + dy, 1.7, 2.6 - k, 0, 0, TAU);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -285,7 +313,7 @@
       this.t = 0;
       this.map = null;
       this.loadError = null;
-      this.progress = [5, 4, 0];
+      this.progress = [8, 3, 0];
       this.cam = null;
       this.dragPrev = null;
       this.dragMoved = false;
@@ -383,10 +411,12 @@
       const viewH = H / scale;
       let point;
       if (this.ceremony) {
+        // v2: the light travels the WALK — from the heart's walk-by point,
+        // over the bridge, through the gate, to the next island's first spot.
         const ri = this.ceremony.ri;
-        const a = nearestLength(this.map.streamSamples, this.map.hearts[ri]);
-        const b = nearestLength(this.map.streamSamples, this.map.spots[ri + 1][0]);
-        point = pointAtSamples(this.map.streamSamples, lerp(a, b, this.travelK()));
+        const a = nearestLength(this.map.walkSamples, this.map.hearts[ri]);
+        const b = nearestLength(this.map.walkSamples, this.map.spots[ri + 1][0]);
+        point = pointAtSamples(this.map.walkSamples, lerp(a, b, this.travelK()));
       } else {
         const ri = this.activeRegion();
         point = ri == null
@@ -515,6 +545,13 @@
     drawLiving(ctx) {
       const active = this.activeRegion();
       for (let ri = 0; ri < REGIONS.length; ri++) {
+        const wa = this.waterAlpha(ri);
+        if (wa > 0.05) {
+          const h = this.map.hearts[ri];
+          drawFountain(ctx, h.x, h.y, this.t + ri * 2.1, wa);
+        }
+      }
+      for (let ri = 0; ri < REGIONS.length; ri++) {
         const awake = this.regionAwake(ri);
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const s = this.map.spots[ri][j];
@@ -540,16 +577,18 @@
           ctx.strokeStyle = alpha('#FFE9A8', 0.25 + hk * 0.6);
           ctx.lineWidth = 3 + hk * 3;
           ctx.save();
-          const pulse = 1 + Math.sin(hk * Math.PI) * 0.12;
+          // r4's fountain courts are smaller than the old painting's hearts;
+          // the trace scales down to hug the basin.
+          const pulse = (1 + Math.sin(hk * Math.PI) * 0.12) * 0.55;
           ctx.translate(h.x, h.y); ctx.scale(pulse, pulse); ctx.translate(-h.x, -h.y);
           heartPath(ctx, this.ceremony.ri, h.x, h.y); ctx.stroke();
           ctx.restore();
         }
         const tk = this.travelK();
         if (tk > 0 && tk < 1) {
-          const a = nearestLength(this.map.streamSamples, this.map.hearts[this.ceremony.ri]);
-          const b = nearestLength(this.map.streamSamples, this.map.spots[this.ceremony.ri + 1][0]);
-          const p = pointAtSamples(this.map.streamSamples, lerp(a, b, tk));
+          const a = nearestLength(this.map.walkSamples, this.map.hearts[this.ceremony.ri]);
+          const b = nearestLength(this.map.walkSamples, this.map.spots[this.ceremony.ri + 1][0]);
+          const p = pointAtSamples(this.map.walkSamples, lerp(a, b, tk));
           const glow = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, 26);
           glow.addColorStop(0, 'rgba(255,246,220,0.96)');
           glow.addColorStop(1, 'rgba(255,246,220,0)');
@@ -602,16 +641,17 @@
         ctx.save();
         ctx.scale(scale, scale);
         ctx.translate(-this.cam.x, -this.cam.y);
-        const wash = ctx.createLinearGradient(1030, 640, 1420, 210);
+        // aimed at r4's Courtyard Heights (center ≈ 1320,135)
+        const wash = ctx.createLinearGradient(1060, 460, 1340, 140);
         wash.addColorStop(0, 'rgba(232,230,209,0)');
         wash.addColorStop(1, alpha('#E8E6D1', 0.32 * (1 - reveal)));
         ctx.fillStyle = wash;
         ctx.beginPath();
-        ctx.moveTo(1000, 0);
+        ctx.moveTo(1010, 0);
         ctx.lineTo(this.map.w, 0);
-        ctx.lineTo(this.map.w, 660);
-        ctx.lineTo(1510, 590);
-        ctx.lineTo(1260, 510);
+        ctx.lineTo(this.map.w, 500);
+        ctx.lineTo(1330, 470);
+        ctx.lineTo(1060, 320);
         ctx.closePath();
         ctx.fill();
         ctx.restore();

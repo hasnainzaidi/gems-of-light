@@ -303,4 +303,26 @@ north-bow / south-bow so the journey is one S-flow; hearts = star pool
 across open sky with gateway arches at far thresholds; contract v2
 anchors (8 spots per island, no stream); open upper-right seam.
 
-**VERDICTS (pending):**
+**Track 2 (engine) landed WITH the art (2026-07-15, per the false-alarm
+rule):** P19 is contract v2 — REGIONS 8/8/8 (sim progress [8,3,0]:
+valley complete + moon waxed, orchard mid-journey, heights asleep);
+no `stream` anywhere (the ceremony's traveling light runs the WALK
+from the finished heart, over the bridge, to the next island's first
+spot); awake fountains PLAY (engine droplet arcs + sparkle at
+`heart-R`, fading in with `water-R` during the wake); the sleeping
+wash re-aimed at r4's heights; heart-trace scaled to the fountain
+courts. Browser-verified on `?lab=19&map=r4`: loads clean, blooms/
+buds/star/moon correct, octagon fills and its fountain rises on the
+region-2 ceremony, camera tracks the walk route, toggle round-trip
+preserves the journey. One engine bug found and fixed on the way:
+the adventure PAUSE menu's back button was hardcoded to the title
+(`adventure.js`) — it now inherits `GOL.homeButton`, so backing out
+of a world entered from the map returns TO THE MAP. (This was the
+toggle's one hole; the shrine path already used homeButton.)
+
+PRE-MERGE CHECKLIST for PR #5 → staging (do NOT merge before): the
+v2 loader rejects the old `map=final` painting and the v1 stub — on
+adoption, r4 becomes `map-artist-pack/journey-map.svg` (new final),
+the stub gets rebuilt to v2, and `?lab=19` defaults must load clean.
+
+**VERDICTS (pending): the r4 full map on the phone.**
