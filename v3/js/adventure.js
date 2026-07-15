@@ -389,7 +389,9 @@
       if (this.paused) {
         this.buttons = [
           { x: W / 2 - 90, y: H / 2 + 30, r: 34, iconName: 'play', fn: () => (this.paused = false) },
-          { x: W / 2, y: H / 2 + 30, r: 34, iconName: 'back', fn: () => GOL.go('title') },
+          // home, not a hardcoded title exit: entered from the map, home IS
+          // the map (GOL.homeButton is overridden for the round trip)
+          Object.assign({}, GOL.homeButton(), { x: W / 2, y: H / 2 + 30, r: 34 }),
           { x: W / 2 + 90, y: H / 2 + 30, r: 34, icon: () => (GOL.store.data.settings.muted ? 'soundOff' : 'sound'), fn: GOL.muteButton(W).fn }
         ];
         GOL.hitButtons(GOL.Input.taps, this.buttons);

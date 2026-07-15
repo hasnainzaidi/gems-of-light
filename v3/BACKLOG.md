@@ -10,22 +10,20 @@ verdict is logged.
 
 ## Now
 
-- [ ] r3 map checkpoint on the phone: canal/heart polish verdicts + does
-      the map→world→map toggle feel like one game?
-      (`?lab=19&map=r3`; verdicts → `map-artist-pack/drafts/r1/LOG.md`)
-- [ ] Playtest the eight resequenced/polished worlds with the girls;
-      verdicts → `PLAN.md` §10 (work order:
-      `BRIEFS-2026-07-14-resequence-and-polish.md`)
-- [ ] Re-cut the map's island groupings over the RESEQUENCED
-      `WORLD_ORDER` — pedagogy call on where the three island boundaries
-      fall now (map assumed the pre-resequence 5/6/6)
+- [ ] Phone-verdict the round-4 map ON STAGING (`?lab=19`): four
+      islands 6/6/6/6, waypoint walk, arrival entry, rail camera,
+      eight wired surah doors — verdicts →
+      `map-artist-pack/drafts/r1/LOG.md`
+- [ ] Detailed per-world playtest with the girls (first pass 2026-07-15:
+      "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
 
 ## Next
 
-- [ ] Wire the real journey into the painted map: REGIONS as contiguous
-      `WORLD_ORDER` runs, real saves, blooms/moons from `gemsOfLight.v3`,
-      tap-to-enter — then replace the title's disc row with the map
-      (P19 harness → production scene)
+- [ ] Promote the map from lab to production: real saves (blooms/
+      moons/progress from `gemsOfLight.v3` instead of the sim),
+      Remembering-moon door, then replace the title's disc row with
+      the map scene (spot→surah wiring + 6/6/6/6 cut already done in
+      P19)
 - [ ] Remembering Moons on the map (moon anchor exists; wire the
       once-a-day dream-shrine door once real saves land)
 - [ ] Ship ritual for the next deploy: `git fetch origin` FIRST,

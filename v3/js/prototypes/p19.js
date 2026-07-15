@@ -17,13 +17,18 @@
   const MAP_KEY = (new URLSearchParams(location.search).get('map') || 'final')
     .replace(/[^A-Za-z0-9_-]/g, '');
   const ASSET_URL = new URL(MAP_KEY === 'final'
-    ? '../../map-artist-pack/journey-map.svg?v=354'
-    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=354',
+    ? '../../map-artist-pack/journey-map.svg?v=358'
+    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=358',
   scriptUrl).href;
-  const REGIONS = [
-    { count: 5, bloom: '#F5B8C4' },
-    { count: 6, bloom: '#F2C46E' },
-    { count: 6, bloom: '#E7C6A0' }
+  // Contract v2.1 (round 4): the region shape is read from the MAP ITSELF —
+  // a heart-4 anchor means four islands × 6 spots (the 6/6/6/6 cut of the
+  // 24-key WORLD_ORDER); otherwise three × 8. The live tree stays loadable
+  // whichever map is staged (the false-alarm rule, engineered away).
+  const BLOOMS = ['#F5B8C4', '#F2C46E', '#E7C6A0', '#F3E9C9'];
+  let REGIONS = [
+    { count: 8, bloom: BLOOMS[0] },
+    { count: 8, bloom: BLOOMS[1] },
+    { count: 8, bloom: BLOOMS[2] }
   ];
   const GRAND = {
     base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC',
@@ -50,11 +55,20 @@
     });
   }
 
+  // Isolate one named group as its own renderable document, wherever the
+  // artist nested it: strip every sibling along its ancestor chain (keeping
+  // defs), so ancestor transforms still apply to the survivor.
   function layerRoot(root, id) {
     const clone = root.cloneNode(true);
-    for (const child of Array.from(clone.children)) {
-      const tag = child.localName && child.localName.toLowerCase();
-      if (tag !== 'defs' && child.id !== id) child.remove();
+    let node = clone.querySelector('#' + id);
+    if (!node) throw new Error('map contract: #' + id + ' missing at layer split');
+    while (node && node !== clone) {
+      const parent = node.parentNode;
+      for (const sib of Array.from(parent.children)) {
+        const tag = sib.localName && sib.localName.toLowerCase();
+        if (sib !== node && tag !== 'defs') sib.remove();
+      }
+      node = parent;
     }
     return clone;
   }
@@ -119,47 +133,48 @@
       // predictable even though the artist file only needs a viewBox.
       root.setAttribute('width', String(vb[2]));
       root.setAttribute('height', String(vb[3]));
+      // Contract v2.1: no stream — the map's only water is the fountain
+      // hearts, and the ceremony's light travels the walk itself. Region
+      // count comes from the map: heart-4 present = 4×6, absent = 3×8.
       requireElement(root, 'walk', 'path');
-      requireElement(root, 'stream', 'path');
       requireElement(root, 'over', 'g');
-      for (let r = 1; r <= 3; r++) {
+      const nRegions = root.querySelector('#heart-4') ? 4 : 3;
+      const perRegion = 24 / nRegions;
+      for (let r = 1; r <= nRegions; r++) {
         requireElement(root, 'water-' + r, 'g');
         requireElement(root, 'heart-' + r, 'circle');
-        for (let n = 1; n <= 7; n++) requireElement(root, 'spot-' + r + '-' + n, 'circle');
+        for (let n = 1; n <= perRegion; n++) requireElement(root, 'spot-' + r + '-' + n, 'circle');
       }
-      requireElement(root, 'gate-1', 'circle');
-      requireElement(root, 'gate-2', 'circle');
+      for (let g = 1; g < nRegions; g++) requireElement(root, 'gate-' + g, 'circle');
       requireElement(root, 'moon', 'circle');
 
       // Mount invisibly for Safari's geometry APIs, then remove after sampling.
       root.style.cssText = 'position:absolute;left:-10000px;top:0;width:' + vb[2] + 'px;height:' + vb[3] + 'px;visibility:hidden;pointer-events:none';
       document.body.appendChild(root);
       const spots = [];
-      for (let r = 1; r <= 3; r++) {
+      const hearts = [];
+      for (let r = 1; r <= nRegions; r++) {
         const row = [];
-        for (let n = 1; n <= 7; n++) row.push(circlePoint(root, 'spot-' + r + '-' + n));
+        for (let n = 1; n <= perRegion; n++) row.push(circlePoint(root, 'spot-' + r + '-' + n));
         spots.push(row);
+        hearts.push(circlePoint(root, 'heart-' + r));
       }
-      const hearts = [1, 2, 3].map((r) => circlePoint(root, 'heart-' + r));
       const moon = circlePoint(root, 'moon');
-      const streamSamples = samplePath(requireElement(root, 'stream', 'path'), 3);
       const walkSamples = samplePath(requireElement(root, 'walk', 'path'), 3);
       root.removeAttribute('style');
       root.remove();
 
       const base = root.cloneNode(true);
       requireElement(base, 'over', 'g').remove();
-      for (let r = 1; r <= 3; r++) requireElement(base, 'water-' + r, 'g').remove();
-      const [baseImg, water1, water2, water3, overImg] = await Promise.all([
-        imageFromRoot(base),
-        imageFromRoot(layerRoot(root, 'water-1')),
-        imageFromRoot(layerRoot(root, 'water-2')),
-        imageFromRoot(layerRoot(root, 'water-3')),
-        imageFromRoot(layerRoot(root, 'over'))
-      ]);
+      for (let r = 1; r <= nRegions; r++) requireElement(base, 'water-' + r, 'g').remove();
+      const jobs = [imageFromRoot(base)];
+      for (let r = 1; r <= nRegions; r++) jobs.push(imageFromRoot(layerRoot(root, 'water-' + r)));
+      jobs.push(imageFromRoot(layerRoot(root, 'over')));
+      const layers = await Promise.all(jobs);
       return {
-        w: vb[2], h: vb[3], spots, hearts, moon, streamSamples, walkSamples,
-        images: { base: baseImg, water: [water1, water2, water3], over: overImg }
+        w: vb[2], h: vb[3], spots, hearts, moon, walkSamples,
+        regions: Array.from({ length: nRegions }, (_, i) => ({ count: perRegion, bloom: BLOOMS[i] })),
+        images: { base: layers[0], water: layers.slice(1, 1 + nRegions), over: layers[layers.length - 1] }
       };
     })();
     return assetPromise;
@@ -198,9 +213,41 @@
     ctx.restore();
   }
 
+  // Contract v2: an awake island's fountain PLAYS — the engine's living
+  // water over the artist's painted basin, gentle arcs and a soft sparkle.
+  // An asleep island keeps its dry basin (its water layer is hidden).
+  function drawFountain(ctx, x, y, t, a) {
+    if (a <= 0.02) return;
+    ctx.save();
+    ctx.globalAlpha *= a;
+    const glow = ctx.createRadialGradient(x, y - 4, 1, x, y - 4, 20);
+    glow.addColorStop(0, 'rgba(255,246,220,0.30)');
+    glow.addColorStop(1, 'rgba(255,246,220,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(x, y - 4, 20, 0, TAU); ctx.fill();
+    for (let i = 0; i < 7; i++) {
+      const k = (t * 0.55 + i / 7) % 1;
+      const dir = i % 2 ? 1 : -1;
+      const dx = dir * (2 + (i % 3) * 2.4) * k;
+      const dy = -14 * Math.sin(k * Math.PI) * (0.7 + (i % 3) * 0.15);
+      const fade = Math.sin(k * Math.PI);
+      ctx.fillStyle = alpha(i % 2 ? '#BFE8DC' : '#FFF6DC', 0.15 + 0.55 * fade);
+      ctx.beginPath();
+      ctx.ellipse(x + dx, y - 3 + dy, 1.7, 2.6 - k, 0, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function heartPath(ctx, ri, x, y) {
     if (ri === 0) {
       GOL.star8Path(ctx, x, y, 58, Math.PI / 8);
+      return;
+    }
+    if (ri === 3) {
+      // the summit's ring pool — a halo of water
+      ctx.beginPath();
+      ctx.ellipse(x, y, 54, 30, 0, 0, TAU);
       return;
     }
     ctx.beginPath();
@@ -285,7 +332,7 @@
       this.t = 0;
       this.map = null;
       this.loadError = null;
-      this.progress = [5, 4, 0];
+      this.progress = [8, 3, 0];
       this.cam = null;
       this.dragPrev = null;
       this.dragMoved = false;
@@ -294,8 +341,25 @@
       this.hero = null;
       this.spotPulse = null;
       this.pendingBloom = false;
+      this.kbdFollow = 0;
+      this.kbdActHeld = false;
+      this.railS = null;
+      this.spotS = null;
+      this.waypoints = null;
+      this.stepCool = 0;
+      this.dwell = null;
+      this.heroArrived = true; // no arrival event on scene entry/return
       loadAsset().then((map) => {
         this.map = map;
+        REGIONS = map.regions;
+        // every spot's position along the walk, and the flat waypoint
+        // ladder she steps between (r4.2: snap-to-waypoint walking)
+        this.spotS = map.spots.map((row) => row.map((sp) => nearestLength(map.walkSamples, sp)));
+        this.waypoints = this.spotS.flat().sort((a, b) => a - b);
+        // simulated journey: it BEGINS on island 1 (r4.2 verdict — the
+        // first island centered on load), two blooms in; everything else
+        // is reachable live by walking and blooming forward
+        this.progress = REGIONS.map((r, i) => (i === 0 ? 2 : 0));
         if (returnState) {
           // back from a world: the journey stands exactly where she left it
           this.progress = returnState.progress;
@@ -322,18 +386,16 @@
 
     regionAwake(i) {
       if (i === 0) return true;
-      if (i === 1) return this.progress[0] >= REGIONS[0].count;
-      return this.progress[1] >= REGIONS[1].count;
+      return this.progress[i - 1] >= REGIONS[i - 1].count;
     },
 
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
 
     waterAlpha(i) {
-      if (i < 2 || !this.ceremony || this.ceremony.ri !== 1 || i !== 2) {
-        return this.regionAwake(i) ? 1 : 0;
-      }
-      return this.travelK();
+      // during a wake ceremony the NEXT island's water rises with the light
+      if (this.ceremony && i === this.ceremony.ri + 1) return this.travelK();
+      return this.regionAwake(i) ? 1 : 0;
     },
 
     // Tap the breathing star: she walks the trail there FIRST, and the
@@ -367,7 +429,109 @@
     // embedded browser's interaction-throttled canvas practical to inspect.
     debugCollectAll() { this.bloomAtStar(true); },
 
+    // Each spot IS a surah (2026-07-15 wiring): global ladder position k →
+    // WORLD_ORDER[k] → the registered world with that key. Keys whose
+    // worlds aren't built yet aren't enterable.
+    worldForSpot(ri, j) {
+      let k = j;
+      for (let i = 0; i < ri; i++) k += REGIONS[i].count;
+      const key = GOL.WORLD_ORDER && GOL.WORLD_ORDER[k];
+      if (!key || !GOL.WORLDS3) return null;
+      const w = GOL.WORLDS3.find((x) => x && x.key === key && x.build);
+      return w ? w.n : null;
+    },
+
+    // The toggle: a bloomed spot is a door into ITS OWN world; home inside
+    // the world leads back here, journey intact. Shared by tap, keyboard,
+    // star-arrival, and the hesitation.
+    enterWorld(ri, j) {
+      const n = this.worldForSpot(ri, j);
+      if (n == null) return false;
+      returnState = {
+        progress: this.progress.slice(),
+        cam: { x: this.cam.x, y: this.cam.y },
+        heroS: this.hero.s
+      };
+      if (!origHomeButton) {
+        origHomeButton = GOL.homeButton;
+        GOL.homeButton = function () {
+          const btn = origHomeButton.apply(GOL, arguments);
+          btn.fn = () => GOL.go('paintedMapLab');
+          return btn;
+        };
+      }
+      GOL.audio.unlock();
+      if (GOL.audio) GOL.audio.sfx('unlockLevel');
+      GOL.go('adventure', { world: n });
+      return true;
+    },
+
+    // Landing on a waypoint (r4.2 verdict): the NEW bloom opens its world
+    // immediately (bloom first; a completed island's wake ceremony takes
+    // precedence over entry); an old bloom arms the visible hesitation.
+    _onArrive() {
+      if (!this.map || !this.spotS || this.ceremony) return;
+      const a = this.activeRegion();
+      if (a != null && this.regionAwake(a)
+          && Math.abs(this.hero.s - this.spotS[a][this.progress[a]]) <= 2) {
+        const j = this.progress[a];
+        this.pendingBloom = false;
+        this._doBloom();
+        if (!this.ceremony) this.enterWorld(a, j);
+        return;
+      }
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        if (!this.regionAwake(ri)) continue;
+        for (let j = 0; j < this.progress[ri]; j++) {
+          if (Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+            // hesitate only where a door actually exists
+            if (this.worldForSpot(ri, j) != null) this.dwell = { t: 0, ri, j };
+            return;
+          }
+        }
+      }
+    },
+
+    // Keyboard navigation (r4 verdict): enter/space acts on whatever she
+    // stands beside — the breathing star blooms, a finished bloom opens
+    // its world.
+    kbdAct() {
+      if (!this.map || !this.hero) return;
+      const pos = pointAtSamples(this.map.walkSamples, this.hero.s);
+      const a = this.activeRegion();
+      if (a != null && this.regionAwake(a) && !this.pendingBloom) {
+        const star = this.map.spots[a][this.progress[a]];
+        if (GOL.dist(pos.x, pos.y, star.x, star.y) <= 40) {
+          this.bloomAtStar(false);
+          return;
+        }
+      }
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        if (!this.regionAwake(ri)) continue;
+        for (let j = 0; j < this.progress[ri]; j++) {
+          const b = this.map.spots[ri][j];
+          if (GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+            this.enterWorld(ri, j);
+            return;
+          }
+        }
+      }
+    },
+
     mapScale(H) { return clamp(H / 393, 0.88, 1.12); },
+
+    // Touch walk buttons (r4.1 verdict): simple back/forward along the
+    // trail, bottom-right, touch only — no full joystick.
+    walkButtons(W, H) {
+      if (!GOL.Input.touchMode) return null;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const y = H - 58 - sa.b * 0.5;
+      const x2 = W - 60 - sa.r;
+      return [
+        { x: x2 - 74, y, r: 30, dir: -1 },
+        { x: x2, y, r: 30, dir: 1 }
+      ];
+    },
 
     mapCamMax(W, H) {
       const scale = this.mapScale(H);
@@ -383,14 +547,22 @@
       const viewH = H / scale;
       let point;
       if (this.ceremony) {
+        // v2: the light travels the WALK — from the heart's walk-by point,
+        // over the bridge, through the gate, to the next island's first spot.
         const ri = this.ceremony.ri;
-        const a = nearestLength(this.map.streamSamples, this.map.hearts[ri]);
-        const b = nearestLength(this.map.streamSamples, this.map.spots[ri + 1][0]);
-        point = pointAtSamples(this.map.streamSamples, lerp(a, b, this.travelK()));
+        const a = nearestLength(this.map.walkSamples, this.map.hearts[ri]);
+        const b = nearestLength(this.map.walkSamples, this.map.spots[ri + 1][0]);
+        point = pointAtSamples(this.map.walkSamples, lerp(a, b, this.travelK()));
+      } else if (this.kbdFollow > 0 && this.hero) {
+        point = pointAtSamples(this.map.walkSamples, this.hero.s);
+      } else if (this.camFree > 0 && this.railS != null) {
+        // the rail (r4.1 verdict): looking around slides along the journey's
+        // own axis — you can scroll, but never get lost in empty sky
+        point = pointAtSamples(this.map.walkSamples, this.railS);
       } else {
         const ri = this.activeRegion();
         point = ri == null
-          ? this.map.spots[2][REGIONS[2].count - 1]
+          ? this.map.spots[REGIONS.length - 1][REGIONS[REGIONS.length - 1].count - 1]
           : this.map.spots[ri][this.progress[ri]];
       }
       const max = this.mapCamMax(W, H);
@@ -419,19 +591,88 @@
       if (this.hero) {
         // she travels the trail itself, never as the crow flies
         const d = this.hero.sT - this.hero.s;
-        if (Math.abs(d) > 1) {
-          this.hero.s += Math.sign(d) * Math.min(Math.abs(d), dt * 170);
-        } else if (this.pendingBloom) {
-          this.pendingBloom = false;
-          this._doBloom();
+        if (Math.abs(d) > 1) this.hero.s += Math.sign(d) * Math.min(Math.abs(d), dt * 170);
+      }
+      const arrived = this.hero ? Math.abs(this.hero.sT - this.hero.s) <= 1 : true;
+
+      // Waypoint walk (r4.2 verdict): she STEPS spot to spot — a subtle
+      // snap, never resting between waypoints. Held input chains steps.
+      const walkBtnsNow = this.walkButtons(W, H);
+      if (this.hero && !this.ceremony) {
+        const K = GOL.Input._keys || {};
+        let dir = (K.ArrowRight || K.d || K.D ? 1 : 0) - (K.ArrowLeft || K.a || K.A ? 1 : 0);
+        if (!dir && walkBtnsNow) {
+          for (const p of GOL.Input.pointers.values()) {
+            for (const b of walkBtnsNow) {
+              if (GOL.dist(p.x, p.y, b.x, b.y) < b.r + 8) dir = b.dir;
+            }
+          }
+        }
+        this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
+        if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
+          const a = this.activeRegion();
+          const maxS = a == null ? this.map.walkSamples.len : this.spotS[a][this.progress[a]];
+          let target = null;
+          if (dir > 0) {
+            target = this.waypoints.find((s) => s > this.hero.sT + 2 && s <= maxS + 1);
+          } else {
+            for (const s of this.waypoints) if (s < this.hero.sT - 2) target = s;
+          }
+          if (target != null) {
+            this.hero.sT = target;
+            this.pendingBloom = false;
+            this.dwell = null;
+            this.stepCool = 0.12;
+            this.kbdFollow = 2.2;
+          }
+        }
+        if (!arrived) this.kbdFollow = Math.max(this.kbdFollow, 0.8);
+        const act = !!(K.Enter || K[' ']);
+        if (act && !this.kbdActHeld) { this.kbdActHeld = true; this.kbdAct(); }
+        else if (!act) this.kbdActHeld = false;
+      }
+      this.kbdFollow = Math.max(0, (this.kbdFollow || 0) - dt);
+
+      // Arrival semantics (r4.2 verdict): landing on the NEW bloom enters
+      // its world at once; resting on an old bloom hesitates visibly, then
+      // enters. Walking through never triggers.
+      if (this.hero && arrived && !this.heroArrived) {
+        this.heroArrived = true;
+        this._onArrive();
+      } else if (!arrived) {
+        this.heroArrived = false;
+        this.dwell = null;
+      }
+      if (this.dwell && !this.ceremony) {
+        this.dwell.t += dt;
+        if (this.dwell.t >= 1.0) {
+          const d = this.dwell;
+          this.dwell = null;
+          this.enterWorld(d.ri, d.j);
+          return;
         }
       }
 
       const drag = GOL.Input.drag;
-      if (drag && !this.ceremony) {
+      const dragOnBtns = drag && walkBtnsNow &&
+        walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10);
+      if (drag && !this.ceremony && !dragOnBtns) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
-          this.cam.x = clamp(this.cam.x - (drag.x - this.dragPrev.x) / scale, 0, camMax.x);
-          this.cam.y = clamp(this.cam.y - (drag.y - this.dragPrev.y) / scale, 0, camMax.y);
+          // rail scroll: project the drag onto the trail's local direction
+          // and slide along it — never free into open sky
+          if (this.railS == null) {
+            const center = {
+              x: this.cam.x + (W / scale) * 0.46,
+              y: this.cam.y + (H / scale) * 0.58
+            };
+            this.railS = nearestLength(this.map.walkSamples, center);
+          }
+          const ahead = pointAtSamples(this.map.walkSamples, this.railS + 8);
+          const here = pointAtSamples(this.map.walkSamples, this.railS - 8);
+          const tl = Math.hypot(ahead.x - here.x, ahead.y - here.y) || 1;
+          const tx = (ahead.x - here.x) / tl, ty = (ahead.y - here.y) / tl;
+          const ds = -((drag.x - this.dragPrev.x) * tx + (drag.y - this.dragPrev.y) * ty) / scale;
+          this.railS = clamp(this.railS + ds, 0, this.map.walkSamples.len);
         }
         this.dragPrev = { id: drag.id, x: drag.x, y: drag.y };
         if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 12) {
@@ -446,9 +687,11 @@
       if (this.ceremony) {
         this.ceremony.t += dt;
         if (this.ceremony.t >= 4.8) this.ceremony = null;
-      } else if (this.camFree <= 0 && !drag) {
+      } else {
+        if (this.camFree <= 0) this.railS = null;
         const target = this.targetCam(W, H);
-        const k = Math.min(1, dt * 1.8);
+        // the rail follows the finger promptly; the journey ease is calm
+        const k = Math.min(1, dt * (this.camFree > 0 ? 6 : 1.8));
         this.cam.x += (target.x - this.cam.x) * k;
         this.cam.y += (target.y - this.cam.y) * k;
       }
@@ -477,22 +720,7 @@
           for (let j = 0; j < this.progress[ri]; j++) {
             const b = this.map.spots[ri][j];
             if (GOL.dist(wx, wy, b.x, b.y) < 36) {
-              returnState = {
-                progress: this.progress.slice(),
-                cam: { x: this.cam.x, y: this.cam.y },
-                heroS: this.hero.s
-              };
-              if (!origHomeButton) {
-                origHomeButton = GOL.homeButton;
-                GOL.homeButton = function () {
-                  const btn = origHomeButton.apply(GOL, arguments);
-                  btn.fn = () => GOL.go('paintedMapLab');
-                  return btn;
-                };
-              }
-              GOL.audio.unlock();
-              if (GOL.audio) GOL.audio.sfx('unlockLevel');
-              GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+              this.enterWorld(ri, j);
               return;
             }
           }
@@ -514,6 +742,13 @@
 
     drawLiving(ctx) {
       const active = this.activeRegion();
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        const wa = this.waterAlpha(ri);
+        if (wa > 0.05) {
+          const h = this.map.hearts[ri];
+          drawFountain(ctx, h.x, h.y, this.t + ri * 2.1, wa);
+        }
+      }
       for (let ri = 0; ri < REGIONS.length; ri++) {
         const awake = this.regionAwake(ri);
         for (let j = 0; j < REGIONS[ri].count; j++) {
@@ -540,16 +775,18 @@
           ctx.strokeStyle = alpha('#FFE9A8', 0.25 + hk * 0.6);
           ctx.lineWidth = 3 + hk * 3;
           ctx.save();
-          const pulse = 1 + Math.sin(hk * Math.PI) * 0.12;
+          // r4's fountain courts are smaller than the old painting's hearts;
+          // the trace scales down to hug the basin.
+          const pulse = (1 + Math.sin(hk * Math.PI) * 0.12) * 0.55;
           ctx.translate(h.x, h.y); ctx.scale(pulse, pulse); ctx.translate(-h.x, -h.y);
           heartPath(ctx, this.ceremony.ri, h.x, h.y); ctx.stroke();
           ctx.restore();
         }
         const tk = this.travelK();
         if (tk > 0 && tk < 1) {
-          const a = nearestLength(this.map.streamSamples, this.map.hearts[this.ceremony.ri]);
-          const b = nearestLength(this.map.streamSamples, this.map.spots[this.ceremony.ri + 1][0]);
-          const p = pointAtSamples(this.map.streamSamples, lerp(a, b, tk));
+          const a = nearestLength(this.map.walkSamples, this.map.hearts[this.ceremony.ri]);
+          const b = nearestLength(this.map.walkSamples, this.map.spots[this.ceremony.ri + 1][0]);
+          const p = pointAtSamples(this.map.walkSamples, lerp(a, b, tk));
           const glow = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, 26);
           glow.addColorStop(0, 'rgba(255,246,220,0.96)');
           glow.addColorStop(1, 'rgba(255,246,220,0)');
@@ -565,6 +802,15 @@
         const moving = Math.abs(this.hero.sT - this.hero.s) > 1;
         drawMapLightling(ctx, pos.x, pos.y, this.t, moving,
           ahead.x >= pos.x ? 1 : -1);
+        if (this.dwell) {
+          // the hesitation, visible: a ring closing in as entry nears
+          const k = clamp(this.dwell.t / 1.0, 0, 1);
+          ctx.strokeStyle = alpha('#FFE9A8', 0.25 + 0.55 * k);
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y + 2, 16 + (1 - k) * 14, 0, TAU);
+          ctx.stroke();
+        }
       }
       if (active != null && !this.ceremony) {
         const s = this.map.spots[active][this.progress[active]];
@@ -595,27 +841,31 @@
         ctx.save(); ctx.globalAlpha = a; ctx.drawImage(this.map.images.water[i], dx, dy, dw, dh); ctx.restore();
       }
 
-      // The lab's engine wash makes the unreached terrace sleep; the SVG
+      // The lab's engine wash makes every unreached island sleep; the SVG
       // itself remains fully awake, exactly as the artist contract requires.
-      if (!this.regionAwake(2)) {
-        const reveal = this.ceremony && this.ceremony.ri === 1 ? this.travelK() : 0;
-        ctx.save();
-        ctx.scale(scale, scale);
-        ctx.translate(-this.cam.x, -this.cam.y);
-        const wash = ctx.createLinearGradient(1030, 640, 1420, 210);
-        wash.addColorStop(0, 'rgba(232,230,209,0)');
-        wash.addColorStop(1, alpha('#E8E6D1', 0.32 * (1 - reveal)));
+      // Data-driven: a soft dome over each asleep island, sized from its
+      // own spots, fading as its wake ceremony arrives.
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.translate(-this.cam.x, -this.cam.y);
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        if (this.regionAwake(ri)) continue;
+        const reveal = this.ceremony && this.ceremony.ri === ri - 1 ? this.travelK() : 0;
+        const a = 0.30 * (1 - reveal);
+        if (a <= 0.01) continue;
+        const h = this.map.hearts[ri];
+        let rr = 0;
+        for (const sp of this.map.spots[ri]) {
+          rr = Math.max(rr, Math.hypot(sp.x - h.x, sp.y - h.y));
+        }
+        rr += 170;
+        const wash = ctx.createRadialGradient(h.x, h.y, rr * 0.35, h.x, h.y, rr);
+        wash.addColorStop(0, alpha('#E8E6D1', a));
+        wash.addColorStop(1, 'rgba(232,230,209,0)');
         ctx.fillStyle = wash;
-        ctx.beginPath();
-        ctx.moveTo(1000, 0);
-        ctx.lineTo(this.map.w, 0);
-        ctx.lineTo(this.map.w, 660);
-        ctx.lineTo(1510, 590);
-        ctx.lineTo(1260, 510);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
+        ctx.beginPath(); ctx.arc(h.x, h.y, rr, 0, TAU); ctx.fill();
       }
+      ctx.restore();
 
       ctx.save();
       ctx.scale(scale, scale);
@@ -626,6 +876,27 @@
 
       const sa = GOL.SAFE || { l: 0, t: 0 };
       GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
+
+      // touch walk buttons: back / forward along the trail
+      const btns = this.walkButtons(W, H);
+      if (btns && this.map && !this.ceremony) {
+        for (const b of btns) {
+          ctx.save();
+          ctx.globalAlpha = 0.78;
+          ctx.fillStyle = '#FDF6E4';
+          ctx.strokeStyle = '#C9B98F'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.r - 4, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = '#8A7A55'; ctx.lineWidth = 4;
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          const d = b.dir * 5;
+          ctx.beginPath();
+          ctx.moveTo(b.x - d, b.y - 9);
+          ctx.lineTo(b.x + d, b.y);
+          ctx.lineTo(b.x - d, b.y + 9);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
     }
   };
 

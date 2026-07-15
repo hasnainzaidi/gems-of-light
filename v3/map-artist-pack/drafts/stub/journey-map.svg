@@ -1,95 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 860">
-  <!-- Contract stub: the minimal aerial-oblique map that satisfies every
-       requirement in MAP-ART-BRIEF.md §5. Used by the P19 harness while
-       real drafts are painted; also the reference implementation of the
-       anchor contract. Deliberately plain — geometry, not art. -->
-
-  <!-- ground plane: valley (lower-left) to heights (upper-right) -->
-  <defs>
-    <linearGradient id="g-ground" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#7CBF6B"/>
-      <stop offset="0.5" stop-color="#7CB863"/>
-      <stop offset="1" stop-color="#8CB061"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="1800" height="860" fill="url(#g-ground)"/>
-  <!-- thin sky band, upper edge only -->
-  <rect x="0" y="0" width="1800" height="46" fill="#DFF0C8"/>
-  <!-- region masses -->
-  <ellipse cx="420" cy="640" rx="400" ry="230" fill="#ACDE90" opacity="0.55"/>
-  <ellipse cx="950" cy="430" rx="380" ry="220" fill="#A4D384" opacity="0.5"/>
-  <ellipse cx="1480" cy="260" rx="360" ry="200" fill="#B0CC80" opacity="0.55"/>
-
-  <!-- the trail: one gesture, lower-left to upper-right, winding -->
-  <path id="walk" d="M 80 800 C 260 780 180 640 340 620 C 520 598 560 720 720 680
-      C 880 640 780 500 940 470 C 1100 440 1180 540 1300 470
-      C 1420 400 1340 300 1480 260 C 1600 226 1660 190 1760 150"
-      fill="none" stroke="#EAE0C6" stroke-width="26" stroke-linecap="round" opacity="0.9"/>
-
-  <!-- the watercourse: spring → upper-right, near the trail -->
-  <path id="stream" d="M 300 560 C 420 560 500 640 640 620 C 800 596 820 480 960 440
-      C 1100 400 1200 480 1320 420 C 1440 360 1400 260 1520 230 C 1620 205 1690 170 1760 130"
-      fill="none" stroke="#CBBC97" stroke-width="12" fill-opacity="0" opacity="0.9"/>
-
-  <!-- per-region water, revealed by the engine as the journey opens -->
-  <g id="water-1">
-    <path d="M 300 560 C 420 560 500 640 640 620" fill="none" stroke="#8FCFC2" stroke-width="8"/>
-    <path d="M 262 522 l 38 -22 38 22 22 38 -22 38 -38 22 -38 -22 -22 -38 Z" fill="#BFE8DC"/>
-  </g>
-  <g id="water-2">
-    <path d="M 640 620 C 800 596 820 480 960 440 C 1100 400 1200 480 1320 420" fill="none" stroke="#8FCFC2" stroke-width="8"/>
-  </g>
-  <g id="water-3">
-    <path d="M 1320 420 C 1440 360 1400 260 1520 230 C 1620 205 1690 170 1760 130" fill="none" stroke="#8FC9B8" stroke-width="8"/>
-  </g>
-
-  <!-- hearts: star spring, quatrefoil clearing, octagon court -->
-  <path d="M 240 500 l 60 -35 60 35 35 60 -35 60 -60 35 -60 -35 -35 -60 Z"
-        fill="none" stroke="#EAE0C6" stroke-width="10"/>
-  <circle id="heart-1" cx="300" cy="560" r="4" opacity="0"/>
-  <g fill="none" stroke="#EAE0C6" stroke-width="9">
-    <circle cx="905" cy="330" r="34"/><circle cx="975" cy="330" r="34"/>
-    <circle cx="940" cy="295" r="34"/><circle cx="940" cy="365" r="34"/>
-  </g>
-  <circle id="heart-2" cx="940" cy="330" r="4" opacity="0"/>
-  <path d="M 1455 150 l 50 0 36 36 0 50 -36 36 -50 0 -36 -36 0 -50 Z"
-        fill="#F0E0BE" stroke="#D2BC90" stroke-width="8"/>
-  <circle id="heart-3" cx="1480" cy="211" r="4" opacity="0"/>
-
-  <!-- gates at the water-stair crests -->
-  <circle id="gate-1" cx="640" cy="620" r="5" opacity="0"/>
-  <circle id="gate-2" cx="1320" cy="420" r="5" opacity="0"/>
-  <!-- the daytime moon's sky -->
-  <circle id="moon" cx="360" cy="330" r="5" opacity="0"/>
-
-  <!-- surah spots: seven per region along the walk, in walking order -->
-  <g opacity="0">
-    <circle id="spot-1-1" cx="120" cy="792" r="4"/>
-    <circle id="spot-1-2" cx="230" cy="742" r="4"/>
-    <circle id="spot-1-3" cx="330" cy="628" r="4"/>
-    <circle id="spot-1-4" cx="470" cy="622" r="4"/>
-    <circle id="spot-1-5" cx="580" cy="682" r="4"/>
-    <circle id="spot-1-6" cx="700" cy="684" r="4"/>
-    <circle id="spot-1-7" cx="800" cy="620" r="4"/>
-    <circle id="spot-2-1" cx="838" cy="540" r="4"/>
-    <circle id="spot-2-2" cx="930" cy="472" r="4"/>
-    <circle id="spot-2-3" cx="1040" cy="452" r="4"/>
-    <circle id="spot-2-4" cx="1150" cy="500" r="4"/>
-    <circle id="spot-2-5" cx="1250" cy="500" r="4"/>
-    <circle id="spot-2-6" cx="1340" cy="450" r="4"/>
-    <circle id="spot-2-7" cx="1400" cy="380" r="4"/>
-    <circle id="spot-3-1" cx="1380" cy="320" r="4"/>
-    <circle id="spot-3-2" cx="1440" cy="270" r="4"/>
-    <circle id="spot-3-3" cx="1530" cy="248" r="4"/>
-    <circle id="spot-3-4" cx="1610" cy="220" r="4"/>
-    <circle id="spot-3-5" cx="1680" cy="192" r="4"/>
-    <circle id="spot-3-6" cx="1730" cy="168" r="4"/>
-    <circle id="spot-3-7" cx="1768" cy="146" r="4"/>
-  </g>
-
-  <!-- walk-behind pieces: a little bridge rail where trail crosses stream -->
-  <g id="over">
-    <rect x="614" y="596" width="60" height="8" rx="4" fill="#8A6B4F"/>
-    <rect x="1294" y="398" width="60" height="8" rx="4" fill="#8A6B4F"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 2400 1080">
+<rect x="0" y="0" width="2400" height="1080" fill="#CDE6D8"/>
+<rect x="0" y="700" width="2400" height="380" fill="#DDEBC9"/>
+<ellipse cx="340" cy="1010" rx="150" ry="34" fill="#F7F2E0" opacity="0.8"/>
+<ellipse cx="873" cy="793" rx="150" ry="34" fill="#F7F2E0" opacity="0.8"/>
+<ellipse cx="1406" cy="576" rx="150" ry="34" fill="#F7F2E0" opacity="0.8"/>
+<ellipse cx="1940" cy="360" rx="150" ry="34" fill="#F7F2E0" opacity="0.8"/>
+<ellipse cx="400" cy="876" rx="236" ry="122" fill="#C9B183"/>
+<ellipse cx="400" cy="850" rx="236" ry="120" fill="#8FBF6E"/>
+<ellipse cx="933" cy="659" rx="236" ry="122" fill="#C9B183"/>
+<ellipse cx="933" cy="633" rx="236" ry="120" fill="#8FBF6E"/>
+<ellipse cx="1466" cy="442" rx="236" ry="122" fill="#C9B183"/>
+<ellipse cx="1466" cy="416" rx="236" ry="120" fill="#8FBF6E"/>
+<ellipse cx="2000" cy="226" rx="236" ry="122" fill="#C9B183"/>
+<ellipse cx="2000" cy="200" rx="236" ry="120" fill="#8FBF6E"/>
+<ellipse cx="410" cy="940" rx="56" ry="28" fill="#EAE0C6"/>
+<ellipse cx="410" cy="940" rx="46" ry="22" fill="#D8CCA8"/>
+<ellipse cx="943" cy="723" rx="56" ry="28" fill="#EAE0C6"/>
+<ellipse cx="943" cy="723" rx="46" ry="22" fill="#D8CCA8"/>
+<ellipse cx="1476" cy="506" rx="56" ry="28" fill="#EAE0C6"/>
+<ellipse cx="1476" cy="506" rx="46" ry="22" fill="#D8CCA8"/>
+<ellipse cx="2010" cy="290" rx="56" ry="28" fill="#EAE0C6"/>
+<ellipse cx="2010" cy="290" rx="46" ry="22" fill="#D8CCA8"/>
+<path id="walk" d="M 200 890 L 300 820 L 480 880 L 600 810 L 733 673 L 833 603 L 1013 663 L 1133 593 L 1266 456 L 1366 386 L 1546 446 L 1666 376 L 1800 240 L 1900 170 L 2080 230 L 2200 160 L 2240 130" fill="none" stroke="#EFE3C2" stroke-width="26" stroke-linejoin="round" stroke-linecap="round"/>
+<g id="water-1"><ellipse cx="410" cy="940" rx="42" ry="20" fill="#7FC8B8"/><ellipse cx="402" cy="936" rx="14" ry="5" fill="#EAF7EF"/></g>
+<g id="water-2"><ellipse cx="943" cy="723" rx="42" ry="20" fill="#8FD0B0"/><ellipse cx="935" cy="719" rx="14" ry="5" fill="#EAF7EF"/></g>
+<g id="water-3"><ellipse cx="1476" cy="506" rx="42" ry="20" fill="#9AD3C4"/><ellipse cx="1468" cy="502" rx="14" ry="5" fill="#EAF7EF"/></g>
+<g id="water-4"><ellipse cx="2010" cy="290" rx="42" ry="20" fill="#BCE3D2"/><ellipse cx="2002" cy="286" rx="14" ry="5" fill="#EAF7EF"/></g>
+<circle id="heart-1" cx="410" cy="940" r="4" opacity="0"/>
+<circle id="heart-2" cx="943" cy="723" r="4" opacity="0"/>
+<circle id="heart-3" cx="1476" cy="506" r="4" opacity="0"/>
+<circle id="heart-4" cx="2010" cy="290" r="4" opacity="0"/>
+<circle cx="212.3" cy="881.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-1" cx="212.3" cy="881.4" r="4" opacity="0"/>
+<circle cx="281.2" cy="833.1" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-2" cx="281.2" cy="833.1" r="4" opacity="0"/>
+<circle cx="358.1" cy="839.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-3" cx="358.1" cy="839.4" r="4" opacity="0"/>
+<circle cx="437.9" cy="866" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-4" cx="437.9" cy="866" r="4" opacity="0"/>
+<circle cx="514.4" cy="860" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-5" cx="514.4" cy="860" r="4" opacity="0"/>
+<circle cx="587" cy="817.6" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-1-6" cx="587" cy="817.6" r="4" opacity="0"/>
+<circle cx="745.3" cy="664.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-1" cx="745.3" cy="664.4" r="4" opacity="0"/>
+<circle cx="814.2" cy="616.1" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-2" cx="814.2" cy="616.1" r="4" opacity="0"/>
+<circle cx="891.1" cy="622.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-3" cx="891.1" cy="622.4" r="4" opacity="0"/>
+<circle cx="970.9" cy="649" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-4" cx="970.9" cy="649" r="4" opacity="0"/>
+<circle cx="1047.4" cy="643" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-5" cx="1047.4" cy="643" r="4" opacity="0"/>
+<circle cx="1120" cy="600.6" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-2-6" cx="1120" cy="600.6" r="4" opacity="0"/>
+<circle cx="1278.3" cy="447.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-1" cx="1278.3" cy="447.4" r="4" opacity="0"/>
+<circle cx="1347.2" cy="399.1" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-2" cx="1347.2" cy="399.1" r="4" opacity="0"/>
+<circle cx="1424.1" cy="405.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-3" cx="1424.1" cy="405.4" r="4" opacity="0"/>
+<circle cx="1503.9" cy="432" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-4" cx="1503.9" cy="432" r="4" opacity="0"/>
+<circle cx="1580.4" cy="426" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-5" cx="1580.4" cy="426" r="4" opacity="0"/>
+<circle cx="1653" cy="383.6" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-3-6" cx="1653" cy="383.6" r="4" opacity="0"/>
+<circle cx="1812.3" cy="231.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-1" cx="1812.3" cy="231.4" r="4" opacity="0"/>
+<circle cx="1881.2" cy="183.1" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-2" cx="1881.2" cy="183.1" r="4" opacity="0"/>
+<circle cx="1958.1" cy="189.4" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-3" cx="1958.1" cy="189.4" r="4" opacity="0"/>
+<circle cx="2037.9" cy="216" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-4" cx="2037.9" cy="216" r="4" opacity="0"/>
+<circle cx="2114.4" cy="210" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-5" cx="2114.4" cy="210" r="4" opacity="0"/>
+<circle cx="2187" cy="167.6" r="6" fill="#B98A3E" opacity="0.7"/>
+<circle id="spot-4-6" cx="2187" cy="167.6" r="4" opacity="0"/>
+<rect x="717" y="629" width="10" height="44" fill="#C9B183"/><rect x="741" y="629" width="10" height="44" fill="#C9B183"/><circle id="gate-1" cx="733" cy="673" r="4" opacity="0"/>
+<rect x="1250" y="412" width="10" height="44" fill="#C9B183"/><rect x="1274" y="412" width="10" height="44" fill="#C9B183"/><circle id="gate-2" cx="1266" cy="456" r="4" opacity="0"/>
+<rect x="1784" y="196" width="10" height="44" fill="#C9B183"/><rect x="1808" y="196" width="10" height="44" fill="#C9B183"/><circle id="gate-3" cx="1800" cy="240" r="4" opacity="0"/>
+<circle id="moon" cx="330" cy="580" r="4" opacity="0"/>
+<g id="over"><ellipse cx="1200" cy="520" rx="90" ry="24" fill="#F7F2E0" opacity="0.85"/></g>
 </svg>

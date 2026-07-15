@@ -633,3 +633,20 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   gate doors or engine effects, and exits through an open upper-right seam for
   later terrain. Direct lab: `?lab=19`. Art and judge sheet:
   `map-artist-pack/journey-map.svg`, `reviews/painted-journey-p19.md`.
+- **PHONE PLAYTEST (Hasnain, 2026-07-15) — resequence+polish verdict:**
+  the eight polished worlds (fatiha → falaq → nas → kawthar → adiyat →
+  qadr → duha → lail) have "random world-specific issues, but nothing
+  blocking." Ship as-is; a detailed per-world playtest follows and its
+  specifics land here. Same session, the map↔world TOGGLE passed ("feels
+  like one game") and the painted map took a direction change — canals
+  out, fountain hearts + sky field in; islands re-cut 8/8/8 over the
+  24-key WORLD_ORDER (Valley 1–8, Orchard 9–16, Heights 17–24 = Phase 4
+  exactly; append-only ladder means no world ever moves islands). Full
+  reasoning: `map-artist-pack/drafts/r1/LOG.md` rounds 3–4.
+- **ISLAND CUT REVISED (2026-07-15, same-day supersession):** the 8/8/8
+  three-island cut gave the gems no room to breathe on-road; Hasnain
+  ordered a FOURTH island — the map is now 6/6/6/6 over the 24-key
+  WORLD_ORDER (Valley = Fatiha…Nasr, II = Masad…Takathur, III =
+  Qariah…Ma'un, Summit = Qadr…Lail, the six night-and-dawn surahs).
+  Engine reads the region shape from the map itself, so both cuts load.
+  Detail: `map-artist-pack/drafts/r1/LOG.md` round 4.

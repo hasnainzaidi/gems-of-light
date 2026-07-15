@@ -102,11 +102,321 @@ proportions, ground shadow, path-following walk) and a real toggle —
 tapping a bloomed spot launches the actual current world; home
 returns to the map with sim state preserved.
 
-**VERDICTS (Hasnain, 2026-07-15, phone playtest — partial):**
+**VERDICTS (Hasnain, 2026-07-15, phone playtest):**
 - **The toggle PASSES: "yes" — map→world→map feels like one game.**
   The mode-switch question (semi-3D oblique map into flat side-view
   levels) is settled; Track 2's map-form lightling + real-world launch
   + state-preserving return are adopted as the production pattern.
-- Track 1 verdicts (canals' spatial logic, the two reworked hearts,
-  overall r3 read) still pending — the playtest report reached the log
-  without them; asked back for the missing calls before running r4.
+- **The watercourse is DEAD — as a concept, not just an execution.**
+  Three strikes: (1) canal→heart joins read as "the hot dog sticking
+  in" at the star pool instead of seamless boundaries; (2) the stepped
+  ladders between islands still don't make sense even after r3's
+  spatial-logic pass; (3) the meta question had no answer — what is
+  the river FOR? It isn't a path, it doesn't interact, it only adds
+  mild visual interest. Verdict: remove the river/canals entirely.
+- **The hearts are PROMOTED to the map's only water.** Each island's
+  geometric heart becomes a central FOUNTAIN with motion/play in it —
+  the island's decorative centerpiece that the path goes around. The
+  child is in star-world, clover-world, or octagon-world. ("I actually
+  like that idea best.")
+- **The field becomes SKY.** Make the background read as sky rather
+  than a ground plain — less "islands on a plain," more "little
+  sections, levels in heaven." Clarifies the island separation too.
+- **Decoration density: the clover island is the standard.** It looks
+  the best; the valley and courtyard islands read sparse — bring both
+  up to its level of beauty.
+- **Island boundaries over the resequenced 24-key WORLD_ORDER: 8/8/8
+  ADOPTED** (recommended this session, approved by Hasnain). Spots bind
+  to WORLD_ORDER positions permanently: Valley = 1–8 (Fatiha…Quraish),
+  Orchard = 9–16 (Fil…Bayyinah), Heights = 17–24 (Kafirun…Lail =
+  Phase 4 exactly). Why: (a) new keys only APPEND to the ladder, so no
+  world ever changes island after a child has seen it; (b) all eight
+  built worlds are on the painted map today (Qadr/Duha/Lail are Phase 4
+  and live in real saves — the phase-aligned 4/7/5 cut would strand
+  them off-map until the expansion panel); (c) the second bridge lands
+  exactly on the Phase 3→4 milestone, and the open upper-right seam is
+  literally where Phase 4 continues (Shams, Balad, Fajr … Naba).
+  Cost: each island needs one more spot anchor (spot-R-8); harness
+  REGIONS go 5/6/6 → 8/8/8.
+- Worlds note (same playtest, logged in PLAN §10): the eight polished
+  worlds have "random world-specific issues, but nothing blocking" —
+  ship as-is; detailed per-world feedback comes from a later playtest.
+
+r2B (r3's ancestor, same watercourse concept) parked outside the repo.
+r3 stays in place as r4's base file until the r4 verdict.
+
+## Round 4 — 2026-07-15 · direction change: sky field + fountain hearts
+
+Direction change (not a refinement) → fresh agent per protocol, working
+from r3's file as base. `MAP-ART-BRIEF.md` §3 (geography/water) and §5
+(anchors) are amended by this round; the canonical brief gets rewritten
+only after the r4 verdict.
+
+**Track 1 (map, fresh Fable agent):** output `drafts/r4/`.
+1. THE FIELD IS SKY — the three walled garden islands float complete
+   in bright morning sky; bridges span open sky between them; the
+   built-object law and single projection hold per island.
+2. ALL WATER LIVES IN THE THREE HEARTS — star pool, clover pool,
+   octagon court, each a central fountain the walk path circles, its
+   water painted inside `water-R` so the engine can wake it. No other
+   water anywhere.
+3. DENSITY to the clover island's standard on all three islands.
+4. Anchor contract v2: `walk`, `spot-R-1..8` (eight per island),
+   `heart-1/2/3`, `gate-1/2` (gateway arch at each bridge's far
+   threshold), `moon`, `water-1/2/3` (fountain water only), `over`.
+   No `stream` anchor. Everything else per MAP-ART-BRIEF §5.
+
+**Track 2 (engine, Opus agent):** `p19.js` + `drafts/stub/` to
+contract v2 — REGIONS 8/8/8, ceremony light travels the WALK path to
+the next gate (no stream), gate opens, the woken island's fountain
+rises into engine-drawn play (gentle arcs + sparkle at `heart-R`);
+asleep islands show dry basins. Toggle untouched.
+
+**First run ABORTED mid-flight (2026-07-15), no art judged.** The
+engine track changed the harness contract in the shared working tree
+before any r4 painting existed — `?lab=19&map=r3` stopped loading
+(v2 requires 8 spots; r3 has 7) and Hasnain, playtesting live, saw
+the crude contract STUB instead of the champion and called stop.
+This is NOT a verdict on the sky/fountain direction: no r4 art was
+ever produced. Process rule earned: on the shared tree, the harness
+must keep loading the current champion until the replacement art
+exists — contract upgrades land together with (or behind) the art,
+never ahead of it. Both tracks stopped; engine WIP salvaged outside
+the repo; p19 + stub reverted; r3 loads as before.
+
+**Re-run (2026-07-15, after the false alarm): direction RECONFIRMED —
+"direction stands — go, sliver first."** New standing verdict from the
+same call: **the walk path must read as one natural, curvy/sinusoidal
+line** — pointy polyline direction-changes "don't make sense." (This
+extends r2's no-hard-kinks verdict from single corners to the whole
+path language: smooth continuous curvature everywhere, varied meander,
+never segment-and-corner.)
+
+Sliver spec (protocol: slivers before full maps): ONE finished island —
+the clover orchard, whose density is already the approved standard —
+floating in bright morning sky, its four-lobed pool as the fountain
+centerpiece the path curves around, full gouache. Two variations from
+one fresh agent, judged on the phone at 852×393 framing before any
+full map or harness work resumes. Output: `drafts/r4/sliver/`.
+
+**SLIVER VERDICT 1 (Hasnain, 2026-07-15, phone):**
+- **Hull: A WINS** ("I like the round garden hulls better"); B (island
+  shaped like its own heart) parked.
+- **Hearts move OFF-CENTER.** A central fountain starves the path of
+  real estate. Offset the water fixture and give the walk the room.
+- **Path topology set by Hasnain's notebook sketch** (described here;
+  the sketch is the spec): three starred circles chained by one
+  continuous line — the path ORBITS each heart once and leaves at
+  roughly 90° to how it entered ("go through each world at almost
+  90°"), then chains on to the next island. The sketch allocates REAL
+  ESTATE, not geometry — keep the drawn line meandering and soft, "not
+  quite so crisp."
+- **The path never touches the fountain.** It is purely decorative —
+  no spur, no connection; the orbit passes near it, that's all.
+- **Floating vibe MISSES as executed:** "feels like hovering over
+  water, maybe" — the under-shadow is too strong. Wanted: floating and
+  ethereal — softer underside, haze/cloud wisps beneath, no hard drop
+  shadow.
+- Orchestrator craft debts confirmed by Hasnain: popsicle bridge
+  stubs, A's dead-end spur, B's detached wall arc, finish glossier
+  than gouache — all owed in the next iteration.
+
+**SLIVER VERDICT 2 (Hasnain, 2026-07-15, phone — on A2):**
+- **The orbit is REJECTED.** "Don't lasso or kink around the water
+  fixture. The path should never bend backwards. At most, it should
+  be 90° from where it came in." The path through an island is a pure
+  THROUGH-LINE: one gentle curve, total turn ≤90°, always flowing
+  forward. (Verdict-1's sketch was allocation, not an orbit — the
+  circles were the worlds, not the path.)
+- **Composition law: the path BIFURCATES each island two-thirds /
+  one-third.** The water fixture lives on the two-thirds side; the
+  remaining third sits across the path. Trees and decor go on BOTH
+  sides so neither reads empty.
+- **The float still misses: these are HIGH UP IN THE SKY,** not a
+  little above the ground. Establish a LANGUAGE OF ASCENSION — going
+  island to island should read as traveling further and further out
+  into the heavens. For the map: an altitude gradient across the
+  three islands. For the tile: no ground-shadow of any kind, cloud
+  layers receding far below, atmospheric depth beneath the island.
+
+**SLIVER VERDICT 3 (Hasnain, 2026-07-15, phone — on A3): "feels
+worse."** The flat left-to-right river missed. Path law refined into
+**THE QUADRANT RULE:** think of the island as four quadrants — the
+path must EXIT from the quadrant diagonally opposite the one it
+enters, and it must get there by passing THROUGH one of the two
+adjacent quadrants first (never straight across the middle, never any
+lasso/doubling-back). E.g. enter SW → sweep through SE → curve up and
+exit NE: the through-island turn the original sketch drew. Also: the
+aggressive cloud banding hugging the island's front is too much —
+dial it back. Priority declared: **get the path geometry and the
+island division right FIRST; styling iterates after.**
+
+**SLIVER VERDICT 4 (Hasnain, 2026-07-15, phone — on A4a/A4b): BOTH
+PASS.** The quadrant-rule geometry is settled; the routings will
+ALTERNATE across islands on the full map (south-bow, north-bow,
+south-bow — the S-flow of the original sketch). Refinements ordered:
+1. **Minimum path-to-edge margin** — the path currently runs too near
+   the rim in places; set a real minimum and hold it everywhere.
+2. **The fountain nestles in the path's ELBOW** — central, in the
+   pocket of the sweep, so the path visibly "walks by the fountain"
+   (near it, never touching it).
+3. **A gardening language for the two sections:** the MAJOR (2/3)
+   garden = the water fixture + larger trees; the MINOR (1/3) garden
+   = flowers and bushes. Each side of the path gets its own
+   consistent vocabulary, on every island.
+
+**SLIVER VERDICT 5 (Hasnain, 2026-07-15, phone — on A5): "not
+quite," three fixes:**
+1. **The sweep must be a real ARC.** A5 reads as "a straight path
+   with a little wobble." Cause named: the entry sits too close to
+   the quadrant boundary, so the origin quadrant gets skimmed. Fix:
+   the path enters CENTRALLY in its entry quadrant and must spend
+   real time in all three quadrants — sustained curvature, a
+   dramatic sweep, not end-turns on a straightaway.
+2. **Nothing touches the path.** Parterres/bushes kissing the ribbon
+   is wrong. And the MINOR garden grows: its width should be at
+   least DOUBLE the path-edge minimum, so it holds its flowers and
+   bushes with room to breathe.
+3. **Flat/ground elements must lie IN the ground plane.** Trees read
+   great (they stand up); but parterres, bloombeds, and the court
+   read as vertical/superimposed — their aspect ratios ignore the
+   projection. Everything flush with the ground gets the same
+   foreshortening (vertical compression) as the island plate itself.
+
+**SLIVER VERDICT 6 (Hasnain, 2026-07-15, phone — on A6): PASS —
+"great. lets draw all three."** The sliver round CLOSES; A6 is the
+champion language tile. The full-map language, all demonstrated in
+one tile: round hull floating above the cloudline (no ground-shadow,
+receding decks below); quadrant-rule sweep with sustained curvature,
+entering/exiting centrally in diagonal quadrants; path-to-edge margin
+with the minor garden ≥2× it; fountain heart nestled in the sweep's
+elbow, walked-by, never touched; major garden = water + larger trees
++ parterres, minor garden = flowers + bushes; every ground-flush
+shape foreshortened to the plate's 2:1 with bottom-only thickness
+lips; calm restrained clouds; gouache, no text/filters.
+
+**Full-map draw commissioned (same artist session):** three A6-language
+islands, 1800×860, ascending lower-left → upper-right in the heavens
+(the ascension gradient separates them), sweeps ALTERNATING south-bow /
+north-bow / south-bow so the journey is one S-flow; hearts = star pool
+/ clover pool / octagon court; region palette families 1/2/3; bridges
+across open sky with gateway arches at far thresholds; contract v2
+anchors (8 spots per island, no stream); open upper-right seam.
+
+**Track 2 (engine) landed WITH the art (2026-07-15, per the false-alarm
+rule):** P19 is contract v2 — REGIONS 8/8/8 (sim progress [8,3,0]:
+valley complete + moon waxed, orchard mid-journey, heights asleep);
+no `stream` anywhere (the ceremony's traveling light runs the WALK
+from the finished heart, over the bridge, to the next island's first
+spot); awake fountains PLAY (engine droplet arcs + sparkle at
+`heart-R`, fading in with `water-R` during the wake); the sleeping
+wash re-aimed at r4's heights; heart-trace scaled to the fountain
+courts. Browser-verified on `?lab=19&map=r4`: loads clean, blooms/
+buds/star/moon correct, octagon fills and its fountain rises on the
+region-2 ceremony, camera tracks the walk route, toggle round-trip
+preserves the journey. One engine bug found and fixed on the way:
+the adventure PAUSE menu's back button was hardcoded to the title
+(`adventure.js`) — it now inherits `GOL.homeButton`, so backing out
+of a world entered from the map returns TO THE MAP. (This was the
+toggle's one hole; the shrine path already used homeButton.)
+
+PRE-MERGE CHECKLIST for PR #5 → staging (do NOT merge before): the
+v2 loader rejects the old `map=final` painting and the v1 stub — on
+adoption, r4 becomes `map-artist-pack/journey-map.svg` (new final),
+the stub gets rebuilt to v2.1, `?lab=19` defaults must load clean,
+and `v3/tools/check-map-svg.mjs` (still v1: requires `stream`, 3×7
+spots) gets rewritten to the adaptive v2.1 contract.
+
+**R4 FULL-MAP VERDICT 1 (Hasnain, 2026-07-15, phone): direction
+holds, five fixes:**
+1. **Awake pools must be FULL of water.** The fountain animation is
+   great, but activated islands' basins read dry — the painted fill
+   inside `water-1`/`water-2` is too modest. The awake look is a full
+   vivid pool (the octagon's read); dry basins are only for asleep.
+2. **Every gem/waypoint sits ON the path.** Spot anchors move onto
+   the walk centerline, not near it.
+3. **Keyboard navigation** (engine): the map must be walkable with
+   arrows — not just tapping. Arrows move her along the trail;
+   enter/space blooms the star or enters a bloomed world.
+4. **Orchard: a tree and a parterre sit IN the fountain court** —
+   placement bug; the court and its air stay clear.
+5. **The first island gets NO on-ramp** — the journey starts there;
+   the walk begins on the valley itself, no bridge from nowhere.
+
+**r4.1 landed (2026-07-15):** all five fixes done and browser-verified.
+Paint: `water-1/2` repainted as brimming pools (octagon-family water);
+all 24 spots moved ONTO the walk centerline (≤0.05 units off); the
+orchard court cleared (tree + parterre out, shrub slid clear); the
+valley on-ramp deleted — the walk now begins on the valley grass at a
+small trailhead. Engine: arrows walk her along the trail with the
+camera following (clamped at the journey's breathing edge),
+enter/space blooms the star or opens a world; `layerRoot` made
+nesting-robust (water groups extract with their ancestor transforms
+wherever the artist grouped them — r4.1 nested them and the pools
+silently rasterized empty; fail-loud added).
+TRADEOFF for Hasnain's eyes: with 8 spots per island ON a ~260–410
+unit road, the old ≥90-unit spot spacing is geometrically impossible —
+spots are now evenly spaced (min gaps 41/59/37 valley/orchard/
+courtyard). If gems crowd at phone distance, the outs are: fewer
+painted road-dots, longer in-island roads next revision, or gems
+alternating road edges. Contract §5's "≥90 apart" is superseded by
+"evenly spaced along the island's road, non-overlapping at phone
+scale."
+
+**R4.1 VERDICT (Hasnain, 2026-07-15, phone): "getting close" — the
+breathing-room problem is real, solved by growing the map, plus three
+navigation orders:**
+- **FOUR islands, six spots each** (6/6/6/6 SUPERSEDES the 8/8/8 cut;
+  24 = 6×4). New ladder cut: Valley 1–6 (Fatiha…Nasr), II 7–12
+  (Masad…Takathur), III 13–18 (Qariah…Ma'un), IV 19–24 (Qadr…Lail —
+  the summit worlds). Phase alignment yields to breathing room.
+- **Islands a bit bigger; paths meander a bit more** (quadrant rule
+  and no-loops law still absolute).
+- **Room to breathe at the end:** the final island must sit far
+  enough from the canvas edge that the camera can CENTER it (today it
+  pulls up because the picture runs out). Canvas grows.
+- **Mobile walk buttons:** keyboard nav has no touch equivalent — add
+  simple left/right (back/forward along the trail) buttons at the
+  bottom-right on touch. No full joystick.
+- **Camera on a rail:** free scrolling gets you "randomly lost /
+  uncentered" — drag now scrubs ALONG the path axis (the journey
+  diagonal), never free into empty space.
+Fourth heart chosen (orchestrator call, flagged for review): a RING
+pool — a halo of water for the island furthest into the heavens (from
+P17's approved shape family: star / quatrefoil / ring; crescent set
+aside to stay clear of iconography). Engine goes contract-adaptive:
+region count read from the map itself (heart-4 present → 4×6, else
+3×8) so the live tree never breaks while art and engine land.
+
+**R4.2 VERDICT (Hasnain, 2026-07-15, phone): five refinements —**
+1. **First island centered on initial load** — more negative sky at
+   the bottom-left so the camera can frame the valley without
+   clamping (same fit rule as the summit, applied to the start).
+   Lab sim also starts the journey ON island 1 now.
+2. **The seam softens:** the path no longer runs clearly off-canvas
+   after the last world — it FADES INTO A CLOUD past the summit.
+3. **Summit floating bars:** the low walls read as floating and
+   overlap trees — ground-flush at ground level or gone.
+4. **Snap-to-waypoint walking:** she steps spot to spot (subtle
+   snap), never resting at a random point on the path. Held input
+   chains steps; each step lands exactly on a waypoint.
+5. **Entering worlds (production-shaping call):** landing on the NEW
+   bloom (the breathing star) loads its world IMMEDIATELY — no tap.
+   Navigating BACK, stopping on an old bloom enters after a short
+   visible hesitation (~1s — long enough that walking through never
+   triggers). If a bloom completes an island, the wake ceremony
+   plays instead and entry waits for the next island's star.
+
+**r4.3 shipped to STAGING (2026-07-15, on Hasnain's go-ahead while
+away — "the changes were pretty minor so I assume they'll be fine"):**
+all five refinements landed and verified; every spot wired to its own
+surah via WORLD_ORDER (8 doors: fatiha/falaq/nas/kawthar on the
+valley, adiyat on island 3, qadr/duha/lail on the summit; unbuilt keys
+not enterable). Pre-merge checklist completed: r4 promoted to
+`map-artist-pack/journey-map.svg` (the lab default), stub rebuilt to
+v2.1 (four islands), `check-map-svg.mjs` rewritten to the adaptive
+v2.1 contract (green on final + stub), `?lab=19` / `map=r4` /
+`map=stub` all load clean, `check.mjs` green. PR #5 merged to staging.
+
+**VERDICTS (pending): Hasnain's phone pass on the STAGING deploy —
+the r4.3 map, the walk/entry feel, and the eight doors.**
