@@ -21,6 +21,7 @@
     id: 14, key: 'qadr', name: 'the blessed night',
     surahId: 97,
     palette: 'qadr', endPalette: 'qadrEnd', // dusk deepens to starred night as gems are gathered
+    gemFx: { 4: 'descentLights' },
     w: 44, h: 44,
     build(b) {
       // the whole world stands on one base floor; the mountain grows UP from it
