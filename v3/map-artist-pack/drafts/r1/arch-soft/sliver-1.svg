@@ -1,0 +1,112 @@
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="plain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BCD8B2"/>
+      <stop offset="1" stop-color="#93C08D"/>
+    </linearGradient>
+    <linearGradient id="grassTop" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#84C471"/>
+      <stop offset="1" stop-color="#74B863"/>
+    </linearGradient>
+  </defs>
+
+  <!-- calm open plain -->
+  <rect x="0" y="0" width="900" height="420" fill="url(#plain)"/>
+  <ellipse cx="130" cy="345" rx="100" ry="26" fill="#F4EFD8" opacity="0.14"/>
+  <ellipse cx="795" cy="110" rx="85" ry="22" fill="#F4EFD8" opacity="0.11"/>
+  <ellipse cx="760" cy="360" rx="70" ry="18" fill="#F4EFD8" opacity="0.09"/>
+
+  <!-- island ground shadow -->
+  <path transform="translate(-7,30)" fill="#6FAD72" opacity="0.5" d="M 205,175 C 210,120 265,85 340,78 C 420,70 505,72 570,92 C 635,112 668,160 662,205 C 656,252 610,290 540,305 C 465,322 360,320 290,300 C 228,282 200,230 205,175 Z"/>
+
+  <!-- retaining wall face (all round; near side shows) -->
+  <path transform="translate(0,22)" fill="#CBBC97" d="M 205,175 C 210,120 265,85 340,78 C 420,70 505,72 570,92 C 635,112 668,160 662,205 C 656,252 610,290 540,305 C 465,322 360,320 290,300 C 228,282 200,230 205,175 Z"/>
+  <rect x="332" y="312" width="6" height="17" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="398" y="320" width="6" height="17" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="468" y="315" width="6" height="17" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="533" y="306" width="6" height="17" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="597" y="286" width="6" height="16" rx="3" fill="#B9A87C" opacity="0.5"/>
+
+  <!-- wall top rim -->
+  <path fill="#EAE0C6" d="M 205,175 C 210,120 265,85 340,78 C 420,70 505,72 570,92 C 635,112 668,160 662,205 C 656,252 610,290 540,305 C 465,322 360,320 290,300 C 228,282 200,230 205,175 Z"/>
+
+  <!-- terrace grass, inset within the wall -->
+  <path transform="translate(26.1,11.8) scale(0.94)" fill="url(#grassTop)" d="M 205,175 C 210,120 265,85 340,78 C 420,70 505,72 570,92 C 635,112 668,160 662,205 C 656,252 610,290 540,305 C 465,322 360,320 290,300 C 228,282 200,230 205,175 Z"/>
+  <ellipse cx="330" cy="138" rx="112" ry="52" fill="#ACDE90" opacity="0.45"/>
+  <ellipse cx="555" cy="248" rx="72" ry="28" fill="#ACDE90" opacity="0.3"/>
+
+  <!-- paved walking trail: gate to basin apron to east landing -->
+  <path d="M 289,289 C 305,255 318,238 348,232 C 390,224 430,238 470,242 C 520,247 570,236 612,220" fill="none" stroke="#E7DDC0" stroke-width="20" stroke-linecap="round"/>
+  <ellipse cx="316" cy="248" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="352" cy="233" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="398" cy="228" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="446" cy="239" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="494" cy="245" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="544" cy="242" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="588" cy="230" rx="7" ry="4.5" fill="#D6C9A2"/>
+
+  <!-- stone-edged water channel, basin to east wall -->
+  <path d="M 400,186 C 470,178 555,180 642,196" fill="none" stroke="#E7DDC0" stroke-width="22" stroke-linecap="round"/>
+  <path d="M 400,186 C 470,178 555,180 642,196" fill="none" stroke="#57A79E" stroke-width="11" stroke-linecap="round"/>
+  <path transform="translate(0,2.5)" d="M 400,186 C 470,178 555,180 642,196" fill="none" stroke="#8FCFC2" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- eight-point-star spring basin, set into the terrace -->
+  <g transform="translate(360,185) scale(1,0.85)">
+    <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#EAE0C6" stroke="#EAE0C6" stroke-width="10" stroke-linejoin="round"/>
+    <g transform="scale(0.82)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#CBBC97" stroke="#CBBC97" stroke-width="9" stroke-linejoin="round"/>
+    </g>
+    <g transform="scale(0.70)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#57A79E" stroke="#57A79E" stroke-width="8" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(0,4) scale(0.70)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#8FCFC2" stroke="#8FCFC2" stroke-width="8" stroke-linejoin="round"/>
+    </g>
+    <ellipse cx="-9" cy="12" rx="17" ry="9" fill="#BFE8DC" opacity="0.85"/>
+  </g>
+
+  <!-- water-stair stub leaving the east wall, toward the next island -->
+  <g>
+    <path transform="translate(0,10)" d="M 654,200 C 690,220 722,240 752,262" fill="none" stroke="#B4A47C" stroke-width="40" stroke-linecap="round"/>
+    <path d="M 654,200 C 690,220 722,240 752,262" fill="none" stroke="#EAE0C6" stroke-width="40" stroke-linecap="round"/>
+    <path d="M 648,197 C 690,220 722,240 752,262" fill="none" stroke="#57A79E" stroke-width="14" stroke-linecap="round"/>
+    <path transform="translate(0,3)" d="M 648,197 C 690,220 722,240 752,262" fill="none" stroke="#8FCFC2" stroke-width="10" stroke-linecap="round"/>
+    <rect x="657" y="203" width="24" height="6" rx="3" fill="#BFE8DC" transform="rotate(6 669 206)"/>
+    <rect x="685" y="221" width="24" height="6" rx="3" fill="#BFE8DC" transform="rotate(12 697 224)"/>
+    <rect x="713" y="241" width="24" height="6" rx="3" fill="#BFE8DC" transform="rotate(18 725 244)"/>
+
+    <path transform="translate(0,7)" d="M 748,258 C 778,264 800,266 818,266" fill="none" stroke="#CBBC97" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 748,258 C 778,264 800,266 818,266" fill="none" stroke="#EAE0C6" stroke-width="24" stroke-linecap="round"/>
+    <path d="M 748,258 C 778,264 800,266 816,266" fill="none" stroke="#57A79E" stroke-width="11" stroke-linecap="round"/>
+    <path transform="translate(0,2.5)" d="M 748,258 C 778,264 800,266 816,266" fill="none" stroke="#8FCFC2" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- orchard tree 1, planted in a cut bed (north-east) -->
+  <g>
+    <ellipse cx="472" cy="130" rx="30" ry="14" fill="#CBBC97"/>
+    <ellipse cx="472" cy="129" rx="24" ry="10" fill="#C4A981"/>
+    <ellipse cx="480" cy="132" rx="26" ry="9" fill="#5B9C52" opacity="0.28"/>
+    <rect x="468" y="104" width="8" height="26" rx="4" fill="#8A6B4F"/>
+    <circle cx="475" cy="94" r="30" fill="#5B9C52"/>
+    <circle cx="470" cy="89" r="27" fill="#7CBF6B"/>
+    <ellipse cx="461" cy="81" rx="14" ry="10" fill="#ACDE90"/>
+  </g>
+
+  <!-- orchard tree 2, planted in a cut bed (west) -->
+  <g>
+    <ellipse cx="262" cy="224" rx="33" ry="15" fill="#CBBC97"/>
+    <ellipse cx="262" cy="223" rx="27" ry="11" fill="#C4A981"/>
+    <ellipse cx="271" cy="226" rx="28" ry="10" fill="#5B9C52" opacity="0.28"/>
+    <rect x="258" y="192" width="8" height="32" rx="4" fill="#8A6B4F"/>
+    <circle cx="266" cy="182" r="34" fill="#5B9C52"/>
+    <circle cx="260" cy="176" r="30" fill="#7CBF6B"/>
+    <ellipse cx="250" cy="167" rx="15" ry="11" fill="#ACDE90"/>
+  </g>
+
+  <!-- small wooden gate where the trail meets the wall -->
+  <g>
+    <path d="M 277,292 L 277,272 C 277,258 301,258 301,272 L 301,292" fill="none" stroke="#8A6B4F" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 280,271 C 282,264 296,264 298,271" fill="none" stroke="#A5825F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="289" cy="293" rx="15" ry="4" fill="#5B9C52" opacity="0.3"/>
+  </g>
+</svg>

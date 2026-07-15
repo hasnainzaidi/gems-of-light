@@ -1,0 +1,140 @@
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="plain2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BCD8B2"/>
+      <stop offset="1" stop-color="#93C08D"/>
+    </linearGradient>
+    <linearGradient id="grass2" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#84C471"/>
+      <stop offset="1" stop-color="#74B863"/>
+    </linearGradient>
+    <linearGradient id="grassUp2" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#93CE7F"/>
+      <stop offset="1" stop-color="#82C06C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- calm open plain -->
+  <rect x="0" y="0" width="900" height="420" fill="url(#plain2)"/>
+  <ellipse cx="180" cy="115" rx="95" ry="24" fill="#F4EFD8" opacity="0.12"/>
+  <ellipse cx="130" cy="390" rx="80" ry="20" fill="#F4EFD8" opacity="0.1"/>
+  <ellipse cx="845" cy="375" rx="70" ry="18" fill="#F4EFD8" opacity="0.1"/>
+
+  <!-- island ground shadow -->
+  <path transform="translate(-7,30)" fill="#6FAD72" opacity="0.5" d="M 350,240 C 348,175 405,125 490,108 C 575,92 690,95 760,125 C 822,152 845,205 830,255 C 815,300 745,330 655,340 C 560,350 445,345 395,315 C 358,293 352,270 350,240 Z"/>
+
+  <!-- paved bridge stub, leaving the west wall toward the next island -->
+  <g>
+    <path transform="translate(0,9)" d="M 390,286 C 310,300 210,312 122,318" fill="none" stroke="#B4A47C" stroke-width="27" stroke-linecap="round"/>
+    <path d="M 390,286 C 310,300 210,312 122,318" fill="none" stroke="#EAE0C6" stroke-width="27" stroke-linecap="round"/>
+    <path d="M 382,286 C 310,299 210,311 128,317" fill="none" stroke="#E7DDC0" stroke-width="15" stroke-linecap="round"/>
+    <ellipse cx="330" cy="294" rx="7" ry="4.5" fill="#D6C9A2"/>
+    <ellipse cx="270" cy="301" rx="7" ry="4.5" fill="#D6C9A2"/>
+    <ellipse cx="210" cy="307" rx="7" ry="4.5" fill="#D6C9A2"/>
+    <ellipse cx="152" cy="312" rx="7" ry="4.5" fill="#D6C9A2"/>
+  </g>
+
+  <!-- lower terrace: wall face, rim, grass -->
+  <path transform="translate(0,20)" fill="#CBBC97" d="M 350,240 C 348,175 405,125 490,108 C 575,92 690,95 760,125 C 822,152 845,205 830,255 C 815,300 745,330 655,340 C 560,350 445,345 395,315 C 358,293 352,270 350,240 Z"/>
+  <rect x="452" y="352" width="6" height="16" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="530" y="362" width="6" height="16" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="612" y="358" width="6" height="16" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="692" y="348" width="6" height="16" rx="3" fill="#B9A87C" opacity="0.55"/>
+  <rect x="762" y="322" width="6" height="15" rx="3" fill="#B9A87C" opacity="0.5"/>
+  <path fill="#EAE0C6" d="M 350,240 C 348,175 405,125 490,108 C 575,92 690,95 760,125 C 822,152 845,205 830,255 C 815,300 745,330 655,340 C 560,350 445,345 395,315 C 358,293 352,270 350,240 Z"/>
+  <path transform="translate(29.5,11.1) scale(0.95)" fill="url(#grass2)" d="M 350,240 C 348,175 405,125 490,108 C 575,92 690,95 760,125 C 822,152 845,205 830,255 C 815,300 745,330 655,340 C 560,350 445,345 395,315 C 358,293 352,270 350,240 Z"/>
+  <ellipse cx="455" cy="245" rx="80" ry="34" fill="#ACDE90" opacity="0.35"/>
+  <ellipse cx="700" cy="300" rx="70" ry="24" fill="#ACDE90" opacity="0.3"/>
+
+  <!-- walking trail on the lower terrace, bridge to the upper stairs -->
+  <path d="M 390,288 C 450,300 520,300 570,288 C 600,282 616,272 628,260" fill="none" stroke="#E7DDC0" stroke-width="20" stroke-linecap="round"/>
+  <ellipse cx="434" cy="294" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="486" cy="297" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="540" cy="294" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="588" cy="281" rx="7" ry="4.5" fill="#D6C9A2"/>
+  <ellipse cx="618" cy="266" rx="7" ry="4.5" fill="#D6C9A2"/>
+
+  <!-- lower channel: chadar landing west to the terminal pool -->
+  <path d="M 570,262 C 535,270 495,274 468,274" fill="none" stroke="#E7DDC0" stroke-width="20" stroke-linecap="round"/>
+  <path d="M 570,262 C 535,270 495,274 468,274" fill="none" stroke="#57A79E" stroke-width="10" stroke-linecap="round"/>
+  <path transform="translate(0,2.5)" d="M 570,262 C 535,270 495,274 468,274" fill="none" stroke="#8FCFC2" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="458" cy="275" rx="20" ry="14" fill="#EAE0C6"/>
+  <ellipse cx="458" cy="275" rx="15" ry="10" fill="#CBBC97"/>
+  <ellipse cx="458" cy="275" rx="12" ry="8" fill="#57A79E"/>
+  <ellipse cx="458" cy="276.5" rx="11" ry="7" fill="#8FCFC2"/>
+  <ellipse cx="455" cy="278" rx="5.5" ry="3" fill="#BFE8DC"/>
+
+  <!-- upper terrace: deep wall face, rim, grass -->
+  <path transform="translate(0,22)" fill="#CBBC97" d="M 520,180 C 522,145 560,122 625,116 C 690,110 745,124 762,150 C 778,174 770,202 738,216 C 700,232 615,234 570,220 C 535,209 518,198 520,180 Z"/>
+  <rect x="600" y="240" width="5" height="14" rx="2.5" fill="#B9A87C" opacity="0.5"/>
+  <rect x="668" y="242" width="5" height="14" rx="2.5" fill="#B9A87C" opacity="0.5"/>
+  <rect x="724" y="230" width="5" height="13" rx="2.5" fill="#B9A87C" opacity="0.5"/>
+  <path fill="#EAE0C6" d="M 520,180 C 522,145 560,122 625,116 C 690,110 745,124 762,150 C 778,174 770,202 738,216 C 700,232 615,234 570,220 C 535,209 518,198 520,180 Z"/>
+  <path transform="translate(25.8,7.0) scale(0.96)" fill="url(#grassUp2)" d="M 520,180 C 522,145 560,122 625,116 C 690,110 745,124 762,150 C 778,174 770,202 738,216 C 700,232 615,234 570,220 C 535,209 518,198 520,180 Z"/>
+  <ellipse cx="590" cy="150" rx="42" ry="20" fill="#ACDE90" opacity="0.45"/>
+  <ellipse cx="715" cy="195" rx="34" ry="15" fill="#ACDE90" opacity="0.3"/>
+
+  <!-- trail stairs up the upper south face, and apron to the basin -->
+  <rect x="632" y="244" width="30" height="9" rx="4.5" fill="#EAE0C6"/>
+  <rect x="635" y="235" width="26" height="9" rx="4.5" fill="#E2D6B4"/>
+  <rect x="638" y="226" width="22" height="9" rx="4.5" fill="#EAE0C6"/>
+  <path d="M 649,224 C 653,216 657,210 661,204" fill="none" stroke="#E7DDC0" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- upper channel: basin to the chadar crest -->
+  <path d="M 628,194 C 610,204 596,212 586,218" fill="none" stroke="#E7DDC0" stroke-width="18" stroke-linecap="round"/>
+  <path d="M 628,194 C 610,204 596,212 586,218" fill="none" stroke="#57A79E" stroke-width="9" stroke-linecap="round"/>
+  <path transform="translate(0,2)" d="M 628,194 C 610,204 596,212 586,218" fill="none" stroke="#8FCFC2" stroke-width="6.5" stroke-linecap="round"/>
+
+  <!-- chadar dropping down the upper wall face to the lower channel -->
+  <path transform="translate(0,6)" d="M 584,222 C 580,236 575,250 572,260" fill="none" stroke="#B4A47C" stroke-width="26" stroke-linecap="round"/>
+  <path d="M 584,222 C 580,236 575,250 572,260" fill="none" stroke="#EAE0C6" stroke-width="26" stroke-linecap="round"/>
+  <path d="M 586,218 C 581,236 575,250 571,262" fill="none" stroke="#57A79E" stroke-width="10" stroke-linecap="round"/>
+  <path transform="translate(0,2.5)" d="M 586,218 C 581,236 575,250 571,262" fill="none" stroke="#8FCFC2" stroke-width="7" stroke-linecap="round"/>
+  <rect x="573" y="228" width="19" height="5" rx="2.5" fill="#BFE8DC"/>
+  <rect x="570" y="240" width="19" height="5" rx="2.5" fill="#BFE8DC"/>
+  <rect x="567" y="252" width="19" height="5" rx="2.5" fill="#BFE8DC"/>
+
+  <!-- eight-point-star spring basin on the upper terrace -->
+  <g transform="translate(650,167) scale(0.80,0.68)">
+    <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#EAE0C6" stroke="#EAE0C6" stroke-width="10" stroke-linejoin="round"/>
+    <g transform="scale(0.82)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#CBBC97" stroke="#CBBC97" stroke-width="9" stroke-linejoin="round"/>
+    </g>
+    <g transform="scale(0.70)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#57A79E" stroke="#57A79E" stroke-width="8" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(0,5) scale(0.70)">
+      <polygon points="54,0 38.2,15.8 38.2,38.2 15.8,38.2 0,54 -15.8,38.2 -38.2,38.2 -38.2,15.8 -54,0 -38.2,-15.8 -38.2,-38.2 -15.8,-38.2 0,-54 15.8,-38.2 38.2,-38.2 38.2,-15.8" fill="#8FCFC2" stroke="#8FCFC2" stroke-width="8" stroke-linejoin="round"/>
+    </g>
+    <ellipse cx="-9" cy="13" rx="17" ry="10" fill="#BFE8DC" opacity="0.85"/>
+  </g>
+
+  <!-- small wooden gate at the chadar crest -->
+  <g>
+    <path d="M 572,224 L 572,204 C 572,190 598,190 598,204 L 598,224" fill="none" stroke="#8A6B4F" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 575,203 C 577,196 593,196 595,203" fill="none" stroke="#A5825F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="585" cy="225" rx="16" ry="4" fill="#5B9C52" opacity="0.25"/>
+  </g>
+
+  <!-- orchard tree 1, cut bed on the lower terrace (west) -->
+  <g>
+    <ellipse cx="462" cy="188" rx="30" ry="14" fill="#CBBC97"/>
+    <ellipse cx="462" cy="187" rx="24" ry="10" fill="#C4A981"/>
+    <ellipse cx="471" cy="190" rx="26" ry="9" fill="#5B9C52" opacity="0.28"/>
+    <rect x="458" y="162" width="8" height="26" rx="4" fill="#8A6B4F"/>
+    <circle cx="465" cy="151" r="29" fill="#5B9C52"/>
+    <circle cx="460" cy="146" r="26" fill="#7CBF6B"/>
+    <ellipse cx="451" cy="138" rx="13" ry="10" fill="#ACDE90"/>
+  </g>
+
+  <!-- orchard tree 2, cut bed on the lower terrace (south-east) -->
+  <g>
+    <ellipse cx="728" cy="282" rx="34" ry="15" fill="#CBBC97"/>
+    <ellipse cx="728" cy="281" rx="28" ry="11" fill="#C4A981"/>
+    <ellipse cx="738" cy="284" rx="29" ry="10" fill="#5B9C52" opacity="0.28"/>
+    <rect x="724" y="248" width="8" height="34" rx="4" fill="#8A6B4F"/>
+    <circle cx="732" cy="237" r="35" fill="#5B9C52"/>
+    <circle cx="726" cy="231" r="31" fill="#7CBF6B"/>
+    <ellipse cx="715" cy="221" rx="15" ry="11" fill="#ACDE90"/>
+  </g>
+</svg>
