@@ -429,9 +429,24 @@
     // embedded browser's interaction-throttled canvas practical to inspect.
     debugCollectAll() { this.bloomAtStar(true); },
 
-    // The toggle: a bloomed spot is a door into the real game; home inside
-    // the world leads back here, journey intact. Shared by tap and keyboard.
-    enterWorld() {
+    // Each spot IS a surah (2026-07-15 wiring): global ladder position k →
+    // WORLD_ORDER[k] → the registered world with that key. Keys whose
+    // worlds aren't built yet aren't enterable.
+    worldForSpot(ri, j) {
+      let k = j;
+      for (let i = 0; i < ri; i++) k += REGIONS[i].count;
+      const key = GOL.WORLD_ORDER && GOL.WORLD_ORDER[k];
+      if (!key || !GOL.WORLDS3) return null;
+      const w = GOL.WORLDS3.find((x) => x && x.key === key && x.build);
+      return w ? w.n : null;
+    },
+
+    // The toggle: a bloomed spot is a door into ITS OWN world; home inside
+    // the world leads back here, journey intact. Shared by tap, keyboard,
+    // star-arrival, and the hesitation.
+    enterWorld(ri, j) {
+      const n = this.worldForSpot(ri, j);
+      if (n == null) return false;
       returnState = {
         progress: this.progress.slice(),
         cam: { x: this.cam.x, y: this.cam.y },
@@ -447,7 +462,8 @@
       }
       GOL.audio.unlock();
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
-      GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+      GOL.go('adventure', { world: n });
+      return true;
     },
 
     // Landing on a waypoint (r4.2 verdict): the NEW bloom opens its world
@@ -458,16 +474,18 @@
       const a = this.activeRegion();
       if (a != null && this.regionAwake(a)
           && Math.abs(this.hero.s - this.spotS[a][this.progress[a]]) <= 2) {
+        const j = this.progress[a];
         this.pendingBloom = false;
         this._doBloom();
-        if (!this.ceremony) this.enterWorld();
+        if (!this.ceremony) this.enterWorld(a, j);
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
         if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < this.progress[ri]; j++) {
           if (Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
-            this.dwell = { t: 0, ri, j };
+            // hesitate only where a door actually exists
+            if (this.worldForSpot(ri, j) != null) this.dwell = { t: 0, ri, j };
             return;
           }
         }
@@ -493,7 +511,7 @@
         for (let j = 0; j < this.progress[ri]; j++) {
           const b = this.map.spots[ri][j];
           if (GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
-            this.enterWorld();
+            this.enterWorld(ri, j);
             return;
           }
         }
@@ -628,8 +646,9 @@
       if (this.dwell && !this.ceremony) {
         this.dwell.t += dt;
         if (this.dwell.t >= 1.0) {
+          const d = this.dwell;
           this.dwell = null;
-          this.enterWorld();
+          this.enterWorld(d.ri, d.j);
           return;
         }
       }
@@ -701,7 +720,7 @@
           for (let j = 0; j < this.progress[ri]; j++) {
             const b = this.map.spots[ri][j];
             if (GOL.dist(wx, wy, b.x, b.y) < 36) {
-              this.enterWorld();
+              this.enterWorld(ri, j);
               return;
             }
           }
