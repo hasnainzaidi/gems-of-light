@@ -485,3 +485,29 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   Presentation-only like P16: simulated progress, no saves, no real worlds.
   Direct lab: `?lab=17`. What to judge and against what:
   `reviews/great-garden-p17.md`.
+  **VERDICT (parent review 2026-07-14): right palette, wrong composition.**
+  Crowded; the four equal beds in a row read as forced — a diagram, not a
+  place (the Super Mario World map named the gap: its worlds are places in
+  one continuous geography). Superseded by P18.
+- **THE TERRACED VALLEY LAB (P18 built 2026-07-14; awaiting vibe check):**
+  P17 un-flattened into one continuous landscape. Three terraces climb a
+  sunlit hillside — Garden valley, Orchard rise, Courtyard heights — each
+  inheriting a world-palette family the game already owns (`fatiha`,
+  `maun`, `zalzalah`), with the SKY lerping between them as the camera
+  travels: regions read as different places without one border drawn.
+  The camera drifts over a map ~3 screens wide (drag to look around; it
+  eases home to the journey's edge) — no pages, just ground that
+  continues, which is also the expansion story: REGIONS are data over
+  contiguous `WORLD_ORDER` runs, so growing past 17 surahs appends terrain
+  off the right edge and nothing a child knows ever moves. Each region
+  keeps a geometric HEART as its shape identity (spring-star pool,
+  quatrefoil clearing, octagon court); finished worlds are gem-hearted
+  blooms along a stream that flows exactly as far as the journey has
+  opened; stepped water-stairs (chadars) climb between terraces.
+  Completing a region runs the blooming: light traces the heart, petals
+  burst, and one bright ripple travels the stream and climbs the
+  water-stair — water filling in behind it — to open the gate and wake
+  the next terrace (asleep until the water arrives). The daytime moon
+  rests over the valley's finished heart. Presentation-only: simulated
+  progress, no saves, no real worlds. Direct lab: `?lab=18`. Judge sheet:
+  `reviews/terraced-valley-p18.md`.
