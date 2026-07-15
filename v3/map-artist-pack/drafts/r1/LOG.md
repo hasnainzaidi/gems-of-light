@@ -102,4 +102,11 @@ proportions, ground shadow, path-following walk) and a real toggle —
 tapping a bloomed spot launches the actual current world; home
 returns to the map with sim state preserved.
 
-**VERDICTS (pending):**
+**VERDICTS (Hasnain, 2026-07-15, phone playtest — partial):**
+- **The toggle PASSES: "yes" — map→world→map feels like one game.**
+  The mode-switch question (semi-3D oblique map into flat side-view
+  levels) is settled; Track 2's map-form lightling + real-world launch
+  + state-preserving return are adopted as the production pattern.
+- Track 1 verdicts (canals' spatial logic, the two reworked hearts,
+  overall r3 read) still pending — the playtest report reached the log
+  without them; asked back for the missing calls before running r4.
