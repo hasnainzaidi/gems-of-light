@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 860">
+  <!-- Contract stub: the minimal aerial-oblique map that satisfies every
+       requirement in MAP-ART-BRIEF.md §5. Used by the P19 harness while
+       real drafts are painted; also the reference implementation of the
+       anchor contract. Deliberately plain — geometry, not art. -->
+
+  <!-- ground plane: valley (lower-left) to heights (upper-right) -->
+  <defs>
+    <linearGradient id="g-ground" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#7CBF6B"/>
+      <stop offset="0.5" stop-color="#7CB863"/>
+      <stop offset="1" stop-color="#8CB061"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1800" height="860" fill="url(#g-ground)"/>
+  <!-- thin sky band, upper edge only -->
+  <rect x="0" y="0" width="1800" height="46" fill="#DFF0C8"/>
+  <!-- region masses -->
+  <ellipse cx="420" cy="640" rx="400" ry="230" fill="#ACDE90" opacity="0.55"/>
+  <ellipse cx="950" cy="430" rx="380" ry="220" fill="#A4D384" opacity="0.5"/>
+  <ellipse cx="1480" cy="260" rx="360" ry="200" fill="#B0CC80" opacity="0.55"/>
+
+  <!-- the trail: one gesture, lower-left to upper-right, winding -->
+  <path id="walk" d="M 80 800 C 260 780 180 640 340 620 C 520 598 560 720 720 680
+      C 880 640 780 500 940 470 C 1100 440 1180 540 1300 470
+      C 1420 400 1340 300 1480 260 C 1600 226 1660 190 1760 150"
+      fill="none" stroke="#EAE0C6" stroke-width="26" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- the watercourse: spring → upper-right, near the trail -->
+  <path id="stream" d="M 300 560 C 420 560 500 640 640 620 C 800 596 820 480 960 440
+      C 1100 400 1200 480 1320 420 C 1440 360 1400 260 1520 230 C 1620 205 1690 170 1760 130"
+      fill="none" stroke="#CBBC97" stroke-width="12" fill-opacity="0" opacity="0.9"/>
+
+  <!-- per-region water, revealed by the engine as the journey opens -->
+  <g id="water-1">
+    <path d="M 300 560 C 420 560 500 640 640 620" fill="none" stroke="#8FCFC2" stroke-width="8"/>
+    <path d="M 262 522 l 38 -22 38 22 22 38 -22 38 -38 22 -38 -22 -22 -38 Z" fill="#BFE8DC"/>
+  </g>
+  <g id="water-2">
+    <path d="M 640 620 C 800 596 820 480 960 440 C 1100 400 1200 480 1320 420" fill="none" stroke="#8FCFC2" stroke-width="8"/>
+  </g>
+  <g id="water-3">
+    <path d="M 1320 420 C 1440 360 1400 260 1520 230 C 1620 205 1690 170 1760 130" fill="none" stroke="#8FC9B8" stroke-width="8"/>
+  </g>
+
+  <!-- hearts: star spring, quatrefoil clearing, octagon court -->
+  <path d="M 240 500 l 60 -35 60 35 35 60 -35 60 -60 35 -60 -35 -35 -60 Z"
+        fill="none" stroke="#EAE0C6" stroke-width="10"/>
+  <circle id="heart-1" cx="300" cy="560" r="4" opacity="0"/>
+  <g fill="none" stroke="#EAE0C6" stroke-width="9">
+    <circle cx="905" cy="330" r="34"/><circle cx="975" cy="330" r="34"/>
+    <circle cx="940" cy="295" r="34"/><circle cx="940" cy="365" r="34"/>
+  </g>
+  <circle id="heart-2" cx="940" cy="330" r="4" opacity="0"/>
+  <path d="M 1455 150 l 50 0 36 36 0 50 -36 36 -50 0 -36 -36 0 -50 Z"
+        fill="#F0E0BE" stroke="#D2BC90" stroke-width="8"/>
+  <circle id="heart-3" cx="1480" cy="211" r="4" opacity="0"/>
+
+  <!-- gates at the water-stair crests -->
+  <circle id="gate-1" cx="640" cy="620" r="5" opacity="0"/>
+  <circle id="gate-2" cx="1320" cy="420" r="5" opacity="0"/>
+  <!-- the daytime moon's sky -->
+  <circle id="moon" cx="360" cy="330" r="5" opacity="0"/>
+
+  <!-- surah spots: seven per region along the walk, in walking order -->
+  <g opacity="0">
+    <circle id="spot-1-1" cx="120" cy="792" r="4"/>
+    <circle id="spot-1-2" cx="230" cy="742" r="4"/>
+    <circle id="spot-1-3" cx="330" cy="628" r="4"/>
+    <circle id="spot-1-4" cx="470" cy="622" r="4"/>
+    <circle id="spot-1-5" cx="580" cy="682" r="4"/>
+    <circle id="spot-1-6" cx="700" cy="684" r="4"/>
+    <circle id="spot-1-7" cx="800" cy="620" r="4"/>
+    <circle id="spot-2-1" cx="838" cy="540" r="4"/>
+    <circle id="spot-2-2" cx="930" cy="472" r="4"/>
+    <circle id="spot-2-3" cx="1040" cy="452" r="4"/>
+    <circle id="spot-2-4" cx="1150" cy="500" r="4"/>
+    <circle id="spot-2-5" cx="1250" cy="500" r="4"/>
+    <circle id="spot-2-6" cx="1340" cy="450" r="4"/>
+    <circle id="spot-2-7" cx="1400" cy="380" r="4"/>
+    <circle id="spot-3-1" cx="1380" cy="320" r="4"/>
+    <circle id="spot-3-2" cx="1440" cy="270" r="4"/>
+    <circle id="spot-3-3" cx="1530" cy="248" r="4"/>
+    <circle id="spot-3-4" cx="1610" cy="220" r="4"/>
+    <circle id="spot-3-5" cx="1680" cy="192" r="4"/>
+    <circle id="spot-3-6" cx="1730" cy="168" r="4"/>
+    <circle id="spot-3-7" cx="1768" cy="146" r="4"/>
+  </g>
+
+  <!-- walk-behind pieces: a little bridge rail where trail crosses stream -->
+  <g id="over">
+    <rect x="614" y="596" width="60" height="8" rx="4" fill="#8A6B4F"/>
+    <rect x="1294" y="398" width="60" height="8" rx="4" fill="#8A6B4F"/>
+  </g>
+</svg>
