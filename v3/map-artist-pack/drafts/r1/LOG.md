@@ -199,4 +199,26 @@ centerpiece the path curves around, full gouache. Two variations from
 one fresh agent, judged on the phone at 852×393 framing before any
 full map or harness work resumes. Output: `drafts/r4/sliver/`.
 
+**SLIVER VERDICT 1 (Hasnain, 2026-07-15, phone):**
+- **Hull: A WINS** ("I like the round garden hulls better"); B (island
+  shaped like its own heart) parked.
+- **Hearts move OFF-CENTER.** A central fountain starves the path of
+  real estate. Offset the water fixture and give the walk the room.
+- **Path topology set by Hasnain's notebook sketch** (described here;
+  the sketch is the spec): three starred circles chained by one
+  continuous line — the path ORBITS each heart once and leaves at
+  roughly 90° to how it entered ("go through each world at almost
+  90°"), then chains on to the next island. The sketch allocates REAL
+  ESTATE, not geometry — keep the drawn line meandering and soft, "not
+  quite so crisp."
+- **The path never touches the fountain.** It is purely decorative —
+  no spur, no connection; the orbit passes near it, that's all.
+- **Floating vibe MISSES as executed:** "feels like hovering over
+  water, maybe" — the under-shadow is too strong. Wanted: floating and
+  ethereal — softer underside, haze/cloud wisps beneath, no hard drop
+  shadow.
+- Orchestrator craft debts confirmed by Hasnain: popsicle bridge
+  stubs, A's dead-end spur, B's detached wall arc, finish glossier
+  than gouache — all owed in the next iteration.
+
 **VERDICTS (pending):**
