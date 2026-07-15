@@ -52,9 +52,19 @@ current state.
   never a bare commit after `git add`.
 - **Waves of parallel agents with disjoint file ownership.** Orchestrator
   does shared plumbing first; follow-ups go to the same agent via
-  SendMessage. Frontier models for creative work, smaller for mechanical.
-  Every level-building brief requires `node v3/tools/check.mjs <target>`
-  green.
+  SendMessage. Every level-building brief requires
+  `node v3/tools/check.mjs <target>` green.
+- **Model selection: pay for judgment, not keystrokes.** Strongest model
+  (Fable-class) for INVENTION and ORCHESTRATION — blank-page design,
+  briefs, judging, pedagogy, merges (errors at the top multiply
+  downward). Opus-class for EXECUTION against a locked spec — building
+  from finished briefs, punch lists, contract work. Cheapest for
+  MECHANICAL machine-verifiable tasks — bumps, pipelines, checker runs.
+  Tie-breakers: if a machine catches the mistake, drop a tier; if only
+  Hasnain's eyes catch it, or the mistake is silent-and-compounding,
+  stay high. When a workstream shifts invention→execution, run a
+  one-round same-prompt bake-off before assuming the tier still needs
+  to be top.
 - **Design philosophy is enforced:** no text instruction, no quizzes, no
   punishment; one loop; ordered collection; wordless visual language.
   Playtest verdicts land in PLAN §9 before/with the fix.
