@@ -82,8 +82,8 @@
     const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
     const y = H - 66 - sa.b * 0.5;
     return {
-      stick: { x: 76 + sa.l, y, r: 50 },
-      jump: { x: W - 72 - sa.r, y, r: 46 }
+      stick: { x: 76 + sa.l, y, r: 58 },
+      jump: { x: W - 72 - sa.r, y, r: 54 }
     };
   };
 
@@ -166,10 +166,20 @@
         { label: 'reciter', opts: Object.keys(GOL.RECITERS || {}), get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } },
         { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
-        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.rows <= 10.5 ? 'near' : GOL.V3.rows >= 12.5 ? 'wide' : 'mid'), set: (v) => { GOL.V3.rows = v === 'near' ? 10 : v === 'wide' ? 13 : 11.5; } },
+        // 'camera' drives the horizontal FOV cap (columns of world shown), the
+        // lever that actually matters on a wide phone: near = zoomed in / bigger
+        // detail, wide = more world. On iPad (~15 cols) only 'near' binds.
+        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.maxCols <= 15 ? 'near' : GOL.V3.maxCols >= 17 ? 'wide' : 'mid'), set: (v) => { GOL.V3.maxCols = v === 'near' ? 14 : v === 'wide' ? 18 : 16; } },
+        // 'headroom' = empty sky above the sprite, fine steps in the low range.
+        // Low values let the bottom clamp anchor the frame (sprite higher, less
+        // dead sky — best for jumping scenes); higher values float in more sky.
+        // The numbers are the seat fraction (·50 = highest sprite / least sky).
+        { label: 'headroom', opts: ['50', '54', '58', '62', '66'],
+          get: () => { const v = GOL.V3.groundBias; return v <= 0.52 ? '50' : v <= 0.56 ? '54' : v <= 0.60 ? '58' : v <= 0.64 ? '62' : '66'; },
+          set: (v) => { GOL.V3.groundBias = { '50': 0.50, '54': 0.54, '58': 0.58, '62': 0.62, '66': 0.66 }[v]; } },
         // the on-device door into debug (no URL editing on a phone) — persists
         // until switched off; ?debug=1 still wins as an explicit override
-        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); } }
+        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); if (GOL.applyDebug) GOL.applyDebug(); } }
       ];
       const pw = Math.min(400, W - 60);
       const px = W / 2 - pw / 2;

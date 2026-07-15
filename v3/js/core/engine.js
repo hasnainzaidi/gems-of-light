@@ -379,7 +379,11 @@
   function updateCamera(cam, pl, dt) {
     cam.lookX += ((pl.facing * 74) - cam.lookX) * Math.min(1, dt * 1.6);
     const tx = pl.x + cam.lookX - cam.viewW / 2;
-    const ty = pl.y - cam.viewH * 0.62;
+    // Seat the sprite this far down the view. Higher = sprite lower on screen =
+    // less dead subterranean dirt below it, more sky/canopy above. On iPad the
+    // shallow levels (3 dirt rows) already hit the bottom clamp and seat the
+    // sprite ~0.74 down; a shorter phone view doesn't, so it needs this to match.
+    const ty = pl.y - cam.viewH * (GOL.V3.groundBias || 0.62);
     cam.x += (tx - cam.x) * Math.min(1, dt * 5.2);
     cam.y += (ty - cam.y) * Math.min(1, dt * 4);
     cam.x = Math.max(0, Math.min(cam.level.w * TILE - cam.viewW, cam.x));

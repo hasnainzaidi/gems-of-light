@@ -179,7 +179,13 @@ V1 was tuned iPad-first; V3 targets phones held in landscape. Concretely:
 - **Camera:** V1 scales the view so 13 tile-rows fill the screen height —
   on a phone that makes the world feel right but fingers cover more of it,
   so v3 exposes the rows-visible constant per prototype (P2 Vertical Climb
-  will want a wider view) and nudges the camera look-ahead up.
+  will want a wider view) and nudges the camera look-ahead up. **Revised
+  2026-07-14** (see §10): height-only scaling let a wide phone spill to ~25
+  columns at half the iPad's tile size, and its shorter view showed a thick
+  dead-dirt band the iPad's clamp hid. The camera now also caps the
+  horizontal field of view (`GOL.V3.maxCols`, default 16) and keeps the
+  vertical seat low (`GOL.V3.groundBias`, default 0.50) so the bottom clamp
+  anchors the frame to the ground on every device — both tunable.
 - **Performance:** keep the DPR clamp at 2 (a 3× canvas on a 6.1" screen is
   wasted work); pre-composed terrain and prop sprites carry over unchanged.
 - **Testing:** playtests and headless QA run at 852×393; `tools/preview.mjs`
@@ -446,6 +452,108 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   vertically aligned eight-point star (`3 ★`, `21 ★`); completed worlds still
   replace it with their Grand Gem. The contained count scales to long surahs
   without turning the journey into a dense progress chart.
+- **MOBILE CAMERA — FOV CAP + SPRITE SEAT (fixed 2026-07-14):** reported that
+  the game "looks great on iPad but too small / zoomed out on phone — a lot of
+  the beautiful detail is getting lost." Root cause: the camera fixed the
+  *vertical* framing (`GOL.V3.rows` ≈ 11.5 tile-rows tall) and let the *width*
+  spill to whatever the aspect ratio allowed. iPad (1.33:1) shows ~15 columns
+  at ~67px tiles; a phone (2.17:1) showed ~25 columns at ~34px — the child a
+  speck in a vast field. The near/mid/wide control only moved the row count,
+  which barely dents the width, so it "didn't work super well." **Fix:** take
+  the more-constraining of a height-fit and a new width-fit,
+  `scale = max(H/(rows·TILE), W/(maxCols·TILE))`, with `maxCols` default 16.
+  iPad's ~15 columns never reach the cap, so iPad is pixel-for-pixel unchanged;
+  a wide phone zooms back in to ~53px tiles / 16 columns. The near/mid/wide
+  camera control now drives this cap (14/16/18). Trade accepted: the phone
+  shows ~7.4 rows tall instead of 11.5 (the aspect ratios can't match both
+  axes) — the child stays framed at the seat below and drop-offs still read.
+  A second report — "reduce/cap the subterranean area, where the sprite walks"
+  — traced to the vertical anchor, hardcoded at 0.62 (sprite 62% down, ~38% of
+  the view dead dirt below). On iPad the shallow levels (3 dirt rows) hit the
+  bottom clamp, which incidentally seats the sprite ~0.74 down — that IS the
+  tidy iPad look. A shorter phone view never reaches the clamp, so it showed
+  the raw 0.62. **Fix:** the anchor is now `GOL.V3.groundBias` (default 0.74,
+  matching iPad's effective seat), with a `headroom` row in the tuning panel
+  (less 0.62 / mid 0.74 / more 0.80), a `?groundY=` override, and cfg
+  persistence — alongside the `?cols=` override for the FOV cap. Headless QA at
+  852×393 across Falaq (pond/ledge) and the tall Al-Lail (h=72) confirmed no
+  playability regression at the defaults: drops stay visible, gems above stay
+  visible. Shipped to `main` (sw.js CACHE v23→v24); a real-device pass is still
+  the final word, and both levers stay tunable if a specific world wants a
+  different feel.
+- **SPRITE SEAT — CORRECTION (fixed 2026-07-14, supersedes the seat half
+  above):** the `groundBias` default of 0.74 was wrong. Real-device feedback:
+  "too much headroom makes all the jumping scenes bad." The mistake was setting
+  the bias to 0.74 to *match iPad's number* — but iPad's tidy seat comes from
+  the camera's **bottom clamp** (`cam.y ≤ level.h·TILE − viewH`, never show
+  below the floor), which its tall view always hits, NOT from the bias. On a
+  short phone view a high bias floats the camera OFF the clamp, opening a dead
+  sky band above the sprite; the sprite crams against the bottom edge and jumps
+  launch into empty sky. **Correct model:** keep the bias LOW so the clamp
+  governs on every device — each then self-frames (iPad identical, phone
+  anchored to the ground with the jump target visible above). Default
+  `groundBias` 0.74 → **0.50**. The `headroom` control is now five fine steps in
+  the low range (`.50/.54/.58/.62/.66`, default .50) — the range that actually
+  varies — replacing the old less/mid/more that reached the bad 0.80. Camera
+  default stays mid (16) so iPad is untouched; `near` (14) is one tap and
+  persists per device (playtester's preference on phone). Verified headless at
+  the Falaq bounce-gem jump (standing + apex). Shipped to `main` (sw.js CACHE
+  v24→v25).
+- **THE GUIDING LIGHT — occlusion reframed as guidance (built 2026-07-14; on
+  `claude/guiding-light-prototype-1vym54`, awaiting child playtest).** A
+  requested new mechanic: the sprite opens a closed BOX OF LIGHT which releases
+  an orb/angel of noor that flies ahead and kindles the noor-seed trail into a
+  bright, then slowly-expiring, lit path through the dark toward the next ayah.
+  This is P6's occluder darkness finally given the *meaningful* home §10 asked
+  for — the dark is not there to hide secrets (the verdict that sank P6) but so
+  a guiding light can reveal the way. Wedded to its surah: it prototypes on
+  **Al-Falaq**, "the daybreak," whose own words seek refuge in the Lord of the
+  dawn "from the evil of the darkness when it settles" — so the guiding light
+  *is* the daybreak breaking, and gathering the ayat lifts the night
+  (`falaqNoor` → `falaqEnd`) until the last gem is found in full dawn.
+  **Invariants held:** no text, no quiz, and crucially **no failure** — the
+  "expiring path" never traps. The child always carries a personal aura of
+  light, Noor the firefly still points the way, and physics/terrain are
+  unchanged; the darkness only softens *distant* seeing, and the boxes/dawn
+  carry the darkest stretch. Gems stay ordered; the orb leads to the same goal
+  the firefly knows. Ordered collection, the earned campfire, the hidden Rahma
+  blossom, and the ≥14-seed trail all remain (the trail is literally the path
+  the orb lights). **How it's wired:** `b.lightbox(x)` DSL primitive; a `night`
+  (0..1) world flag; adventure `updateGuideLight`/`drawDarkness` (a
+  destination-out light-mask punched by the child's aura, the kindled seeds,
+  the orb, opened boxes, and a faint next-ayah beacon; base darkness =
+  `night · (1 − restoreK·0.9)` so dawn lifts it globally). Lives in the debug
+  lab as `?proto=15&debug=1` on its own `labSaveKey` ('falaq-noor'), so it never
+  touches World One's real Al-Falaq Grand Gem. `check.mjs 15` green; a headless
+  logic harness confirms box-open → orb → seed-kindle → expire → dawn-lift and
+  that daylit worlds are wholly untouched. **Open questions for the nieces:**
+  does the "follow the light while it lasts" read as inviting rather than
+  anxious? Is opening-on-arrival (no button to hunt for) the right kid-simple
+  gesture? If it lands, its natural shipping homes are the roadmap's guided-path
+  surahs — At-Takathur's clutter-clearing (WORLDS-PLAN I) and Al-Kafirun's
+  noor-lit road (E) — rather than a second Falaq.
+- **GEM BAND MOVED TO THE BOTTOM + made self-windowing (2026-07-14; on
+  `claude/gem-drawer-reposition-7htqtg`).** With the zoom/clamp work above, the
+  low `groundBias` means the camera's bottom clamp always shows a strip of dead
+  **subterranean soil** below the floor — unusable play space. Meanwhile the
+  top-centre, where the wordless gem band lived, became a *critical* spot (the
+  action now reaches the top of the frame). So the band moves down into that
+  dead strip, tucked into the gap **between the thumbstick and the jump button**.
+  Its slot/width are derived from `GOL.touchZones` (bandCx = midpoint of the two
+  controls' inner edges; bandMax = that gap; bandY centres the 52px band on the
+  controls' row) so band and controls can never collide on any screen, and the
+  camp-progress pips ride just above it. **Scaling for long surahs (Al-Lail 21,
+  Al-'Alaq 19):** the narrower bottom gap can't hold every slot, so `drawHudBand`
+  now *windows*. If all slots fit it opens them to a comfortable gap; if not it
+  shows a window of full-size slots that follows the collection **frontier**
+  (centred on the next gem, clamped to the ends), with a little cluster of
+  shrinking dots trailing off each side — deep gem-gold gathered gems behind,
+  faint empty stars ahead. Still wordless, no numbers: the child feels "I've got
+  a bunch, and a bunch are waiting." Ordered collection makes the window a clean
+  gathered-then-empty reel. Verified headless (layout fits the control gap at
+  568–844px widths, windowing 7/11/15/21 slots) and by rendering the real
+  `drawHudBand` states to a screenshot. `check.mjs` all-green; sw.js CACHE
+  v27→v28.
 - **THE SKY ABOVE THE PATH LAB (P16 built 2026-07-13; awaiting child
   playtest):** the journey's answer to twenty surahs is a second ALTITUDE,
   not a second screen. The path below only ever holds the chapter being
