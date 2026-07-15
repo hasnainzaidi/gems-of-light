@@ -361,4 +361,29 @@ alternating road edges. Contract §5's "≥90 apart" is superseded by
 "evenly spaced along the island's road, non-overlapping at phone
 scale."
 
-**VERDICTS (pending): r4.1 on the phone.**
+**R4.1 VERDICT (Hasnain, 2026-07-15, phone): "getting close" — the
+breathing-room problem is real, solved by growing the map, plus three
+navigation orders:**
+- **FOUR islands, six spots each** (6/6/6/6 SUPERSEDES the 8/8/8 cut;
+  24 = 6×4). New ladder cut: Valley 1–6 (Fatiha…Nasr), II 7–12
+  (Masad…Takathur), III 13–18 (Qariah…Ma'un), IV 19–24 (Qadr…Lail —
+  the summit worlds). Phase alignment yields to breathing room.
+- **Islands a bit bigger; paths meander a bit more** (quadrant rule
+  and no-loops law still absolute).
+- **Room to breathe at the end:** the final island must sit far
+  enough from the canvas edge that the camera can CENTER it (today it
+  pulls up because the picture runs out). Canvas grows.
+- **Mobile walk buttons:** keyboard nav has no touch equivalent — add
+  simple left/right (back/forward along the trail) buttons at the
+  bottom-right on touch. No full joystick.
+- **Camera on a rail:** free scrolling gets you "randomly lost /
+  uncentered" — drag now scrubs ALONG the path axis (the journey
+  diagonal), never free into empty space.
+Fourth heart chosen (orchestrator call, flagged for review): a RING
+pool — a halo of water for the island furthest into the heavens (from
+P17's approved shape family: star / quatrefoil / ring; crescent set
+aside to stay clear of iconography). Engine goes contract-adaptive:
+region count read from the map itself (heart-4 present → 4×6, else
+3×8) so the live tree never breaks while art and engine land.
+
+**VERDICTS (pending): r4.2 — four islands — on the phone.**
