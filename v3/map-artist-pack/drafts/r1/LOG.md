@@ -221,4 +221,22 @@ full map or harness work resumes. Output: `drafts/r4/sliver/`.
   stubs, A's dead-end spur, B's detached wall arc, finish glossier
   than gouache — all owed in the next iteration.
 
+**SLIVER VERDICT 2 (Hasnain, 2026-07-15, phone — on A2):**
+- **The orbit is REJECTED.** "Don't lasso or kink around the water
+  fixture. The path should never bend backwards. At most, it should
+  be 90° from where it came in." The path through an island is a pure
+  THROUGH-LINE: one gentle curve, total turn ≤90°, always flowing
+  forward. (Verdict-1's sketch was allocation, not an orbit — the
+  circles were the worlds, not the path.)
+- **Composition law: the path BIFURCATES each island two-thirds /
+  one-third.** The water fixture lives on the two-thirds side; the
+  remaining third sits across the path. Trees and decor go on BOTH
+  sides so neither reads empty.
+- **The float still misses: these are HIGH UP IN THE SKY,** not a
+  little above the ground. Establish a LANGUAGE OF ASCENSION — going
+  island to island should read as traveling further and further out
+  into the heavens. For the map: an altitude gradient across the
+  three islands. For the tile: no ground-shadow of any kind, cloud
+  layers receding far below, atmospheric depth beneath the island.
+
 **VERDICTS (pending):**
