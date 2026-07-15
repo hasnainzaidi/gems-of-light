@@ -14,6 +14,9 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
+    # Until the ANTHROPIC_API_KEY repo secret is configured, the action
+    # fails at startup — don't paint every PR red for missing plumbing.
+    continue-on-error: true
     permissions:
       contents: read
       pull-requests: write # post reviews / comments and approve

@@ -663,3 +663,19 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   controls; a cheap guard skips the draw once it's fully below the view.
   Verified in-engine (Al-Lail) at clamped / +3.5-tile / +7-tile camera. sw.js
   CACHE v29→v30.
+- **THE MAP IS THE GAME'S HOME (promoted 2026-07-15, on Hasnain's "how
+  do i promote that to be the main page"):** the painted four-island
+  journey left the lab. `v3/js/map.js` (scene `journeyMap`) binds the
+  P19 experience to the REAL save: blooms are earned Grand Gems, the
+  breathing star is the next world of the natural journey, buds are
+  worlds still growing, islands wake as their built worlds complete
+  (ceremony plays on return with news), landing on the star enters its
+  world, resting on an old bloom re-enters after the hesitation ring.
+  The title's pedagogy moved onto the map spots: per-surah Remembering
+  Moons (tap to dream, once a day), the missing-you golden ring with
+  Noor beside it, Rahma-blossom brows. The title is now a splash — logo,
+  settings, grown-ups star, tap-anywhere → map — and its disc row is
+  DELETED (git history is its archive, per Hasnain's "proto branch or
+  delete"). `GOL.homeScene`: home means the map everywhere once
+  visited (worlds, shrines, dreams, grown-ups). The P19 lab stays for
+  future art rounds.

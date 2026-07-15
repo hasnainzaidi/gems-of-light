@@ -19,13 +19,9 @@ verdict is logged.
 
 ## Next
 
-- [ ] Promote the map from lab to production: real saves (blooms/
-      moons/progress from `gemsOfLight.v3` instead of the sim),
-      Remembering-moon door, then replace the title's disc row with
-      the map scene (spot→surah wiring + 6/6/6/6 cut already done in
-      P19)
-- [ ] Remembering Moons on the map (moon anchor exists; wire the
-      once-a-day dream-shrine door once real saves land)
+- [ ] Map polish once the promotion settles: port the disc row's two
+      remaining dressings to map spots (memory-bloom arcs from
+      heardFull, ayah-count pips on the open world) — see PLAN §10
 - [ ] Ship ritual for the next deploy: `git fetch origin` FIRST,
       reconcile via `origin/main`, merge only child-playable work,
       bump `sw.js` CACHE, run `node v3/tools/check.mjs` parity gate
