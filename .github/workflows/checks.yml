@@ -1,0 +1,20 @@
+name: Checks
+
+# The merge gate: every PR (and every push to staging/main) must pass the
+# v3 level integrity checker before it can land. check.mjs with no args
+# verifies every world is completable and the root//v3/ builds stay in sync.
+on:
+  pull_request:
+  push:
+    branches: [staging, main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: v3 level integrity checker
+        run: node v3/tools/check.mjs

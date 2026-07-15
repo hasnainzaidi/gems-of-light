@@ -42,14 +42,21 @@ current state.
 
 ## Working rules (user-approved; keep them)
 
-- **Git:** `main` = live site (push deploys via Pages; bump `CACHE` in
-  `sw.js` when it changes). `v3-prototypes` = all v3 work. One commit per
-  finished idea. Merge to main only what a child could play today. The user
-  is a git novice — drive git for him, explain plainly. Cloud sessions ship
-  straight to origin/main, so `git fetch origin` before any reconcile and
-  diff against origin/main, not local main. Parallel sessions stage files
-  concurrently — commit with explicit pathspecs (`git commit -- <paths>`),
-  never a bare commit after `git add`.
+- **Git — prod/staging model (since 2026-07-15):** `main` = PROD
+  (playgemsoflight.com; push deploys via the Pages workflow; bump
+  `CACHE` in `sw.js` when it changes). `staging` = the always-playable
+  integration branch (renamed from `v3-prototypes`), auto-deployed by
+  Cloudflare Pages to the staging URL Hasnain playtests on his phone.
+  ALL work lands on staging first — via PRs with the Checks workflow
+  green (`.github/workflows/checks.yml` runs `node v3/tools/check.mjs`);
+  never leave staging broken. Promotion = merge staging → main after
+  Hasnain approves on his phone (merge only what a child could play
+  today). Cloud sessions target STAGING, never main directly; `git
+  fetch origin` before any reconcile and diff against origin/staging.
+  One commit per finished idea. The user is a git novice — drive git
+  for him, explain plainly. Parallel sessions stage files concurrently —
+  commit with explicit pathspecs (`git commit -- <paths>`), never a
+  bare commit after `git add`.
 - **Waves of parallel agents with disjoint file ownership.** Orchestrator
   does shared plumbing first; follow-ups go to the same agent via
   SendMessage. Every level-building brief requires
@@ -71,7 +78,12 @@ current state.
 
 ## Dev mechanics
 
-- Server: `python3 -m http.server 8437` at repo root; phone tests at
+- Phone playtests happen on STAGING (Cloudflare Pages; URL recorded
+  here once the Cloudflare project is connected — expected
+  gems-of-light.pages.dev). Separate origin from prod, so it has its
+  own save + service worker.
+- Local server (live co-design sessions only): `python3 -m http.server
+  8437` at repo root; phone at
   http://hasnains-mac-mini.local:8437/v3/ (landscape).
 - Script tags carry `?v=NNN` — bump on JS changes. Root `sw.js` is
   network-first for `/v3/`.
@@ -98,3 +110,7 @@ current state.
   journey map program ran its verdict rounds (champion `drafts/r3`,
   living harness `?lab=19` with the map↔world toggle) — see
   `v3/map-artist-pack/drafts/r1/LOG.md`. Full trail: `git log`, PLAN §10.
+- **2026-07-15 (infra):** prod/staging split adopted — `v3-prototypes`
+  renamed `staging`, Checks CI added (checker green gates every PR),
+  Cloudflare Pages serves staging on its own origin; promotion is
+  merge staging → main. See the Git working rule above.
