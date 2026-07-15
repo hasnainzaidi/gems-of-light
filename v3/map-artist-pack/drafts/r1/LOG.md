@@ -251,4 +251,18 @@ aggressive cloud banding hugging the island's front is too much —
 dial it back. Priority declared: **get the path geometry and the
 island division right FIRST; styling iterates after.**
 
+**SLIVER VERDICT 4 (Hasnain, 2026-07-15, phone — on A4a/A4b): BOTH
+PASS.** The quadrant-rule geometry is settled; the routings will
+ALTERNATE across islands on the full map (south-bow, north-bow,
+south-bow — the S-flow of the original sketch). Refinements ordered:
+1. **Minimum path-to-edge margin** — the path currently runs too near
+   the rim in places; set a real minimum and hold it everywhere.
+2. **The fountain nestles in the path's ELBOW** — central, in the
+   pocket of the sweep, so the path visibly "walks by the fountain"
+   (near it, never touching it).
+3. **A gardening language for the two sections:** the MAJOR (2/3)
+   garden = the water fixture + larger trees; the MINOR (1/3) garden
+   = flowers and bushes. Each side of the path gets its own
+   consistent vocabulary, on every island.
+
 **VERDICTS (pending):**
