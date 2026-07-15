@@ -407,4 +407,16 @@ region count read from the map itself (heart-4 present → 4×6, else
    triggers). If a bloom completes an island, the wake ceremony
    plays instead and entry waits for the next island's star.
 
-**VERDICTS (pending): r4.3 on the phone.**
+**r4.3 shipped to STAGING (2026-07-15, on Hasnain's go-ahead while
+away — "the changes were pretty minor so I assume they'll be fine"):**
+all five refinements landed and verified; every spot wired to its own
+surah via WORLD_ORDER (8 doors: fatiha/falaq/nas/kawthar on the
+valley, adiyat on island 3, qadr/duha/lail on the summit; unbuilt keys
+not enterable). Pre-merge checklist completed: r4 promoted to
+`map-artist-pack/journey-map.svg` (the lab default), stub rebuilt to
+v2.1 (four islands), `check-map-svg.mjs` rewritten to the adaptive
+v2.1 contract (green on final + stub), `?lab=19` / `map=r4` /
+`map=stub` all load clean, `check.mjs` green. PR #5 merged to staging.
+
+**VERDICTS (pending): Hasnain's phone pass on the STAGING deploy —
+the r4.3 map, the walk/entry feel, and the eight doors.**

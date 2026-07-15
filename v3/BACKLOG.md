@@ -10,20 +10,20 @@ verdict is logged.
 
 ## Now
 
-- [ ] Map round 4: sky field + fountain hearts + decoration density,
-      plus contract v2 in the harness (8 spots/island, walk-path
-      ceremony) — brief and running tracks in
-      `map-artist-pack/drafts/r1/LOG.md` §Round 4; phone verdict next
+- [ ] Phone-verdict the round-4 map ON STAGING (`?lab=19`): four
+      islands 6/6/6/6, waypoint walk, arrival entry, rail camera,
+      eight wired surah doors — verdicts →
+      `map-artist-pack/drafts/r1/LOG.md`
 - [ ] Detailed per-world playtest with the girls (first pass 2026-07-15:
       "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
 
 ## Next
 
-- [ ] Wire the real journey into the painted map: REGIONS = the decided
-      8/8/8 cut over `WORLD_ORDER` (Valley 1–8, Orchard 9–16, Heights
-      17–24), real saves, blooms/moons from `gemsOfLight.v3`,
-      tap-to-enter — then replace the title's disc row with the map
-      (P19 harness → production scene)
+- [ ] Promote the map from lab to production: real saves (blooms/
+      moons/progress from `gemsOfLight.v3` instead of the sim),
+      Remembering-moon door, then replace the title's disc row with
+      the map scene (spot→surah wiring + 6/6/6/6 cut already done in
+      P19)
 - [ ] Remembering Moons on the map (moon anchor exists; wire the
       once-a-day dream-shrine door once real saves land)
 - [ ] Ship ritual for the next deploy: `git fetch origin` FIRST,

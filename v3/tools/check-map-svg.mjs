@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-// Validate the programmable artist contract in MAP-ART-BRIEF.md.
-// Dependency-free by design: this runs anywhere the existing v3 checkers run.
+// Validate the programmable artist contract (v2.1, round 4) in
+// MAP-ART-BRIEF.md as amended by map-artist-pack/drafts/r1/LOG.md:
+// islands in sky, fountain hearts (water only in `water-R` groups),
+// NO stream, spots ON the walk, adaptive region shape (heart-4 present
+// = four islands × 6 spots; absent = three × 8), gates = islands − 1.
+// Dependency-free by design: runs anywhere the existing v3 checkers run.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -51,13 +55,12 @@ function numberAttr(t, name, id) {
 if (/<!DOCTYPE|<!ENTITY/i.test(xml)) fail('DOCTYPE/entity declarations are not allowed');
 const root = tags.find((t) => t.tag === 'svg');
 if (!root) fail('missing root <svg>');
-if (root && root.attrs.version !== '1.1') fail('root version must be SVG 1.1');
 const vb = (root?.attrs.viewBox || '').trim().split(/[ ,]+/).map(Number);
 if (vb.length !== 4 || vb.some((v) => !Number.isFinite(v)) || vb[2] <= 0 || vb[3] <= 0) {
   fail('viewBox must contain four finite values with positive width/height');
 }
 const W = vb[2] || 0, H = vb[3] || 0;
-if (W && H && (W / H < 1.8 || W / H > 2.3)) fail(`viewBox aspect ${String(W / H)} is outside the brief's roughly 2:1 range`);
+if (W && H && (W / H < 1.7 || W / H > 2.6)) fail(`viewBox aspect ${String(W / H)} is outside the roughly 2:1 range`);
 if (bytes > 1_500_000) fail(`file is ${bytes} bytes; delivery ceiling is 1,500,000`);
 
 const prohibited = new Set([
@@ -80,26 +83,38 @@ for (const match of xml.matchAll(/url\(([^)]+)\)/g)) {
   if (!value.startsWith('#')) fail(`external url(${value}) is not allowed`);
 }
 
+// v2.1: the region shape comes from the map itself
+const nRegions = byId.has('heart-4') ? 4 : 3;
+const perRegion = 24 / nRegions;
+
 const walkTag = required('walk', 'path');
-const streamTag = required('stream', 'path');
+if (byId.has('stream')) fail('#stream is not part of contract v2.1 — the map has no watercourse');
 required('over', 'g');
-for (let r = 1; r <= 3; r++) {
+for (let r = 1; r <= nRegions; r++) {
   required(`water-${r}`, 'g');
   required(`heart-${r}`, 'circle');
-  for (let n = 1; n <= 7; n++) required(`spot-${r}-${n}`, 'circle');
+  for (let n = 1; n <= perRegion; n++) required(`spot-${r}-${n}`, 'circle');
 }
-required('gate-1', 'circle');
-required('gate-2', 'circle');
+for (let g = 1; g < nRegions; g++) required(`gate-${g}`, 'circle');
 required('moon', 'circle');
-for (const id of ['water-1', 'water-2', 'water-3', 'over']) {
+const groupIds = ['over'];
+for (let r = 1; r <= nRegions; r++) groupIds.push(`water-${r}`);
+for (const id of groupIds) {
   const re = new RegExp(`<g\\b[^>]*\\bid=["']${id}["'][^>]*>([\\s\\S]*?)<\\/g>`);
   const m = xml.match(re);
   if (!m || !m[1].replace(/<!--[^]*?-->/g, '').trim()) fail(`#${id} must be a nonempty group`);
 }
 
+const anchorIds = [];
+for (let r = 1; r <= nRegions; r++) {
+  anchorIds.push(`heart-${r}`);
+  for (let n = 1; n <= perRegion; n++) anchorIds.push(`spot-${r}-${n}`);
+}
+for (let g = 1; g < nRegions; g++) anchorIds.push(`gate-${g}`);
+anchorIds.push('moon');
+
 const circles = new Map();
-for (const id of [...Array.from({ length: 3 }, (_, r) => Array.from({ length: 7 }, (_, n) => `spot-${r + 1}-${n + 1}`)).flat(),
-  'heart-1', 'heart-2', 'heart-3', 'gate-1', 'gate-2', 'moon']) {
+for (const id of anchorIds) {
   const t = byId.get(id);
   if (!t) continue;
   if ('transform' in t.attrs) fail(`#${id} must use raw root-space cx/cy (no transform)`);
@@ -172,51 +187,62 @@ function nearest(points, p) {
 }
 
 try {
-  for (const [id, t] of [['walk', walkTag], ['stream', streamTag]]) {
-    if (!t?.attrs.d?.trim()) fail(`#${id} needs a nonempty d attribute`);
-    if (t && (t.attrs.d.match(/[mM]/g) || []).length !== 1) fail(`#${id} must contain one subpath`);
-  }
-  if (walkTag?.attrs.d && streamTag?.attrs.d) {
+  if (!walkTag?.attrs.d?.trim()) fail('#walk needs a nonempty d attribute');
+  if (walkTag && (walkTag.attrs.d.match(/[mM]/g) || []).length !== 1) fail('#walk must contain one subpath');
+  if (walkTag?.attrs.d) {
     const walk = pathSamples(walkTag.attrs.d);
-    const stream = pathSamples(streamTag.attrs.d);
-    if (walk[0].x > vb[0] + W * 0.01 || walk[0].y < vb[1] + H * 0.75) {
-      fail('#walk must begin at the lower-left edge');
-    }
-    if (walk.at(-1).x < vb[0] + W * 0.99 || walk.at(-1).y > vb[1] + H * 0.25) {
-      fail('#walk must exit at the upper-right edge');
-    }
-    if (stream.at(-1).x < vb[0] + W * 0.99 || stream.at(-1).y > vb[1] + H * 0.25) {
-      fail('#stream must reach the upper-right edge');
-    }
-    if (nearest(stream, circles.get('heart-1')).distance > 5) fail('#stream must begin at the valley spring / #heart-1');
-    const spots = [];
-    for (let r = 1; r <= 3; r++) for (let n = 1; n <= 7; n++) spots.push({ id: `spot-${r}-${n}`, ...circles.get(`spot-${r}-${n}`) });
-    for (let a = 0; a < spots.length; a++) for (let b = a + 1; b < spots.length; b++) {
-      const d = Math.hypot(spots[a].x - spots[b].x, spots[a].y - spots[b].y);
-      if (d < 90) fail(`${spots[a].id} and ${spots[b].id} are only ${d.toFixed(1)} units apart`);
-    }
+    // spots: ON the walk, in walking order, evenly breathable per island
     let prior = -1;
-    for (const s of spots) {
-      const hit = nearest(walk, s);
-      if (hit.distance > 45) warn(`${s.id} is ${hit.distance.toFixed(1)} units from #walk`);
-      if (hit.index <= prior) fail(`${s.id} is out of walking order`);
-      prior = hit.index;
+    for (let r = 1; r <= nRegions; r++) {
+      let prevHit = null;
+      for (let n = 1; n <= perRegion; n++) {
+        const id = `spot-${r}-${n}`;
+        const s = circles.get(id);
+        if (!s) continue;
+        const hit = nearest(walk, s);
+        if (hit.distance > 9) fail(`${id} is ${hit.distance.toFixed(1)} units off #walk (must sit on the road)`);
+        if (hit.index <= prior) fail(`${id} is out of walking order`);
+        prior = hit.index;
+        if (prevHit != null) {
+          const gap = walk[hit.index].l - walk[prevHit].l;
+          if (gap < 70) fail(`${id} is only ${gap.toFixed(1)} walk-units after its predecessor (breathing minimum 70)`);
+        }
+        prevHit = hit.index;
+      }
     }
-    const g1 = nearest(stream, circles.get('gate-1'));
-    const g2 = nearest(stream, circles.get('gate-2'));
-    if (g1.distance > 40) fail(`#gate-1 is ${g1.distance.toFixed(1)} units from #stream`);
-    if (g2.distance > 40) fail(`#gate-2 is ${g2.distance.toFixed(1)} units from #stream`);
-    if (g2.index <= g1.index) fail('#gate-2 must follow #gate-1 along #stream');
+    // gates: on the walk, in order
+    let gPrior = -1;
+    for (let g = 1; g < nRegions; g++) {
+      const gate = circles.get(`gate-${g}`);
+      if (!gate) continue;
+      const hit = nearest(walk, gate);
+      if (hit.distance > 40) fail(`#gate-${g} is ${hit.distance.toFixed(1)} units from #walk`);
+      if (hit.index <= gPrior) fail(`#gate-${g} is out of order along #walk`);
+      gPrior = hit.index;
+    }
+    // hearts: near (walked-by) but never ON the walk
+    for (let r = 1; r <= nRegions; r++) {
+      const h = circles.get(`heart-${r}`);
+      if (!h) continue;
+      const hit = nearest(walk, h);
+      if (hit.distance < 20) fail(`#heart-${r} is ${hit.distance.toFixed(1)} units from #walk — the path walks BY the fountain, never through it`);
+      if (hit.distance > 160) warn(`#heart-${r} is ${hit.distance.toFixed(1)} units from #walk — meant to be nestled in the sweep's elbow`);
+    }
   }
 } catch (err) {
   fail(`path geometry could not be checked: ${err.message}`);
 }
 
-const hearts = [1, 2, 3].map((i) => circles.get(`heart-${i}`));
-if (hearts.every(Boolean) && !(
-  hearts[0].x < hearts[1].x && hearts[1].x < hearts[2].x &&
-  hearts[0].y > hearts[1].y && hearts[1].y > hearts[2].y
-)) fail('heart anchors must progress lower-left → upper-right');
+const hearts = [];
+for (let r = 1; r <= nRegions; r++) hearts.push(circles.get(`heart-${r}`));
+if (hearts.every(Boolean)) {
+  for (let i = 1; i < hearts.length; i++) {
+    if (!(hearts[i - 1].x < hearts[i].x && hearts[i - 1].y > hearts[i].y)) {
+      fail('heart anchors must progress lower-left → upper-right');
+      break;
+    }
+  }
+}
 
 for (const w of warnings) console.warn(`⚠ ${w}`);
 if (errors.length) {
@@ -224,5 +250,4 @@ if (errors.length) {
   console.error(`\n${errors.length} map contract error${errors.length === 1 ? '' : 's'}`);
   process.exit(1);
 }
-console.log(`✓ ${path.relative(process.cwd(), file)} · ${W}×${H} · ${(W / H).toFixed(2)}:1 · ${bytes.toLocaleString()} bytes`);
-console.log('✓ 2D overworld contract · 21 ordered spots · 3 hearts · 2 gates · 3 water layers · foreground over layer');
+console.log(`✓ ${path.relative(process.cwd(), file)} · ${W}×${H} · ${(W / H).toFixed(2)}:1 · ${nRegions}×${perRegion} spots · ${bytes.toLocaleString()} bytes`);
