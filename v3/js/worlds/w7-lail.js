@@ -6,12 +6,10 @@
 // legs feel the same chunking the campfire and the STANZA SHRINE breathe:
 //   stanzas: [4, 7, 5, 5]  (the oaths · the two ways · guidance · the pleased)
 //
-// The soul of the world is the fork in the middle stretch. "Your striving is
-// diverse" — the giver eased, the withholder hardened — is told wordlessly:
-// the path visibly FORKS around a central rock mass into a left arm and a right
-// arm, and BOTH always rejoin toward the light above (no wrong way, no dead
-// end, no punishment). The gems trace the left arm; the right is the parallel
-// way, marked by its own seeds, meeting the same rejoin ledge.
+// The soul of the world is the braid in the middle stretch. "Your striving is
+// diverse" is told wordlessly three times: lush and quiet-stone arms part
+// around small rock knuckles, then BOTH meet at the next gem (no wrong way, no
+// dead end, no punishment). Every parting arrives at the same light.
 //
 // You never climb down; you only rise, from the dark valley floor to a broad
 // starred summit cap where the campfire and the shrine door wait.
@@ -42,18 +40,23 @@
       b.slab(28, 35, 54); // a broad flat shelf, a lantern, a still moment
 
       // ── STANZA 2 · THE TWO WAYS (vv5–11) — the long middle face ──
-      // the path forks around a central rock mass into two arms that rejoin.
-      b.block(30, 31, 47, 53); // the central rock (the paths part around it)
-      // left arm — the way the gems trace, switchbacking up-and-left
-      b.slab(24, 28, 52); // L1
-      b.slab(20, 24, 50); // L2
-      b.slab(17, 21, 48); // L3
-      b.slab(20, 24, 46); // L4
-      // right arm — the parallel way, always passable, no gems, its own seeds
-      b.slab(34, 38, 52); // R1
-      b.slab(38, 42, 50); // R2
-      b.slab(40, 44, 48); // R3
-      b.slab(37, 41, 46); // R4
+      // Three equal two-way cells: each lush left arm and quiet-stone right
+      // arm parts around a small knuckle, then meets one jump higher at the
+      // next gem. The last meeting touches (but does not descend onto) REJOIN.
+      b.stoneBlock(31, 32, 54, 55); // K1 — the fork mouth on rest ledge 1
+      b.slab(23, 27, 53); // cell 1 · lush left arm
+      b.slab(36, 40, 53); // cell 1 · quiet-stone right arm
+      b.slab(28, 35, 51); // M1 — shared meeting, g6
+
+      b.stoneBlock(34, 35, 51, 52); // K2 — the ways part again from M1
+      b.slab(29, 33, 50); // cell 2 · lush left arm
+      b.slab(37, 41, 50); // cell 2 · quiet-stone right arm
+      b.slab(35, 40, 47); // M2 — shared meeting, g7
+
+      b.stoneBlock(39, 40, 47, 48); // K3 — the final parting from M2
+      b.slab(34, 38, 47); // cell 3 · lush left arm
+      b.slab(41, 45, 47); // cell 3 · quiet-stone right arm
+      b.slab(39, 41, 44); // M3 — shared meeting, g8
       // the rejoin: a wide ledge bridging over the rock where both arms meet
       b.block(24, 38, 43, 44); // REJOIN
       b.slab(28, 32, 41); // S1 — rising on toward the second camp
@@ -88,15 +91,15 @@
       b.stoneBlock(22, 34, 5, 7);
 
       // BEAT — 21 gems, one per ayah, gathered IN ORDER as the night deepens,
-      // each a rung higher than the last (heights strictly ascending)
+      // the climb never descends (the last meeting and rejoin share a height)
       b.gem(1, 10, 65);  // the oaths begin — the night when it covers
       b.gem(2, 16, 62);  // and the day when it shines
       b.gem(3, 22, 59);  // and the making of the male and female
       b.gem(4, 28, 56);  // "indeed your striving is diverse"
-      b.gem(5, 26, 51);  // the fork — the giver, the mindful of Allah
-      b.gem(6, 22, 49);  // and believes in the best
-      b.gem(7, 19, 47);  // We will ease him toward ease
-      b.gem(8, 22, 45);  // but the withholder who is self-sufficient
+      b.gem(5, 31, 53);  // fork mouth — the giver, the mindful of Allah
+      b.gem(6, 34, 50);  // M1 — both ways believe in the best
+      b.gem(7, 39, 46);  // M2 — both ways are eased onward
+      b.gem(8, 40, 43);  // M3 — both ways meet before the rejoin
       b.gem(9, 30, 42);  // the rejoin — the ways meet toward the light
       b.gem(10, 30, 40); // We will ease him toward hardship
       b.gem(11, 33, 37); // and his wealth will not avail him when he falls
@@ -128,11 +131,23 @@
       b.seedArc(10, 65, 16, 62, 3, 2); // g1 → g2
       b.seedArc(16, 62, 22, 59, 3, 2); // g2 → g3
       b.seedArc(22, 59, 28, 56, 3, 2); // g3 → g4
-      b.seedArc(28, 56, 26, 51, 3, 2); // g4 → the fork mouth
-      b.seedArc(26, 51, 22, 49, 3, 1); // left arm
-      b.seedArc(22, 49, 19, 47, 3, 1);
-      b.seedArc(19, 47, 22, 45, 3, 1);
-      b.seedArc(22, 45, 30, 42, 3, 2); // left arm → rejoin
+      b.seedArc(28, 56, 31, 53, 3, 1); // g4 → g5, the fork mouth
+      // cell 1: equally sparked arms converge on M1 / g6
+      b.seedArc(31, 53, 25, 52, 3, 1);
+      b.seedArc(25, 52, 34, 50, 3, 1);
+      b.seedArc(31, 53, 40, 52, 3, 1);
+      b.seedArc(40, 52, 34, 50, 3, 1);
+      // cell 2: the same parting and meeting at M2 / g7
+      b.seedArc(34, 50, 31, 49, 3, 1);
+      b.seedArc(31, 49, 39, 46, 3, 2);
+      b.seedArc(34, 50, 39, 49, 3, 1);
+      b.seedArc(39, 49, 39, 46, 3, 2);
+      // cell 3: both arms rise without descent to M3 / g8, then REJOIN / g9
+      b.seedArc(39, 46, 38, 46, 3, 1);
+      b.seedArc(38, 46, 40, 43, 3, 1);
+      b.seedArc(39, 46, 43, 46, 3, 1);
+      b.seedArc(43, 46, 40, 43, 3, 1);
+      b.seedArc(40, 43, 30, 42, 4, 1);
       b.seedArc(30, 42, 30, 40, 2, 1); // rejoin → S1
       b.seedArc(30, 40, 33, 37, 3, 1); // S1 → S2 → camp 2
       b.seedArc(33, 37, 28, 31, 4, 2); // camp 2 → high slab face
@@ -144,8 +159,6 @@
       b.seedArc(21, 13, 16, 10, 3, 1);
       b.seedArc(16, 10, 11, 7, 3, 1);
       b.seedArc(11, 7, 21, 5, 4, 0.5); // C3 → the open crest rung
-      // the right arm of the fork, sparked so both ways read as passable
-      b.seed(36, 51).seed(40, 49).seed(42, 47).seed(39, 45);
       // a first spark by the trailhead and one by the secret flank
       b.seed(7, 68).seed(3, 67).seed(21, 3).seed(30, 3);
 
@@ -154,10 +167,15 @@
       b.waterfall(9, 40);  // the left face
       b.waterfall(33, 58); // spilling off the trailhead shoulder
 
-      // set dressing: lanterns crown each night camp; cypress and olive on the
-      // high ledges, a fallen column and flowers rest at the dark base
-      b.prop('lantern', 32).prop('lantern', 38).prop('lantern', 36)
+      // set dressing: lanterns crown the three shared night camps (never an
+      // arm); explicit rows keep stacked climb surfaces from pulling them up
+      b.prop('lantern', 33, { y: 54 * GOL.TILE })
+       .prop('lantern', 34, { y: 35 * GOL.TILE })
+       .prop('lantern', 31, { y: 17 * GOL.TILE })
        .prop('cypress', 25).prop('olive', 13).prop('bush', 22)
+       .prop('flowers', 26, { y: 53 * GOL.TILE, v: 1 })
+       .prop('olive', 33, { y: 50 * GOL.TILE })
+       .prop('column', 44, { y: 47 * GOL.TILE })
        .prop('column', 1).prop('flowers', 5, { v: 1 });
 
       // creatures: butterflies low over the trailhead, night birds higher
