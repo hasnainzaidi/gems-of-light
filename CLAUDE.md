@@ -26,6 +26,9 @@ current state.
 
 ## Read before acting (v3 work)
 
+- `v3/BACKLOG.md` — the shared forward-looking list (Now/Next/Later),
+  one line per item pointing at its owning doc. Pick from NOW; log the
+  verdict in PLAN §10 or the workstream log, then delete the line.
 - `v3/PLAN.md` — every design decision and playtest verdict (§9), the
   Remembering spec, knowledge telemetry rationale (§7). THE source of truth.
 - `v3/GRAMMARS.md` — the three world-building grammars + gotchas; new surah
