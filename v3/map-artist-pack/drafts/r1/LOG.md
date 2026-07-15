@@ -323,7 +323,9 @@ toggle's one hole; the shrine path already used homeButton.)
 PRE-MERGE CHECKLIST for PR #5 → staging (do NOT merge before): the
 v2 loader rejects the old `map=final` painting and the v1 stub — on
 adoption, r4 becomes `map-artist-pack/journey-map.svg` (new final),
-the stub gets rebuilt to v2, and `?lab=19` defaults must load clean.
+the stub gets rebuilt to v2.1, `?lab=19` defaults must load clean,
+and `v3/tools/check-map-svg.mjs` (still v1: requires `stream`, 3×7
+spots) gets rewritten to the adaptive v2.1 contract.
 
 **R4 FULL-MAP VERDICT 1 (Hasnain, 2026-07-15, phone): direction
 holds, five fixes:**
