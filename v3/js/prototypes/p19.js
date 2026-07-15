@@ -30,6 +30,10 @@
     dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8'
   };
   let assetPromise = null;
+  // The map<->world toggle (round-3 verdict): entering a real world from
+  // the map must come back to the map, sim state intact.
+  let origHomeButton = null; // stashed while a world entered from the map
+  let returnState = null;    // progress/camera/hero preserved across it
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function ease(v) { return v * v * (3 - 2 * v); }
@@ -222,12 +226,62 @@
     ctx.closePath();
   }
 
+  // The lightling's MAP FORM (round-3 verdict): the same soul — warm pearl
+  // glow, sprout, little face — rebuilt for the overworld's high camera.
+  // The side-view sprite never appears on the map: here she is grounded by
+  // her shadow, read from above and slightly in front, bobbing as she walks.
+  function drawMapLightling(ctx, x, y, t, moving, facing) {
+    const bob = moving ? Math.abs(Math.sin(t * 7)) * 3.2 : Math.sin(t * 1.8) * 1.1;
+    const r = 15;
+    ctx.fillStyle = 'rgba(62,83,64,0.20)';
+    ctx.beginPath(); ctx.ellipse(x, y + 6, r * 0.86, r * 0.36, 0, 0, TAU); ctx.fill();
+    ctx.save();
+    ctx.translate(x, y - 9 - bob);
+    if (facing < 0) ctx.scale(-1, 1);
+    const aura = ctx.createRadialGradient(0, 0, 2, 0, 0, r * 1.9);
+    aura.addColorStop(0, 'rgba(255,246,220,0.5)');
+    aura.addColorStop(1, 'rgba(255,246,220,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath(); ctx.arc(0, 0, r * 1.9, 0, TAU); ctx.fill();
+    const body = ctx.createRadialGradient(-r * 0.25, -r * 0.55, r * 0.2, 0, 0, r * 1.05);
+    body.addColorStop(0, '#FFFDF4');
+    body.addColorStop(0.6, '#FFF3D6');
+    body.addColorStop(1, '#F0D9A0');
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.88, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#6DA84E'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(1, -r * 0.8); ctx.quadraticCurveTo(2, -r * 1.12, 1, -r * 1.28); ctx.stroke();
+    ctx.fillStyle = '#8FC77E';
+    ctx.beginPath(); ctx.ellipse(-3.4, -r * 1.3, 4.6, 2.5, -0.55, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#6DA84E';
+    ctx.beginPath(); ctx.ellipse(4.6, -r * 1.26, 4.2, 2.3, 0.5, 0, TAU); ctx.fill();
+    // her face sits low on the pearl — seen a little from above
+    const fy = r * 0.22;
+    const blink = Math.sin(t * 0.7) > 0.985;
+    ctx.fillStyle = '#4A4038';
+    if (blink) {
+      ctx.fillRect(-6.2, fy - 0.6, 3.4, 1.3);
+      ctx.fillRect(2.8, fy - 0.6, 3.4, 1.3);
+    } else {
+      ctx.beginPath(); ctx.arc(-4.6, fy, 1.7, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(4.6, fy, 1.7, 0, TAU); ctx.fill();
+    }
+    ctx.strokeStyle = '#4A4038'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(0, fy + 1.5, 3.4, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke();
+    ctx.fillStyle = 'rgba(245,184,196,0.55)';
+    ctx.beginPath(); ctx.ellipse(-8.2, fy + 2.5, 2.6, 1.6, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8.2, fy + 2.5, 2.6, 1.6, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
   const paintedMapLab = {
     t: 0, map: null, loadError: null, progress: null, cam: null,
     dragPrev: null, dragMoved: false, camFree: 0, ceremony: null,
-    hero: null, spotPulse: null,
+    hero: null, spotPulse: null, pendingBloom: false,
 
     enter() {
+      // home again: the world's home button goes back to being the title's
+      if (origHomeButton) { GOL.homeButton = origHomeButton; origHomeButton = null; }
       this.t = 0;
       this.map = null;
       this.loadError = null;
@@ -239,12 +293,22 @@
       this.ceremony = null;
       this.hero = null;
       this.spotPulse = null;
+      this.pendingBloom = false;
       loadAsset().then((map) => {
         this.map = map;
+        if (returnState) {
+          // back from a world: the journey stands exactly where she left it
+          this.progress = returnState.progress;
+          this.cam = returnState.cam;
+          this.hero = { s: returnState.heroS, sT: returnState.heroS };
+          returnState = null;
+          return;
+        }
         const a = this.activeRegion();
         const j = a == null ? REGIONS[2].count - 1 : Math.max(0, this.progress[a] - 1);
         const s = map.spots[a == null ? 2 : a][j];
-        this.hero = { x: s.x, y: s.y, tx: s.x, ty: s.y };
+        const here = nearestLength(map.walkSamples, s);
+        this.hero = { s: here, sT: here };
       }).catch((err) => {
         this.loadError = err;
         try { console.error('[gol] P19', err); } catch (_) {}
@@ -272,25 +336,36 @@
       return this.travelK();
     },
 
-    advanceNext() {
+    // Tap the breathing star: she walks the trail there FIRST, and the
+    // bloom opens when she arrives (round-3: motion belongs to the path).
+    bloomAtStar(instant) {
       const a = this.activeRegion();
-      if (a == null || !this.map || !this.regionAwake(a) || this.ceremony) return;
+      if (a == null || !this.map || !this.hero || !this.regionAwake(a) || this.ceremony) return;
+      const spot = this.map.spots[a][this.progress[a]];
+      const sT = nearestLength(this.map.walkSamples, spot);
+      if (instant) {
+        this.hero.s = this.hero.sT = sT;
+        this._doBloom();
+        return;
+      }
+      this.hero.sT = sT;
+      this.pendingBloom = true;
+      if (GOL.audio) GOL.audio.sfx('tap');
+    },
+    _doBloom() {
+      const a = this.activeRegion();
+      if (a == null) return;
       this.progress[a]++;
       this.spotPulse = { ri: a, j: this.progress[a] - 1, t: 1 };
       if (GOL.audio) GOL.audio.sfx('blossom');
       if (this.progress[a] === REGIONS[a].count && a < REGIONS.length - 1) {
         this.ceremony = { ri: a, t: 0 };
       }
-      const nextA = this.activeRegion();
-      const target = nextA == null
-        ? this.map.spots[2][REGIONS[2].count - 1]
-        : this.map.spots[nextA][Math.max(0, this.progress[nextA] - 1)];
-      if (this.hero) { this.hero.tx = target.x; this.hero.ty = target.y; }
     },
 
     // Boot's G hotkey means “the next thing” in debug. This also makes the
     // embedded browser's interaction-throttled canvas practical to inspect.
-    debugCollectAll() { this.advanceNext(); },
+    debugCollectAll() { this.bloomAtStar(true); },
 
     mapScale(H) { return clamp(H / 393, 0.88, 1.12); },
 
@@ -342,8 +417,14 @@
       if (this.cam == null) this.cam = this.targetCam(W, H);
 
       if (this.hero) {
-        this.hero.x += (this.hero.tx - this.hero.x) * Math.min(1, dt * 2.4);
-        this.hero.y += (this.hero.ty - this.hero.y) * Math.min(1, dt * 2.4);
+        // she travels the trail itself, never as the crow flies
+        const d = this.hero.sT - this.hero.s;
+        if (Math.abs(d) > 1) {
+          this.hero.s += Math.sign(d) * Math.min(Math.abs(d), dt * 170);
+        } else if (this.pendingBloom) {
+          this.pendingBloom = false;
+          this._doBloom();
+        }
       }
 
       const drag = GOL.Input.drag;
@@ -381,10 +462,42 @@
       const wx = clickAt.x / scale + this.cam.x;
       const wy = clickAt.y / scale + this.cam.y;
       const a = this.activeRegion();
-      if (a == null || !this.regionAwake(a)) return;
-      const s = this.map.spots[a][this.progress[a]];
-      if (GOL.dist(wx, wy, s.x, s.y) > 34) return;
-      this.advanceNext();
+      if (a != null && this.regionAwake(a) && !this.pendingBloom) {
+        const s = this.map.spots[a][this.progress[a]];
+        if (GOL.dist(wx, wy, s.x, s.y) <= 34) {
+          this.bloomAtStar(false);
+          return;
+        }
+      }
+      // The toggle test: every finished bloom is a door into the real
+      // game. Home inside the world leads back HERE, journey intact.
+      if (this.hero) {
+        for (let ri = 0; ri < REGIONS.length; ri++) {
+          if (!this.regionAwake(ri)) continue;
+          for (let j = 0; j < this.progress[ri]; j++) {
+            const b = this.map.spots[ri][j];
+            if (GOL.dist(wx, wy, b.x, b.y) < 26) {
+              returnState = {
+                progress: this.progress.slice(),
+                cam: { x: this.cam.x, y: this.cam.y },
+                heroS: this.hero.s
+              };
+              if (!origHomeButton) {
+                origHomeButton = GOL.homeButton;
+                GOL.homeButton = function () {
+                  const btn = origHomeButton.apply(GOL, arguments);
+                  btn.fn = () => GOL.go('paintedMapLab');
+                  return btn;
+                };
+              }
+              GOL.audio.unlock();
+              if (GOL.audio) GOL.audio.sfx('unlockLevel');
+              GOL.go('adventure', { world: GOL.currentWorld ? GOL.currentWorld() : 1 });
+              return;
+            }
+          }
+        }
+      }
     },
 
     drawMoon(ctx) {
@@ -447,15 +560,11 @@
 
       this.drawMoon(ctx);
       if (this.hero) {
-        ctx.save();
-        ctx.translate(this.hero.x - 25, this.hero.y + 23);
-        ctx.scale(1.34, 1.34);
-        GOL.drawSprite(ctx, 0, 0, {
-          vx: this.hero.tx - this.hero.x, vy: 0, grounded: true, facing: 1,
-          t: this.t, idleT: 2, blink: Math.sin(this.t * 0.7) > 0.985,
-          squashX: 1, squashY: 1, moving: Math.abs(this.hero.tx - this.hero.x) > 2
-        });
-        ctx.restore();
+        const pos = pointAtSamples(this.map.walkSamples, this.hero.s);
+        const ahead = pointAtSamples(this.map.walkSamples, this.hero.s + 6);
+        const moving = Math.abs(this.hero.sT - this.hero.s) > 1;
+        drawMapLightling(ctx, pos.x, pos.y, this.t, moving,
+          ahead.x >= pos.x ? 1 : -1);
       }
       if (active != null && !this.ceremony) {
         const s = this.map.spots[active][this.progress[active]];
