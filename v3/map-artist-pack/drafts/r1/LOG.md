@@ -265,4 +265,22 @@ south-bow — the S-flow of the original sketch). Refinements ordered:
    = flowers and bushes. Each side of the path gets its own
    consistent vocabulary, on every island.
 
+**SLIVER VERDICT 5 (Hasnain, 2026-07-15, phone — on A5): "not
+quite," three fixes:**
+1. **The sweep must be a real ARC.** A5 reads as "a straight path
+   with a little wobble." Cause named: the entry sits too close to
+   the quadrant boundary, so the origin quadrant gets skimmed. Fix:
+   the path enters CENTRALLY in its entry quadrant and must spend
+   real time in all three quadrants — sustained curvature, a
+   dramatic sweep, not end-turns on a straightaway.
+2. **Nothing touches the path.** Parterres/bushes kissing the ribbon
+   is wrong. And the MINOR garden grows: its width should be at
+   least DOUBLE the path-edge minimum, so it holds its flowers and
+   bushes with room to breathe.
+3. **Flat/ground elements must lie IN the ground plane.** Trees read
+   great (they stand up); but parterres, bloombeds, and the court
+   read as vertical/superimposed — their aspect ratios ignore the
+   projection. Everything flush with the ground gets the same
+   foreshortening (vertical compression) as the island plate itself.
+
 **VERDICTS (pending):**
