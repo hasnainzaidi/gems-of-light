@@ -1,120 +1,152 @@
 // World Six — Ad-Duha · The Morning Brightness
-// "By the morning brightness, and the night when it grows still — your Lord has
-// not forsaken you." The gentlest world in the journey: a wide, unhurried
-// garden wander with no trial and no urgency. Eleven ayat, eleven gems, walked
-// left-to-right in calm beats of one gem each.
-//
-// The soul of the world is the light. It opens in deep-blue starlit stillness
-// ('qadrEnd' — the night when it grows still) and warms GEM BY GEM toward the
-// fullest golden forenoon ('fatiha' — the morning brightness), the engine
-// lerping the sky from palette to endPalette as gems are gathered. This is
-// prototype p7's night→morning palette driver, reused whole: the reassurance
-// of the surah lives entirely in the warming light, never in a word. Soft
-// creatures wake as the morning comes; the walk ends in a warm sunrise clearing.
+// Qadr ends under full stars with peace until dawn; this world begins in that
+// exact starred stillness and lets dawn arrive one gathered ayah at a time.
+// Its terrain follows the surah's three movements: promise (1–5), shelter
+// (6–8), then giving forward (9–11). Nothing changes with time and nothing
+// tests the child — the path simply grows warmer, safer, and more generous.
 (function () {
   const GOL = window.GOL;
 
   GOL.registerWorld(6, {
     id: 16, key: 'duha', name: 'the morning brightness',
     surahId: 93,
-    palette: 'qadrEnd', endPalette: 'fatiha', // still starred night → golden forenoon
-    w: 150, h: 16,
+    palette: 'qadrEnd', endPalette: 'fatiha',
+    w: 159, h: 16,
+    // All ambient life is placed deliberately below so the west stays asleep
+    // and the east wakes in a clean bird-then-butterfly gradient.
+    density: 0.000001,
+    // From the first outward-turning ayah, restoration runs ahead of the child.
+    bloomAhead: { from: 9, tiles: 7 },
     build(b) {
-      b.ground(0, 149, 13);
+      b.ground(0, 158, 13);
 
-      // ── beat 1 (ayah 1): a flowered mound in the last of the night ──
-      b.block(9, 11, 12, 12);
-      b.gem(1, 10, 10);
-      b.prop('olive', 6).prop('flowers', 8, { v: 1 }).prop('bush', 13, { v: 1 });
-      b.creature('tortoise', 4, null, { range: 40 }); // asleep on the near bank
+      // ── MOVEMENT I · THE OATHS AND THE PROMISE (ayahs 1–5) ───────────
 
-      // ── beat 2 (ayah 2): two gentle garden steps up ──
-      b.slab(16, 18, 11).slab(20, 22, 9);
-      b.gem(2, 21, 7);
-      b.seedArc(15, 11, 22, 7, 4, 1);
-      b.prop('lantern', 15).prop('flowers', 24, { v: 2 });
+      // 1 — morning brightness held inside the last of Qadr's night. There is
+      // no opening mound: only Qadr's summit lantern, a sleeping tortoise, and
+      // the first low gem shining more brightly than anything around it.
+      b.gem(1, 10, 11);
+      b.prop('lantern', 7);
+      b.creature('tortoise', 4, null, { range: 18 });
 
-      // ── beat 3 (ayah 3): a low grassy mound ──
-      b.block(33, 35, 12, 12);
-      b.gem(3, 34, 10);
-      b.prop('cypress', 27).prop('flowers', 31);
+      // 2 — the night when it grows still. A long pond, five plain stones, no
+      // nearby creature, and only a few sparks leave this the quietest beat.
+      b.water(20, 32, 13);
+      b.stone(21).stone(24).stone(26).stone(28).stone(31);
+      b.gem(2, 26, 10);
 
-      // ── beat 4 (ayah 4): a shallow pond crossed on stepping stones ──
-      b.water(40, 46, 13);
-      b.stone(41).stone(43).stone(45);
-      b.block(47, 49, 12, 12); // the far bank rise
-      b.gem(4, 48, 10);
-      b.seedArc(39, 11, 47, 11, 5, 1); // over the still water
-      b.prop('fountain', 38).prop('flowers', 50, { v: 1 });
+      // 3 — "not forsaken": two soft steps make the first clear turn upward.
+      // From here the guiding sparks become dense and never thin again.
+      b.slab(37, 41, 11).slab(43, 47, 9);
+      b.gem(3, 45, 7);
+      b.prop('flowers', 36, { v: 1 }).prop('lantern', 48);
 
-      // ── beat 5 (ayah 5): a bounce blossom lifts to a high gem ──
-      b.bounce(59);
-      b.gem(5, 59, 8);
-      b.blossom(59, 6); // the hidden Rahma blossom, straight up off the pad
-      b.seed(59, 11).seed(59, 9);
-      b.prop('bush', 55, { v: 2 }).prop('flowers', 62);
+      // 4 — "better than the first": the broadest, tallest mound so far rises
+      // in gentle shoulders, with its gem resting on the high central crest.
+      b.block(51, 52, 11, 12);
+      b.block(53, 54, 10, 12);
+      b.block(55, 59, 9, 12);
+      b.block(60, 61, 10, 12);
+      b.block(62, 63, 11, 12);
+      b.gem(4, 57, 7);
+      b.prop('olive', 52).prop('flowers', 61, { v: 2 });
 
-      // ── beat 6 (ayah 6): two steps up as the sky lightens ──
-      b.slab(65, 67, 11).slab(69, 71, 9);
-      b.gem(6, 70, 7);
-      b.seedArc(64, 11, 70, 7, 4, 1);
-      b.prop('lantern', 63).prop('flowers', 73, { v: 1 });
+      // 5 — "He will give, and you will be pleased": a high gem and an onward
+      // landing reached by a bounce. This is route, not the familiar secret —
+      // there is deliberately no blossom over this pad.
+      b.bounce(66);
+      b.gem(5, 66, 6);
+      b.slab(69, 71, 9);
 
-      // ── beat 7 (ayah 7): a flowered mound, birds beginning to stir ──
-      b.block(82, 84, 12, 12);
-      b.gem(7, 83, 10);
-      b.prop('olive', 78).prop('flowers', 86);
+      // ── MOVEMENT II · THE THREE SHELTERS (ayahs 6–8) ─────────────────
 
-      // ── beat 8 (ayah 8): a single soft rise ──
-      b.slab(92, 94, 11);
-      b.gem(8, 93, 9);
-      b.prop('bush', 89, { v: 1 }).prop('flowers', 96, { v: 2 });
+      // 6 — orphan, then sheltered. The bounce route lands on the low roof;
+      // the child drops at its open eastern face, then walks inside without a
+      // jump. A back wall and roof hold the gem and one warm lantern lightly —
+      // an alcove, never a cave or foreground occluder.
+      b.stoneBlock(73, 73, 9, 12);
+      b.stoneBlock(74, 80, 9, 9);
+      b.gem(6, 77, 11);
+      b.prop('lantern', 79);
 
-      // ── beat 9 (ayah 9): a garden mound in the forenoon warmth ──
-      b.block(104, 106, 12, 12);
-      b.gem(9, 105, 10);
-      b.prop('cypress', 100).prop('flowers', 108);
+      // 7 — lost, then guided. Olives and cypresses flank one level lane while
+      // its dense seed-line runs absolutely straight through the middle.
+      b.gem(7, 94, 11);
+      b.prop('olive', 84).prop('cypress', 88)
+       .prop('olive', 99, { v: 1 }).prop('cypress', 103, { v: 1 });
 
-      // ── beat 10 (ayah 10): the last steps up ──
-      b.slab(110, 112, 11).slab(114, 116, 9);
-      b.gem(10, 115, 7);
-      b.seedArc(109, 11, 116, 7, 4, 1);
-      b.prop('lantern', 109).prop('flowers', 118, { v: 1 });
+      // 8 — poor, then enriched. Low garden walls, a fruiting tree, and a thick
+      // pocket of flowers hold the gem; three birds resting here lift together
+      // as the child reaches it, the waking world's fullest beat so far.
+      b.gem(8, 111, 11);
+      b.prop('wall', 106, { n: 3 }).prop('wall', 115, { n: 3 })
+       .prop('fruit', 111, { v: 1 })
+       .prop('flowers', 107).prop('flowers', 109, { v: 2 })
+       .prop('flowers', 113, { v: 1 }).prop('flowers', 116, { v: 2 });
+      // Their shared x makes the proximity wake-up atomic; the small height
+      // offsets keep all three bodies visible around the tree before takeoff.
+      b.creature('bird', 111, 11.55).creature('bird', 111, 11.8)
+       .creature('bird', 111, 12);
 
-      // ── beat 11 (ayah 11): the final mound in full golden light ──
-      b.block(127, 129, 12, 12);
-      b.gem(11, 128, 10);
-      b.prop('olive', 124).prop('flowers', 131, { v: 2 });
+      // ── MOVEMENT III · GIVING FORWARD (ayahs 9–11) ───────────────────
 
-      // the warm sunrise clearing: a low step just off the walking line holds
-      // an ancient memory setting — unaimed: after this morning's own surah
-      // has been heard, the journey chooses which earlier surah it remembers
-      // (the one longest un-recalled — WORLDS-PLAN §1) — then the campfire
-      // and the shrine door, out in the fullest morning.
-      b.slab(134, 134, 12);
-      b.memory(134);
-      b.campfire(139);
-      b.door(144);
-      b.prop('lantern', 137).prop('flowers', 141).prop('bush', 147, { v: 2 });
+      // Three open, gentle rises in full forenoon. The bloomAhead declaration
+      // above makes each collection flower the next seven tiles, so by ayah 11
+      // the walk toward the listening fire is already restored.
+      b.block(119, 123, 12, 12);
+      b.gem(9, 121, 10);
+      b.slab(126, 130, 11);
+      b.gem(10, 128, 9);
+      b.block(133, 139, 10, 12);
+      b.gem(11, 137, 8);
+      b.prop('flowers', 120, { v: 1 }).prop('olive', 124)
+       .prop('flowers', 132, { v: 2 }).prop('cypress', 140);
 
-      b.start(4);
+      // The one hidden Rahma blossom waits at the very end in open morning sky:
+      // the old bounce-and-secret pairing becomes the last bright blessing,
+      // not the route beat at ayah 5.
+      b.bounce(145);
+      b.blossom(145, 6);
 
-      // noor-seed trails threading the whole gentle wander (well above the
-      // floor; arcs marking the leaps, runs singing the flat stretches)
-      b.seedRun(4, 8);
-      b.seedRun(24, 32);
-      b.seedRun(50, 57);
-      b.seedRun(73, 81);
-      b.seedRun(85, 92);
-      b.seedRun(96, 103);
-      b.seedRun(118, 126);
-      b.seedRun(130, 135);
+      // A quiet, unaimed memory setting and a sparse golden listening clearing.
+      // The stone remains scenery under PLAN §10; the campfire and door keep
+      // their wide, flat headroom.
+      b.slab(148, 148, 12);
+      b.memory(148);
+      b.campfire(152);
+      b.door(157);
+      b.prop('lantern', 150).prop('flowers', 155, { v: 1 });
 
-      // creatures: a tortoise sleeps low in the west; birds and butterflies
-      // wake and venture out as the morning brightness spreads eastward
-      b.creature('butterfly', 27, 6).creature('butterfly', 76, 6)
-       .creature('butterfly', 120, 5)
-       .creature('bird', 88).creature('bird', 112).creature('bird', 133);
+      b.start(3);
+
+      // Sparse under the opening stars and across the still pond…
+      b.seedRun(4, 16, 4);
+      b.seedArc(19, 11, 31, 11, 4, 0.5);
+
+      // …then visibly thick from the promise onward, tracing every landing,
+      // the shelter curl, the dead-straight tree lane, and all three rises.
+      b.seedArc(33, 11, 45, 7, 8, 1);
+      b.seedRun(46, 50, 1);
+      b.seedArc(51, 10, 57, 7, 6, 0.6);
+      b.seedRun(59, 65, 1);
+      b.seedArc(66, 11, 70, 8, 6, 1.2);
+      b.seedRun(70, 79, 1);
+      b.seedArc(80, 8, 82, 11, 3, 0);
+      b.seed(80, 11).seed(78, 11).seed(76, 11);
+      b.seedRun(83, 103, 1);
+      b.seedRun(104, 117, 1);
+      b.seedArc(117, 11, 121, 10, 5, 0.4);
+      b.seedArc(123, 10, 128, 9, 6, 0.5);
+      b.seedArc(130, 9, 137, 8, 8, 0.5);
+      b.seedRun(139, 144, 1);
+      b.seed(145, 11).seed(145, 9);
+      b.seedRun(146, 150, 1);
+
+      // Eastward waking: birds begin only after the shelters start, and the
+      // first ambient butterflies wait until the garden has become abundant.
+      b.creature('bird', 82).creature('bird', 97).creature('bird', 126)
+       .creature('butterfly', 104, 7).creature('butterfly', 121, 6)
+       .creature('butterfly', 139, 7);
     }
   });
 })();
