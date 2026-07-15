@@ -1,10 +1,9 @@
-# Worlds Plan — Levels 1 & 2 (the next twelve surahs)
+# Worlds Plan — the phased memorization journey
 
 Companion to `PLAN.md` (loop design, decisions log) and `GRAMMARS.md` (how to
-build a world). This file is the roadmap for the twelve new surah worlds drawn
-from the "easiest first" memorization ladder: Level 1 (short, highly
-repetitive) and Level 2 (short but varied). Al-Falaq (W1) and An-Nas (W2) are
-already built; W3 'Adiyat and W4 Qadr predate this plan and stay as they are.
+build a world). This file is the roadmap for the four-phase memorization
+ladder. File numbers are stable implementation details; `WORLD_ORDER` carries
+the child-facing sequence, and absent recipes simply do not appear yet.
 
 Reviewed 2026-07-12; the corrections from that review are folded in below.
 
@@ -14,10 +13,10 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 
 - **Unlock order is data-driven, not file-driven.** One ordered list of world
   keys (in `worlds.js`) decides the child-facing sequence; world numbers/files
-  never need renaming and saves are never touched by a reorder. Proposed
-  sequence (roughly the traditional bottom-up memorization path, warnings
-  late): falaq, nas, ikhlas, kawthar, asr, quraish, fil, duha, adiyat, sharh,
-  qadr, kafirun, takathur, humazah, masad, lail.
+  never need renaming. The list now has four phases: prayer essentials;
+  short-surah momentum; medium-length patience; then the remaining Juz 'Amma
+  shortest-to-longest. A dated save migration preserves every world a child
+  visited before the 2026-07-14 reorder without fabricating journey progress.
 - **Memory stones are placed by the recipe, aimed by the engine.** Recipes
   call `b.memory(x)` with NO surah id; at ember-arm time the engine picks the
   **least-recently-remembered completed surah** (falling back to most recent
@@ -67,22 +66,32 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 
 ## 2. The map
 
-| # | Surah | Ayat | Grammar | Modality | One line |
-|---|-------|------|---------|----------|----------|
-| — | Al-Falaq (113) | 5 | Cozy Garden | — | ✅ built (W1) |
-| — | An-Nas (114) | 6 | Cozy Garden | — | ✅ built (W2) |
-| A | Al-Ikhlas (112) | 4 | Landmark line | P8 made meaningful | The One Light at the world's center |
-| B | Al-Kawthar (108) | 3 | River Road | P4 raft + bloom surge | A short river of abundance |
-| C | Al-Asr (103) | 3 | Guided Path | P7 palette, gem-driven | Golden hour, deepened gem by gem |
-| D | Quraish (106) | 4 | River Road | P7 palette (winter→summer) | The caravan of two seasons, home to the House |
-| E | Al-Kafirun (109) | 6 | Guided Path | reflection motif | Your lit path; its dim mirror in the river |
-| F | Al-Masad (111) | 5 | Cozy Garden | grove dressing | A quiet date-palm grove |
-| G | Al-Fil (105) | 5 | Cozy Garden | bird-flock restoration | The sky fills with ababil wings |
-| H | Ash-Sharh (94) | 8 | Terrain-opening | headroom as relief | A low close passage that opens wide and bright |
-| I | At-Takathur (102) | 8 | Cozy + occluders | P6 clutter-clearing | Piled clutter clears to the true garden |
-| J | Al-Humazah (104) | 9 | Cozy Garden | hoards bloom | Gems freed from dull hoards that flower behind them |
-| K | Ad-Duha (93) | 11 | Cozy Garden | P7 palette (night→morning) | Still night warming to golden forenoon |
-| L | Al-Lail (92) | 21 | The Climb | P2 tall camera + **shrine chunking (new)** | The long night ascent; two ways that rejoin toward the light |
+| Journey | Phase | Surah | Key | Ayat | Status | Grammar / seed |
+|---:|---:|---|---|---:|---|---|
+| 1 | 1 | Al-Fatiha (1) | `fatiha` | 7 | ✅ W8 | Cozy Garden / straight path |
+| 2 | 1 | Al-Ikhlas (112) | `ikhlas` | 4 | next new world | Landmark line / the One Light |
+| 3 | 1 | Al-Falaq (113) | `falaq` | 5 | ✅ W1 | Cozy Garden / daybreak |
+| 4 | 1 | An-Nas (114) | `nas` | 6 | ✅ W2 | Cozy Garden / mirror-twin village |
+| 5 | 2 | Al-Kawthar (108) | `kawthar` | 3 | ✅ W5 | River Road / abundance |
+| 6 | 2 | An-Nasr (110) | `nasr` | 3 | planned | Guided garden road / opening gate |
+| 7 | 2 | Al-Masad (111) | `masad` | 5 | planned | Cozy Garden / palm grove |
+| 8 | 2 | Quraish (106) | `quraish` | 4 | planned | River Road / two seasons |
+| 9 | 2 | Al-Fil (105) | `fil` | 5 | planned | Cozy Garden / bird flocks |
+| 10 | 2 | Al-Humazah (104) | `humazah` | 9 | planned | Cozy Garden / hoards bloom |
+| 11 | 2 | Al-'Asr (103) | `asr` | 3 | planned | Guided Path / golden hour |
+| 12 | 3 | At-Takathur (102) | `takathur` | 8 | planned | Cozy + occluders / true garden |
+| 13 | 3 | Al-Qari'ah (101) | `qariah` | 11 | planned | Windy moor / balanced stone |
+| 14 | 3 | Al-'Adiyat (100) | `adiyat` | 11 | ✅ W3 | River Road / momentum |
+| 15 | 3 | Az-Zalzalah (99) | `zalzalah` | 8 | planned | Soft mounds / earth offers gems |
+| 16 | 3 | Al-Bayyinah (98) | `bayyinah` | 8 | planned | Guided dusk lane / lanterns |
+| 17 | 4 | Al-Kafirun (109) | `kafirun` | 6 | planned | Guided Path / reflection |
+| 18 | 4 | Al-Ma'un (107) | `maun` | 7 | planned | Cozy Garden / small kindnesses |
+| 19 | 4 | Al-Qadr (97) | `qadr` | 5 | ✅ W4 | The Climb / blessed night |
+| 20 | 4 | Al-'Alaq (96) | `alaq` | 19 | planned | Stanza Climb / Hira light |
+| 21 | 4 | At-Tin (95) | `tin` | 8 | planned | Orchard terraces / holy mount |
+| 22 | 4 | Ash-Sharh (94) | `sharh` | 8 | planned | Terrain-opening / relief |
+| 23 | 4 | Ad-Duha (93) | `duha` | 11 | ✅ W6 | Cozy Garden / Qadr's dawn |
+| 24 | 4 | Al-Lail (92) | `lail` | 21 | ✅ W7 | The Climb / braided ways |
 
 ## 3. Per-world sketches
 
@@ -180,35 +189,69 @@ Between stanzas: small flat REST LEDGES (night camps — a lantern, a still
 moment) so the climb breathes in the same maqati' as the campfire and
 shrine. This world proves the long-surah machinery for all of Level 3.
 
+### M. An-Nasr — The Help and the Opening (3 ayat)
+A garden road approaches a great far gate that opens band by band as gems are
+found; creatures stream homeward past the child as they near it.
+
+### N. Al-Ma'un — The Small Kindnesses (7 ayat)
+A humble-cozy garden where gems rest beside small good things — a bowl, a
+doorstep, a well — and restoration blooms ahead of the child, reusing Duha's
+bloom-ahead language.
+
+### O. Al-Qari'ah — The Striking Day, the Scales (11 ayat)
+A high windy moor where seed-lights drift like scattered moths; a great
+balanced stone reads as scales on the skyline, visual only and never
+interactive.
+
+### P. Az-Zalzalah — The Earth Tells Its News (8 ayat)
+Soft mounds open and offer their gems as the child nears; the tiniest seeds
+sparkle brightest: "an atom's weight of good — he will see it."
+
+### Q. Al-Bayyinah — The Clear Evidence (8 ayat)
+A dusk lane lights lantern by lantern, each gem kindling the next stretch.
+
+### R. Al-'Alaq — Read! (19 ayat, stanza Climb)
+A stanza Climb (`stanzas: [5, 9, 5]`) rises to a cave high on the mountain;
+the first light blooms inside the cave at the summit — the Hira homage,
+wordless.
+
+### S. At-Tin — The Fig and the Olive (8 ayat)
+An orchard-terrace world with fig and olive props rises gently to a small
+holy mount.
+
 ## 4. Waves (orchestrator plumbing first; playtest gates between)
 
 Repo law: verdicts land in PLAN §9 before or with the fix — so no wave starts
-until the previous wave's worlds have been played by the nieces. 2–3 worlds
-per wave; one bad assumption copied into twelve recipes is the expensive
-failure mode.
+until the previous wave's worlds have been played by the nieces. Build in
+phase order so the earliest gap in the child's path always gets attention
+first; one bad assumption copied into later recipes is the expensive failure.
 
-- **Wave 0 — content pipeline (no recipes).** ✅ done 2026-07-12.
-  1. `js/data.js`: add the five missing surahs — 92, 93, 94, 109, 111
-     (Uthmani text fetched from a canonical source, never from memory;
-     verse counts 21/11/8/6/5). The other seven already have entries.
-  2. `audio/basit/`: fetch Abdul Basit per-ayah mp3s for all 12 surahs
-     (87 files), verify sizes/format.
-  3. This doc + GRAMMARS.md memory-stone correction.
-- **Wave 1 — plumbing + first recipes.** ✅ built 2026-07-12 (plumbing,
-  checker unaimed-stone fix, w5-kawthar, w6-duha — all checker-green and
-  browser-verified). **→ awaiting the nieces' playtest before Wave 2.**
-- **Wave 2 — the golden pair + the grove.** **Al-Asr (C)**, **Quraish (D)**
-  (both P7-palette variants), **Al-Masad (F)** (palm props). → playtest.
-- **Wave 3 — the meaningful landmark + the reflection.** **Al-Ikhlas (A)**
-  and **Al-Kafirun (E)** — the two worlds whose *ideas* are new; build after
-  the easy wins proved the pipeline. → playtest hard (both carry design
-  risk).
-- **Wave 4 — feature-bearing pair.** **Al-Fil (G)** (flock system) and
-  **Ash-Sharh (H)** (undercroft terrain feel). → playtest.
-- **Wave 5 — the late trio's remaining two.** **At-Takathur (I)** (occluder
-  rework) and **Al-Humazah (J)** (hoard-bloom flavor). → playtest.
-- **Wave 6 — shrine chunking, then Al-Lail (L).** Design → PLAN §10 →
-  build → playtest. Unlocks Level 3 lengths for the future.
+> **NEXT NEW WORLD: AL-IKHLAS, ALONE.** It sits second in Phase 1 and is the
+> only gap in the child's first month. Build its existing One Light sketch,
+> playtest it, and record the verdict before opening Phase 2 work.
+
+- **Phase 1 gate — Al-Ikhlas alone.** The meaningful-landmark idea carries
+  real design risk and earns an isolated child playtest.
+- **Phase 2A — An-Nasr, then Al-Masad.** Fill the first two gaps after built
+  Kawthar; the opening gate and palm grove each get a verdict.
+- **Phase 2B — Quraish, then Al-Fil.** The two-seasons road precedes the
+  bird-flock world exactly as it does in the journey.
+- **Phase 2C — Al-Humazah, then Al-'Asr.** Finish the momentum phase with
+  gentle consequence imagery and gem-driven golden hour.
+- **Phase 3A — At-Takathur, then Al-Qari'ah.** Prove occluder clarity before
+  the windy moor; built Al-'Adiyat follows them in the journey.
+- **Phase 3B — Az-Zalzalah, then Al-Bayyinah.** Finish the patience phase
+  with offering earth and the lantern-lit clear lane.
+- **Phase 4A — Al-Kafirun, then Al-Ma'un.** Build the reflection path before
+  the small-kindness garden; built Qadr follows.
+- **Phase 4B — Al-'Alaq alone.** Its 19-ayah stanza climb and Hira summit get
+  an isolated long-surah gate.
+- **Phase 4C — At-Tin, then Ash-Sharh.** Orchard terraces lead to the world
+  of opening; built Duha and Lail complete the current ladder.
+
+Every bullet above ends in a nieces' playtest and a verdict in PLAN §9
+territory before the next begins. The current resequence-and-polish work also
+stops after R2 for its own required playtest gate.
 
 Every recipe brief carries the standing gates: `node v3/tools/check.mjs wN`
 green, GRAMMARS invariants, disjoint file ownership (one agent = one
@@ -216,6 +259,9 @@ green, GRAMMARS invariants, disjoint file ownership (one agent = one
 
 ## 5. Audit trail (what Wave 0 found, 2026-07-12)
 
+- 2026-07-14 ladder extension: the new phases added An-Nasr and At-Tin to
+  `js/data.js` from Quran Foundation/Quran.com Uthmani source text, and added
+  the 64 missing Abdul Basit files for 95/96/98/99/101/107/110 from EveryAyah.
 - `js/data.js` covered 96–108 + 112–114; missing 92/93/94/109/111 → Wave 0.1.
 - `audio/basit/` held only the four built worlds (097/100/113/114) →
   Wave 0.2 fetches the rest; everyayah remains the online fallback.

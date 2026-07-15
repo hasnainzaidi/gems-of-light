@@ -100,16 +100,20 @@ then the quiet campfire clearing and door.
 
 ## World list
 
-| # | surah | key | grammar |
-|---|-------|-----|---------|
-| 1 | Al-Falaq (113) | falaq | Cozy Garden |
-| 2 | An-Nas (114) | nas | Cozy Garden |
-| 3 | Al-'Adiyat (100) | adiyat | River Road |
-| 4 | Al-Qadr (97) | qadr | The Climb |
-| 5 | Al-Kawthar (108) | kawthar | River Road |
-| 6 | Ad-Duha (93) | duha | Cozy Garden |
-| 7 | Al-Lail (92) | lail | The Climb |
-| 8 | Al-Fatiha (1) | fatiha | Cozy Garden / Guided Path |
+Journey order lives in four pedagogical phases in `GOL.WORLD_ORDER`; file
+numbers remain stable and do not control unlock order. Until missing recipes
+are built, the eight grown worlds appear in this order:
+
+| order | phase | file | surah | key | grammar |
+|---:|---:|---:|---|---|---|
+| 1 | 1 | W8 | Al-Fatiha (1) | fatiha | Cozy Garden / Guided Path |
+| 2 | 1 | W1 | Al-Falaq (113) | falaq | Cozy Garden |
+| 3 | 1 | W2 | An-Nas (114) | nas | Cozy Garden |
+| 4 | 2 | W5 | Al-Kawthar (108) | kawthar | River Road |
+| 5 | 3 | W3 | Al-'Adiyat (100) | adiyat | River Road |
+| 6 | 4 | W4 | Al-Qadr (97) | qadr | The Climb |
+| 7 | 4 | W6 | Ad-Duha (93) | duha | Cozy Garden |
+| 8 | 4 | W7 | Al-Lail (92) | lail | The Climb |
 
 New world: pick the grammar that fits the surah's character, copy its recipe,
 keep every invariant, and run `node v3/tools/check.mjs wN` until it is ✓.

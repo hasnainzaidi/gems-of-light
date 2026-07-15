@@ -13,11 +13,17 @@
   };
 
   // The child-facing journey is one ordered list of keys — pedagogy can be
-  // retuned by editing this line alone; files and saves never move
-  // (WORLDS-PLAN §1: roughly the traditional bottom-up path, warnings late).
-  GOL.WORLD_ORDER = ['fatiha', 'falaq', 'nas', 'ikhlas', 'kawthar', 'asr', 'quraish',
-    'fil', 'duha', 'adiyat', 'sharh', 'qadr', 'kafirun', 'takathur',
-    'humazah', 'masad', 'lail'];
+  // retuned by editing this list alone; files and saves never move.
+  GOL.WORLD_ORDER = [
+    // Phase 1 — the essentials of prayer
+    'fatiha', 'ikhlas', 'falaq', 'nas',
+    // Phase 2 — short surahs that build momentum
+    'kawthar', 'nasr', 'masad', 'quraish', 'fil', 'humazah', 'asr',
+    // Phase 3 — medium lengths that ask for patience
+    'takathur', 'qariah', 'adiyat', 'zalzalah', 'bayyinah',
+    // Phase 4 — the rest of Juz 'Amma, shortest to longest
+    'kafirun', 'maun', 'qadr', 'alaq', 'tin', 'sharh', 'duha', 'lail',
+  ];
 
   // registered worlds in journey order; a key missing from the list keeps
   // its file order at the end (so nothing ever vanishes from the journey)
@@ -60,6 +66,27 @@
     const w = GOL.WORLDS3[n - 1];
     return !!(w && GOL.store.data.grand && GOL.store.data.grand[w.surahId]);
   };
+
+  // 2026-07-14 journey resequence: a child never loses a world they have
+  // already visited. Practice-opening preserves access without fabricating
+  // progression or awarding anything.
+  GOL.preserveVisitedWorlds = function () {
+    const d = GOL.store.data;
+    d.migrations = d.migrations || {};
+    if (d.migrations.resequence20260714) return;
+    d.opened = [...new Set(d.opened || [])];
+    for (const w of GOL.WORLDS3.filter((x) => x && x.build)) {
+      const st = d.levels && d.levels[w.surahId];
+      const visited = st && ((st.lastPlayed || 0) > 0 || (st.seeds || 0) > 0 ||
+        (st.heardFull || 0) > 0);
+      if (visited && !GOL.worldProgressOpen(w.n) && !d.opened.includes(w.surahId)) {
+        d.opened.push(w.surahId);
+      }
+    }
+    d.migrations.resequence20260714 = true;
+    GOL.store.save();
+  };
+
   // the world a fresh "tap anywhere" should enter: the furthest open one
   // along the journey that actually has a recipe
   GOL.currentWorld = function () {

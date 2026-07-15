@@ -97,6 +97,43 @@ window.GOL_DATA = {
       ]
     },
     {
+      "id": 110,
+      "slug": "nasr",
+      "arabicName": "النصر",
+      "englishName": "An-Nasr",
+      "meaningName": "The Help",
+      "kidIntro": "This surah shows us what to do when a great help arrives: thank Allah with a humble heart, because every opening comes from Him.",
+      "story": {
+        "title": "The most thankful homecoming",
+        "pages": [
+          "For many years, the Prophet Muhammad, peace be upon him, and his friends could not live safely in their beloved city of Makkah. They missed their old home, but they stayed patient and gentle.",
+          "Then Allah's help came. The road home opened, and people entered Islam in great groups. The Prophet returned to Makkah without boasting or showing off.",
+          "He bowed his head so low in thankfulness. At the moment of his greatest victory, he praised Allah and asked Him for forgiveness.",
+          "An-Nasr teaches us what a beautiful win looks like: a grateful heart that remembers where every help came from."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "إِذَا جَآءَ نَصْرُ ٱللَّهِ وَٱلْفَتْحُ",
+          "tr": "idhā jāa naṣru l-lahi wal-fatḥu",
+          "meaning": "When Allah's help comes and the way opens,"
+        },
+        {
+          "n": 2,
+          "ar": "وَرَأَيْتَ ٱلنَّاسَ يَدْخُلُونَ فِى دِينِ ٱللَّهِ أَفْوَاجًا",
+          "tr": "wara-ayta l-nāsa yadkhulūna fī dīni l-lahi afwājan",
+          "meaning": "and you see people entering Allah's faith in great groups,"
+        },
+        {
+          "n": 3,
+          "ar": "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَٱسْتَغْفِرْهُ ۚ إِنَّهُۥ كَانَ تَوَّابًۢا",
+          "tr": "fasabbiḥ biḥamdi rabbika wa-is'taghfir'hu innahu kāna tawwāban",
+          "meaning": "then praise your Lord, thank Him, and ask His forgiveness. He always welcomes us back."
+        }
+      ]
+    },
+    {
       "id": 111,
       "slug": "masad",
       "arabicName": "المسد",
@@ -1263,6 +1300,73 @@ window.GOL_DATA = {
           "ar": "وَأَمَّا بِنِعْمَةِ رَبِّكَ فَحَدِّثْ",
           "tr": "wa-ammā biniʿ'mati rabbika faḥaddith",
           "meaning": "and always speak warmly about the good things your Lord has given you."
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "slug": "tin",
+      "arabicName": "التين",
+      "englishName": "At-Tin",
+      "meaningName": "The Fig",
+      "kidIntro": "This surah begins with a fig, an olive, and two special mountains. It reminds us that Allah made every person beautifully, ready for a life of faith and good deeds.",
+      "story": {
+        "title": "Made in the finest shape",
+        "pages": [
+          "At-Tin opens like a little journey: a ripe fig, a shining olive, Mount Sinai, and the safe city of Makkah. Each is a sign pointing toward something precious.",
+          "Then Allah reminds us that He made every person in the finest shape — with hands that can help, minds that can learn, and hearts that can choose what is good.",
+          "When people believe and do good, their reward never runs out. Their beautiful beginning keeps growing into a beautiful life.",
+          "The surah closes with a gentle question: is Allah not the wisest and fairest Judge of all?"
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "وَٱلتِّينِ وَٱلزَّيْتُونِ",
+          "tr": "wal-tīni wal-zaytūni",
+          "meaning": "By the fig and the olive,"
+        },
+        {
+          "n": 2,
+          "ar": "وَطُورِ سِينِينَ",
+          "tr": "waṭūri sīnīna",
+          "meaning": "and by Mount Sinai,"
+        },
+        {
+          "n": 3,
+          "ar": "وَهَـٰذَا ٱلْبَلَدِ ٱلْأَمِينِ",
+          "tr": "wahādhā l-baladi l-amīni",
+          "meaning": "and by this safe city of Makkah,"
+        },
+        {
+          "n": 4,
+          "ar": "لَقَدْ خَلَقْنَا ٱلْإِنسَـٰنَ فِىٓ أَحْسَنِ تَقْوِيمٍ",
+          "tr": "laqad khalaqnā l-insāna fī aḥsani taqwīmin",
+          "meaning": "We truly made every person in the finest shape."
+        },
+        {
+          "n": 5,
+          "ar": "ثُمَّ رَدَدْنَـٰهُ أَسْفَلَ سَـٰفِلِينَ",
+          "tr": "thumma radadnāhu asfala sāfilīna",
+          "meaning": "Yet a person can turn away and fall far below that beautiful beginning,"
+        },
+        {
+          "n": 6,
+          "ar": "إِلَّا ٱلَّذِينَ ءَامَنُوا۟ وَعَمِلُوا۟ ٱلصَّـٰلِحَـٰتِ فَلَهُمْ أَجْرٌ غَيْرُ مَمْنُونٍ",
+          "tr": "illā alladhīna āmanū waʿamilū l-ṣāliḥāti falahum ajrun ghayru mamnūnin",
+          "meaning": "except those who believe and do good — they will have a reward that never ends."
+        },
+        {
+          "n": 7,
+          "ar": "فَمَا يُكَذِّبُكَ بَعْدُ بِٱلدِّينِ",
+          "tr": "famā yukadhibuka baʿdu bil-dīni",
+          "meaning": "So after all this, what could make anyone deny the Judgment?"
+        },
+        {
+          "n": 8,
+          "ar": "أَلَيْسَ ٱللَّهُ بِأَحْكَمِ ٱلْحَـٰكِمِينَ",
+          "tr": "alaysa l-lahu bi-aḥkami l-ḥākimīna",
+          "meaning": "Is Allah not the wisest and fairest Judge of all?"
         }
       ]
     },

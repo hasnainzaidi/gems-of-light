@@ -99,6 +99,7 @@
   resize();
 
   GOL.store.load();
+  GOL.preserveVisitedWorlds();
   GOL.Input.init(canvas);
 
   const wake = () => {
