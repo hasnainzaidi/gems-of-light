@@ -325,4 +325,40 @@ v2 loader rejects the old `map=final` painting and the v1 stub — on
 adoption, r4 becomes `map-artist-pack/journey-map.svg` (new final),
 the stub gets rebuilt to v2, and `?lab=19` defaults must load clean.
 
-**VERDICTS (pending): the r4 full map on the phone.**
+**R4 FULL-MAP VERDICT 1 (Hasnain, 2026-07-15, phone): direction
+holds, five fixes:**
+1. **Awake pools must be FULL of water.** The fountain animation is
+   great, but activated islands' basins read dry — the painted fill
+   inside `water-1`/`water-2` is too modest. The awake look is a full
+   vivid pool (the octagon's read); dry basins are only for asleep.
+2. **Every gem/waypoint sits ON the path.** Spot anchors move onto
+   the walk centerline, not near it.
+3. **Keyboard navigation** (engine): the map must be walkable with
+   arrows — not just tapping. Arrows move her along the trail;
+   enter/space blooms the star or enters a bloomed world.
+4. **Orchard: a tree and a parterre sit IN the fountain court** —
+   placement bug; the court and its air stay clear.
+5. **The first island gets NO on-ramp** — the journey starts there;
+   the walk begins on the valley itself, no bridge from nowhere.
+
+**r4.1 landed (2026-07-15):** all five fixes done and browser-verified.
+Paint: `water-1/2` repainted as brimming pools (octagon-family water);
+all 24 spots moved ONTO the walk centerline (≤0.05 units off); the
+orchard court cleared (tree + parterre out, shrub slid clear); the
+valley on-ramp deleted — the walk now begins on the valley grass at a
+small trailhead. Engine: arrows walk her along the trail with the
+camera following (clamped at the journey's breathing edge),
+enter/space blooms the star or opens a world; `layerRoot` made
+nesting-robust (water groups extract with their ancestor transforms
+wherever the artist grouped them — r4.1 nested them and the pools
+silently rasterized empty; fail-loud added).
+TRADEOFF for Hasnain's eyes: with 8 spots per island ON a ~260–410
+unit road, the old ≥90-unit spot spacing is geometrically impossible —
+spots are now evenly spaced (min gaps 41/59/37 valley/orchard/
+courtyard). If gems crowd at phone distance, the outs are: fewer
+painted road-dots, longer in-island roads next revision, or gems
+alternating road edges. Contract §5's "≥90 apart" is superseded by
+"evenly spaced along the island's road, non-overlapping at phone
+scale."
+
+**VERDICTS (pending): r4.1 on the phone.**

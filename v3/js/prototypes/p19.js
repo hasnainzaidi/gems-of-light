@@ -17,8 +17,8 @@
   const MAP_KEY = (new URLSearchParams(location.search).get('map') || 'final')
     .replace(/[^A-Za-z0-9_-]/g, '');
   const ASSET_URL = new URL(MAP_KEY === 'final'
-    ? '../../map-artist-pack/journey-map.svg?v=355'
-    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=355',
+    ? '../../map-artist-pack/journey-map.svg?v=358'
+    : '../../map-artist-pack/drafts/' + MAP_KEY + '/journey-map.svg?v=358',
   scriptUrl).href;
   // Contract v2 (round 4): 8 spots per region — the adopted 8/8/8 cut of
   // the 24-key WORLD_ORDER (Valley 1–8, Orchard 9–16, Heights 17–24).
@@ -52,11 +52,20 @@
     });
   }
 
+  // Isolate one named group as its own renderable document, wherever the
+  // artist nested it: strip every sibling along its ancestor chain (keeping
+  // defs), so ancestor transforms still apply to the survivor.
   function layerRoot(root, id) {
     const clone = root.cloneNode(true);
-    for (const child of Array.from(clone.children)) {
-      const tag = child.localName && child.localName.toLowerCase();
-      if (tag !== 'defs' && child.id !== id) child.remove();
+    let node = clone.querySelector('#' + id);
+    if (!node) throw new Error('map contract: #' + id + ' missing at layer split');
+    while (node && node !== clone) {
+      const parent = node.parentNode;
+      for (const sib of Array.from(parent.children)) {
+        const tag = sib.localName && sib.localName.toLowerCase();
+        if (sib !== node && tag !== 'defs') sib.remove();
+      }
+      node = parent;
     }
     return clone;
   }
