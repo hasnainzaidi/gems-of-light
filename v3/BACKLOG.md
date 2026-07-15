@@ -10,20 +10,18 @@ verdict is logged.
 
 ## Now
 
-- [ ] r3 map checkpoint on the phone: canal/heart polish verdicts + does
-      the map→world→map toggle feel like one game?
-      (`?lab=19&map=r3`; verdicts → `map-artist-pack/drafts/r1/LOG.md`)
-- [ ] Playtest the eight resequenced/polished worlds with the girls;
-      verdicts → `PLAN.md` §10 (work order:
-      `BRIEFS-2026-07-14-resequence-and-polish.md`)
-- [ ] Re-cut the map's island groupings over the RESEQUENCED
-      `WORLD_ORDER` — pedagogy call on where the three island boundaries
-      fall now (map assumed the pre-resequence 5/6/6)
+- [ ] Map round 4: sky field + fountain hearts + decoration density,
+      plus contract v2 in the harness (8 spots/island, walk-path
+      ceremony) — brief and running tracks in
+      `map-artist-pack/drafts/r1/LOG.md` §Round 4; phone verdict next
+- [ ] Detailed per-world playtest with the girls (first pass 2026-07-15:
+      "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
 
 ## Next
 
-- [ ] Wire the real journey into the painted map: REGIONS as contiguous
-      `WORLD_ORDER` runs, real saves, blooms/moons from `gemsOfLight.v3`,
+- [ ] Wire the real journey into the painted map: REGIONS = the decided
+      8/8/8 cut over `WORLD_ORDER` (Valley 1–8, Orchard 9–16, Heights
+      17–24), real saves, blooms/moons from `gemsOfLight.v3`,
       tap-to-enter — then replace the title's disc row with the map
       (P19 harness → production scene)
 - [ ] Remembering Moons on the map (moon anchor exists; wire the

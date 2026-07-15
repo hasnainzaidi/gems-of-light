@@ -102,11 +102,74 @@ proportions, ground shadow, path-following walk) and a real toggle —
 tapping a bloomed spot launches the actual current world; home
 returns to the map with sim state preserved.
 
-**VERDICTS (Hasnain, 2026-07-15, phone playtest — partial):**
+**VERDICTS (Hasnain, 2026-07-15, phone playtest):**
 - **The toggle PASSES: "yes" — map→world→map feels like one game.**
   The mode-switch question (semi-3D oblique map into flat side-view
   levels) is settled; Track 2's map-form lightling + real-world launch
   + state-preserving return are adopted as the production pattern.
-- Track 1 verdicts (canals' spatial logic, the two reworked hearts,
-  overall r3 read) still pending — the playtest report reached the log
-  without them; asked back for the missing calls before running r4.
+- **The watercourse is DEAD — as a concept, not just an execution.**
+  Three strikes: (1) canal→heart joins read as "the hot dog sticking
+  in" at the star pool instead of seamless boundaries; (2) the stepped
+  ladders between islands still don't make sense even after r3's
+  spatial-logic pass; (3) the meta question had no answer — what is
+  the river FOR? It isn't a path, it doesn't interact, it only adds
+  mild visual interest. Verdict: remove the river/canals entirely.
+- **The hearts are PROMOTED to the map's only water.** Each island's
+  geometric heart becomes a central FOUNTAIN with motion/play in it —
+  the island's decorative centerpiece that the path goes around. The
+  child is in star-world, clover-world, or octagon-world. ("I actually
+  like that idea best.")
+- **The field becomes SKY.** Make the background read as sky rather
+  than a ground plain — less "islands on a plain," more "little
+  sections, levels in heaven." Clarifies the island separation too.
+- **Decoration density: the clover island is the standard.** It looks
+  the best; the valley and courtyard islands read sparse — bring both
+  up to its level of beauty.
+- **Island boundaries over the resequenced 24-key WORLD_ORDER: 8/8/8
+  ADOPTED** (recommended this session, approved by Hasnain). Spots bind
+  to WORLD_ORDER positions permanently: Valley = 1–8 (Fatiha…Quraish),
+  Orchard = 9–16 (Fil…Bayyinah), Heights = 17–24 (Kafirun…Lail =
+  Phase 4 exactly). Why: (a) new keys only APPEND to the ladder, so no
+  world ever changes island after a child has seen it; (b) all eight
+  built worlds are on the painted map today (Qadr/Duha/Lail are Phase 4
+  and live in real saves — the phase-aligned 4/7/5 cut would strand
+  them off-map until the expansion panel); (c) the second bridge lands
+  exactly on the Phase 3→4 milestone, and the open upper-right seam is
+  literally where Phase 4 continues (Shams, Balad, Fajr … Naba).
+  Cost: each island needs one more spot anchor (spot-R-8); harness
+  REGIONS go 5/6/6 → 8/8/8.
+- Worlds note (same playtest, logged in PLAN §10): the eight polished
+  worlds have "random world-specific issues, but nothing blocking" —
+  ship as-is; detailed per-world feedback comes from a later playtest.
+
+r2B (r3's ancestor, same watercourse concept) parked outside the repo.
+r3 stays in place as r4's base file until the r4 verdict.
+
+## Round 4 — 2026-07-15 · direction change: sky field + fountain hearts
+
+Direction change (not a refinement) → fresh agent per protocol, working
+from r3's file as base. `MAP-ART-BRIEF.md` §3 (geography/water) and §5
+(anchors) are amended by this round; the canonical brief gets rewritten
+only after the r4 verdict.
+
+**Track 1 (map, fresh Fable agent):** output `drafts/r4/`.
+1. THE FIELD IS SKY — the three walled garden islands float complete
+   in bright morning sky; bridges span open sky between them; the
+   built-object law and single projection hold per island.
+2. ALL WATER LIVES IN THE THREE HEARTS — star pool, clover pool,
+   octagon court, each a central fountain the walk path circles, its
+   water painted inside `water-R` so the engine can wake it. No other
+   water anywhere.
+3. DENSITY to the clover island's standard on all three islands.
+4. Anchor contract v2: `walk`, `spot-R-1..8` (eight per island),
+   `heart-1/2/3`, `gate-1/2` (gateway arch at each bridge's far
+   threshold), `moon`, `water-1/2/3` (fountain water only), `over`.
+   No `stream` anchor. Everything else per MAP-ART-BRIEF §5.
+
+**Track 2 (engine, Opus agent):** `p19.js` + `drafts/stub/` to
+contract v2 — REGIONS 8/8/8, ceremony light travels the WALK path to
+the next gate (no stream), gate opens, the woken island's fountain
+rises into engine-drawn play (gentle arcs + sparkle at `heart-R`);
+asleep islands show dry basins. Toggle untouched.
+
+**VERDICTS (pending):**
