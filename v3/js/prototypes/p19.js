@@ -476,7 +476,7 @@
           if (!this.regionAwake(ri)) continue;
           for (let j = 0; j < this.progress[ri]; j++) {
             const b = this.map.spots[ri][j];
-            if (GOL.dist(wx, wy, b.x, b.y) < 26) {
+            if (GOL.dist(wx, wy, b.x, b.y) < 36) {
               returnState = {
                 progress: this.progress.slice(),
                 cam: { x: this.cam.x, y: this.cam.y },
