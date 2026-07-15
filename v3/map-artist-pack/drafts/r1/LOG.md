@@ -172,4 +172,16 @@ the next gate (no stream), gate opens, the woken island's fountain
 rises into engine-drawn play (gentle arcs + sparkle at `heart-R`);
 asleep islands show dry basins. Toggle untouched.
 
+**First run ABORTED mid-flight (2026-07-15), no art judged.** The
+engine track changed the harness contract in the shared working tree
+before any r4 painting existed — `?lab=19&map=r3` stopped loading
+(v2 requires 8 spots; r3 has 7) and Hasnain, playtesting live, saw
+the crude contract STUB instead of the champion and called stop.
+This is NOT a verdict on the sky/fountain direction: no r4 art was
+ever produced. Process rule earned: on the shared tree, the harness
+must keep loading the current champion until the replacement art
+exists — contract upgrades land together with (or behind) the art,
+never ahead of it. Both tracks stopped; engine WIP salvaged outside
+the repo; p19 + stub reverted; r3 loads as before.
+
 **VERDICTS (pending):**
