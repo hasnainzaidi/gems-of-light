@@ -239,4 +239,16 @@ full map or harness work resumes. Output: `drafts/r4/sliver/`.
   three islands. For the tile: no ground-shadow of any kind, cloud
   layers receding far below, atmospheric depth beneath the island.
 
+**SLIVER VERDICT 3 (Hasnain, 2026-07-15, phone — on A3): "feels
+worse."** The flat left-to-right river missed. Path law refined into
+**THE QUADRANT RULE:** think of the island as four quadrants — the
+path must EXIT from the quadrant diagonally opposite the one it
+enters, and it must get there by passing THROUGH one of the two
+adjacent quadrants first (never straight across the middle, never any
+lasso/doubling-back). E.g. enter SW → sweep through SE → curve up and
+exit NE: the through-island turn the original sketch drew. Also: the
+aggressive cloud banding hugging the island's front is too much —
+dial it back. Priority declared: **get the path geometry and the
+island division right FIRST; styling iterates after.**
+
 **VERDICTS (pending):**
