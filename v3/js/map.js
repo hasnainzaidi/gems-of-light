@@ -487,6 +487,14 @@
     walkToStar() {
       if (!this.star || !this.map || !this.hero || this.ceremony) return;
       const sT = this.spotS[this.star.ri][this.star.j];
+      // A fresh journey spawns her right ON the breathing star (Al-Fatiha),
+      // where the walk buttons have nowhere to step. Tapping the star she
+      // already stands on must OPEN it — the same act the keyboard grants —
+      // never a silent no-op that traps a new child on the first surah.
+      if (Math.abs(this.hero.s - sT) <= 2 && Math.abs(this.hero.sT - sT) <= 2) {
+        this.enterWorld(this.star.ri, this.star.j);
+        return;
+      }
       this.hero.sT = sT;
       if (GOL.audio) GOL.audio.sfx('tap');
     },
