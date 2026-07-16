@@ -621,6 +621,24 @@
         if (this.loadError && GOL.Input.taps.length) GOL.go('title');
         return;
       }
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      // The grown-ups doorway lives here on the home map now — the splash is
+      // too fleeting to hold it. A quiet star at top-left, beside the back
+      // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
+      // just pulses; the hold gate keeps children out gently.
+      const gb = (this.grownBtn = { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      {
+        let holding = false;
+        for (const [, p] of GOL.Input.pointers) {
+          if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
+        }
+        for (const tap of GOL.Input.taps) {
+          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.r + 14) this.grownPulse = 1;
+        }
+        this.grownHold = holding ? Math.min(1, (this.grownHold || 0) + dt) : Math.max(0, (this.grownHold || 0) - dt * 2.2);
+        this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
+        if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
+      }
       const scale = this.mapScale(H);
       const camMax = this.mapCamMax(W, H);
       if (this.cam == null) this.cam = this.targetCam(W, H);
@@ -692,8 +710,9 @@
       }
 
       const drag = GOL.Input.drag;
-      const dragOnBtns = drag && walkBtnsNow &&
-        walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10);
+      const dragOnBtns = drag && (
+        (walkBtnsNow && walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10)) ||
+        GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14);
       if (drag && !this.ceremony && !dragOnBtns) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
           // rail scroll: project the drag onto the trail's local direction
@@ -735,7 +754,8 @@
       }
 
       if (!clickAt || this.ceremony) return;
-      const sa = GOL.SAFE || { l: 0, t: 0 };
+      // a plain tap on the grown-ups star only pulses — it opens on hold
+      if (GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
       if (GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
         GOL.go('title');
         return;
@@ -948,6 +968,31 @@
 
       const sa = GOL.SAFE || { l: 0, t: 0 };
       GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
+
+      // the grown-ups doorway, beside the back arrow — a cream chip with a
+      // quiet star, a hold-progress ring, and a small label
+      const gb = this.grownBtn;
+      if (gb) {
+        const gp = this.grownHold || 0;
+        if (this.grownPulse > 0) {
+          ctx.strokeStyle = alpha('#C89B55', 0.6 * this.grownPulse);
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 6 + (1 - this.grownPulse) * 7, 0, TAU); ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(250,244,224,0.76)';
+        ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 1, 0, TAU); ctx.fill();
+        ctx.strokeStyle = alpha('#C89B55', 0.7); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r - 1, 0, TAU); ctx.stroke();
+        GOL.star8Path(ctx, gb.x, gb.y, gb.r * 0.5, Math.PI / 8 + this.t * 0.12);
+        ctx.fillStyle = '#7A6238'; ctx.fill();
+        if (gp > 0.01) {
+          ctx.strokeStyle = alpha('#B8862E', 0.95);
+          ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 4, -Math.PI / 2, -Math.PI / 2 + gp * TAU); ctx.stroke();
+          ctx.lineCap = 'butt';
+        }
+        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 12, { size: 9.5, weight: '700', color: alpha('#3B2E14', 0.55), shadow: false });
+      }
 
       // touch walk buttons: back / forward along the trail
       const btns = this.walkButtons(W, H);
