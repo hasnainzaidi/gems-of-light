@@ -343,6 +343,7 @@
       this.waypoints = null;
       this.stepCool = 0;
       this.dwell = null;
+      this.startAnchorS = null;
       this.heroArrived = true; // no arrival event on scene entry/return
       loadAsset().then((map) => {
         this.map = map;
@@ -352,6 +353,17 @@
         this.spotS = map.spots.map((row) => row.map((sp) => nearestLength(map.walkSamples, sp)));
         this.waypoints = this.spotS.flat().sort((a, b) => a - b);
         this.readSave();
+        // A brand-new journey (the breathing star is the very first spot and
+        // nothing has bloomed yet) stands her at the TRAILHEAD — the start of
+        // the painted walk, a step shy of Al-Fatiha — and adds it to the
+        // waypoint ladder. Her first, obvious action is then a step FORWARD,
+        // which walks her INTO the first bloom and opens it. Before this she
+        // spawned ON the star with both walk buttons dead and only a
+        // non-obvious tap to enter — a new child could get stuck on world one.
+        if (this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
+          this.startAnchorS = 0;
+          if (this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
+        }
         if (returnState) {
           // back from a world: she stands exactly where she left, and the
           // save may have grown — celebrate what's new
@@ -363,7 +375,7 @@
         }
         this.celebrateNews();
         const st = this.star || this.lastBloom() || { ri: 0, j: 0 };
-        const here = this.spotS[st.ri][st.j];
+        const here = this.startAnchorS != null ? this.startAnchorS : this.spotS[st.ri][st.j];
         this.hero = { s: here, sT: here };
       }).catch((err) => {
         this.loadError = err;
