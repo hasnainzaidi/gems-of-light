@@ -67,13 +67,17 @@
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
     reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'alafasy'
   };
+  if (GOL.EXPERIENCE.showcase) {
+    GOL.V3.echo = 'off';
+    GOL.V3.arabic = false;
+  }
   // the in-app tuning panel persists its choices; a URL param still wins as
   // an explicit override for that key. CFG_V lets a default change (like the
   // echo one above, or the 2026-07-15 Mishary default) reset a stale
   // persisted choice instead of stranding it.
   const CFG_V = 3;
   try {
-    const saved = JSON.parse(localStorage.getItem('gemsOfLight.v3cfg') || '{}');
+    const saved = JSON.parse(localStorage.getItem(GOL.EXPERIENCE.configKey) || '{}');
     if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
@@ -86,7 +90,7 @@
   GOL.applyDebug(); // saved debug may have flipped DEBUG on — resync DEBUG_ACCEL
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem('gemsOfLight.v3cfg', JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
+      localStorage.setItem(GOL.EXPERIENCE.configKey, JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
     } catch (e) { /* ignore */ }
   };
 
@@ -227,8 +231,8 @@
     directParams.checkpoint = { index: directCamp - 1, start, len: c.afterAyah - start + 1, afterAyah: c.afterAyah };
   }
   const forceOnboarding = q.get('onboarding') === '1';
-  const needsPorch = forceOnboarding ||
-    (!GOL.onboardingStatus().parentComplete && !GOL.hasJourneyProgress());
+  const needsPorch = GOL.EXPERIENCE.onboarding && (forceOnboarding ||
+    (!GOL.onboardingStatus().parentComplete && !GOL.hasJourneyProgress()));
   const initialScene = directDef
     ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure'))
     : (needsPorch ? 'onboarding' : 'title');
@@ -281,7 +285,7 @@
         ctx.fillRect(0, 0, W, H);
       }
     }
-    if (GOL.DEBUG) {
+    if (GOL.DEBUG && !GOL.EXPERIENCE.showcase) {
       GOL.text(ctx, 'DEBUG', W - 8 - (GOL.SAFE.r || 0), H - 10, { size: 10, weight: '800', color: 'rgba(220,80,60,0.9)', align: 'right', shadow: false });
     }
     // ?fps=1 — an on-device frame-time readout for judder hunts: shows the

@@ -7,6 +7,23 @@
   const TILE = GOL.TILE;
   const { alpha } = GOL.color;
 
+  // One build, two deliberately separate experiences. The learning game is
+  // always the default; Showcase must be explicitly requested and receives
+  // its own storage namespace before anything loads a save.
+  const experienceQuery = new URLSearchParams(location.search);
+  const showcase = experienceQuery.get('showcase') === '1';
+  GOL.EXPERIENCE = Object.freeze(showcase ? {
+    id: 'showcase', showcase: true,
+    recitation: false, arabic: false, shrine: false, remembering: false,
+    progression: 'all-open', onboarding: false, grownups: false, install: false,
+    saveKey: 'gemsOfLight.v3.showcase', configKey: 'gemsOfLight.v3.showcase.cfg'
+  } : {
+    id: 'learning', showcase: false,
+    recitation: true, arabic: true, shrine: true, remembering: true,
+    progression: 'journey', onboarding: true, grownups: true, install: true,
+    saveKey: 'gemsOfLight.v3', configKey: 'gemsOfLight.v3cfg'
+  });
+
   // ---------------------------------------------------------------- input --
   const Input = {
     left: false, right: false, jumpHeld: false,
@@ -566,7 +583,7 @@
   GOL.updateCreatures = updateCreatures;
 
   // --------------------------------------------------------------- saving --
-  const KEY = 'gemsOfLight.v3';
+  const KEY = GOL.EXPERIENCE.saveKey;
   GOL.store = {
     data: null,
     load() {

@@ -431,6 +431,7 @@
       // the Remembering's doors (one dream per surah per day) and the
       // done garden that misses its child (>20h unheard, oldest first)
       this.moonBtns = [];
+      const remembering = GOL.EXPERIENCE.remembering;
       this.missSpot = null;
       let oldest = Infinity;
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -439,7 +440,7 @@
           if (!sp || !sp.done || !this.map) continue;
           const pos = this.map.spots[ri][j];
           const st = GOL.store.level(sp.surahId);
-          if (st.moonWaxedDay !== GOL.todayKey()) {
+          if (remembering && st.moonWaxedDay !== GOL.todayKey()) {
             this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
           }
           const lp = st.lastPlayed || 0;
@@ -493,12 +494,18 @@
     activeRegion() { return this.star ? this.star.ri : null; },
     // Debug wakes every island so a grown-up can walk the whole journey and
     // audit each world's art without earning it first.
-    regionAwake(i) { return GOL.DEBUG || !!(this.awake && this.awake[i]); },
+    regionAwake(i) {
+      return GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG ||
+        !!(this.awake && this.awake[i]);
+    },
 
     // A spot is a door when its world is finished (a bloom re-opens on rest) —
     // or, in debug, any built-and-open world (worldOpen is universally true in
     // debug), so every level is reachable. The breathing star is separate.
-    isDoor(sp) { return !!(sp && (sp.done || (GOL.DEBUG && sp.open))); },
+    isDoor(sp) {
+      return !!(sp && (sp.done ||
+        ((GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG) && sp.open)));
+    },
 
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
@@ -672,6 +679,7 @@
     // steps; the little × dismisses it for good. Installed players, debug, and
     // anyone who's hidden it never see it. One geometry source for tap + draw.
     installNudge(W, H) {
+      if (!GOL.EXPERIENCE.install) return null;
       const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
       if (ob && ob.parentComplete) return null;
       if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
@@ -743,7 +751,8 @@
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
       // just pulses; the hold gate keeps children out gently.
-      const gb = (this.grownBtn = firstFocus ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      const gb = (this.grownBtn = (!GOL.EXPERIENCE.grownups || firstFocus)
+        ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
       if (gb) {
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
@@ -784,7 +793,7 @@
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
           // Debug lifts the star's cap so a grown-up can step to any built
           // world along the whole trail; normal play stops at the next star.
-          const maxS = (this.star && !GOL.DEBUG)
+          const maxS = (this.star && !GOL.DEBUG && GOL.EXPERIENCE.progression !== 'all-open')
             ? this.spotS[this.star.ri][this.star.j]
             : this.map.walkSamples.len;
           let target = null;
@@ -937,7 +946,7 @@
     },
 
     drawMoon(ctx) {
-      if (!this.map || !this.regionAwake(1)) return;
+      if (!GOL.EXPERIENCE.remembering || !this.map || !this.regionAwake(1)) return;
       const m = this.map.moon;
       const breathe = 0.5 + 0.5 * Math.sin(this.t * 1.5);
       ctx.fillStyle = alpha('#FFFFFF', 0.16 + breathe * 0.13);
@@ -978,7 +987,7 @@
               ctx.fillStyle = alpha('#CFE0FF', br);
               ctx.beginPath(); ctx.arc(s.x - 18, s.y - 26, 12 + Math.sin(this.t * 1.8) * 1.5, 0, TAU); ctx.fill();
             }
-            if (inviting || (st.moon || 0) > 0.01) {
+            if (GOL.EXPERIENCE.remembering && (inviting || (st.moon || 0) > 0.01)) {
               GOL.drawMoon(ctx, s.x - 18, s.y - 26, 7, st.moon || 0, this.t, { glow: false });
             }
             // a done garden long unheard breathes a soft golden ring

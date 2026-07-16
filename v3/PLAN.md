@@ -798,3 +798,18 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   vignette; the required preview itself teaches Explore → Listen → Remember and
   proves sound. Its completion card goes directly to optional home-screen setup,
   then handoff. No separate method branch, sound check, or reciter choice.
+- **SHOWCASE MODE — ONE BUILD, TWO HONEST EXPERIENCES (built 2026-07-16;
+  phone verdict pending):** `?showcase=1` selects an immutable guest profile
+  before storage loads. It uses `gemsOfLight.v3.showcase` plus its own config,
+  centrally blocks recitation/preloads/ayah script, bypasses the grown-up porch,
+  opens every built world, and removes tuning, grown-ups, install, debug chrome,
+  and Remembering Moons from the guest surfaces. The game itself remains the
+  real platformer: ordered gems, restoration, creatures, seeds, campfire, and
+  map. At the campfire the gathered lights merge into a World Gem; the existing
+  arch returns to the journey and blooms that world's map spot instead of
+  entering the shrine. The learning profile remains the no-query default and
+  retains its original save, onboarding, recitations, shrine, Remembering, and
+  progression. Contract: `SHOWCASE-PLAN.md`; checker now enforces both sides in
+  `tools/test-showcase-contract.mjs`. Desktop phone-viewport browser verdict:
+  neutral title/map/direct-world/campfire all render without console errors;
+  real-phone staging verdict is still required before promotion.
