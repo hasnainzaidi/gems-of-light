@@ -301,6 +301,7 @@ if (!arg) {
   const { execFileSync } = require('child_process');
   try {
     execFileSync(process.execPath, [join(V3, 'tools', 'check-entry-parity.mjs')], { stdio: 'inherit' });
+    execFileSync(process.execPath, [join(V3, 'tools', 'test-onboarding-contract.mjs')], { stdio: 'inherit' });
   } catch (e) {
     failures++;
   }

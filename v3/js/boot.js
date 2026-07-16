@@ -7,6 +7,19 @@
   GOL.VERSION = 'v3.0';
   GOL.AUDIO_BASE = '../audio/'; // narration/voice files live at the repo root
 
+  // Is the game running as an installed PWA (home-screen launch) rather than a
+  // browser tab? Drives the install nudge — installed players never see it.
+  // Defined here (boot runs before any frame) so scenes can call it at runtime.
+  // Guarded for private mode; errs toward "browser tab" only when we can tell.
+  GOL.isStandalone = function () {
+    try {
+      return (window.matchMedia &&
+        (matchMedia('(display-mode: standalone)').matches ||
+         matchMedia('(display-mode: fullscreen)').matches)) ||
+        navigator.standalone === true;
+    } catch (e) { return false; }
+  };
+
   // ------------------------------------------------------------ reciters --
   // one voice at a time, chosen in the tuning panel; local files first,
   // everyayah.com streaming as the fallback. Mishary is the default voice
@@ -117,6 +130,41 @@
   resize();
 
   GOL.store.load();
+  // install-nudge memory: { greeted } once boot's one-time invitation has been
+  // met; { ribbonHidden } once a grown-up dismisses the quiet map reminder.
+  // Both persist in the save; init here so every reader can trust it exists.
+  GOL.store.data.install = GOL.store.data.install || {};
+  // The grown-up porch is additive and save-safe. Existing families should
+  // never be sent backward through setup merely because their save predates
+  // this schema; any real journey trace counts as an already-started child.
+  GOL.hasJourneyProgress = function () {
+    const d = GOL.store.data || {};
+    return !!(
+      (d.grand && Object.keys(d.grand).length) ||
+      (d.levels && Object.keys(d.levels).length) ||
+      (d.opened && d.opened.length) ||
+      (d.unlocked && d.unlocked > 0)
+    );
+  };
+  {
+    const hadJourney = GOL.hasJourneyProgress();
+    const ob = (GOL.store.data.onboarding = GOL.store.data.onboarding || {});
+    if (ob.v == null) ob.v = 1;
+    if (ob.parentComplete == null) ob.parentComplete = hadJourney;
+    if (ob.childStarted == null) ob.childStarted = hadJourney;
+  }
+  GOL.onboardingStatus = () => GOL.store.data.onboarding;
+  GOL.completeParentOnboarding = function () {
+    const ob = GOL.store.data.onboarding;
+    ob.v = 1; ob.parentComplete = true;
+    GOL.store.save();
+  };
+  GOL.markChildStarted = function () {
+    const ob = GOL.store.data.onboarding;
+    if (ob.childStarted) return;
+    ob.v = 1; ob.parentComplete = true; ob.childStarted = true;
+    GOL.store.save();
+  };
   GOL.preserveVisitedWorlds();
   GOL.Input.init(canvas);
 
@@ -157,19 +205,9 @@
     GOL.sceneName = name;
     current.enter(params || {});
   }
-  // PWA SOFT GATE (approved 2026-07-12): an un-installed browser visit meets
-  // the install invitation before the game — home-screen real estate matters
-  // too much on a phone to leave to chance. Installed (standalone) launches,
-  // debug, ?install=0, and grown-ups who held through it this session all go
-  // straight to the title. install.js owns the scene; this is just the fork.
-  let gated = false;
-  try {
-    const standalone = (window.matchMedia &&
-      (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) ||
-      navigator.standalone === true;
-    gated = !standalone && !GOL.DEBUG && q.get('install') !== '0' &&
-      sessionStorage.getItem('golInstallSkip') !== '1' && !!GOL.SCENES.install;
-  } catch (e) { /* private mode etc: play on */ }
+  // A clean family begins on the grown-up porch. Installation lives inside
+  // that value-first sequence; it is never a boot gate. Existing saves and
+  // completed handoffs keep the familiar child postcard doorway.
   const directDef = (GOL.DEBUG || !!directLab) && directProto && GOL.PROTOTYPES[directProto];
   // A targeted clean start for prototype playtests. It never touches real
   // world progress, and removes itself from the URL so a later refresh resumes
@@ -188,7 +226,13 @@
     const start = directCamp === 1 ? 1 : directDef.campShrines[directCamp - 2].afterAyah;
     directParams.checkpoint = { index: directCamp - 1, start, len: c.afterAyah - start + 1, afterAyah: c.afterAyah };
   }
-  switchTo(directDef ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure')) : (gated ? 'install' : 'title'), directParams);
+  const forceOnboarding = q.get('onboarding') === '1';
+  const needsPorch = forceOnboarding ||
+    (!GOL.onboardingStatus().parentComplete && !GOL.hasJourneyProgress());
+  const initialScene = directDef
+    ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure'))
+    : (needsPorch ? 'onboarding' : 'title');
+  switchTo(initialScene, directParams);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();

@@ -63,7 +63,14 @@
       const px = L + 16, pw = (R - L) - 32;
       const panelTop = titleY + 40;
       const footerY = H - 16 - sa.b * 0.5;
-      const panelH = Math.max(80, (footerY - 14) - panelTop);
+      // a grown-up on a phone browser gets a quiet "add to home screen" line
+      // just above the footer; installed players (standalone) don't need it
+      const showInstall = !GOL.isStandalone();
+      const installH = showInstall ? 26 : 0;
+      const panelH = Math.max(80, (footerY - 14 - installH) - panelTop);
+      const installLink = showInstall
+        ? { cx: (L + R) / 2, cy: footerY - installH + 6, x: (L + R) / 2 - 150, y: footerY - installH - 6, w: 300, h: 24 }
+        : null;
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;
 
@@ -83,7 +90,7 @@
         const hit = { x: tx - 92, y: y + 4, w: toggleW + 92, h: rH - 8 };
         return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit };
       });
-      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll };
+      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll, installLink };
     },
 
     update(dt, W, H) {
@@ -117,6 +124,14 @@
       if (GOL.dist(clickAt.x, clickAt.y, home.x, home.y) < home.r) {
         GOL.audio.sfx('tap');
         home.fn();
+        return;
+      }
+      // the "add to home screen" line — always available here, opens the steps
+      const il = lay.installLink;
+      if (il && clickAt.x >= il.x && clickAt.x <= il.x + il.w &&
+          clickAt.y >= il.y && clickAt.y <= il.y + il.h) {
+        GOL.audio.sfx('tap');
+        GOL.go('install', { from: 'grownups' });
         return;
       }
       // a surah's "on the map" toggle — only worlds not already reachable can
@@ -236,6 +251,15 @@
         const thumbY = trackY + (trackH - thumbH) * (lay.scroll / lay.maxScroll);
         ctx.fillStyle = alpha(INK, 0.18);
         GOL.roundRect(ctx, lay.px + lay.pw - 12, thumbY, 3.5, thumbH, 2); ctx.fill();
+      }
+
+      // the quiet "add to home screen" line, in the map ribbon's warm gold
+      const il = lay.installLink;
+      if (il) {
+        const star8 = 0.8 + 0.2 * Math.sin(t * 1.6);
+        GOL.star8(ctx, il.cx - 118, il.cy, 5.5, Math.PI / 8 + t * 0.15, alpha('#F0C878', star8));
+        GOL.text(ctx, 'Add Gems of Light to your home screen', il.cx + 10, il.cy,
+          { size: 12.5, weight: '800', color: '#EBCB86', shadow: false });
       }
 
       // footer reassurance

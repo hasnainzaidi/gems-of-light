@@ -321,7 +321,7 @@
     dragPrev: null, dragMoved: false, camFree: 0, ceremony: null,
     hero: null, spotPulse: null, pendingBloom: false,
 
-    enter() {
+    enter(params) {
       // from here on, "home" means the map — for worlds, shrines, dreams
       GOL.homeScene = 'journeyMap';
       this.t = 0;
@@ -336,6 +336,11 @@
       this.hero = null;
       this.spotPulse = null;
       this.pendingBloom = false;
+      this.firstInvite = null;
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() :
+        (GOL.store.data && GOL.store.data.onboarding);
+      this.firstHandoff = !!(params && params.firstHandoff) ||
+        !!(ob && ob.parentComplete && !ob.childStarted);
       this.kbdFollow = 0;
       this.kbdActHeld = false;
       this.railS = null;
@@ -363,6 +368,9 @@
         if (this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
           this.startAnchorS = 0;
           if (this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
+          if (this.firstHandoff && !returnState) {
+            this.firstInvite = { t: 0, answered: false, response: 0 };
+          }
         }
         if (returnState) {
           // back from a world: she stands exactly where she left, and the
@@ -483,7 +491,14 @@
     },
 
     activeRegion() { return this.star ? this.star.ri : null; },
-    regionAwake(i) { return !!(this.awake && this.awake[i]); },
+    // Debug wakes every island so a grown-up can walk the whole journey and
+    // audit each world's art without earning it first.
+    regionAwake(i) { return GOL.DEBUG || !!(this.awake && this.awake[i]); },
+
+    // A spot is a door when its world is finished (a bloom re-opens on rest) —
+    // or, in debug, any built-and-open world (worldOpen is universally true in
+    // debug), so every level is reachable. The breathing star is separate.
+    isDoor(sp) { return !!(sp && (sp.done || (GOL.DEBUG && sp.open))); },
 
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
@@ -498,6 +513,7 @@
     // world opens when she arrives (motion belongs to the path).
     walkToStar() {
       if (!this.star || !this.map || !this.hero || this.ceremony) return;
+      this.answerFirstInvite();
       const sT = this.spotS[this.star.ri][this.star.j];
       // A fresh journey spawns her right ON the breathing star (Al-Fatiha),
       // where the walk buttons have nowhere to step. Tapping the star she
@@ -521,10 +537,28 @@
         cam: { x: this.cam.x, y: this.cam.y },
         heroS: this.hero.s
       };
+      // Adult setup becomes child progress only at this boundary: the first
+      // real world is opening. The parent preview and postcard never mark it.
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete && !ob.childStarted && GOL.markChildStarted) {
+        GOL.markChildStarted();
+      }
       GOL.audio.unlock();
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: sp.n });
       return true;
+    },
+
+    answerFirstInvite() {
+      if (!this.firstInvite || this.firstInvite.answered) return false;
+      this.firstInvite.answered = true;
+      this.firstInvite.response = 1;
+      if (this.star) this.spotPulse = { ri: this.star.ri, j: this.star.j, t: 1 };
+      return true;
+    },
+
+    firstFocus() {
+      return !!(this.firstInvite && !this.firstInvite.answered);
     },
 
     // Landing on a waypoint: the breathing star opens its world at once;
@@ -540,7 +574,7 @@
         if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
-          if (sp && sp.done && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+          if (this.isDoor(sp) && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
             this.dwell = { t: 0, ri, j };
             return;
           }
@@ -566,7 +600,7 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          if (sp && sp.done && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+          if (this.isDoor(sp) && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this.enterWorld(ri, j);
             return;
           }
@@ -583,10 +617,13 @@
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       const y = H - 58 - sa.b * 0.5;
       const x2 = W - 60 - sa.r;
-      return [
+      const buttons = [
         { x: x2 - 74, y, r: 30, dir: -1 },
         { x: x2, y, r: 30, dir: 1 }
       ];
+      // At handoff there is exactly one useful direction. Removing the inert
+      // back control makes the forward invitation legible without words.
+      return this.firstFocus() ? [buttons[1]] : buttons;
     },
 
     mapCamMax(W, H) {
@@ -629,8 +666,66 @@
       };
     },
 
+    // The quiet home-screen reminder: a small parchment ribbon at top-center,
+    // shown to any un-installed browser visit (this is the landscape counterpart
+    // to the portrait "add to home screen" card). Tapping it opens the install
+    // steps; the little × dismisses it for good. Installed players, debug, and
+    // anyone who's hidden it never see it. One geometry source for tap + draw.
+    installNudge(W, H) {
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete) return null;
+      if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
+      const ins = GOL.store.data.install || {};
+      if (ins.ribbonHidden) return null;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const w = Math.min(236, W - 140), h = 34;
+      const x = (W - w) / 2, y = sa.t * 0.5 + 14;
+      return { x, y, w, h, close: { x: x + w - 16, y: y + h / 2, r: 13 } };
+    },
+
+    // the ribbon itself, in the map's cream-and-gold chrome language: a small
+    // parchment pill with a gem-star, one gentle line, and a dismiss ×
+    drawInstallNudge(ctx, W, H) {
+      const n = this.installNudge(W, H);
+      if (!n) return;
+      const midY = n.y + n.h / 2;
+      // a soft breathing glow so the eye finds it once, then lets it be
+      const pulse = 0.5 + 0.5 * Math.sin(this.t * 1.6);
+      ctx.save();
+      ctx.shadowColor = alpha('#F0C878', 0.35 + 0.2 * pulse);
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(250,244,224,0.92)';
+      GOL.roundRect(ctx, n.x, n.y, n.w, n.h, n.h / 2); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = alpha('#C89B55', 0.8); ctx.lineWidth = 1.6;
+      GOL.roundRect(ctx, n.x, n.y, n.w, n.h, n.h / 2); ctx.stroke();
+      // a little gem-star at the left, matching the map's bloom stars
+      const starX = n.x + 22;
+      GOL.star8Path(ctx, starX, midY, 8, Math.PI / 8 + this.t * 0.2);
+      const sg = ctx.createLinearGradient(0, midY - 8, 0, midY + 8);
+      sg.addColorStop(0, GRAND.light); sg.addColorStop(1, GRAND.dark);
+      ctx.fillStyle = sg; ctx.fill();
+      // the line, gold-ink, sitting between the star and the ×
+      GOL.text(ctx, 'Add to home screen', starX + 14 + (n.w - 78) / 2, midY,
+        { size: 12.5, weight: '800', color: '#7A5A24', shadow: false });
+      // the dismiss × — a faint ring with a soft cross
+      const c = n.close;
+      ctx.strokeStyle = alpha('#8A7A55', 0.5); ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = alpha('#7A6238', 0.8); ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      const k = 3.4;
+      ctx.beginPath();
+      ctx.moveTo(c.x - k, c.y - k); ctx.lineTo(c.x + k, c.y + k);
+      ctx.moveTo(c.x + k, c.y - k); ctx.lineTo(c.x - k, c.y + k);
+      ctx.stroke(); ctx.lineCap = 'butt';
+    },
+
     update(dt, W, H) {
       this.t += dt;
+      if (this.firstInvite) {
+        this.firstInvite.t += dt;
+        this.firstInvite.response = Math.max(0, this.firstInvite.response - dt * 1.8);
+      }
       this.camFree = Math.max(0, this.camFree - dt);
       if (this.spotPulse) {
         this.spotPulse.t = Math.max(0, this.spotPulse.t - dt * 1.7);
@@ -642,12 +737,14 @@
         return;
       }
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const firstFocus = this.firstFocus();
+      const nudge = firstFocus ? null : this.installNudge(W, H); // never competes with the first star
       // The grown-ups doorway lives here on the home map now — the splash is
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
       // just pulses; the hold gate keeps children out gently.
-      const gb = (this.grownBtn = { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
-      {
+      const gb = (this.grownBtn = firstFocus ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      if (gb) {
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
           if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
@@ -685,7 +782,9 @@
         }
         this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
-          const maxS = this.star
+          // Debug lifts the star's cap so a grown-up can step to any built
+          // world along the whole trail; normal play stops at the next star.
+          const maxS = (this.star && !GOL.DEBUG)
             ? this.spotS[this.star.ri][this.star.j]
             : this.map.walkSamples.len;
           let target = null;
@@ -700,6 +799,7 @@
             this.dwell = null;
             this.stepCool = 0.12;
             this.kbdFollow = 2.2;
+            if (dir > 0 && this.answerFirstInvite() && GOL.audio) GOL.audio.sfx('tap');
           }
         }
         if (!arrived) this.kbdFollow = Math.max(this.kbdFollow, 0.8);
@@ -730,9 +830,14 @@
       }
 
       const drag = GOL.Input.drag;
+      // NB: the install ribbon is deliberately NOT excluded here. Excluding a
+      // region from the rail-drag also stops dragPrev being set for it, which is
+      // exactly what turns a press-release into a clickAt — so excluding the
+      // ribbon would make its tap (× and body alike) do nothing. A clean tap on
+      // it moves <12px, so it never scrolls; only a real drag-from-ribbon does.
       const dragOnBtns = drag && (
         (walkBtnsNow && walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10)) ||
-        GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14);
+        (gb && GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14));
       if (drag && !this.ceremony && !dragOnBtns) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
           // rail scroll: project the drag onto the trail's local direction
@@ -774,9 +879,25 @@
       }
 
       if (!clickAt || this.ceremony) return;
+      // the home-screen ribbon: its × dismisses for good, its body re-opens the
+      // install steps (returning here afterward)
+      if (nudge) {
+        if (GOL.dist(clickAt.x, clickAt.y, nudge.close.x, nudge.close.y) < nudge.close.r) {
+          GOL.audio.sfx('tap');
+          GOL.store.data.install.ribbonHidden = true;
+          GOL.store.save();
+          return;
+        }
+        if (clickAt.x >= nudge.x && clickAt.x <= nudge.x + nudge.w &&
+            clickAt.y >= nudge.y && clickAt.y <= nudge.y + nudge.h) {
+          GOL.audio.sfx('tap');
+          GOL.go('install', { from: 'journeyMap' });
+          return;
+        }
+      }
       // a plain tap on the grown-ups star only pulses — it opens on hold
-      if (GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
-      if (GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
+      if (gb && GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
+      if (!firstFocus && GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
         GOL.go('title');
         return;
       }
@@ -806,7 +927,7 @@
           for (let j = 0; j < REGIONS[ri].count; j++) {
             const sp = this.spotInfo[ri][j];
             const b = this.map.spots[ri][j];
-            if (sp && sp.done && GOL.dist(wx, wy, b.x, b.y) < 36) {
+            if (this.isDoor(sp) && GOL.dist(wx, wy, b.x, b.y) < 36) {
               this.enterWorld(ri, j);
               return;
             }
@@ -907,6 +1028,7 @@
       }
 
       this.drawMoon(ctx);
+      this.drawFirstInvitation(ctx);
       if (this.hero) {
         const pos = pointAtSamples(this.map.walkSamples, this.hero.s);
         const ahead = pointAtSamples(this.map.walkSamples, this.hero.s + 6);
@@ -924,13 +1046,50 @@
         }
       }
       const nest = this.missSpot || this.star;
-      if (nest && !this.ceremony) {
+      if (nest && !this.ceremony && !this.firstFocus()) {
         const s = this.map.spots[nest.ri][nest.j];
         GOL.drawFirefly(ctx,
           s.x + 32 + Math.cos(this.t * 0.9) * 8,
           s.y - 32 + Math.sin(this.t * 1.7) * 8,
           this.t, 1.15);
       }
+    },
+
+    // Noor writes the first route in light exactly once. The trail builds
+    // from the waiting lightling toward Al-Fatiha, then rests at the star;
+    // the child's first forward/tap response sends a bright answer back.
+    drawFirstInvitation(ctx) {
+      const inv = this.firstInvite;
+      if (!inv || !this.map || !this.hero || !this.star) return;
+      const start = this.startAnchorS == null ? this.hero.s : this.startAnchorS;
+      const end = this.spotS[this.star.ri][this.star.j];
+      const reveal = inv.answered ? 1 : ease(clamp(inv.t / 2.7, 0, 1));
+      const span = Math.max(1, end - start);
+      const step = Math.max(6, span / 24);
+      ctx.save();
+      ctx.lineCap = 'round';
+      for (let s = start; s <= end; s += step) {
+        const f = (s - start) / span;
+        if (f > reveal + 0.015) break;
+        const p = pointAtSamples(this.map.walkSamples, s);
+        const nearHead = clamp(1 - Math.abs(f - reveal) / 0.20, 0, 1);
+        ctx.fillStyle = alpha('#FFE9A8', 0.10 + nearHead * 0.62 + inv.response * 0.18);
+        ctx.beginPath(); ctx.arc(p.x, p.y - 3, 2.2 + nearHead * 2.2, 0, TAU); ctx.fill();
+      }
+      const head = pointAtSamples(this.map.walkSamples, lerp(start, end, reveal));
+      GOL.drawFirefly(ctx, head.x, head.y - 12, this.t, 1.45 + inv.response * 0.35);
+      const star = this.map.spots[this.star.ri][this.star.j];
+      const breathe = 0.5 + 0.5 * Math.sin(this.t * 2.2);
+      ctx.strokeStyle = alpha('#FFE9A8', 0.34 + breathe * 0.36 + inv.response * 0.25);
+      ctx.lineWidth = 2.4 + inv.response * 2;
+      ctx.beginPath(); ctx.arc(star.x, star.y - 7, 23 + breathe * 4 + inv.response * 7, 0, TAU); ctx.stroke();
+      if (inv.response > 0 && this.hero) {
+        const hp = pointAtSamples(this.map.walkSamples, this.hero.s);
+        ctx.strokeStyle = alpha('#FFF6DC', inv.response * 0.8);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(hp.x, hp.y - 4, 18 + (1 - inv.response) * 18, 0, TAU); ctx.stroke();
+      }
+      ctx.restore();
     },
 
     draw(ctx, W, H) {
@@ -987,7 +1146,7 @@
       ctx.drawImage(this.map.images.over, dx, dy, dw, dh);
 
       const sa = GOL.SAFE || { l: 0, t: 0 };
-      GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
+      if (!this.firstFocus()) GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
 
       // the grown-ups doorway, beside the back arrow — a cream chip with a
       // quiet star, a hold-progress ring, and a small label
@@ -1011,15 +1170,23 @@
           ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 4, -Math.PI / 2, -Math.PI / 2 + gp * TAU); ctx.stroke();
           ctx.lineCap = 'butt';
         }
-        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 12, { size: 9.5, weight: '700', color: alpha('#3B2E14', 0.55), shadow: false });
+        // The patient-hold star is learned by the grown-up during setup; the
+        // child's home remains wordless after handoff.
       }
+
+      this.drawInstallNudge(ctx, W, H);
 
       // touch walk buttons: back / forward along the trail
       const btns = this.walkButtons(W, H);
       if (btns && this.map && !this.ceremony) {
         for (const b of btns) {
           ctx.save();
-          ctx.globalAlpha = 0.78;
+          const invited = this.firstFocus() && b.dir > 0;
+          ctx.globalAlpha = invited ? 0.88 + Math.sin(this.t * 2.4) * 0.1 : 0.78;
+          if (invited) {
+            ctx.shadowColor = alpha('#FFE9A8', 0.9);
+            ctx.shadowBlur = 16;
+          }
           ctx.fillStyle = '#FDF6E4';
           ctx.strokeStyle = '#C9B98F'; ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(b.x, b.y, b.r - 4, 0, TAU); ctx.fill(); ctx.stroke();

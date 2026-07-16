@@ -234,11 +234,57 @@
       this.splashFade = 0;
       this.wasPortrait = undefined;
       this.nudgePulse = 0;
+      // The grown-up porch hands the prepared garden over through this same
+      // postcard, but in a deliberately child-only mode. Keep this explicit
+      // (rather than guessing from an empty save) so returning families retain
+      // the familiar title/map doorway.
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      this.childMode = !!(params && (params.childWelcome || params.childMode || params.handoff)) ||
+        !!(ob && ob.parentComplete && !ob.childStarted);
+      // portrait is a dead state for play (you must rotate), so we use it to
+      // pitch "add to home screen" with a quiet "Just play" escape. Tapping
+      // Just play flips to the rotate nudge; install.js returns here with
+      // { proceed:true } to do the same. Installed (standalone) skips straight
+      // to the rotate nudge — its window is already full-screen.
+      this.portraitProceed = this.childMode || !!(params && params.proceed);
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
       this.celebrateT = this.celebrateN ? 3.2 : 0;
       if (this.celebrateN) GOL.audio.sfx('unlockLevel');
+    },
+    // The portrait "add to home screen" card + "Just play" pill. One source of
+    // geometry for update (taps) and draw. Null when there's nothing to pitch:
+    // installed (standalone), or the grown-up already tapped Just play.
+    portraitInvite(W, H) {
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete) return null;
+      if (GOL.isStandalone() || this.portraitProceed) return null;
+      const cx = W / 2;
+      const cw = Math.min(W - 56, 360), cardH = 128;
+      const cardX = cx - cw / 2, cardY = H * 0.34;
+      const bw = Math.min(190, cw - 30), bh = 46;
+      const justBtn = { x: cx - bw / 2, y: cardY + cardH + 26, w: bw, h: bh };
+      // the whole card is tappable — it opens the full per-platform steps
+      const card = { x: cardX, y: cardY, w: cw, h: cardH };
+      return { cx, cardX, cardY, cardW: cw, cardH, card, justBtn };
+    },
+    drawPortraitInvite(ctx, inv, t) {
+      const { cx, cardX, cardY, cardW, cardH, justBtn } = inv;
+      // a parchment card on the painted meadow, the grown-ups voice
+      GOL.drawPanel(ctx, cardX, cardY, cardW, cardH, { radius: 18 });
+      // a gem-star crowning the card
+      GOL.star8(ctx, cx, cardY + 34, 12, Math.PI / 8 + t * 0.18, alpha(GRAND.base, 0.95));
+      // lead with the benefit, not the chore; the › hints the card opens the
+      // full step-by-step, and "3 taps" promises the setup is quick
+      GOL.text(ctx, 'Play Full Screen', cx, cardY + 72, { size: 21, weight: '800', color: INK, shadow: false });
+      GOL.text(ctx, '3 taps to set up  ›', cx, cardY + 100, { size: 12.5, weight: '700', color: alpha(GOLD, 0.95), shadow: false });
+      // the quiet "Just play" escape — a soft cream pill
+      ctx.fillStyle = 'rgba(253,246,228,0.92)';
+      GOL.roundRect(ctx, justBtn.x, justBtn.y, justBtn.w, justBtn.h, justBtn.h / 2); ctx.fill();
+      ctx.strokeStyle = alpha('#C89B55', 0.7); ctx.lineWidth = 1.6;
+      GOL.roundRect(ctx, justBtn.x, justBtn.y, justBtn.w, justBtn.h, justBtn.h / 2); ctx.stroke();
+      GOL.text(ctx, 'Just play', cx, justBtn.y + justBtn.h / 2, { size: 16, weight: '800', color: '#7A5A24', shadow: false });
     },
     // The tuning rows and their segmented option buttons. One source of
     // geometry, used by both hit-testing and drawing.
@@ -317,7 +363,7 @@
         this.wasPortrait = portrait;
         GOL.audio.unlock();
         GOL.audio.sfx('unlockLevel');
-        GOL.go('journeyMap');
+        GOL.go('journeyMap', this.childMode ? { firstHandoff: true } : undefined);
         return;
       }
       this.wasPortrait = portrait;
@@ -328,31 +374,16 @@
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
-      this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
+      this.gearBtn = this.childMode ? null : { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
       this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
-      // Debug-only experiment shelf. Production worlds remain the main lab;
-      // active, explicitly registered experiments sit lower as numbered
-      // lanterns so competing mechanics can coexist in one build.
-      const protoIds = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
-      this.protoBtns = protoIds.map((id, i) => ({
-        id, key: GOL.PROTOTYPES[id].key,
-        x: W / 2 + (i - (protoIds.length - 1) / 2) * 74,
-        y: H * 0.82, r: 27,
-        // These adult-facing lab buttons skip the identical 21-gem climb and
-        // open the complete point of difference: the shrine recall task.
-        fn: () => {
-          GOL.audio.unlock(); GOL.audio.sfx('unlockLevel');
-          const def = GOL.PROTOTYPES[id];
-          // Journey labs (P16) own a whole scene rather than a shrine focus.
-          if (def.scene) { GOL.go(def.scene, { proto: id }); return; }
-          // P14's experiment lives along the mountain, so it must begin in
-          // the adventure. P11–P13 still jump to their shrine-only difference.
-          if (def.longMode === 'night-camps') GOL.go('adventure', { proto: id });
-          else GOL.go('shrine', { proto: id, labFocus: true });
-        }
-      }));
+      // The numbered prototype shelf was retired with the ten-prototype lab
+      // (its lanterns are the old game language). Debug now audits the REAL
+      // journey: tap through to the map, where every built world is openable
+      // (map.js gives debug free reign — see regionAwake / the debug walk cap
+      // and tap/enter paths). Prototype labs stay reachable by URL (?proto=N).
+      this.protoBtns = [];
       // the tuning panel owns all input while it is open
-      if (this.settingsOpen) {
+      if (this.settingsOpen && this.gearBtn) {
         const segs = this.settingsSegs(W, H).out;
         for (const tap of GOL.Input.taps) {
           if (tap.ui) continue;
@@ -381,9 +412,33 @@
         this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
         if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
       }
-      if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
+      if (this.gearBtn && GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
+      // the portrait "add to home screen" card: the card body opens the full
+      // steps; "Just play" flips this splash to the rotate nudge
+      if (portrait) {
+        const inv = this.portraitInvite(W, H);
+        if (inv) {
+          const hit = (b, tp) => tp.x >= b.x && tp.x <= b.x + b.w && tp.y >= b.y && tp.y <= b.y + b.h;
+          for (const tap of GOL.Input.taps) {
+            if (tap.ui) continue;
+            if (hit(inv.justBtn, tap)) {
+              tap.ui = true;
+              GOL.audio.unlock();
+              GOL.audio.sfx('tap');
+              this.portraitProceed = true;
+              // "Just play" promises that setup can wait. Do not repeat the
+              // same invitation on the very next screen; a reload starts a
+              // fresh session, and the grown-ups page still keeps a doorway.
+              GOL.installNudgeDeferred = true;
+              this.nudgePulse = 1;
+              return;
+            }
+            if (hit(inv.card, tap)) { tap.ui = true; GOL.audio.unlock(); GOL.audio.sfx('tap'); GOL.go('install', { from: 'title' }); return; }
+          }
+        }
+      }
       // any other tap begins: the journey map is the game's home page.
       // In portrait the map would be unplayable, so a tap only wakes audio
       // and makes the rotate invitation answer back — rotating is the door.
@@ -392,7 +447,7 @@
           GOL.audio.unlock();
           if (portrait) { this.nudgePulse = 1; GOL.audio.sfx('tap'); return; }
           GOL.audio.sfx('unlockLevel');
-          GOL.go('journeyMap');
+          GOL.go('journeyMap', this.childMode ? { firstHandoff: true } : undefined);
           return;
         }
       }
@@ -431,12 +486,18 @@
         GOL.text(ctx, b.key, b.x, b.y + 39, { size: 9.5, weight: '700', color: alpha('#FFFFFF', 0.72) });
       }
       if (portrait) {
-        // in the open sky between the title and the horizon (~0.39H), so the
-        // invitation never sits on the garden itself
-        drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
-        GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+        // portrait first pitches "add to home screen" (with a Just play escape);
+        // once the grown-up proceeds — or when already installed — it becomes
+        // the rotate invitation, since rotating is the door into the game
+        const inv = this.portraitInvite(W, H);
+        if (inv) {
+          this.drawPortraitInvite(ctx, inv, t);
+        } else {
+          drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
+          if (!this.childMode) GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+        }
       } else if (!(this.protoBtns && this.protoBtns.length)) {
-        GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
+        if (!this.childMode) GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
@@ -460,10 +521,14 @@
           ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 5, -Math.PI / 2, -Math.PI / 2 + gp * Math.PI * 2); ctx.stroke();
           ctx.lineCap = 'butt';
         }
-        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
+        if (!this.childMode) GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
       }
-      const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
-      GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
+      // Keep engine diagnostics out of the child's first impression. They are
+      // still useful in an explicit debug session alongside the DEBUG badge.
+      if (GOL.DEBUG && !this.childMode) {
+        const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
+        GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
+      }
       if (this.settingsOpen) this.drawSettings(ctx, W, H);
       GOL.drawVignette(ctx, W, H, 0.12);
     }
