@@ -367,27 +367,12 @@
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
       this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
       this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
-      // Debug-only experiment shelf. Production worlds remain the main lab;
-      // active, explicitly registered experiments sit lower as numbered
-      // lanterns so competing mechanics can coexist in one build.
-      const protoIds = GOL.DEBUG ? Object.keys(GOL.PROTOTYPES).map(Number).sort((a, b) => a - b) : [];
-      this.protoBtns = protoIds.map((id, i) => ({
-        id, key: GOL.PROTOTYPES[id].key,
-        x: W / 2 + (i - (protoIds.length - 1) / 2) * 74,
-        y: H * 0.82, r: 27,
-        // These adult-facing lab buttons skip the identical 21-gem climb and
-        // open the complete point of difference: the shrine recall task.
-        fn: () => {
-          GOL.audio.unlock(); GOL.audio.sfx('unlockLevel');
-          const def = GOL.PROTOTYPES[id];
-          // Journey labs (P16) own a whole scene rather than a shrine focus.
-          if (def.scene) { GOL.go(def.scene, { proto: id }); return; }
-          // P14's experiment lives along the mountain, so it must begin in
-          // the adventure. P11–P13 still jump to their shrine-only difference.
-          if (def.longMode === 'night-camps') GOL.go('adventure', { proto: id });
-          else GOL.go('shrine', { proto: id, labFocus: true });
-        }
-      }));
+      // The numbered prototype shelf was retired with the ten-prototype lab
+      // (its lanterns are the old game language). Debug now audits the REAL
+      // journey: tap through to the map, where every built world is openable
+      // (map.js gives debug free reign — see regionAwake / the debug walk cap
+      // and tap/enter paths). Prototype labs stay reachable by URL (?proto=N).
+      this.protoBtns = [];
       // the tuning panel owns all input while it is open
       if (this.settingsOpen) {
         const segs = this.settingsSegs(W, H).out;

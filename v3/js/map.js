@@ -483,7 +483,14 @@
     },
 
     activeRegion() { return this.star ? this.star.ri : null; },
-    regionAwake(i) { return !!(this.awake && this.awake[i]); },
+    // Debug wakes every island so a grown-up can walk the whole journey and
+    // audit each world's art without earning it first.
+    regionAwake(i) { return GOL.DEBUG || !!(this.awake && this.awake[i]); },
+
+    // A spot is a door when its world is finished (a bloom re-opens on rest) —
+    // or, in debug, any built-and-open world (worldOpen is universally true in
+    // debug), so every level is reachable. The breathing star is separate.
+    isDoor(sp) { return !!(sp && (sp.done || (GOL.DEBUG && sp.open))); },
 
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
@@ -540,7 +547,7 @@
         if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
-          if (sp && sp.done && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+          if (this.isDoor(sp) && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
             this.dwell = { t: 0, ri, j };
             return;
           }
@@ -566,7 +573,7 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          if (sp && sp.done && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+          if (this.isDoor(sp) && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this.enterWorld(ri, j);
             return;
           }
@@ -738,7 +745,9 @@
         }
         this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
-          const maxS = this.star
+          // Debug lifts the star's cap so a grown-up can step to any built
+          // world along the whole trail; normal play stops at the next star.
+          const maxS = (this.star && !GOL.DEBUG)
             ? this.spotS[this.star.ri][this.star.j]
             : this.map.walkSamples.len;
           let target = null;
@@ -880,7 +889,7 @@
           for (let j = 0; j < REGIONS[ri].count; j++) {
             const sp = this.spotInfo[ri][j];
             const b = this.map.spots[ri][j];
-            if (sp && sp.done && GOL.dist(wx, wy, b.x, b.y) < 36) {
+            if (this.isDoor(sp) && GOL.dist(wx, wy, b.x, b.y) < 36) {
               this.enterWorld(ri, j);
               return;
             }
