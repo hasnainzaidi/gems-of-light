@@ -774,3 +774,19 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   again; a reload may invite again, while the grown-ups page remains an
   intentional route; (2) the `v3 · sound · echo` diagnostic is debug-only,
   keeping production's first postcard wholly in the child's voice.
+- **DELIGHTFUL ONBOARDING — VALUE BEFORE INSTALLATION (2026-07-16,
+  user-approved first-principles rebuild):** the PWA prompt is no longer the
+  onboarding. A clean family now crosses one canonical grown-up porch:
+  welcome → non-saving interactive garden preview → Explore/Listen/Remember
+  method → make-it-theirs → real sound check → handoff. Platform variation is
+  confined to the setup card; Android retains its genuine one-tap browser
+  prompt, and every path has Not now. Preview uses the real lightling, gem,
+  ayah, Noor, bloom, and particle language but cannot touch the child save.
+  Handoff persists one additive `{v,parentComplete,childStarted}` boundary,
+  enters a wordless child postcard, and gives Al-Fatiha's first map star
+  exclusive priority: Noor writes the route once, the forward control answers,
+  and child progress begins only when the real world opens. Existing saves
+  bypass the porch; reloads between handoff and first play resume safely.
+  Responsive verdict: 390×844 and 844×390, Safari/in-app/Android/desktop cards,
+  full preview→handoff path, returning-save path — no overlap and no console
+  warnings/errors. Contract and wave ownership: `ONBOARDING-PLAN-2026-07-16.md`.

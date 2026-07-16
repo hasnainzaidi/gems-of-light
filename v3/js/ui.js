@@ -234,12 +234,19 @@
       this.splashFade = 0;
       this.wasPortrait = undefined;
       this.nudgePulse = 0;
+      // The grown-up porch hands the prepared garden over through this same
+      // postcard, but in a deliberately child-only mode. Keep this explicit
+      // (rather than guessing from an empty save) so returning families retain
+      // the familiar title/map doorway.
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      this.childMode = !!(params && (params.childWelcome || params.childMode || params.handoff)) ||
+        !!(ob && ob.parentComplete && !ob.childStarted);
       // portrait is a dead state for play (you must rotate), so we use it to
       // pitch "add to home screen" with a quiet "Just play" escape. Tapping
       // Just play flips to the rotate nudge; install.js returns here with
       // { proceed:true } to do the same. Installed (standalone) skips straight
       // to the rotate nudge — its window is already full-screen.
-      this.portraitProceed = !!(params && params.proceed);
+      this.portraitProceed = this.childMode || !!(params && params.proceed);
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
@@ -250,6 +257,8 @@
     // geometry for update (taps) and draw. Null when there's nothing to pitch:
     // installed (standalone), or the grown-up already tapped Just play.
     portraitInvite(W, H) {
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete) return null;
       if (GOL.isStandalone() || this.portraitProceed) return null;
       const cx = W / 2;
       const cw = Math.min(W - 56, 360), cardH = 128;
@@ -354,7 +363,7 @@
         this.wasPortrait = portrait;
         GOL.audio.unlock();
         GOL.audio.sfx('unlockLevel');
-        GOL.go('journeyMap');
+        GOL.go('journeyMap', this.childMode ? { firstHandoff: true } : undefined);
         return;
       }
       this.wasPortrait = portrait;
@@ -365,7 +374,7 @@
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
-      this.gearBtn = { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
+      this.gearBtn = this.childMode ? null : { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
       this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
       // The numbered prototype shelf was retired with the ten-prototype lab
       // (its lanterns are the old game language). Debug now audits the REAL
@@ -374,7 +383,7 @@
       // and tap/enter paths). Prototype labs stay reachable by URL (?proto=N).
       this.protoBtns = [];
       // the tuning panel owns all input while it is open
-      if (this.settingsOpen) {
+      if (this.settingsOpen && this.gearBtn) {
         const segs = this.settingsSegs(W, H).out;
         for (const tap of GOL.Input.taps) {
           if (tap.ui) continue;
@@ -403,7 +412,7 @@
         this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
         if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
       }
-      if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
+      if (this.gearBtn && GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
       // the portrait "add to home screen" card: the card body opens the full
@@ -438,7 +447,7 @@
           GOL.audio.unlock();
           if (portrait) { this.nudgePulse = 1; GOL.audio.sfx('tap'); return; }
           GOL.audio.sfx('unlockLevel');
-          GOL.go('journeyMap');
+          GOL.go('journeyMap', this.childMode ? { firstHandoff: true } : undefined);
           return;
         }
       }
@@ -485,10 +494,10 @@
           this.drawPortraitInvite(ctx, inv, t);
         } else {
           drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
-          GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+          if (!this.childMode) GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
         }
       } else if (!(this.protoBtns && this.protoBtns.length)) {
-        GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
+        if (!this.childMode) GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
@@ -512,11 +521,11 @@
           ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 5, -Math.PI / 2, -Math.PI / 2 + gp * Math.PI * 2); ctx.stroke();
           ctx.lineCap = 'butt';
         }
-        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
+        if (!this.childMode) GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
       }
       // Keep engine diagnostics out of the child's first impression. They are
       // still useful in an explicit debug session alongside the DEBUG badge.
-      if (GOL.DEBUG) {
+      if (GOL.DEBUG && !this.childMode) {
         const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
         GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
       }
