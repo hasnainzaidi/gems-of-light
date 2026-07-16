@@ -14,10 +14,12 @@ assert.match(preview, /registerScene\(['"]parentPreview['"]/,
   'parent preview scene is not registered');
 
 const onboarding = read('js/onboarding.js');
-for (const stage of ['welcome', 'preview', 'method', 'setup', 'sound', 'handoff']) {
+for (const stage of ['welcome', 'preview', 'setup', 'handoff']) {
   assert.match(onboarding, new RegExp("['\"]" + stage + "['\"]"),
     `canonical onboarding stage missing: ${stage}`);
 }
+assert.doesNotMatch(onboarding, /stage === ['"]sound['"]|tap to change|I can hear it/,
+  'the playable preview already proves sound; onboarding must not repeat it');
 assert.match(onboarding, /completeParentOnboarding/,
   'handoff must persist the adult/child boundary');
 assert.match(onboarding, /childMode|childWelcome|handoff/,

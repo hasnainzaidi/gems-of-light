@@ -5,8 +5,8 @@
   'use strict';
   const GOL = window.GOL;
   const { alpha } = GOL.color;
-  const STAGES = ['welcome', 'preview', 'method', 'setup', 'sound', 'handoff'];
-  const DRAWABLE = new Set(['welcome', 'method', 'setup', 'sound', 'handoff']);
+  const STAGES = ['welcome', 'preview', 'setup', 'handoff'];
+  const DRAWABLE = new Set(['welcome', 'setup', 'handoff']);
   const CREAM = '#FAF4E0', INK = GOL.INK || '#3E5340';
   const SOFT = GOL.INK_SOFT || '#6B7D66', GOLD = '#B98A3E', GOLD_L = '#FFE9A8';
   const q = new URLSearchParams(location.search);
@@ -85,7 +85,7 @@
   }
 
   function setupCopy(os) {
-    if (GOL.isStandalone && GOL.isStandalone()) return { title: 'Already at home', note: 'Gems of Light is ready to open full-screen.', steps: ['Continue to the sound check'], primary: 'Continue' };
+    if (GOL.isStandalone && GOL.isStandalone()) return { title: 'Already at home', note: 'Gems of Light is ready to open full-screen.', steps: ['The garden is ready for your child'], primary: 'Continue' };
     if (os === 'ios') return { title: 'On iPhone with Safari', note: 'A little home of its own, easy for your child to find.', steps: ['Tap Share below', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
     if (os === 'iosChrome') return { title: 'On iPhone with Chrome', note: 'The Share button is at the top right.', steps: ['Tap Share', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
     if (os === 'iosInApp') return { title: 'Open in Safari first', note: 'In-app browsers cannot make the full-screen garden.', steps: ['Open this page in Safari', 'Tap Share', 'Choose Add to Home Screen'], primary: "I've added it" };
@@ -96,9 +96,9 @@
 
   const scene = {
     ownsPortrait: true,
-    stage: 'welcome', t: 0, stageT: 0, sampled: false, os: 'desktop', buttons: {}, installPending: false, bd: null,
+    stage: 'welcome', t: 0, stageT: 0, os: 'desktop', buttons: {}, installPending: false, bd: null,
     enter(params) {
-      this.t = 0; this.stageT = 0; this.sampled = false; this.installPending = false; this.os = platform();
+      this.t = 0; this.stageT = 0; this.installPending = false; this.os = platform();
       this.bd = GOL.buildBackdrop ? GOL.buildBackdrop('falaq', 814) : null;
       const requested = params && params.stage;
       this.stage = DRAWABLE.has(requested) ? requested : (qaStage() || 'welcome');
@@ -124,19 +124,11 @@
     },
     actions(L) {
       const max = Math.min(270, L.pw - 56), gap = 10;
-      if (this.stage === 'setup' || (this.stage === 'sound' && this.sampled)) {
+      if (this.stage === 'setup') {
         const w = Math.min(210, (L.pw - 64 - gap) / 2);
         return { secondary: { x: L.cx - w - gap / 2, y: L.by, w, h: L.bh }, primary: { x: L.cx + gap / 2, y: L.by, w, h: L.bh } };
       }
       return { primary: { x: L.cx - max / 2, y: L.by, w: max, h: L.bh } };
-    },
-    sample() {
-      this.sampled = true;
-      if (!GOL.audio) return;
-      GOL.audio.unlock();
-      if (GOL.audio.setMuted) GOL.audio.setMuted(false);
-      if (GOL.audio.playVerse) GOL.audio.playVerse(113, 1, null);
-      else GOL.audio.sfx('unlockLevel');
     },
     finish() {
       if (GOL.completeParentOnboarding) GOL.completeParentOnboarding();
@@ -148,11 +140,11 @@
         this.installPending = true;
         GOL.installGuide.prompt().then(() => {
           this.installPending = false;
-          this.setStage('sound');
+          this.setStage('handoff');
         });
         return;
       }
-      this.setStage('sound');
+      this.setStage('handoff');
     },
     update(dt, W, H) {
       this.t += dt; this.stageT += dt;
@@ -162,33 +154,14 @@
         if (hit(a.primary, tap)) {
           tap.ui = true;
           if (this.stage === 'welcome') GOL.go('parentPreview');
-          else if (this.stage === 'method') this.setStage('setup');
           else if (this.stage === 'setup') this.finishSetup();
-          else if (this.stage === 'sound') this.sampled ? this.setStage('handoff') : this.sample();
           else if (this.stage === 'handoff') this.finish();
           return;
         }
         if (hit(a.secondary, tap)) {
           tap.ui = true;
-          if (this.stage === 'setup') this.setStage('sound');
-          else if (this.stage === 'sound') this.sample();
+          if (this.stage === 'setup') this.setStage('handoff');
           return;
-        }
-      }
-      if (this.stage === 'welcome') {
-        const how = { x: L.cx - 90, y: L.by - 39, w: 180, h: 28 };
-        this.buttons.how = how;
-        for (const tap of GOL.Input.taps) if (!tap.ui && hit(how, tap)) { tap.ui = true; this.setStage('method'); return; }
-      }
-      if (this.stage === 'sound') {
-        const rec = { x: L.cx - 110, y: L.by - 37, w: 220, h: 27 };
-        this.buttons.reciter = rec;
-        for (const tap of GOL.Input.taps) if (!tap.ui && hit(rec, tap)) {
-          tap.ui = true;
-          const keys = Object.keys(GOL.RECITERS || {});
-          if (keys.length > 1) GOL.V3.reciter = keys[(keys.indexOf(GOL.V3.reciter) + 1) % keys.length];
-          if (GOL.saveV3cfg) GOL.saveV3cfg();
-          this.sample(); return;
         }
       }
     },
@@ -205,36 +178,28 @@
         GOL.star8(ctx, L.cx, titleY - 1, 12 + Math.sin(this.t * 2) * 1.2, Math.PI / 8 + this.t * .08, GOLD);
         GOL.text(ctx, 'Gems of Light', L.cx, titleY + 36, { size: titleSize + 4, weight: '800', color: INK, shadow: false });
         wrapped(ctx, 'A gentle Quran memorisation adventure for young children.', L.cx, contentY + 52, L.inner, bodySize, SOFT, '700', 2);
-        GOL.drawFirefly(ctx, L.cx + Math.sin(this.t) * 24, contentY + 105 + Math.sin(this.t * 1.7) * 5, this.t, 1.1);
-        GOL.text(ctx, 'How it works', L.cx, L.by - 25, { size: 13, weight: '700', color: GOLD, shadow: false });
-        drawButton(ctx, a.primary, 'Try the garden', true);
-      } else if (this.stage === 'method') {
-        const methodTitleH = wrapped(ctx, 'A journey they learn by living', L.cx, titleY,
-          L.inner, L.portrait ? 21 : titleSize, INK, '800', 2, L.portrait ? 25 : 28);
-        const labels = [['Explore', 'find each light in order'], ['Listen', 'an ayah meets each discovery'], ['Remember', 'rebuild the sequence at the shrine']];
-        if (L.portrait) {
-          const rowH = Math.min(66, (L.by - contentY - 35) / 3);
-          labels.forEach((r, i) => {
-            const y = Math.max(contentY, titleY + methodTitleH + 5) + i * rowH + rowH / 2;
-            ctx.fillStyle = alpha(GOLD, .16); ctx.beginPath(); ctx.arc(L.px + 46, y, 18, 0, Math.PI * 2); ctx.fill();
-            GOL.text(ctx, String(i + 1), L.px + 46, y, { size: 13, weight: '800', color: GOLD, shadow: false });
-            GOL.text(ctx, r[0], L.px + 76, y - 8, { size: 15, weight: '800', color: INK, align: 'left', shadow: false });
-            GOL.text(ctx, r[1], L.px + 76, y + 11, { size: 11.5, weight: '600', color: SOFT, align: 'left', shadow: false });
-          });
-        } else {
-          // A wide phone gives the three ideas their own calm columns instead
-          // of crushing portrait rows together vertically.
-          labels.forEach((r, i) => {
-            const x = L.px + L.pw * (i + .5) / 3;
-            const y = titleY + methodTitleH + 22;
-            ctx.fillStyle = alpha(GOLD, .16); ctx.beginPath(); ctx.arc(x, y, 17, 0, Math.PI * 2); ctx.fill();
-            GOL.text(ctx, String(i + 1), x, y, { size: 12.5, weight: '800', color: GOLD, shadow: false });
-            GOL.text(ctx, r[0], x, y + 31, { size: 14.5, weight: '800', color: INK, shadow: false });
-            GOL.text(ctx, r[1], x, y + 50, { size: 10.5, weight: '600', color: SOFT, shadow: false });
-          });
+        const gardenY = L.portrait ? contentY + 180 : contentY + 77;
+        const gardenW = Math.min(L.inner - 24, L.portrait ? 250 : 300);
+        ctx.fillStyle = alpha('#7BA267', .16);
+        ctx.beginPath(); ctx.ellipse(L.cx, gardenY + 27, gardenW / 2, L.portrait ? 43 : 31, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = alpha(GOLD, .28); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(L.cx - gardenW * .28, gardenY + 18);
+        ctx.quadraticCurveTo(L.cx, gardenY - 35, L.cx + gardenW * .28, gardenY + 4); ctx.stroke();
+        for (let i = 0; i < 4; i++) {
+          const p = (this.t * .1 + i / 4) % 1;
+          const x = L.cx - gardenW * .28 + gardenW * .56 * p;
+          const y = gardenY + 18 - Math.sin(p * Math.PI) * 38;
+          GOL.star8(ctx, x, y, 2.5 + Math.sin(this.t * 2 + i), this.t + i, alpha(GOLD_L, .85));
         }
-        GOL.text(ctx, 'No ads  ·  no scores  ·  no reading required', L.cx, L.by - 22, { size: 11, weight: '700', color: SOFT, shadow: false });
-        drawButton(ctx, a.primary, 'Make it theirs', true);
+        GOL.drawSprite(ctx, L.cx - gardenW * .31, gardenY + 30, {
+          facing: 1, moving: false, grounded: true, idleT: this.t, t: this.t,
+          squashX: 1, squashY: 1, blink: Math.sin(this.t * .71) > .985, groundDist: 0
+        });
+        if (GOL.GEMS && GOL.GEMS[0]) GOL.drawGem(ctx, L.cx + gardenW * .31, gardenY - 4, 14, GOL.GEMS[0], this.t, { glow: 1 });
+        GOL.text(ctx, 'Explore  →  Listen  →  Remember', L.cx, gardenY + (L.portrait ? 83 : 56), {
+          size: L.portrait ? 13 : 11.5, weight: '800', color: SOFT, shadow: false
+        });
+        drawButton(ctx, a.primary, 'See how it works', true);
       } else if (this.stage === 'setup') {
         const c = setupCopy(this.os);
         GOL.text(ctx, 'Make Gems of Light theirs', L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
@@ -248,17 +213,6 @@
         });
         GOL.text(ctx, c.note, L.cx, L.by - 17, { size: 10.5, weight: '600', color: SOFT, shadow: false });
         drawButton(ctx, a.secondary, 'Not now', false); drawButton(ctx, a.primary, c.primary, true);
-      } else if (this.stage === 'sound') {
-        const soundTitleH = wrapped(ctx, 'Let’s make sure the garden can sing', L.cx, titleY,
-          L.inner, L.portrait ? 21 : titleSize, INK, '800', 2, L.portrait ? 25 : 28);
-        const sy = Math.max(contentY, titleY + soundTitleH + 8) + (L.portrait ? 42 : 23), pulse = .9 + .08 * Math.sin(this.t * 2.3);
-        ctx.fillStyle = alpha(GOLD_L, .5); ctx.beginPath(); ctx.arc(L.cx, sy, 40 * pulse, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = GOLD; ctx.beginPath(); ctx.moveTo(L.cx - 8, sy - 12); ctx.lineTo(L.cx + 14, sy); ctx.lineTo(L.cx - 8, sy + 12); ctx.fill();
-        GOL.text(ctx, this.sampled ? 'Tap again to replay' : 'Play a short sample', L.cx, sy + 57, { size: 13, weight: '700', color: SOFT, shadow: false });
-        const rn = GOL.RECITERS && GOL.RECITERS[GOL.V3.reciter] ? GOL.RECITERS[GOL.V3.reciter].name : 'current reciter';
-        GOL.text(ctx, 'Reciter: ' + rn + '  ·  tap to change', L.cx, L.by - 23, { size: 10.5, weight: '700', color: GOLD, shadow: false });
-        if (this.sampled) { drawButton(ctx, a.secondary, 'Play again', false); drawButton(ctx, a.primary, 'I can hear it', true); }
-        else drawButton(ctx, a.primary, 'Hear the garden', true);
       } else {
         GOL.text(ctx, 'Their garden is ready', L.cx, titleY, { size: titleSize + 2, weight: '800', color: INK, shadow: false });
         const py = contentY + (L.portrait ? 62 : 45);
@@ -277,7 +231,7 @@
       if (stage === 'preview') { GOL.go('parentPreview'); return; }
       GOL.go('onboarding', { stage: DRAWABLE.has(stage) ? stage : 'welcome' });
     },
-    previewComplete() { GOL.go('onboarding', { stage: 'method' }); },
+    previewComplete() { GOL.go('onboarding', { stage: 'setup' }); },
     finishHandoff() { scene.finish(); }
   };
   GOL.registerScene('onboarding', scene);

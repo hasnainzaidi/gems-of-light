@@ -8,9 +8,9 @@ Status: approved direction; implementation branch
 Installation is not onboarding. A new family moves through one canonical
 journey:
 
-`welcome → preview → method → make-it-theirs → sound → handoff → child welcome`
+`welcome → playable explanation → make-it-theirs → handoff → child welcome`
 
-The first five stages belong to a grown-up and may use concise text. After
+The first three stages belong to a grown-up and may use concise text. After
 handoff, the experience returns to the game's wordless child language.
 Platform differences may change only the contents of the make-it-theirs card;
 they must never reorder or replace stages.
@@ -33,7 +33,7 @@ they must never reorder or replace stages.
 - Entering the real first journey sets `childStarted`.
 - Existing saves with any journey progress bypass the grown-up porch.
 - `?onboarding=1` forces the porch for visual QA without clearing progress.
-- Installation is optional. “Not now” advances to sound, and does not cause a
+- Installation is optional. “Not now” advances to handoff, and does not cause a
   second prompt in the same visit.
 
 ## Scene and API contract
@@ -42,13 +42,13 @@ they must never reorder or replace stages.
 
 Owns the canonical grown-up shell and these internal stages:
 
-1. `welcome`: postcard, one-sentence promise, **Try the garden**, quiet
-   **How it works**.
-2. `method`: Explore / Listen / Remember, trust markers, **Make it theirs**.
+1. `welcome`: postcard, one-sentence promise, a living garden vignette, and one
+   required **See how it works** action.
+2. `preview`: the parent performs the real Explore / Listen / Remember loop;
+   hearing the ayah here proves sound without a separate checkpoint.
 3. `setup`: the same card shell for every platform; uses the existing platform
    detector and illustrated step language; **Not now** is always available.
-4. `sound`: one obvious sample action, **I can hear it**, optional reciter link.
-5. `handoff`: “Their garden is ready”; animated rotate-and-pass invitation.
+4. `handoff`: “Their garden is ready”; animated rotate-and-pass invitation.
 
 Public hooks:
 
@@ -61,7 +61,7 @@ Public hooks:
 A short, non-saving micro-garden built from the real engine's lightling, gem,
 recitation, bloom, and particle language. It teaches by response, not a video
 or a settings form. After the first gem settles, a grown-up card offers
-**Continue exploring** and **Set up for my child**. Home/back returns to the
+**Continue exploring** and **Make it theirs**. Home/back returns to the
 porch. It must never call `GOL.store.save()` or mutate `GOL.store.data`.
 
 ### Child handoff

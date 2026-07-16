@@ -790,3 +790,11 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   Responsive verdict: 390×844 and 844×390, Safari/in-app/Android/desktop cards,
   full preview→handoff path, returning-save path — no overlap and no console
   warnings/errors. Contract and wave ownership: `ONBOARDING-PLAN-2026-07-16.md`.
+- **ONBOARDING PHONE VERDICT — TEACH ONCE (2026-07-16, Hasnain):** the first
+  porch shipped with an empty-looking middle and made “How it works” optional;
+  later it repeated audio in a separate sound/reciter checkpoint even though
+  the parent had already heard a real ayah in the garden. Accepted correction:
+  welcome now has one clear **See how it works** action and a living garden
+  vignette; the required preview itself teaches Explore → Listen → Remember and
+  proves sound. Its completion card goes directly to optional home-screen setup,
+  then handoff. No separate method branch, sound check, or reciter choice.

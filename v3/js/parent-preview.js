@@ -159,7 +159,7 @@
 
     finish() {
       if (GOL.onboarding && GOL.onboarding.previewComplete) GOL.onboarding.previewComplete();
-      else GOL.go('onboarding', { stage: 'method' });
+      else GOL.go('onboarding', { stage: 'setup' });
     },
 
     update(dt, W, H) {
@@ -314,7 +314,7 @@
           });
         }
         pill(ctx, L.continueBtn, 'Continue exploring', false);
-        pill(ctx, L.setupBtn, 'Set up for my child', true);
+        pill(ctx, L.setupBtn, 'Make it theirs', true);
       }
     }
   };
