@@ -629,6 +629,58 @@
       };
     },
 
+    // The quiet home-screen reminder: a small parchment ribbon at top-center,
+    // shown to any un-installed browser visit (this is the landscape counterpart
+    // to the portrait "add to home screen" card). Tapping it opens the install
+    // steps; the little × dismisses it for good. Installed players, debug, and
+    // anyone who's hidden it never see it. One geometry source for tap + draw.
+    installNudge(W, H) {
+      if (GOL.isStandalone() || GOL.DEBUG) return null;
+      const ins = GOL.store.data.install || {};
+      if (ins.ribbonHidden) return null;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const w = Math.min(236, W - 140), h = 34;
+      const x = (W - w) / 2, y = sa.t * 0.5 + 14;
+      return { x, y, w, h, close: { x: x + w - 16, y: y + h / 2, r: 13 } };
+    },
+
+    // the ribbon itself, in the map's cream-and-gold chrome language: a small
+    // parchment pill with a gem-star, one gentle line, and a dismiss ×
+    drawInstallNudge(ctx, W, H) {
+      const n = this.installNudge(W, H);
+      if (!n) return;
+      const midY = n.y + n.h / 2;
+      // a soft breathing glow so the eye finds it once, then lets it be
+      const pulse = 0.5 + 0.5 * Math.sin(this.t * 1.6);
+      ctx.save();
+      ctx.shadowColor = alpha('#F0C878', 0.35 + 0.2 * pulse);
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(250,244,224,0.92)';
+      GOL.roundRect(ctx, n.x, n.y, n.w, n.h, n.h / 2); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = alpha('#C89B55', 0.8); ctx.lineWidth = 1.6;
+      GOL.roundRect(ctx, n.x, n.y, n.w, n.h, n.h / 2); ctx.stroke();
+      // a little gem-star at the left, matching the map's bloom stars
+      const starX = n.x + 22;
+      GOL.star8Path(ctx, starX, midY, 8, Math.PI / 8 + this.t * 0.2);
+      const sg = ctx.createLinearGradient(0, midY - 8, 0, midY + 8);
+      sg.addColorStop(0, GRAND.light); sg.addColorStop(1, GRAND.dark);
+      ctx.fillStyle = sg; ctx.fill();
+      // the line, gold-ink, sitting between the star and the ×
+      GOL.text(ctx, 'Add to home screen', starX + 14 + (n.w - 78) / 2, midY,
+        { size: 12.5, weight: '800', color: '#7A5A24', shadow: false });
+      // the dismiss × — a faint ring with a soft cross
+      const c = n.close;
+      ctx.strokeStyle = alpha('#8A7A55', 0.5); ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = alpha('#7A6238', 0.8); ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      const k = 3.4;
+      ctx.beginPath();
+      ctx.moveTo(c.x - k, c.y - k); ctx.lineTo(c.x + k, c.y + k);
+      ctx.moveTo(c.x + k, c.y - k); ctx.lineTo(c.x - k, c.y + k);
+      ctx.stroke(); ctx.lineCap = 'butt';
+    },
+
     update(dt, W, H) {
       this.t += dt;
       this.camFree = Math.max(0, this.camFree - dt);
@@ -642,6 +694,7 @@
         return;
       }
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const nudge = this.installNudge(W, H); // the home-screen reminder (or null)
       // The grown-ups doorway lives here on the home map now — the splash is
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
@@ -730,6 +783,11 @@
       }
 
       const drag = GOL.Input.drag;
+      // NB: the install ribbon is deliberately NOT excluded here. Excluding a
+      // region from the rail-drag also stops dragPrev being set for it, which is
+      // exactly what turns a press-release into a clickAt — so excluding the
+      // ribbon would make its tap (× and body alike) do nothing. A clean tap on
+      // it moves <12px, so it never scrolls; only a real drag-from-ribbon does.
       const dragOnBtns = drag && (
         (walkBtnsNow && walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10)) ||
         GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14);
@@ -774,6 +832,22 @@
       }
 
       if (!clickAt || this.ceremony) return;
+      // the home-screen ribbon: its × dismisses for good, its body re-opens the
+      // install steps (returning here afterward)
+      if (nudge) {
+        if (GOL.dist(clickAt.x, clickAt.y, nudge.close.x, nudge.close.y) < nudge.close.r) {
+          GOL.audio.sfx('tap');
+          GOL.store.data.install.ribbonHidden = true;
+          GOL.store.save();
+          return;
+        }
+        if (clickAt.x >= nudge.x && clickAt.x <= nudge.x + nudge.w &&
+            clickAt.y >= nudge.y && clickAt.y <= nudge.y + nudge.h) {
+          GOL.audio.sfx('tap');
+          GOL.go('install', { from: 'journeyMap' });
+          return;
+        }
+      }
       // a plain tap on the grown-ups star only pulses — it opens on hold
       if (GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
       if (GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
@@ -1013,6 +1087,8 @@
         }
         GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 12, { size: 9.5, weight: '700', color: alpha('#3B2E14', 0.55), shadow: false });
       }
+
+      this.drawInstallNudge(ctx, W, H);
 
       // touch walk buttons: back / forward along the trail
       const btns = this.walkButtons(W, H);

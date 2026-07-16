@@ -234,11 +234,48 @@
       this.splashFade = 0;
       this.wasPortrait = undefined;
       this.nudgePulse = 0;
+      // portrait is a dead state for play (you must rotate), so we use it to
+      // pitch "add to home screen" with a quiet "Just play" escape. Tapping
+      // Just play flips to the rotate nudge; install.js returns here with
+      // { proceed:true } to do the same. Installed (standalone) skips straight
+      // to the rotate nudge — its window is already full-screen.
+      this.portraitProceed = !!(params && params.proceed);
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
       this.celebrateT = this.celebrateN ? 3.2 : 0;
       if (this.celebrateN) GOL.audio.sfx('unlockLevel');
+    },
+    // The portrait "add to home screen" card + "Just play" pill. One source of
+    // geometry for update (taps) and draw. Null when there's nothing to pitch:
+    // installed (standalone), or the grown-up already tapped Just play.
+    portraitInvite(W, H) {
+      if (GOL.isStandalone() || this.portraitProceed) return null;
+      const cx = W / 2;
+      const cw = Math.min(W - 56, 360), cardH = 128;
+      const cardX = cx - cw / 2, cardY = H * 0.34;
+      const bw = Math.min(190, cw - 30), bh = 46;
+      const justBtn = { x: cx - bw / 2, y: cardY + cardH + 26, w: bw, h: bh };
+      // the whole card is tappable — it opens the full per-platform steps
+      const card = { x: cardX, y: cardY, w: cw, h: cardH };
+      return { cx, cardX, cardY, cardW: cw, cardH, card, justBtn };
+    },
+    drawPortraitInvite(ctx, inv, t) {
+      const { cx, cardX, cardY, cardW, cardH, justBtn } = inv;
+      // a parchment card on the painted meadow, the grown-ups voice
+      GOL.drawPanel(ctx, cardX, cardY, cardW, cardH, { radius: 18 });
+      // a gem-star crowning the card
+      GOL.star8(ctx, cx, cardY + 34, 12, Math.PI / 8 + t * 0.18, alpha(GRAND.base, 0.95));
+      // lead with the benefit, not the chore; the › hints the card opens the
+      // full step-by-step, and "3 taps" promises the setup is quick
+      GOL.text(ctx, 'Play Full Screen', cx, cardY + 72, { size: 21, weight: '800', color: INK, shadow: false });
+      GOL.text(ctx, '3 taps to set up  ›', cx, cardY + 100, { size: 12.5, weight: '700', color: alpha(GOLD, 0.95), shadow: false });
+      // the quiet "Just play" escape — a soft cream pill
+      ctx.fillStyle = 'rgba(253,246,228,0.92)';
+      GOL.roundRect(ctx, justBtn.x, justBtn.y, justBtn.w, justBtn.h, justBtn.h / 2); ctx.fill();
+      ctx.strokeStyle = alpha('#C89B55', 0.7); ctx.lineWidth = 1.6;
+      GOL.roundRect(ctx, justBtn.x, justBtn.y, justBtn.w, justBtn.h, justBtn.h / 2); ctx.stroke();
+      GOL.text(ctx, 'Just play', cx, justBtn.y + justBtn.h / 2, { size: 16, weight: '800', color: '#7A5A24', shadow: false });
     },
     // The tuning rows and their segmented option buttons. One source of
     // geometry, used by both hit-testing and drawing.
@@ -384,6 +421,19 @@
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
+      // the portrait "add to home screen" card: the card body opens the full
+      // steps; "Just play" flips this splash to the rotate nudge
+      if (portrait) {
+        const inv = this.portraitInvite(W, H);
+        if (inv) {
+          const hit = (b, tp) => tp.x >= b.x && tp.x <= b.x + b.w && tp.y >= b.y && tp.y <= b.y + b.h;
+          for (const tap of GOL.Input.taps) {
+            if (tap.ui) continue;
+            if (hit(inv.justBtn, tap)) { tap.ui = true; GOL.audio.unlock(); GOL.audio.sfx('tap'); this.portraitProceed = true; this.nudgePulse = 1; return; }
+            if (hit(inv.card, tap)) { tap.ui = true; GOL.audio.unlock(); GOL.audio.sfx('tap'); GOL.go('install', { from: 'title' }); return; }
+          }
+        }
+      }
       // any other tap begins: the journey map is the game's home page.
       // In portrait the map would be unplayable, so a tap only wakes audio
       // and makes the rotate invitation answer back — rotating is the door.
@@ -431,10 +481,16 @@
         GOL.text(ctx, b.key, b.x, b.y + 39, { size: 9.5, weight: '700', color: alpha('#FFFFFF', 0.72) });
       }
       if (portrait) {
-        // in the open sky between the title and the horizon (~0.39H), so the
-        // invitation never sits on the garden itself
-        drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
-        GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+        // portrait first pitches "add to home screen" (with a Just play escape);
+        // once the grown-up proceeds — or when already installed — it becomes
+        // the rotate invitation, since rotating is the door into the game
+        const inv = this.portraitInvite(W, H);
+        if (inv) {
+          this.drawPortraitInvite(ctx, inv, t);
+        } else {
+          drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
+          GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+        }
       } else if (!(this.protoBtns && this.protoBtns.length)) {
         GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }

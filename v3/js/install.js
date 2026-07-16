@@ -1,17 +1,20 @@
 // Gems of Light v3 — install.js
-// The PWA install gate: a soft block. When the game is opened in a browser
-// tab (not installed to the home screen), boot shows THIS scene instead of the
-// game — a warm, wordless-game-adjacent invitation to add Gems of Light to the
-// home screen, where it gets the full landscape screen with no Safari chrome.
+// The PWA install steps (softened from the old boot gate, 2026-07-15). A warm,
+// wordless-game-adjacent, per-platform walkthrough of adding Gems of Light to
+// the home screen, where it opens full-screen with no browser chrome. It is a
+// destination reached on demand — never a wall the game hides behind.
 //
 // This page is GROWN-UP-FACING (same precedent as grownups.js): short, gentle
-// text IS welcome here. It never guilts and never hard-blocks — a quiet
-// hold-to-continue star lets an adult slip past into the browser build.
+// text IS welcome here. A single-tap "Just play" always walks straight back
+// into the game — no hold, no guilt.
 //
-// Contract with boot (boot wires the standalone check + entry separately):
-//   • boot switches here at startup when NOT running standalone.
-//   • Exits: (a) escape hatch → sessionStorage 'golInstallSkip'='1' then
-//     GOL.go('title');  (b) Android native install accepted → GOL.go('title').
+// Contract with callers (boot no longer routes here):
+//   • Opened with GOL.go('install', { from }) from the portrait "add to home
+//     screen" card (from:'title'), the map ribbon (from:'journeyMap'), and the
+//     grown-ups page (from:'grownups'). `from` is where "Just play" returns to.
+//   • Exits: (a) "Just play" → leave() → GOL.go(from||'title'); from the title
+//     card it passes { proceed:true } so the splash flips to its rotate nudge.
+//     (b) Android native install accepted → same.
 //   • This file loads BEFORE boot.js, so the beforeinstallprompt capture below
 //     is armed in time to catch Android's event.
 (function () {
@@ -62,7 +65,6 @@
   // ------------------------------------------------------------ palette -----
   const GOLD_D = '#B98A3E', GOLD = '#D9A44A', GOLD_L = '#FFE9A8', CREAM = '#FAF4E0';
   const INK = GOL.INK, INK_SOFT = GOL.INK_SOFT;
-  const HOLD_SECS = 1.2;
 
   // =========================================================== glyphs (paths) =
   // All drawn with canvas paths — no images, no emoji. Each takes a center and
@@ -216,12 +218,20 @@
 
   // ============================================================== the scene ===
   const install = {
-    t: 0, hold: 0, shimmer: 0, fx: null, os: 'desktop', branch: 'desktop',
+    t: 0, shimmer: 0, fx: null, os: 'desktop', branch: 'desktop', from: null,
+    // These steps ARE the portrait experience (setting the game up happens
+    // upright), so own portrait — boot must render them, never overlay its
+    // "turn sideways" curtain. "Just play" is what leads to the rotate nudge.
+    ownsPortrait: true,
 
-    enter() {
-      this.t = 0; this.hold = 0; this.shimmer = 0;
+    enter(params) {
+      this.t = 0; this.shimmer = 0;
       this.os = detectOS();
       this.fx = GOL.makeFx ? GOL.makeFx() : null;
+      // where "Just play" returns to: the boot greeting has no home yet (→ the
+      // title splash), but when re-opened from the map ribbon or the grown-ups
+      // page we hand the grown-up back exactly where they were.
+      this.from = (params && params.from) || null;
     },
 
     // the illustrated steps for the current branch
@@ -291,8 +301,11 @@
 
       const headBlock = 52;
       const noteH = note ? 22 : 0;
-      const blockH = headBlock + 16 + cardH + noteH;
-      const startY = Math.max(sa.t * 0.5 + 14, (H - blockH) / 2 - 6);
+      // reserve room below for the mobile "Just play" pill so the centred block
+      // never lets it collide with the locating note on a short landscape phone
+      const footBlock = branch === 'desktop' ? 0 : 58;
+      const blockH = headBlock + 16 + cardH + noteH + footBlock;
+      const startY = Math.max(sa.t * 0.5 + 12, (H - blockH) / 2 - 6);
       const headY = startY + 14;
       const subY = headY + 22;
       const cardY = subY + 22;
@@ -302,8 +315,14 @@
         headY, subY, noteY: cardY + cardH + 15
       };
 
-      // the quiet hold-to-continue star, bottom-right (grown-ups idiom)
-      lay.star = { x: W - 46 - sa.r, y: H - 42 - sa.b * 0.5, r: 15 };
+      // the quiet one-tap "Just play" — a soft secondary pill under the card.
+      // No hold: we greet, we never wall. Present on every mobile branch (the
+      // desktop branch has its own in-card continue below).
+      if (branch !== 'desktop') {
+        const bw = Math.min(200, cardW - 40), bh = 42;
+        const by = Math.min(H - sa.b * 0.5 - 12 - bh, lay.noteY + (note ? 16 : 8));
+        lay.justBtn = { x: (W - bw) / 2, y: by, w: bw, h: bh };
+      }
 
       // Android native-install button (inside the card)
       if (branch === 'androidPrompt') {
@@ -318,11 +337,17 @@
       return lay;
     },
 
-    skip() {
-      try { sessionStorage.setItem('golInstallSkip', '1'); } catch (e) { /* private mode */ }
+    // "Just play" / done here → return to wherever this was opened from. From
+    // the portrait card we hand back { proceed:true } so the title flips to its
+    // rotate nudge rather than pitching the card again; the map ribbon and the
+    // grown-ups page just return to themselves.
+    leave() {
       if (GOL.audio) GOL.audio.sfx('tap');
-      GOL.go('title');
+      const dest = this.from || 'title';
+      GOL.go(dest, dest === 'title' ? { proceed: true } : undefined);
     },
+
+    skip() { this.leave(); },
 
     androidInstall() {
       const dp = deferredPrompt;
@@ -332,7 +357,7 @@
       try {
         dp.prompt();
         Promise.resolve(dp.userChoice).then((choice) => {
-          if (choice && choice.outcome === 'accepted') GOL.go('title');
+          if (choice && choice.outcome === 'accepted') this.leave();
           // dismissed → deferredPrompt is now null, so the branch falls back
           // to the manual steps on the next frame. No guilt, no block.
         }).catch(() => {});
@@ -363,22 +388,17 @@
           if (tap.ui) continue;
           if (hitRect(lay.contBtn, tap)) { tap.ui = true; this.skip(); return; }
         }
-        return; // desktop has no hold-star
+        return; // desktop has its own in-card continue
       }
 
-      // Mobile paths: the press-and-hold escape star
-      const star = lay.star;
-      let holding = false;
-      for (const [, p] of GOL.Input.pointers) {
-        if (GOL.dist(p.x, p.y, star.x, star.y) < star.r + 18) { holding = true; break; }
-      }
+      // Mobile paths: one gentle tap on "Just play" walks straight into the
+      // game — the invitation is a greeting, never a wall. A brief shimmer
+      // acknowledges the tap on the frame it lands.
+      this.shimmer = Math.max(0, this.shimmer - dt * 2.5);
       for (const tap of GOL.Input.taps) {
         if (tap.ui) continue;
-        if (GOL.dist(tap.x, tap.y, star.x, star.y) < star.r + 18) { tap.ui = true; this.shimmer = 1; }
+        if (hitRect(lay.justBtn, tap)) { tap.ui = true; this.shimmer = 1; this.skip(); return; }
       }
-      this.hold = holding ? Math.min(1, this.hold + dt / HOLD_SECS) : Math.max(0, this.hold - dt * 2.2);
-      this.shimmer = Math.max(0, this.shimmer - dt * 2.5);
-      if (this.hold >= 1) { this.hold = 0; if (GOL.audio) GOL.audio.sfx('unlockLevel'); this.skip(); }
     },
 
     draw(ctx, W, H) {
@@ -457,8 +477,9 @@
           { size: 11.5, weight: '600', color: alpha('#F5EDD4', 0.55), shadow: false });
       }
 
-      // the hold-to-continue star (mobile paths only)
-      if (branch !== 'desktop') this.drawHoldStar(ctx, lay.star, t);
+      // the one-tap "Just play" (mobile paths only) — a soft, unpushy
+      // secondary pill. The grown-up can always add it later from the map.
+      if (branch !== 'desktop' && lay.justBtn) this.drawJustPlay(ctx, lay.justBtn);
     },
 
     drawPillButton(ctx, b, label, warm) {
@@ -474,24 +495,24 @@
         { size: warm ? 16 : 15, weight: '800', color: '#5A431C', shadow: false });
     },
 
-    drawHoldStar(ctx, star, t) {
-      const gp = this.hold;
-      // a soft shimmer on a quick tap
+    drawJustPlay(ctx, b) {
+      // a soft shimmer acknowledges the tap on the frame it lands
       if (this.shimmer > 0) {
-        ctx.strokeStyle = alpha(GOLD_L, 0.45 * this.shimmer); ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(star.x, star.y, star.r + 6 + (1 - this.shimmer) * 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = alpha(GOLD_L, 0.5 * this.shimmer); ctx.lineWidth = 2;
+        GOL.roundRect(ctx, b.x - 3 - (1 - this.shimmer) * 5, b.y - 3 - (1 - this.shimmer) * 5,
+          b.w + 6 + (1 - this.shimmer) * 10, b.h + 6 + (1 - this.shimmer) * 10, (b.h + 6) / 2);
+        ctx.stroke();
       }
-      GOL.star8Path(ctx, star.x, star.y, star.r * 0.62, Math.PI / 8 + t * 0.12);
-      ctx.fillStyle = alpha(CREAM, 0.42 + 0.14 * Math.sin(t * 1.4)); ctx.fill();
-      ctx.strokeStyle = alpha(GOLD, 0.6); ctx.lineWidth = 1.3; ctx.stroke();
-      // the ring fills as it's held, drains when released early
-      if (gp > 0.01) {
-        ctx.strokeStyle = alpha(GOLD_L, 0.9); ctx.lineWidth = 2.4; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.arc(star.x, star.y, star.r + 5, -Math.PI / 2, -Math.PI / 2 + gp * Math.PI * 2); ctx.stroke();
-        ctx.lineCap = 'butt';
-      }
-      GOL.text(ctx, 'continue in browser (hold)', star.x - star.r - 12, star.y,
-        { size: 10.5, weight: '700', color: alpha('#F5EDD4', 0.5), align: 'right', shadow: false });
+      // a quiet cream pill with a hairline edge — clearly secondary to the gold
+      // install steps above, never competing for the eye
+      ctx.fillStyle = alpha(CREAM, 0.14);
+      GOL.roundRect(ctx, b.x, b.y, b.w, b.h, b.h / 2); ctx.fill();
+      ctx.strokeStyle = alpha(CREAM, 0.4); ctx.lineWidth = 1.4;
+      GOL.roundRect(ctx, b.x, b.y, b.w, b.h, b.h / 2); ctx.stroke();
+      GOL.text(ctx, 'Just play', b.x + b.w / 2, b.y + b.h / 2 - 6,
+        { size: 15, weight: '800', color: CREAM, shadow: false });
+      GOL.text(ctx, 'you can add it later', b.x + b.w / 2, b.y + b.h / 2 + 11,
+        { size: 10, weight: '600', color: alpha(CREAM, 0.55), shadow: false });
     }
   };
 
