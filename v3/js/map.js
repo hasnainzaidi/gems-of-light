@@ -507,6 +507,35 @@
         ((GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG) && sp.open)));
     },
 
+    // A practice door: a surah a grown-up opened on the map that the natural
+    // journey has not reached yet — open, not yet bloomed, and not the star.
+    // These sit BEYOND the breathing star, so they get their own way in (a tap
+    // or the walk buttons carry her past the unsolved blooms between). Debug and
+    // all-open already make every open world a door, so this is real play only.
+    isPracticeDoor(ri, j) {
+      if (GOL.DEBUG || GOL.EXPERIENCE.progression === 'all-open') return false;
+      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
+      return !!(sp && sp.open && !sp.done &&
+        !(this.star && this.star.ri === ri && this.star.j === j));
+    },
+
+    // How far along the walk she may travel in normal play: to the breathing
+    // star, or — when a grown-up has opened a later surah for practice — out to
+    // that opened spot, past the unsolved blooms between (a practice door is a
+    // real destination, not a wall she gets stuck on).
+    furthestReachS() {
+      let maxS = this.star ? this.spotS[this.star.ri][this.star.j] : this.map.walkSamples.len;
+      if (this.spotInfo) {
+        for (let ri = 0; ri < REGIONS.length; ri++) {
+          for (let j = 0; j < REGIONS[ri].count; j++) {
+            const sp = this.spotInfo[ri][j];
+            if (sp && sp.open) maxS = Math.max(maxS, this.spotS[ri][j]);
+          }
+        }
+      }
+      return maxS;
+    },
+
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
 
@@ -531,6 +560,16 @@
         return;
       }
       this.hero.sT = sT;
+      if (GOL.audio) GOL.audio.sfx('tap');
+    },
+
+    // Walk the trail to a reachable spot, entering when she arrives (motion
+    // belongs to the path). A grown-up's practice door uses this to speed-run
+    // there, gliding straight past the unsolved blooms between.
+    walkToSpot(ri, j) {
+      if (!this.map || !this.hero || this.ceremony) return;
+      this.hero.sT = this.spotS[ri][j];
+      this.dwell = null;
       if (GOL.audio) GOL.audio.sfx('tap');
     },
 
@@ -578,10 +617,12 @@
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
-        if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
+          if (Math.abs(this.hero.s - this.spotS[ri][j]) > 2) continue;
           const sp = this.spotInfo[ri][j];
-          if (this.isDoor(sp) && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+          // a finished bloom (in a woken island) or a grown-up's practice door
+          // both hesitate visibly, then open
+          if ((this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j)) {
             this.dwell = { t: 0, ri, j };
             return;
           }
@@ -603,11 +644,11 @@
         }
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
-        if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          if (this.isDoor(sp) && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+          const openHere = (this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j);
+          if (openHere && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this.enterWorld(ri, j);
             return;
           }
@@ -791,10 +832,12 @@
         }
         this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
-          // Debug lifts the star's cap so a grown-up can step to any built
-          // world along the whole trail; normal play stops at the next star.
+          // Debug and all-open lift the star's cap so a grown-up can step to
+          // any built world along the whole trail; normal play stops at the
+          // next star — or, if a grown-up opened a later surah for practice,
+          // walks on past the unsolved blooms to reach that opened spot.
           const maxS = (this.star && !GOL.DEBUG && GOL.EXPERIENCE.progression !== 'all-open')
-            ? this.spotS[this.star.ri][this.star.j]
+            ? this.furthestReachS()
             : this.map.walkSamples.len;
           let target = null;
           if (dir > 0) {
@@ -929,6 +972,20 @@
           return;
         }
       }
+      // a grown-up's practice door: tap to speed-run there along the trail,
+      // past the unsolved blooms between — it opens on arrival (like the star)
+      if (this.hero) {
+        for (let ri = 0; ri < REGIONS.length; ri++) {
+          for (let j = 0; j < REGIONS[ri].count; j++) {
+            if (!this.isPracticeDoor(ri, j)) continue;
+            const b = this.map.spots[ri][j];
+            if (GOL.dist(wx, wy, b.x, b.y) <= 34) {
+              this.walkToSpot(ri, j);
+              return;
+            }
+          }
+        }
+      }
       // every finished bloom is a door into its world; home leads back here
       if (this.hero) {
         for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -1002,6 +1059,14 @@
             GOL.star8Path(ctx, s.x, s.y - 7, 11 + b * 2 + pulse * 2, Math.PI / 8);
             ctx.fillStyle = alpha('#F0C878', 0.35 + b * 0.34); ctx.fill();
             ctx.strokeStyle = alpha('#B98A3E', 0.9); ctx.lineWidth = 2; ctx.stroke();
+          } else if (this.isPracticeDoor(ri, j)) {
+            // a grown-up opened this surah for practice: a green open-door
+            // star, gentler than the golden journey star — an invitation to
+            // go, not "the next step". Drawn even on a still-sleeping island.
+            const b = 0.6 + 0.4 * Math.sin(this.t * 2 + j);
+            GOL.star8Path(ctx, s.x, s.y - 7, 10 + b * 2, Math.PI / 8);
+            ctx.fillStyle = alpha('#BFE0A6', 0.28 + b * 0.28); ctx.fill();
+            ctx.strokeStyle = alpha('#6DA84E', 0.85); ctx.lineWidth = 2; ctx.stroke();
           } else if (awake) {
             // a bud: built-but-waiting stirs; a still-growing key sleeps soft
             drawBud(ctx, s.x, s.y, sp ? 0.82 : 0.5);
