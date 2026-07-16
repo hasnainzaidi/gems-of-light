@@ -344,6 +344,10 @@
     leave() {
       if (GOL.audio) GOL.audio.sfx('tap');
       const dest = this.from || 'title';
+      // The title's secondary action says "you can add it later". Respect
+      // that choice for the rest of this visit instead of immediately showing
+      // the landscape ribbon on the map. A reload offers it again gently.
+      if (dest === 'title') GOL.installNudgeDeferred = true;
       GOL.go(dest, dest === 'title' ? { proceed: true } : undefined);
     },
 

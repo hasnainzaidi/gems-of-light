@@ -642,7 +642,7 @@
     // steps; the little × dismisses it for good. Installed players, debug, and
     // anyone who's hidden it never see it. One geometry source for tap + draw.
     installNudge(W, H) {
-      if (GOL.isStandalone() || GOL.DEBUG) return null;
+      if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
       const ins = GOL.store.data.install || {};
       if (ins.ribbonHidden) return null;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };

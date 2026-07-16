@@ -764,3 +764,13 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   ship again. Hoard 5 is a whole-cairn lid, hoard 6 a capstone vault
   (two flavors on purpose). Verified end-to-end in-engine: land on lid
   → 0.25s beat → open → child settles at the gem.
+- **FRESH-PLAYER ONBOARDING VERDICT (2026-07-16, Codex browser pass):**
+  staging loaded without console errors across landscape, iPhone Safari,
+  iPhone in-app-browser, Android-install, and portrait→landscape handoffs.
+  The postcard, setup cards, one-tap escape, and rotation door all read
+  cleanly at 390×844 / 844×390. Two papercuts were accepted for polish:
+  (1) choosing “Just play — you can add it later” now defers the map's
+  install ribbon for the rest of that visit instead of immediately asking
+  again; a reload may invite again, while the grown-ups page remains an
+  intentional route; (2) the `v3 · sound · echo` diagnostic is debug-only,
+  keeping production's first postcard wholly in the child's voice.

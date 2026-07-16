@@ -414,7 +414,18 @@
           const hit = (b, tp) => tp.x >= b.x && tp.x <= b.x + b.w && tp.y >= b.y && tp.y <= b.y + b.h;
           for (const tap of GOL.Input.taps) {
             if (tap.ui) continue;
-            if (hit(inv.justBtn, tap)) { tap.ui = true; GOL.audio.unlock(); GOL.audio.sfx('tap'); this.portraitProceed = true; this.nudgePulse = 1; return; }
+            if (hit(inv.justBtn, tap)) {
+              tap.ui = true;
+              GOL.audio.unlock();
+              GOL.audio.sfx('tap');
+              this.portraitProceed = true;
+              // "Just play" promises that setup can wait. Do not repeat the
+              // same invitation on the very next screen; a reload starts a
+              // fresh session, and the grown-ups page still keeps a doorway.
+              GOL.installNudgeDeferred = true;
+              this.nudgePulse = 1;
+              return;
+            }
             if (hit(inv.card, tap)) { tap.ui = true; GOL.audio.unlock(); GOL.audio.sfx('tap'); GOL.go('install', { from: 'title' }); return; }
           }
         }
@@ -503,8 +514,12 @@
         }
         GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
       }
-      const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
-      GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
+      // Keep engine diagnostics out of the child's first impression. They are
+      // still useful in an explicit debug session alongside the DEBUG badge.
+      if (GOL.DEBUG) {
+        const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
+        GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
+      }
       if (this.settingsOpen) this.drawSettings(ctx, W, H);
       GOL.drawVignette(ctx, W, H, 0.12);
     }
