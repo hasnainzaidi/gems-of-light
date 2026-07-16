@@ -1,7 +1,8 @@
 // Gems of Light v3 — dsl.js
 // The level-recipe builder, carried over from v1's levels.js, plus the two
 // spots every v3 world needs: the campfire clearing and the shrine door.
-// Tile codes: 0 air, 1 ground/stone, 2 one-way slab, 3 water, 4 carved stone.
+// Tile codes: 0 air, 1 ground/stone, 2 one-way slab, 3 water, 4 carved stone,
+// 5 offering stone (a pale lid that opens under the child's feet — see b.lid).
 (function () {
   const GOL = window.GOL;
   const TILE = GOL.TILE;
@@ -26,6 +27,10 @@
       slab(x0, x1, row) { for (let x = x0; x <= x1; x++) this.set(x, row, 2); return b; },
       block(x0, x1, y0, y1) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) this.set(x, y, 1); return b; },
       stoneBlock(x0, x1, y0, y1) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) this.set(x, y, 4); return b; },
+      // an offering stone: pale carved stone that stays solid until the child
+      // STANDS on it — then the whole contiguous group opens (tiles → air)
+      // with a soft burst, revealing what it sheltered. Reseals every visit.
+      lid(x0, x1, y0, y1) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) this.set(x, y, 5); return b; },
       stone(x, row) {
         row = row == null ? 13 : row;
         this.set(x, row, 2);
@@ -124,7 +129,8 @@
         return b;
       },
       surface(x) {
-        for (let y = 0; y < h; y++) { const t = this.get(x, y); if (t === 1 || t === 2 || t === 4) return y; }
+        // an offering stone (5) counts: it is solid ground until it opens
+        for (let y = 0; y < h; y++) { const t = this.get(x, y); if (t === 1 || t === 2 || t === 4 || t === 5) return y; }
         return h;
       }
     };

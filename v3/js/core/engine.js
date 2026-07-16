@@ -127,7 +127,9 @@
 
   // -------------------------------------------------------------- physics --
   // Tile codes: 0 air, 1 earth, 2 one-way slab, 3 water, 4 carved stone.
-  const SOLID = (t) => t === 1 || t === 4;
+  // 5 is the offering stone: solid exactly like carved stone until adventure
+  // opens its group (its tiles are rewritten to air, so no state lives here)
+  const SOLID = (t) => t === 1 || t === 4 || t === 5;
   GOL.isSolid = SOLID;
   const P = {
     WALK: 205, ACCEL: 1250, DECEL: 1500,

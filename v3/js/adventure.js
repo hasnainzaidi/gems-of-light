@@ -170,6 +170,36 @@
       });
       // foreground curtains that soften when the wanderer steps behind them
       this.occs = (L.occluders || []).map((o) => ({ o, fade: 1 }));
+      // offering stones (tile 5): gather the contiguous 4-neighbor groups.
+      // Each stays solid until the child STANDS on it, then the whole group
+      // opens a beat later (tiles → air). buildPrototype pours fresh tiles
+      // every enter, so every lid begins the visit resealed — like the gems.
+      this.lids = [];
+      this.lidAt = new Map();
+      {
+        const grouped = new Set();
+        for (let y = 0; y < L.h; y++) for (let x = 0; x < L.w; x++) {
+          if (L.tiles[y * L.w + x] !== 5 || grouped.has(x + ',' + y)) continue;
+          const g = { cells: [], tops: [], open: false, armT: -1, phase: this.lids.length * 1.7, x0: x, x1: x };
+          const q = [[x, y]];
+          grouped.add(x + ',' + y);
+          while (q.length) {
+            const [cx, cy] = q.pop();
+            g.cells.push({ x: cx, y: cy });
+            g.x0 = Math.min(g.x0, cx); g.x1 = Math.max(g.x1, cx);
+            this.lidAt.set(cx + ',' + cy, g);
+            if (cy === 0 || L.tiles[(cy - 1) * L.w + cx] === 0) g.tops.push({ x: cx, y: cy });
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+              const nx = cx + dx, ny = cy + dy, k = nx + ',' + ny;
+              if (nx < 0 || nx >= L.w || ny < 0 || ny >= L.h || grouped.has(k)) continue;
+              if (L.tiles[ny * L.w + nx] !== 5) continue;
+              grouped.add(k);
+              q.push([nx, ny]);
+            }
+          }
+          this.lids.push(g);
+        }
+      }
       // guiding-light boxes: closed until the wanderer reaches them, then each
       // releases one orb of noor that kindles the path ahead. `this.orb` holds
       // the single live orb (only one flies at a time). Inert in daylit worlds.
@@ -488,6 +518,24 @@
           GOL.audio.sfx('bounce');
           this.fx.spawn('ring', p.x, p.y - 18, { color: '#F5B8C4', size: 20 });
           for (let i = 0; i < 7; i++) this.fx.spawn('sparkle', p.x + GOL.rnd(-16, 16), p.y - 16, { color: i % 2 ? '#F5B8C4' : '#FFF3C4' });
+        }
+      }
+
+      // offering stones: standing on a lid group arms it; a short beat later
+      // the whole group breathes open. Once armed it opens even if the child
+      // hops off mid-beat — a step is a step, never a puzzle of dwelling.
+      if (this.lids.length) {
+        if (pl.grounded && !pl.rescue) {
+          const fy = Math.floor((pl.y + 2) / TILE);
+          for (const ox of [-15, 0, 15]) {
+            const g = this.lidAt.get(Math.floor((pl.x + ox) / TILE) + ',' + fy);
+            if (g && !g.open && g.armT < 0) g.armT = 0.25;
+          }
+        }
+        for (const g of this.lids) {
+          if (g.open || g.armT < 0) continue;
+          g.armT -= dt;
+          if (g.armT <= 0) this.openLid(g);
         }
       }
 
@@ -1235,6 +1283,24 @@
       pl.lastSafe = { x: pl.x, y: pl.y };
     },
 
+    // The offering stone answers: the whole group turns to air with a soft
+    // burst of dust and light. Physics follows the tiles (engine SOLID reads
+    // them live) and the draw pass simply stops painting the group — the
+    // static terrain never held these cells. Visual only; no sound.
+    openLid(g) {
+      const L = this.L;
+      g.open = true;
+      for (const c of g.cells) L.tiles[c.y * L.w + c.x] = 0;
+      for (const c of g.cells) {
+        const cx = (c.x + 0.5) * TILE, cy = (c.y + 0.5) * TILE;
+        for (let i = 0; i < 4; i++) this.fx.spawn('dust', cx + GOL.rnd(-16, 16), cy + GOL.rnd(-14, 14), {});
+        for (let i = 0; i < 3; i++) this.fx.spawn('sparkle', cx + GOL.rnd(-16, 16), cy + GOL.rnd(-16, 16), { color: i % 2 ? '#FFE9A8' : '#FFF6DC' });
+      }
+      for (const c of g.tops) {
+        this.fx.spawn('ring', (c.x + 0.5) * TILE, c.y * TILE, { color: '#FFF3C4', size: 16 });
+      }
+    },
+
     // A single flock bird's world-space position at time `tt`: a loose
     // wheeling orbit around the anchor, with a gentle sinusoidal spread. A
     // sweeper bird also arcs a long way across the sky and back once every
@@ -1320,6 +1386,18 @@
         }
       }
       for (const w of this.waterRects) GOL.drawWater(ctx, w.x, w.y, w.w, w.h, t, P);
+
+      // offering stones are painted live, never into the static terrain — an
+      // opened group simply stops being drawn. A breathing seam of light
+      // along each top edge wordlessly invites the child to step up.
+      for (const g of this.lids) {
+        if (g.open) continue;
+        if ((g.x1 + 1) * TILE < cam.x - 60 || g.x0 * TILE > cam.x + cam.viewW + 60) continue;
+        for (const c of g.cells) ctx.drawImage(this.atlas.lid, c.x * TILE, c.y * TILE);
+        const k = 0.2 + 0.12 * Math.sin(t * 2.1 + g.phase);
+        ctx.fillStyle = alpha('#FFE9A8', k);
+        for (const c of g.tops) ctx.fillRect(c.x * TILE + 4, c.y * TILE + 1, TILE - 8, 3);
+      }
 
       // the prototype's own landmark (a great tree, lighthouse, ruin…),
       // drawn behind the props so life gathers in front of it. `prog` is the

@@ -745,3 +745,22 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   the game's own drawFountain shape. Share card regenerated as
   assets/share-postcard-v2.jpg (v1 removed; fresh URL busts crawler
   caches).
+- **FIRST VERDICTS ON THE MOMENTUM & PATIENCE WAVE (Hasnain, 2026-07-15
+  staging playtest):** (1) IKHLAS: the out-and-back gem order ("the
+  jumbled order is weird and unexpected") — REJECTED; the world reflows
+  linearly, gems 1→4 left to right (x 19/41/55/67), campfire/door past
+  the last gem; the monument keeps its center-stage pillar and
+  prog-driven rings, and the final ring encloses the new campfire
+  clearing. (2) HUMAZAH: two hoard-cairns (hoards 5 and 6 — the audit
+  found the real pair) were sealed boxes with no way in — but "i like
+  the mechanic," so the fix is the OFFERING STONE (Hasnain's "special
+  box you step on that opens it"): tile 5 + `b.lid(x0,x1,y0,y1)` — pale
+  carved stone with a breathing glow seam, solid until the child STANDS
+  on it, then the whole contiguous group dissolves in a silent
+  dust-sparkle burst and the child sinks gently into the pocket beside
+  the gem. Standing on the hoard is what opens it. Per-visit reseal.
+  The checker now opens lids from reachable tops in a fixpoint BFS and
+  ERRORS on any never-openable lid — this class of sealed-box bug can't
+  ship again. Hoard 5 is a whole-cairn lid, hoard 6 a capstone vault
+  (two flavors on purpose). Verified end-to-end in-engine: land on lid
+  → 0.25s beat → open → child settles at the gem.

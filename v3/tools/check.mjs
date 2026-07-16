@@ -79,22 +79,36 @@ for (const tgt of targets) {
   if (def.endPalette && !GOL.PALETTES[def.endPalette]) errs.push('unknown endPalette "' + def.endPalette + '"');
 
   const get = (x, y) => (x < 0 || x >= L.w ? 1 : y < 0 ? 0 : y >= L.h ? 3 : L.tiles[y * L.w + x]);
+  // 5 is the offering stone: solid (standable) until stood upon, then its
+  // whole contiguous group opens — the walk below runs to fixpoint over that
   const standable = (x, y) =>
-    (get(x, y) === 1 || get(x, y) === 2 || get(x, y) === 4) && get(x, y - 1) === 0 && get(x, y - 2) === 0;
+    (get(x, y) === 1 || get(x, y) === 2 || get(x, y) === 4 || get(x, y) === 5) && get(x, y - 1) === 0 && get(x, y - 2) === 0;
 
-  // nodes: standable cells, plus cells along every mover's path (leaf/raft
-  // tops are places the player can stand)
-  const nodes = new Set();
-  for (let x = 0; x < L.w; x++) for (let y = 0; y < L.h; y++) if (standable(x, y)) nodes.add(x + ',' + y);
-  for (const m of L.moverDefs || []) {
-    if (m.kind === 'h' || m.kind === 'raft') {
-      const row = Math.floor(m.y / TILE);
-      for (let x = Math.floor(m.x0 / TILE); x <= Math.floor(m.x1 / TILE); x++) nodes.add(x + ',' + row);
-    } else {
-      const col = Math.floor(m.x / TILE);
-      for (let r = Math.floor(m.y0 / TILE); r <= Math.floor(m.y1 / TILE); r++) nodes.add(col + ',' + r);
+  // offering-stone lids: gather the contiguous 4-neighbor tile-5 groups now,
+  // so reaching a standing spot on any group can open it (tiles → air)
+  const lidGroups = [];
+  {
+    const grouped = new Set();
+    for (let y = 0; y < L.h; y++) for (let x = 0; x < L.w; x++) {
+      if (get(x, y) !== 5 || grouped.has(x + ',' + y)) continue;
+      const cells = [];
+      const lq = [[x, y]];
+      grouped.add(x + ',' + y);
+      while (lq.length) {
+        const [cx, cy] = lq.pop();
+        cells.push([cx, cy]);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = cx + dx, ny = cy + dy, k = nx + ',' + ny;
+          if (nx < 0 || nx >= L.w || ny < 0 || ny >= L.h || grouped.has(k)) continue;
+          if (get(nx, ny) !== 5) continue;
+          grouped.add(k);
+          lq.push([nx, ny]);
+        }
+      }
+      lidGroups.push({ cells, open: false });
     }
   }
+
   if (!L.start) errs.push('no start');
   if (!L.campfire) errs.push('no campfire');
   if (!L.door) errs.push('no door');
@@ -102,27 +116,58 @@ for (const tgt of targets) {
   const startX = Math.floor(L.start.x / TILE);
   const startY = L.surface(startX);
   const key = startX + ',' + startY;
-  if (!nodes.has(key)) errs.push('start not standable at ' + key);
-  const seen = new Set([key]);
-  const q = [[startX, startY]];
   const JUMP_UP = 3, JUMP_ACROSS = 4;
   const padAt = new Set((L.pads || []).map((p) => p.tx + ',' + p.ty));
-  while (q.length) {
-    const [x, y] = q.shift();
-    const onPad = padAt.has(x + ',' + y);
-    const upMax = onPad ? 6 : JUMP_UP;
-    for (let dx = -JUMP_ACROSS; dx <= JUMP_ACROSS; dx++) {
-      for (let dy = -upMax; dy <= L.h; dy++) {
-        const nx = x + dx, ny = y + dy;
-        if (nx < 0 || nx >= L.w || ny < 0 || ny >= L.h) continue;
-        if (dy < 0 && Math.abs(dx) + Math.abs(dy) > (onPad ? 8 : 5)) continue;
-        if (dy > 0 && Math.abs(dx) > JUMP_ACROSS) continue;
-        const k = nx + ',' + ny;
-        if (!nodes.has(k) || seen.has(k)) continue;
-        seen.add(k);
-        q.push([nx, ny]);
+
+  // flood-fill to fixpoint: whenever the walker can stand on a closed lid
+  // group, the group opens (its tiles become air) and the flood runs again —
+  // opening a lid may reveal standing room that reaches the next one
+  let seen;
+  for (let pass = 0; ; pass++) {
+    // nodes: standable cells, plus cells along every mover's path (leaf/raft
+    // tops are places the player can stand)
+    const nodes = new Set();
+    for (let x = 0; x < L.w; x++) for (let y = 0; y < L.h; y++) if (standable(x, y)) nodes.add(x + ',' + y);
+    for (const m of L.moverDefs || []) {
+      if (m.kind === 'h' || m.kind === 'raft') {
+        const row = Math.floor(m.y / TILE);
+        for (let x = Math.floor(m.x0 / TILE); x <= Math.floor(m.x1 / TILE); x++) nodes.add(x + ',' + row);
+      } else {
+        const col = Math.floor(m.x / TILE);
+        for (let r = Math.floor(m.y0 / TILE); r <= Math.floor(m.y1 / TILE); r++) nodes.add(col + ',' + r);
       }
     }
+    if (pass === 0 && !nodes.has(key)) errs.push('start not standable at ' + key);
+    seen = new Set([key]);
+    const q = [[startX, startY]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      const onPad = padAt.has(x + ',' + y);
+      const upMax = onPad ? 6 : JUMP_UP;
+      for (let dx = -JUMP_ACROSS; dx <= JUMP_ACROSS; dx++) {
+        for (let dy = -upMax; dy <= L.h; dy++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || nx >= L.w || ny < 0 || ny >= L.h) continue;
+          if (dy < 0 && Math.abs(dx) + Math.abs(dy) > (onPad ? 8 : 5)) continue;
+          if (dy > 0 && Math.abs(dx) > JUMP_ACROSS) continue;
+          const k = nx + ',' + ny;
+          if (!nodes.has(k) || seen.has(k)) continue;
+          seen.add(k);
+          q.push([nx, ny]);
+        }
+      }
+    }
+    let openedAny = false;
+    for (const g of lidGroups) {
+      if (g.open || !g.cells.some(([cx, cy]) => seen.has(cx + ',' + cy))) continue;
+      g.open = true;
+      openedAny = true;
+      for (const [cx, cy] of g.cells) L.tiles[cy * L.w + cx] = 0;
+    }
+    if (!openedAny) break;
+  }
+  for (const g of lidGroups) {
+    if (!g.open) errs.push('offering stone never openable (no reachable standing spot) at ' + g.cells[0][0] + ',' + g.cells[0][1]);
   }
 
   const airReach = (gx, gy) => {
@@ -242,7 +287,8 @@ for (const tgt of targets) {
 
   const label = `${tag} ${def.name} (${def.key}) ${L.w}x${L.h}, ${L.gems.length} gems, ` +
     `${(L.seeds || []).length} seeds, ${(L.pads || []).length} bounce, ${(L.moverDefs || []).length} movers` +
-    (L.weather ? ', weather:' + L.weather : '') + (L.occluders && L.occluders.length ? ', ' + L.occluders.length + ' occluders' : '');
+    (L.weather ? ', weather:' + L.weather : '') + (L.occluders && L.occluders.length ? ', ' + L.occluders.length + ' occluders' : '') +
+    (lidGroups.length ? ', ' + lidGroups.length + ' lids' : '');
   if (errs.length) { failures++; console.log('✗ ' + label); errs.forEach((e) => console.log('   - ' + e)); }
   else console.log('✓ ' + label + ` — reachable cells: ${seen.size}`);
 }
