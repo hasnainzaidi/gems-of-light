@@ -36,9 +36,13 @@ assert.match(engine, /get\(['"]showcase['"]\)\s*===\s*['"]1['"]/,
 assert.match(engine, /Object\.freeze\(showcase\s*\?/,
   'experience profiles must be immutable and selected in one place');
 const showcaseProfile = between(engine, "id: 'showcase'", "id: 'learning'", 'Showcase profile');
-for (const capability of ['recitation', 'arabic', 'shrine', 'remembering', 'onboarding', 'grownups', 'install']) {
+for (const capability of ['recitation', 'arabic', 'shrine', 'remembering', 'grownups']) {
   assert.match(showcaseProfile, new RegExp(`${capability}:\\s*false`),
     `Showcase profile must disable ${capability}`);
+}
+for (const capability of ['onboarding', 'install']) {
+  assert.match(showcaseProfile, new RegExp(`${capability}:\\s*true`),
+    `Showcase profile must retain ${capability}`);
 }
 assert.match(showcaseProfile, /progression:\s*['"]all-open['"]/,
   'Showcase profile must explicitly request all-open progression');
@@ -66,6 +70,15 @@ assert.match(engine, /localStorage\.setItem\(KEY\s*,/,
   'save writes must use the selected experience key');
 assert.doesNotMatch(engine, /localStorage\.(?:get|set)Item\(\s*['"]gemsOfLight/,
   'the store must not bypass the selected experience namespace');
+assert.match(engine, /manifest-showcase\.webmanifest/,
+  'Showcase must select its own install manifest');
+
+for (const name of ['manifest-showcase.webmanifest', '../manifest-showcase.webmanifest']) {
+  const manifest = JSON.parse(read(name));
+  assert.equal(manifest.start_url, './?showcase=1', `${name} must reopen in Showcase`);
+  assert.doesNotMatch(manifest.description, /qur|surah|ayah|memor/i,
+    `${name} description must remain secular`);
+}
 
 const boot = read('js/boot.js');
 assert.match(boot, /localStorage\.getItem\(GOL\.EXPERIENCE\.configKey\)/,
@@ -75,9 +88,11 @@ assert.match(boot, /localStorage\.setItem\(GOL\.EXPERIENCE\.configKey\s*,/,
 assert.doesNotMatch(boot, /localStorage\.(?:get|set)Item\(\s*['"]gemsOfLight/,
   'config persistence must not bypass the selected experience namespace');
 assert.match(boot, /GOL\.EXPERIENCE\.onboarding\s*&&[\s\S]{0,180}(?:needsPorch|forceOnboarding|parentComplete)/,
-  'Showcase must bypass onboarding even on a clean save');
+  'both experiences must route clean saves through their onboarding');
 assert.match(boot, /needsPorch\s*\?\s*['"]onboarding['"]/,
-  'ordinary clean saves must retain the onboarding route');
+  'clean saves must retain the onboarding route');
+assert.match(boot, /GOL\.EXPERIENCE\.showcase[\s\S]{0,120}showcaseV[\s\S]{0,180}parentComplete\s*=\s*false/,
+  'existing Showcase saves must receive the new onboarding once');
 
 const audio = read('js/core/audio.js');
 for (const [method, next] of [

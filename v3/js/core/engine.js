@@ -15,7 +15,7 @@
   GOL.EXPERIENCE = Object.freeze(showcase ? {
     id: 'showcase', showcase: true,
     recitation: false, arabic: false, shrine: false, remembering: false,
-    progression: 'all-open', onboarding: false, grownups: false, install: false,
+    progression: 'all-open', onboarding: true, grownups: false, install: true,
     saveKey: 'gemsOfLight.v3.showcase', configKey: 'gemsOfLight.v3.showcase.cfg'
   } : {
     id: 'learning', showcase: false,
@@ -23,6 +23,13 @@
     progression: 'journey', onboarding: true, grownups: true, install: true,
     saveKey: 'gemsOfLight.v3', configKey: 'gemsOfLight.v3cfg'
   });
+  // Android/desktop PWA installs launch the manifest's start_url. Showcase
+  // needs its own manifest so an installed guest garden does not silently
+  // reopen as the learning game after the browser closes.
+  if (showcase) {
+    const manifest = document.querySelector('link[rel="manifest"]');
+    if (manifest) manifest.href = new URL('manifest-showcase.webmanifest', location.href).href;
+  }
 
   // ---------------------------------------------------------------- input --
   const Input = {
