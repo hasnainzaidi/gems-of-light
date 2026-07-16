@@ -53,6 +53,7 @@
   GOL.worldOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
+    if (GOL.EXPERIENCE && GOL.EXPERIENCE.progression === 'all-open') return !!w.build;
     if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldProgressOpen(n)) return true;
     return !!(w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));

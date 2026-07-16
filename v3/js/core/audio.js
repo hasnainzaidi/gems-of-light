@@ -118,6 +118,7 @@
     // service worker (cache-first for mp3s) keep each ayah for instant — and
     // offline — playback, with no element-count pressure.
     preloadSurah(surah) {
+      if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) return;
       const rec = this._reciter();
       for (const v of surah.verses) {
         try { fetch(rec.local + this.key(surah.id, v.n) + '.mp3').catch(() => {}); } catch (e) { /* ignore */ }
@@ -125,6 +126,10 @@
     },
     // Play one ayah. Always eventually calls onend (never blocks the child).
     playVerse(surahId, n, onend) {
+      if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) {
+        if (onend) setTimeout(onend, 0);
+        return null;
+      }
       this.stopSpeak(); // narration always yields to the Qur'an
       this.stopRecitation();
       return this._verse(surahId, n, onend, false);
@@ -133,6 +138,7 @@
     // child toward its gem. Quieter than a recitation and never allowed
     // to interrupt one.
     echoVerse(surahId, n, vol) {
+      if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) return null;
       if (this.reciting || this._speaking) return null;
       const h = this._verse(surahId, n, null, false);
       h.el.volume = Math.max(0.05, Math.min(1, vol == null ? 0.3 : vol));
@@ -208,6 +214,10 @@
     // as each echo begins. Nothing is ever silent — talqeen modeled, not asked
     // for. When echoVol is absent, behavior is exactly as before (breath path).
     playSurah(surah, cb) {
+      if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) {
+        if (cb && cb.onend) setTimeout(cb.onend, 0);
+        return null;
+      }
       this.stopSpeak();
       this.stopRecitation();
       const breathMs = (cb && cb.breath != null ? cb.breath : 0.42) * 1000;
