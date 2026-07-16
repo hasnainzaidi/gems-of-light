@@ -5,7 +5,7 @@
 // CACHE-FIRST for recitations (.mp3) and fonts: immutable once heard —
 // a surah once played is a surah kept, even offline.
 // The /v1/ archive and /v2/ lab ride the same rules.
-const CACHE = 'gems-of-light-v30';
+const CACHE = 'gems-of-light-v31';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'
@@ -31,7 +31,8 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   const isAudio = url.pathname.endsWith('.mp3');
-  const isFont = url.hostname.includes('fonts.g');
+  // Fonts are self-hosted now (same-origin .woff2) — no fonts.g host to match.
+  const isFont = url.pathname.endsWith('.woff2');
 
   // recitations + fonts: cache-first (immutable), fill the cache on first hear
   if (isAudio || isFont) {

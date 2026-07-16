@@ -7,6 +7,14 @@
   GOL.VERSION = 'v3.0';
   GOL.AUDIO_BASE = '../audio/'; // narration/voice files live at the repo root
 
+  // Offline-only mode: never reach a third-party origin at runtime. The web
+  // build keeps the everyayah.com streaming fallback as a safety net (false);
+  // the native App Store build sets window.GOL_OFFLINE_ONLY=true before boot,
+  // so the remote reciter fetch is disabled and every asset is bundled-local.
+  // ?offline=1 forces it on for testing. See v3/APP-STORE-PLAN.md.
+  GOL.OFFLINE_ONLY = (window.GOL_OFFLINE_ONLY === true) ||
+    new URLSearchParams(location.search).get('offline') === '1';
+
   // ------------------------------------------------------------ reciters --
   // one voice at a time, chosen in the tuning panel; local files first,
   // everyayah.com streaming as the fallback. Mishary is the default voice

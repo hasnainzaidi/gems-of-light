@@ -41,3 +41,6 @@ verdict is logged.
       needs a child playtest before it's adopted or parked)
 - [ ] Voice input / recitation checking (v2's QRC lab is the starting
       point: `v2/RECITATION-CHECKER-PLAN.md`)
+- [ ] iOS App Store release (no Swift rewrite — Capacitor WebView wrap):
+      Phase 1 (self-contained web build) shipping now; Phases 2–4
+      (native shell, compliance, submission) — see `APP-STORE-PLAN.md`

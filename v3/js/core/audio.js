@@ -163,8 +163,10 @@
       const onError = () => {
         // local miss or a stalled load: fall back to the streaming reciter
         // ONCE, and actually resume playback on it — otherwise the fallback
-        // loads but stays silent (the child pauses and hears nothing)
-        if (!triedRemote) {
+        // loads but stays silent (the child pauses and hears nothing).
+        // OFFLINE_ONLY (the native App Store build) forbids the third-party
+        // fetch entirely — finish gracefully instead of reaching everyayah.com.
+        if (!triedRemote && !GOL.OFFLINE_ONLY && rec.remote) {
           triedRemote = true;
           el.src = rec.remote + key + '.mp3';
           el.load();
