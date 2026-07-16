@@ -5,8 +5,8 @@
   'use strict';
   const GOL = window.GOL;
   const { alpha } = GOL.color;
-  const STAGES = ['welcome', 'preview', 'setup', 'handoff'];
-  const DRAWABLE = new Set(['welcome', 'setup', 'handoff']);
+  const STAGES = ['welcome', 'preview', 'knowledge', 'setup', 'handoff'];
+  const DRAWABLE = new Set(['welcome', 'knowledge', 'setup', 'handoff']);
   const CREAM = '#FAF4E0', INK = GOL.INK || '#3E5340';
   const SOFT = GOL.INK_SOFT || '#6B7D66', GOLD = '#B98A3E', GOLD_L = '#FFE9A8';
   const q = new URLSearchParams(location.search);
@@ -106,9 +106,13 @@
   const scene = {
     ownsPortrait: true,
     stage: 'welcome', t: 0, stageT: 0, os: 'desktop', buttons: {}, installPending: false, bd: null,
+    journeyStage: null,
     enter(params) {
       this.t = 0; this.stageT = 0; this.installPending = false; this.os = platform();
       this.bd = GOL.buildBackdrop ? GOL.buildBackdrop('falaq', 814) : null;
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : {};
+      const draft = ob.journeyStageDraft != null ? ob.journeyStageDraft : ob.journeyStage;
+      this.journeyStage = Number.isInteger(draft) ? draft : null;
       const requested = params && params.stage;
       this.stage = DRAWABLE.has(requested) ? requested : (qaStage() || 'welcome');
     },
@@ -123,9 +127,10 @@
       const portrait = H > W;
       const marginX = Math.max(18, sa.l + 14, sa.r + 14);
       const pw = Math.min(portrait ? 390 : 680, W - marginX * 2);
-      const top = Math.max(sa.t + 14, portrait ? H * .16 : 46);
+      const knowledge = this.stage === 'knowledge';
+      const top = Math.max(sa.t + 14, portrait ? (knowledge ? H * .09 : H * .16) : (knowledge ? 22 : 46));
       const bottom = Math.max(sa.b + 16, 18);
-      const ph = Math.min(portrait ? 490 : 270, H - top - bottom);
+      const ph = Math.min(portrait ? (knowledge ? 560 : 490) : (knowledge ? 340 : 270), H - top - bottom);
       const px = (W - pw) / 2, py = top;
       const bh = Math.max(40, Math.min(50, ph * .15));
       const by = py + ph - bh - 20;
@@ -138,6 +143,28 @@
         return { secondary: { x: L.cx - w - gap / 2, y: L.by, w, h: L.bh }, primary: { x: L.cx + gap / 2, y: L.by, w, h: L.bh } };
       }
       return { primary: { x: L.cx - max / 2, y: L.by, w: max, h: L.bh } };
+    },
+    stageCards(L) {
+      const choices = GOL.JOURNEY_STAGE_CHOICES || [];
+      const cols = L.portrait ? 1 : 2;
+      const rows = Math.ceil(choices.length / cols);
+      const gapX = 10, gapY = 9;
+      const gridX = L.px + 26;
+      const gridY = L.py + (L.portrait ? 135 : 104);
+      const gridW = L.pw - 52;
+      const availableH = Math.max(80, L.by - gridY - 14);
+      const h = Math.min(L.portrait ? 74 : 68, (availableH - gapY * (rows - 1)) / rows);
+      const w = (gridW - gapX * (cols - 1)) / cols;
+      return choices.map((choice, i) => {
+        const col = i % cols, row = Math.floor(i / cols);
+        return { choice, x: gridX + col * (w + gapX), y: gridY + row * (h + gapY), w, h };
+      });
+    },
+    saveJourneyStage() {
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (!ob) return;
+      ob.journeyStageDraft = this.journeyStage;
+      GOL.store.save();
     },
     finish() {
       if (GOL.completeParentOnboarding) GOL.completeParentOnboarding();
@@ -160,9 +187,23 @@
       const L = this.layout(W, H), a = this.actions(L); this.buttons = a;
       for (const tap of GOL.Input.taps) {
         if (tap.ui) continue;
+        if (this.stage === 'knowledge') {
+          const card = this.stageCards(L).find((b) => hit(b, tap));
+          if (card) {
+            tap.ui = true;
+            this.journeyStage = card.choice.index;
+            this.saveJourneyStage();
+            if (GOL.audio) GOL.audio.sfx('tap');
+            return;
+          }
+        }
         if (hit(a.primary, tap)) {
           tap.ui = true;
           if (this.stage === 'welcome') GOL.go('parentPreview');
+          else if (this.stage === 'knowledge') {
+            if (this.journeyStage == null) return;
+            this.saveJourneyStage(); this.setStage('setup');
+          }
           else if (this.stage === 'setup') this.finishSetup();
           else if (this.stage === 'handoff') this.finish();
           return;
@@ -214,6 +255,33 @@
           size: L.portrait ? 13 : 11.5, weight: '800', color: SOFT, shadow: false
         });
         drawButton(ctx, a.primary, 'See how it works', true);
+      } else if (this.stage === 'knowledge') {
+        GOL.text(ctx, 'Make it their garden', L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
+        GOL.text(ctx, 'Where are they in their memorisation journey?', L.cx, contentY, {
+          size: bodySize, weight: '700', color: SOFT, shadow: false
+        });
+        GOL.text(ctx, 'Choose the closest fit — the surahs below are just examples.', L.cx, contentY + (L.portrait ? 23 : 18), {
+          size: L.portrait ? 11.5 : 10.5, weight: '700', color: alpha(SOFT, .78), shadow: false
+        });
+        for (const b of this.stageCards(L)) {
+          const selected = this.journeyStage === b.choice.index;
+          ctx.fillStyle = selected ? alpha('#DCEBCB', .98) : alpha('#F7EFD9', .72);
+          GOL.roundRect(ctx, b.x, b.y, b.w, b.h, 12); ctx.fill();
+          ctx.strokeStyle = selected ? alpha('#4E8C52', .9) : alpha(GOLD, .35);
+          ctx.lineWidth = selected ? 1.8 : 1.1;
+          GOL.roundRect(ctx, b.x, b.y, b.w, b.h, 12); ctx.stroke();
+          if (selected) GOL.star8(ctx, b.x + 18, b.y + b.h / 2, 6.5, Math.PI / 8, '#D09B38');
+          const tx = b.x + (selected ? 34 : 18);
+          GOL.text(ctx, b.choice.label, tx, b.y + b.h * .36, {
+            size: L.portrait ? 14.5 : 14, weight: '800', color: selected ? '#355F3B' : INK,
+            align: 'left', shadow: false
+          });
+          GOL.text(ctx, 'Around: ' + b.choice.examples, tx, b.y + b.h * .69, {
+            size: L.portrait ? 11.5 : 10.5, weight: '700', color: selected ? alpha('#355F3B', .72) : SOFT,
+            align: 'left', shadow: false
+          });
+        }
+        drawButton(ctx, a.primary, this.journeyStage == null ? 'Choose one to continue' : 'Continue', this.journeyStage != null);
       } else if (this.stage === 'setup') {
         const c = setupCopy(this.os);
         GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Make Gems of Light yours' : 'Make Gems of Light theirs',
@@ -250,7 +318,9 @@
       if (stage === 'preview') { GOL.go('parentPreview'); return; }
       GOL.go('onboarding', { stage: DRAWABLE.has(stage) ? stage : 'welcome' });
     },
-    previewComplete() { GOL.go('onboarding', { stage: 'setup' }); },
+    previewComplete() {
+      GOL.go('onboarding', { stage: GOL.EXPERIENCE.showcase ? 'setup' : 'knowledge' });
+    },
     finishHandoff() { scene.finish(); }
   };
   GOL.registerScene('onboarding', scene);

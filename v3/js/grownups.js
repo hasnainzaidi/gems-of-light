@@ -184,6 +184,8 @@
           ? window.GOL_DATA.surahs.find((s) => s.id === w.surahId) : null;
         const st = GOL.store.level(w.surahId);
         const done = GOL.worldDone(w.n);
+        const priorKnown = GOL.worldPriorKnown && GOL.worldPriorKnown(w.n) &&
+          !(GOL.worldEarned && GOL.worldEarned(w.n));
         const visited = !!(st && ((st.lastPlayed || 0) > 0 || (st.heardFull || 0) > 0 ||
           (st.seeds || 0) > 0 || (st.replays || 0) > 0));
 
@@ -210,7 +212,7 @@
         const nx = lay.ix + 24;
         const name = surah ? surah.englishName : ('world ' + w.n);
         GOL.text(ctx, name, nx, mid - 8, { size: 15, weight: '800', color: INK, align: 'left', shadow: false });
-        let status = done ? 'completed' : (visited ? 'in progress' : 'not started yet');
+        let status = priorKnown ? 'already knew' : (done ? 'completed' : (visited ? 'in progress' : 'not started yet'));
         const when = relDay(st && st.lastPlayed);
         if (when && (done || visited)) status += ' · last played ' + when;
         const meaning = surah && surah.meaningName ? surah.meaningName + ' · ' : '';

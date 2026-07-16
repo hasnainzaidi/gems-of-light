@@ -817,3 +817,18 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   `tools/test-showcase-contract.mjs`. Desktop phone-viewport browser verdict:
   neutral title/map/direct-world/campfire all render without console errors;
   real-phone staging verdict is still required before promotion.
+- **JOURNEY-PLACEMENT ONBOARDING EXPERIMENT (built 2026-07-16; phone verdict
+  pending):** “Make it their garden” asks one question—where is the child in
+  their memorisation journey?—with one warm, surah-example-led choice per
+  painted island: Planting the first seeds / Finding their rhythm / Growing in
+  confidence / Taking on longer surahs. The choice places the Lightling at that
+  island's first built world and blooms earlier-island worlds, while keeping
+  the parent placement separate from earned Grand Gems and knowledge telemetry.
+  The named surahs are explicitly “just examples” and each card says “Around:”
+  so no three-item list reads as the full contents of an island.
+  Every earlier six-slot island is completely bloomed (unbuilt worlds use
+  visual-only auto-blooms with no door or telemetry); the selected island's
+  first surah remains the breathing star. The Lightling stands on the previous
+  island's final slot, so one forward step begins the selected island—no replay
+  detour. The mapping expands cleanly when a fifth or sixth island arrives. Contract:
+  `ONBOARDING-PLAN-2026-07-16.md`; staging phone verdict pending.

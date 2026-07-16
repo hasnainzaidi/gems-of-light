@@ -14,7 +14,7 @@ assert.match(preview, /registerScene\(['"]parentPreview['"]/,
   'parent preview scene is not registered');
 
 const onboarding = read('js/onboarding.js');
-for (const stage of ['welcome', 'preview', 'setup', 'handoff']) {
+for (const stage of ['welcome', 'preview', 'knowledge', 'setup', 'handoff']) {
   assert.match(onboarding, new RegExp("['\"]" + stage + "['\"]"),
     `canonical onboarding stage missing: ${stage}`);
 }
@@ -22,6 +22,14 @@ assert.doesNotMatch(onboarding, /stage === ['"]sound['"]|tap to change|I can hea
   'the playable preview already proves sound; onboarding must not repeat it');
 assert.match(onboarding, /completeParentOnboarding/,
   'handoff must persist the adult/child boundary');
+assert.match(onboarding, /journeyStageDraft/,
+  'parent journey placement must remain a draft until handoff');
+assert.match(onboarding, /Where are they in their memorisation journey/,
+  'placement should be one parent self-assessment, not a surah checklist');
+assert.match(onboarding, /surahs below are just examples/,
+  'surah examples must not read as the complete contents of a stage');
+assert.match(onboarding, /Around:/,
+  'each card must frame its surahs as an approximate journey neighbourhood');
 assert.match(onboarding, /childMode|childWelcome|handoff/,
   'handoff must enter the child postcard explicitly');
 assert.match(onboarding, /Explore\s+→\s+Collect\s+→\s+Restore/,
@@ -47,6 +55,8 @@ assert.match(map, /markChildStarted/,
   'child progress must begin at the real journey boundary');
 assert.match(map, /firstInvite/,
   'fresh handoff must have a dedicated first-map invitation');
+assert.match(map, /handoffStartSlot/,
+  'prepared handoff must start on the previous island endpoint');
 
 for (const entry of ['index.html', '../index.html']) {
   const html = fs.readFileSync(path.resolve(here, '..', entry), 'utf8');

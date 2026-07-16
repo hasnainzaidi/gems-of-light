@@ -50,7 +50,9 @@ assert.equal(states.get(114).completed, undefined, 'practice marked journey comp
 assert.equal(stamps.length, 0, 'practice emitted a Grand Gem stamp');
 assert.equal(states.get(114).shrineRuns.length, 1, 'practice knowledge telemetry was lost');
 
-// Once W1 is genuinely earned, W2 is naturally reached and may award normally.
+// Once the complete built journey prefix is genuinely earned, W2 is naturally
+// reached and may award normally. (Al-Fatiha now precedes file-number W1.)
+GOL.store.data.grand[1] = 1;
 GOL.store.data.grand[113] = 1;
 assert.equal(GOL.worldPracticeOnly(2), false);
 Object.assign(shrine, { practiceOnly: false, firstTry: 6 });
