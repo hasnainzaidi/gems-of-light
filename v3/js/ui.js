@@ -126,6 +126,39 @@
   // Dev-facing doorway into the prototypes. Tap anywhere to begin.
   const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
 
+  // The splash postcard — the lightling beside the valley spring, painted in
+  // the journey map's language (v3/art/splash-postcard.svg, 1600x900). Loaded
+  // once and drawn cover-fit; until it arrives the old painted-in-code
+  // backdrop stands in, then the postcard fades over it.
+  const SPLASH_URL = new URL('../art/splash-postcard.svg?v=363',
+    document.currentScript ? document.currentScript.src : location.href).href;
+  const splash = { img: null, ready: false };
+  function loadSplash() {
+    if (splash.img) return;
+    splash.img = new Image();
+    splash.img.onload = () => { splash.ready = true; };
+    splash.img.src = SPLASH_URL;
+  }
+  function drawSplashArt(ctx, W, H, fade) {
+    const iw = 1600, ih = 900;
+    const s = Math.max(W / iw, H / ih);
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.drawImage(splash.img, (W - iw * s) / 2, (H - ih * s) / 2, iw * s, ih * s);
+    ctx.restore();
+  }
+  // the cream postcard border: a deckle band and a fine gold inner line
+  function drawPostcardFrame(ctx, W, H) {
+    ctx.save();
+    ctx.strokeStyle = alpha('#FDF6E4', 0.95);
+    ctx.lineWidth = 12;
+    GOL.roundRect(ctx, 5, 5, W - 10, H - 10, 18); ctx.stroke();
+    ctx.strokeStyle = alpha('#C89B55', 0.5);
+    ctx.lineWidth = 1.5;
+    GOL.roundRect(ctx, 14, 14, W - 28, H - 28, 12); ctx.stroke();
+    ctx.restore();
+  }
+
   // A tiny meadow flower for the journey's memory blooms (borrowed from v1's map).
   function drawMapFlower(ctx, x, y, r, t, color) {
     ctx.save();
@@ -154,6 +187,8 @@
       this.t = 0;
       this.fx = GOL.makeFx();
       this.bd = buildBackdrop('falaq', 44);
+      loadSplash();
+      this.splashFade = splash.ready ? 1 : 0;
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
@@ -228,6 +263,7 @@
     },
     update(dt, W, H) {
       this.t += dt;
+      this.splashFade = splash.ready ? Math.min(1, (this.splashFade || 0) + dt * 2.5) : 0;
       this.fx.update(dt);
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
@@ -300,11 +336,20 @@
     },
     draw(ctx, W, H) {
       const t = this.t;
-      const gy = GOL.drawBackdrop(ctx, this.bd, W, H, t, t * 12, 0.8);
-      GOL.drawSprite(ctx, W / 2 - 300, gy + 22, {
-        vx: 0, vy: 0, grounded: true, facing: 1, t, idleT: 3,
-        blink: Math.sin(t * 0.7) > 0.98, squashX: 1, squashY: 1, moving: false
-      });
+      const fade = this.splashFade || 0;
+      // the postcard painting owns the scene (lightling included); the old
+      // painted-in-code backdrop only stands in for the first few frames
+      if (fade < 1) {
+        const gy = GOL.drawBackdrop(ctx, this.bd, W, H, t, t * 12, 0.8);
+        GOL.drawSprite(ctx, W / 2 - 300, gy + 22, {
+          vx: 0, vy: 0, grounded: true, facing: 1, t, idleT: 3,
+          blink: Math.sin(t * 0.7) > 0.98, squashX: 1, squashY: 1, moving: false
+        });
+      }
+      if (splash.ready && fade > 0) {
+        drawSplashArt(ctx, W, H, fade);
+        drawPostcardFrame(ctx, W, H);
+      }
       this.fx.draw(ctx);
       const ty = H * 0.26;
       GOL.star8(ctx, W / 2 - 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
@@ -321,7 +366,7 @@
         GOL.text(ctx, b.key, b.x, b.y + 39, { size: 9.5, weight: '700', color: alpha('#FFFFFF', 0.72) });
       }
       if (!(this.protoBtns && this.protoBtns.length)) {
-        GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.84, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
+        GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
       if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');

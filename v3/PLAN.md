@@ -709,3 +709,18 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   per-wave playtest gates were consolidated by Hasnain into ONE staging
   playtest of the whole 13-surah span — verdict pending, specifics to
   land here.
+- **THE SPLASH IS A POSTCARD FROM THE GARDEN (2026-07-15, on Hasnain's
+  request):** the title screen now opens on `v3/art/splash-postcard.svg`
+  — the lightling beside the valley spring (the map's eight-point-star
+  stone pool) in a morning garden, painted in the journey map's own
+  gouache language (same palette families, stone/water/bloom grammar,
+  and the exact `drawSprite` anatomy for the lightling). Drawn
+  cover-fit inside a cream postcard frame; the old painted-in-code
+  backdrop remains only as the first-frames stand-in and crossfades
+  away. No text lives in the SVG — the canvas letters the title, so the
+  painting is reusable. The same scene, with the title baked in, is the
+  link-preview card: `assets/share-postcard-v1.jpg` (1200×630, ~127 KB),
+  wired to og:image / twitter:image in the root index.html (new
+  filename so crawler caches refresh). Compose page for regenerating it
+  lives with the session notes; re-render = headless Chrome at 2×,
+  downsample, JPEG 85.

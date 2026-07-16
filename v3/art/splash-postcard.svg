@@ -1,0 +1,326 @@
+<svg viewBox="0 0 1600 900" width="1600" height="900" xmlns="http://www.w3.org/2000/svg">
+<!-- The splash postcard: the lightling resting beside the valley spring —
+     the eight-point-star stone pool that sources all the journey map's
+     water — painted in the map's own gouache language (see
+     v3/map-artist-pack/MAP-ART-BRIEF.md §4 for the palette families).
+     No text here: the title is lettered by the canvas (splash) or the
+     share-image composer, so the painting stays reusable.
+     Safe area: keep the story inside x 120..1480, y 90..800 (phone and
+     iPad cover-crops, and the 1200x630 share crop, all keep that zone). -->
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9ED2C6"/>
+    <stop offset="0.55" stop-color="#DFF0C8"/>
+    <stop offset="1" stop-color="#FBE7AE"/>
+  </linearGradient>
+  <linearGradient id="lawn" x1="0" y1="0" x2="0.2" y2="1">
+    <stop offset="0" stop-color="#A8DA8C"/>
+    <stop offset="1" stop-color="#6FAF60"/>
+  </linearGradient>
+  <linearGradient id="fore" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#68A868"/>
+    <stop offset="1" stop-color="#4E8746"/>
+  </linearGradient>
+  <radialGradient id="moonHalo">
+    <stop offset="0" stop-color="#FDF4D8" stop-opacity="0.6"/>
+    <stop offset="1" stop-color="#FDF4D8" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="warm">
+    <stop offset="0" stop-color="#FBE7AE" stop-opacity="0.5"/>
+    <stop offset="1" stop-color="#FBE7AE" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="halo">
+    <stop offset="0" stop-color="#FFF3C4" stop-opacity="0.5"/>
+    <stop offset="0.55" stop-color="#FFF3C4" stop-opacity="0.16"/>
+    <stop offset="1" stop-color="#FFF3C4" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="body" cx="0.58" cy="0.3" r="0.95">
+    <stop offset="0" stop-color="#FFFBEA"/>
+    <stop offset="0.55" stop-color="#FFF1CC"/>
+    <stop offset="1" stop-color="#F3D492"/>
+  </radialGradient>
+  <radialGradient id="tintTeal">
+    <stop offset="0" stop-color="#9ED2C6" stop-opacity="0.2"/>
+    <stop offset="1" stop-color="#9ED2C6" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="tintHoney">
+    <stop offset="0" stop-color="#F6CE92" stop-opacity="0.3"/>
+    <stop offset="1" stop-color="#F6CE92" stop-opacity="0"/>
+  </radialGradient>
+
+  <!-- a memory bloom (the map's pink five-petal flower) -->
+  <g id="bloom">
+    <path d="M0,10 Q1,2 0,-3" fill="none" stroke="#6DA84E" stroke-width="2.6" stroke-linecap="round"/>
+    <g transform="translate(0,-10)">
+      <ellipse cx="0" cy="-6.6" rx="4.4" ry="6.2" fill="#EFC3CC"/>
+      <ellipse cx="0" cy="-6.6" rx="4.4" ry="6.2" fill="#EFC3CC" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-6.6" rx="4.4" ry="6.2" fill="#F2CFD8" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-6.6" rx="4.4" ry="6.2" fill="#EFC3CC" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-6.6" rx="4.4" ry="6.2" fill="#F2CFD8" transform="rotate(288)"/>
+      <circle cx="0" cy="0" r="3.4" fill="#F6D68C"/>
+    </g>
+  </g>
+
+  <!-- an orchard tree, the map's blob-canopy hand -->
+  <g id="tree">
+    <ellipse cx="0" cy="4" rx="52" ry="12" fill="#4E8746" opacity="0.22"/>
+    <rect x="-8" y="-66" width="16" height="72" rx="7" fill="#8A6B4F"/>
+    <circle cx="-38" cy="-84" r="40" fill="#5E8A50"/>
+    <circle cx="40" cy="-86" r="42" fill="#6FAA58"/>
+    <circle cx="0" cy="-116" r="52" fill="#6FAA58"/>
+    <circle cx="-16" cy="-126" r="36" fill="#98CB77"/>
+    <circle cx="34" cy="-104" r="26" fill="#98CB77"/>
+    <circle cx="-30" cy="-70" r="9" fill="#F4CD7E"/>
+    <circle cx="22" cy="-128" r="8" fill="#F4CD7E"/>
+    <circle cx="48" cy="-78" r="8" fill="#F4CD7E"/>
+    <circle cx="-4" cy="-96" r="7" fill="#F6D68C"/>
+  </g>
+
+  <!-- a grass tuft -->
+  <g id="tuft" fill="none" stroke-linecap="round">
+    <path d="M-8,0 Q-9,-10 -12,-16" stroke="#5B9C52" stroke-width="3"/>
+    <path d="M-2,0 Q-2,-13 -4,-21" stroke="#5B9C52" stroke-width="3"/>
+    <path d="M3,0 Q4,-12 7,-18" stroke="#6FAD72" stroke-width="3"/>
+    <path d="M8,0 Q10,-8 13,-13" stroke="#6FAD72" stroke-width="3"/>
+  </g>
+
+  <!-- a little light-sparkle -->
+  <path id="spark" d="M0,-15 C2,-4 4,-2 13,0 C4,2 2,4 0,15 C-2,4 -4,2 -13,0 C-4,-2 -2,-4 0,-15 Z" fill="#FFF6DC"/>
+
+  <!-- a drifting petal -->
+  <ellipse id="petal" cx="0" cy="0" rx="7" ry="4" fill="#F2CFD8"/>
+</defs>
+
+<!-- ============================== sky ============================== -->
+<rect x="0" y="0" width="1600" height="480" fill="url(#sky)"/>
+
+<!-- the pale daytime moon, resting in a bright sky -->
+<circle cx="1210" cy="170" r="100" fill="url(#moonHalo)"/>
+<circle cx="1210" cy="170" r="42" fill="#FDF6E4"/>
+<circle cx="1222" cy="180" r="30" fill="#F7EFD3" opacity="0.8"/>
+<circle cx="1196" cy="158" r="7" fill="#F0E8CC" opacity="0.8"/>
+<circle cx="1206" cy="186" r="5" fill="#F0E8CC" opacity="0.7"/>
+
+<!-- soft clouds -->
+<g opacity="0.55"><ellipse cx="420" cy="128" rx="70" ry="13" fill="#FDF6E4"/><ellipse cx="392" cy="134" rx="45" ry="10" fill="#F4EFD8"/></g>
+<g opacity="0.4"><ellipse cx="640" cy="72" rx="48" ry="10" fill="#FDF6E4"/><ellipse cx="622" cy="76" rx="30" ry="8" fill="#F4EFD8"/></g>
+<g opacity="0.45"><ellipse cx="1450" cy="260" rx="56" ry="11" fill="#FDF6E4"/><ellipse cx="1426" cy="265" rx="35" ry="8" fill="#F4EFD8"/></g>
+<g opacity="0.35"><ellipse cx="170" cy="230" rx="50" ry="10" fill="#FDF6E4"/><ellipse cx="151" cy="234" rx="32" ry="8" fill="#F4EFD8"/></g>
+
+<!-- ============================ far hills =========================== -->
+<path d="M0,368 C130,330 300,352 460,356 C600,360 700,326 840,334 C1000,344 1090,318 1230,330 C1380,342 1490,324 1600,340 L1600,480 L0,480 Z" fill="#BCD8B2"/>
+<ellipse cx="350" cy="352" rx="11" ry="16" fill="#A6C89C"/>
+<ellipse cx="398" cy="360" rx="9" ry="12" fill="#A6C89C"/>
+<ellipse cx="930" cy="336" rx="10" ry="14" fill="#A6C89C"/>
+<ellipse cx="1280" cy="334" rx="9" ry="13" fill="#A6C89C"/>
+<path d="M0,428 C180,394 380,416 580,408 C800,398 980,424 1180,408 C1340,396 1480,416 1600,404 L1600,520 L0,520 Z" fill="#93C08D"/>
+<ellipse cx="700" cy="410" rx="9" ry="12" fill="#7FB07A"/>
+<ellipse cx="1440" cy="410" rx="10" ry="13" fill="#7FB07A"/>
+
+<!-- ======================= upper lawn + gateway ===================== -->
+<path d="M0,452 C260,438 560,448 860,442 C1120,436 1380,448 1600,440 L1600,600 L0,600 Z" fill="#96BE74"/>
+<!-- hedges along the garden's back edge: rounded bush mounds -->
+<g>
+  <ellipse cx="120" cy="466" rx="92" ry="14" fill="#5E8A50"/>
+  <circle cx="70" cy="446" r="26" fill="#6FAA58"/>
+  <circle cx="122" cy="440" r="30" fill="#6FAA58"/>
+  <circle cx="172" cy="448" r="24" fill="#6FAA58"/>
+  <circle cx="108" cy="434" r="16" fill="#98CB77"/>
+  <circle cx="160" cy="442" r="11" fill="#98CB77"/>
+  <circle cx="86" cy="452" r="5.5" fill="#F4CD7E" opacity="0.9"/>
+</g>
+<g>
+  <ellipse cx="420" cy="468" rx="110" ry="14" fill="#5E8A50"/>
+  <circle cx="352" cy="450" r="24" fill="#6FAA58"/>
+  <circle cx="404" cy="442" r="30" fill="#6FAA58"/>
+  <circle cx="462" cy="448" r="26" fill="#6FAA58"/>
+  <circle cx="392" cy="436" r="16" fill="#98CB77"/>
+  <circle cx="450" cy="442" r="12" fill="#98CB77"/>
+  <circle cx="434" cy="456" r="5.5" fill="#F4CD7E" opacity="0.9"/>
+</g>
+<g>
+  <ellipse cx="700" cy="466" rx="84" ry="13" fill="#5E8A50"/>
+  <circle cx="662" cy="450" r="22" fill="#6FAA58"/>
+  <circle cx="708" cy="444" r="26" fill="#6FAA58"/>
+  <circle cx="748" cy="452" r="20" fill="#6FAA58"/>
+  <circle cx="696" cy="438" r="14" fill="#98CB77"/>
+  <circle cx="730" cy="448" r="5.5" fill="#F4CD7E" opacity="0.9"/>
+</g>
+<g>
+  <ellipse cx="1478" cy="466" rx="96" ry="14" fill="#5E8A50"/>
+  <circle cx="1432" cy="448" r="25" fill="#6FAA58"/>
+  <circle cx="1484" cy="442" r="29" fill="#6FAA58"/>
+  <circle cx="1534" cy="450" r="23" fill="#6FAA58"/>
+  <circle cx="1470" cy="436" r="15" fill="#98CB77"/>
+  <circle cx="1512" cy="446" r="5.5" fill="#F4CD7E" opacity="0.9"/>
+</g>
+<!-- the cream garden wall with its open wooden gateway -->
+<g>
+  <rect x="908" y="440" width="180" height="26" rx="10" fill="#D0B892"/>
+  <rect x="902" y="426" width="192" height="22" rx="11" fill="#ECDFBE"/>
+  <rect x="1210" y="440" width="150" height="26" rx="10" fill="#D0B892"/>
+  <rect x="1204" y="426" width="162" height="22" rx="11" fill="#ECDFBE"/>
+  <ellipse cx="960" cy="437" rx="8" ry="3.6" fill="#D6C9A2" opacity="0.85"/>
+  <ellipse cx="1040" cy="437" rx="8" ry="3.6" fill="#D6C9A2" opacity="0.85"/>
+  <ellipse cx="1262" cy="437" rx="8" ry="3.6" fill="#D6C9A2" opacity="0.85"/>
+  <ellipse cx="1322" cy="437" rx="8" ry="3.6" fill="#D6C9A2" opacity="0.85"/>
+  <path d="M1108,462 L1108,414 A40,40 0 0 1 1188,414 L1188,462 Z" fill="#FBE7AE" opacity="0.9"/>
+  <path d="M1104,460 L1104,414 A44,44 0 0 1 1192,414 L1192,460" fill="none" stroke="#8A6B4F" stroke-width="10" stroke-linecap="round"/>
+  <rect x="1096" y="456" width="104" height="12" rx="6" fill="#C9B389"/>
+</g>
+
+<!-- ============================ main lawn =========================== -->
+<path d="M0,502 C240,486 520,498 800,490 C1080,482 1340,496 1600,486 L1600,900 L0,900 Z" fill="url(#lawn)"/>
+<ellipse cx="330" cy="570" rx="200" ry="44" fill="#ACDE90" opacity="0.5"/>
+<ellipse cx="1260" cy="600" rx="240" ry="50" fill="#ACDE90" opacity="0.45"/>
+<ellipse cx="800" cy="760" rx="300" ry="56" fill="#5B9C52" opacity="0.22"/>
+
+<!-- warm morning light pooling around the spring -->
+<ellipse cx="850" cy="600" rx="560" ry="290" fill="url(#warm)"/>
+
+<!-- a crescent flowerbed cut from the lawn, charbagh-fashion -->
+<g transform="translate(360,660)">
+  <path d="M-150,10 A150,64 0 0 1 150,10 A118,50 0 1 0 -150,10 Z" fill="#C9B389"/>
+  <path d="M-150,2 A150,64 0 0 1 150,2 A118,50 0 1 0 -150,2 Z" fill="#C4A981"/>
+</g>
+<use href="#bloom" transform="translate(250,650) scale(1.35)"/>
+<use href="#bloom" transform="translate(320,634) scale(1.15)"/>
+<use href="#bloom" transform="translate(400,632) scale(1.4)"/>
+<use href="#bloom" transform="translate(470,648) scale(1.2)"/>
+
+<!-- ============================ walkway ============================ -->
+<g fill="none" stroke-linecap="round">
+  <path d="M150,915 C280,850 400,812 530,796 C600,788 646,780 692,764" stroke="#C9B389" stroke-width="70" transform="translate(0,8)"/>
+  <path d="M150,915 C280,850 400,812 530,796 C600,788 646,780 692,764" stroke="#ECDFBE" stroke-width="60"/>
+</g>
+<ellipse cx="255" cy="866" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.85"/>
+<ellipse cx="352" cy="832" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.85"/>
+<ellipse cx="452" cy="808" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.85"/>
+<ellipse cx="556" cy="790" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.85"/>
+<ellipse cx="652" cy="772" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.85"/>
+
+<!-- ================== the eight-point-star spring ================== -->
+<g transform="translate(880,620)">
+  <ellipse cx="0" cy="118" rx="270" ry="46" fill="#4E8746" opacity="0.18"/>
+  <g transform="translate(0,22) scale(1,0.52)">
+    <rect x="-185" y="-185" width="370" height="370" rx="30" fill="#B9A87C"/>
+    <rect x="-185" y="-185" width="370" height="370" rx="30" transform="rotate(45)" fill="#B9A87C"/>
+  </g>
+  <g transform="scale(1,0.52)">
+    <rect x="-185" y="-185" width="370" height="370" rx="30" fill="#ECDFBE"/>
+    <rect x="-185" y="-185" width="370" height="370" rx="30" transform="rotate(45)" fill="#ECDFBE"/>
+    <rect x="-152" y="-152" width="304" height="304" rx="25" fill="#FDF6E4"/>
+    <rect x="-152" y="-152" width="304" height="304" rx="25" transform="rotate(45)" fill="#FDF6E4"/>
+    <rect x="-138" y="-138" width="276" height="276" rx="22" fill="#6FB6A4"/>
+    <rect x="-138" y="-138" width="276" height="276" rx="22" transform="rotate(45)" fill="#6FB6A4"/>
+    <rect x="-114" y="-104" width="228" height="228" rx="19" fill="#8ECFBE"/>
+    <rect x="-114" y="-104" width="228" height="228" rx="19" transform="rotate(45 0 10)" fill="#8ECFBE"/>
+    <ellipse cx="-34" cy="-20" rx="66" ry="34" fill="#C8ECDB" opacity="0.45"/>
+    <ellipse cx="52" cy="50" rx="34" ry="18" fill="#C8ECDB" opacity="0.3"/>
+  </g>
+  <!-- paving stones resting around the rim -->
+  <ellipse cx="-212" cy="62" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.8"/>
+  <ellipse cx="212" cy="62" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.8"/>
+  <ellipse cx="-134" cy="-102" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.8"/>
+  <ellipse cx="148" cy="-96" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.8"/>
+</g>
+
+<!-- the stone channel carrying the spring's water toward the meadow -->
+<g fill="none" stroke-linecap="round">
+  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#C9B389" stroke-width="50" transform="translate(0,7)"/>
+  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#ECDFBE" stroke-width="42"/>
+  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#6FB6A4" stroke-width="26"/>
+  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#8ECFBE" stroke-width="17"/>
+  <path d="M948,786 C980,812 1018,830 1056,842" stroke="#C8ECDB" stroke-width="5" opacity="0.8"/>
+  <path d="M1210,868 C1256,880 1300,890 1340,898" stroke="#C8ECDB" stroke-width="5" opacity="0.7"/>
+</g>
+
+<!-- ===================== garden dressing ===================== -->
+<use href="#tree" transform="translate(1330,600) scale(1.25)"/>
+<use href="#tree" transform="translate(1440,555) scale(0.7)"/>
+<use href="#tree" transform="translate(215,560) scale(0.85)"/>
+
+<use href="#bloom" transform="translate(700,740) scale(1.8)"/>
+<use href="#bloom" transform="translate(732,758) scale(1.4)"/>
+<use href="#bloom" transform="translate(672,762) scale(1.15)"/>
+<use href="#bloom" transform="translate(1150,730) scale(1.6)"/>
+<use href="#bloom" transform="translate(1184,716) scale(1.2)"/>
+<use href="#bloom" transform="translate(1500,690) scale(1.4)"/>
+<use href="#bloom" transform="translate(560,560) scale(1.05)"/>
+<use href="#bloom" transform="translate(1240,530) scale(1)"/>
+
+<use href="#tuft" transform="translate(480,620) scale(1.5)"/>
+<use href="#tuft" transform="translate(1080,700) scale(1.6)"/>
+<use href="#tuft" transform="translate(1260,770) scale(1.7)"/>
+<use href="#tuft" transform="translate(640,690) scale(1.3)"/>
+<use href="#tuft" transform="translate(180,690) scale(1.6)"/>
+<use href="#tuft" transform="translate(1540,600) scale(1.4)"/>
+<use href="#tuft" transform="translate(900,520) scale(1.2)"/>
+
+<!-- ===================== the lightling ===================== -->
+<g transform="translate(555,0)">
+  <ellipse cx="0" cy="778" rx="50" ry="11" fill="#3E5C42" opacity="0.16"/>
+  <circle cx="0" cy="725" r="132" fill="url(#halo)"/>
+  <!-- legs -->
+  <ellipse cx="-19" cy="766" rx="12.2" ry="16" fill="#E3B76F" transform="rotate(-8 -19 766)"/>
+  <ellipse cx="19" cy="766" rx="12.2" ry="16" fill="#E3B76F" transform="rotate(8 19 766)"/>
+  <!-- body -->
+  <circle cx="0" cy="725" r="50" fill="url(#body)"/>
+  <circle cx="0" cy="725" r="48" fill="none" stroke="#D9A44A" stroke-width="4.5" opacity="0.55"/>
+  <!-- sprout -->
+  <g transform="translate(0,677) rotate(4)">
+    <path d="M0,5 Q1.5,-5 0,-12" fill="none" stroke="#6DA84E" stroke-width="5.8" stroke-linecap="round"/>
+    <ellipse cx="-11.7" cy="-16" rx="13.4" ry="7.6" fill="#77B368" transform="rotate(-40 -11.7 -16)"/>
+    <ellipse cx="11.7" cy="-16" rx="13.4" ry="7.6" fill="#A3D488" transform="rotate(40 11.7 -16)"/>
+  </g>
+  <!-- face, turned toward the spring -->
+  <ellipse cx="-3.6" cy="717" rx="7.4" ry="10" fill="#4A3B2A"/>
+  <ellipse cx="28.1" cy="717" rx="7.4" ry="10" fill="#4A3B2A"/>
+  <circle cx="-1" cy="713.7" r="2.8" fill="#FFFFFF" opacity="0.95"/>
+  <circle cx="30.7" cy="713.7" r="2.8" fill="#FFFFFF" opacity="0.95"/>
+  <ellipse cx="-15.5" cy="730" rx="7.6" ry="5" fill="#F0A987" opacity="0.4"/>
+  <ellipse cx="40.2" cy="730" rx="7.6" ry="5" fill="#F0A987" opacity="0.4"/>
+  <path d="M3.5,736.5 Q12.3,744.5 21.1,736.5" fill="none" stroke="#8A6B4F" stroke-width="4.1" stroke-linecap="round" opacity="0.75"/>
+</g>
+
+<!-- ========================= foreground ========================= -->
+<path d="M0,852 C180,832 360,866 560,854 C790,840 990,878 1210,864 C1380,854 1500,872 1600,860 L1600,900 L0,900 Z" fill="url(#fore)"/>
+<use href="#tuft" transform="translate(430,888) scale(2.1)"/>
+<use href="#tuft" transform="translate(760,892) scale(2.3)"/>
+<use href="#tuft" transform="translate(1120,896) scale(2)"/>
+<use href="#bloom" transform="translate(84,890) scale(2)"/>
+<use href="#bloom" transform="translate(960,896) scale(1.8)"/>
+
+<!-- the framing canopy, upper-left -->
+<g>
+  <path d="M0,36 C90,52 180,38 300,12" fill="none" stroke="#8A6B4F" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="30" cy="30" r="108" fill="#6FAA58"/>
+  <circle cx="168" cy="4" r="88" fill="#6FAA58"/>
+  <circle cx="282" cy="-36" r="78" fill="#5E8A50"/>
+  <circle cx="110" cy="16" r="56" fill="#98CB77"/>
+  <circle cx="236" cy="-22" r="44" fill="#98CB77"/>
+  <circle cx="70" cy="92" r="46" fill="#4E8746" opacity="0.85"/>
+  <circle cx="152" cy="52" r="9" fill="#F4CD7E"/>
+  <circle cx="248" cy="16" r="8" fill="#F4CD7E"/>
+  <circle cx="60" cy="106" r="8" fill="#F4CD7E"/>
+</g>
+
+<!-- drifting petals -->
+<use href="#petal" transform="translate(378,208) rotate(-24)" opacity="0.85"/>
+<use href="#petal" transform="translate(452,300) rotate(30)" opacity="0.75"/>
+<use href="#petal" transform="translate(340,398) rotate(-10)" opacity="0.7"/>
+<use href="#petal" transform="translate(1330,360) rotate(18)" opacity="0.6"/>
+<use href="#petal" transform="translate(1270,480) rotate(-30)" opacity="0.7"/>
+<use href="#petal" transform="translate(724,560) rotate(12)" opacity="0.6"/>
+
+<!-- little lights -->
+<use href="#spark" transform="translate(966,590)" opacity="0.9"/>
+<use href="#spark" transform="translate(816,662) scale(0.6)" opacity="0.8"/>
+<use href="#spark" transform="translate(662,620) scale(0.8)" opacity="0.85"/>
+<use href="#spark" transform="translate(1090,772) scale(0.55)" opacity="0.7"/>
+<use href="#spark" transform="translate(456,724) scale(0.5)" opacity="0.7"/>
+
+<!-- regional light tints, the map's closing wash -->
+<ellipse cx="220" cy="180" rx="560" ry="330" fill="url(#tintTeal)"/>
+<ellipse cx="1440" cy="240" rx="620" ry="380" fill="url(#tintHoney)"/>
+</svg>
