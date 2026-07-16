@@ -724,3 +724,24 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   filename so crawler caches refresh). Compose page for regenerating it
   lives with the session notes; re-render = headless Chrome at 2×,
   downsample, JPEG 85.
+- **ROTATING IS THE DOOR (2026-07-15, on Hasnain's request):** the splash
+  now has a PORTRAIT composition (`v3/art/splash-postcard-portrait.svg`,
+  900×1600 — same scene, same grammar, recomposed upright) and the title
+  is the rotate nudge itself: in portrait it shows the postcard, the
+  title, and a little phone pictogram that tips itself sideways ("turn
+  me sideways" beneath, the curtain's old words); the moment the phone
+  rotates to landscape the journey map opens (the rotation, not a tap,
+  is the begin gesture — it also wakes audio). A tap in portrait only
+  pulses the nudge and unlocks audio. A landscape arrival keeps the
+  tap-anywhere door. boot.js's global sideways curtain now skips scenes
+  that declare `ownsPortrait` (only the title, so far) — mid-game
+  portrait still gets the curtain, protecting a child's place in a
+  world rather than warping home. Verified: portrait boot, portrait
+  tap, rotate→map, landscape boot, checker green.
+  *r2 (same day, Hasnain's notes):* the nudge moved up into the open
+  sky just under the title (never on the garden); the stone channel
+  ("weird hot dog pipe") is gone from BOTH compositions; the spring is
+  now a true fountain — stone pillar, falling arcs, droplets, ripples,
+  the game's own drawFountain shape. Share card regenerated as
+  assets/share-postcard-v2.jpg (v1 removed; fresh URL busts crawler
+  caches).

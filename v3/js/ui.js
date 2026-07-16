@@ -127,24 +127,64 @@
   const GRAND = { base: '#F0C878', light: '#FFE9A8', lighter: '#FFF6DC', dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8' };
 
   // The splash postcard — the lightling beside the valley spring, painted in
-  // the journey map's language (v3/art/splash-postcard.svg, 1600x900). Loaded
-  // once and drawn cover-fit; until it arrives the old painted-in-code
-  // backdrop stands in, then the postcard fades over it.
-  const SPLASH_URL = new URL('../art/splash-postcard.svg?v=363',
-    document.currentScript ? document.currentScript.src : location.href).href;
-  const splash = { img: null, ready: false };
+  // the journey map's language. Two compositions of the same scene: landscape
+  // (splash-postcard.svg, 1600x900) and portrait (splash-postcard-portrait.svg,
+  // 900x1600) — the portrait one is the phone's front door and the rotate
+  // nudge. Loaded once and drawn cover-fit; until the art arrives the old
+  // painted-in-code backdrop stands in, then the postcard fades over it.
+  const SPLASH_SCRIPT_URL = document.currentScript ? document.currentScript.src : location.href;
+  const SPLASH = {
+    land: { file: 'splash-postcard.svg?v=364', w: 1600, h: 900 },
+    port: { file: 'splash-postcard-portrait.svg?v=364', w: 900, h: 1600 }
+  };
   function loadSplash() {
-    if (splash.img) return;
-    splash.img = new Image();
-    splash.img.onload = () => { splash.ready = true; };
-    splash.img.src = SPLASH_URL;
+    for (const k of Object.keys(SPLASH)) {
+      const e = SPLASH[k];
+      if (e.img) continue;
+      e.img = new Image();
+      e.img.onload = () => { e.ready = true; };
+      e.img.src = new URL('../art/' + e.file, SPLASH_SCRIPT_URL).href;
+    }
+  }
+  function splashFor(W, H) {
+    const e = H > W ? SPLASH.port : SPLASH.land;
+    return e.ready ? e : null;
   }
   function drawSplashArt(ctx, W, H, fade) {
-    const iw = 1600, ih = 900;
-    const s = Math.max(W / iw, H / ih);
+    const e = splashFor(W, H);
+    if (!e) return;
+    const s = Math.max(W / e.w, H / e.h);
     ctx.save();
     ctx.globalAlpha = fade;
-    ctx.drawImage(splash.img, (W - iw * s) / 2, (H - ih * s) / 2, iw * s, ih * s);
+    ctx.drawImage(e.img, (W - e.w * s) / 2, (H - e.h * s) / 2, e.w * s, e.h * s);
+    ctx.restore();
+  }
+  // The wordless rotate invitation: a little phone that tips itself into
+  // landscape, over and over. Portrait's stand-in for "tap anywhere".
+  function drawRotateNudge(ctx, x, y, t, pulse) {
+    const sm = (v) => v * v * (3 - 2 * v);
+    const cyc = t % 2.8;
+    let ang = 0, a = 1;
+    if (cyc < 0.8) ang = 0;
+    else if (cyc < 1.5) ang = sm((cyc - 0.8) / 0.7) * Math.PI / 2;
+    else if (cyc < 2.4) ang = Math.PI / 2;
+    else { ang = Math.PI / 2; a = Math.max(0, 1 - (cyc - 2.4) / 0.4); }
+    ctx.save();
+    ctx.translate(x, y);
+    if (pulse > 0.01) {
+      ctx.strokeStyle = alpha('#B98A3E', 0.5 * pulse);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 44 + (1 - pulse) * 10, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = a;
+    ctx.rotate(-ang);
+    ctx.fillStyle = alpha('#2E4032', 0.55);
+    GOL.roundRect(ctx, -15, -26, 30, 52, 8); ctx.fill();
+    ctx.strokeStyle = alpha('#FDF6E4', 0.92);
+    ctx.lineWidth = 2.5;
+    GOL.roundRect(ctx, -15, -26, 30, 52, 8); ctx.stroke();
+    ctx.fillStyle = alpha('#FDF6E4', 0.92);
+    ctx.beginPath(); ctx.arc(0, 19, 2.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
   // the cream postcard border: a deckle band and a fine gold inner line
@@ -183,12 +223,17 @@
 
   const title = {
     t: 0, fx: null, bd: null, buttons: [], settingsOpen: false, celebrateN: 0, celebrateT: 0,
+    // the title paints its own portrait composition — boot.js's sideways
+    // curtain stays out of this scene (rotating here opens the journey map)
+    ownsPortrait: true,
     enter(params) {
       this.t = 0;
       this.fx = GOL.makeFx();
       this.bd = buildBackdrop('falaq', 44);
       loadSplash();
-      this.splashFade = splash.ready ? 1 : 0;
+      this.splashFade = 0;
+      this.wasPortrait = undefined;
+      this.nudgePulse = 0;
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
@@ -263,7 +308,22 @@
     },
     update(dt, W, H) {
       this.t += dt;
-      this.splashFade = splash.ready ? Math.min(1, (this.splashFade || 0) + dt * 2.5) : 0;
+      // The rotation IS the door: arriving in portrait, the child rotates to
+      // landscape and the journey map opens. (A landscape arrival keeps the
+      // tap-anywhere door; mid-game portrait still gets boot.js's curtain.)
+      const portrait = H > W;
+      if (this.wasPortrait === undefined) this.wasPortrait = portrait;
+      if (this.wasPortrait && !portrait) {
+        this.wasPortrait = portrait;
+        GOL.audio.unlock();
+        GOL.audio.sfx('unlockLevel');
+        GOL.go('journeyMap');
+        return;
+      }
+      this.wasPortrait = portrait;
+      this.nudgePulse = Math.max(0, (this.nudgePulse || 0) - dt * 2.5);
+      const art = splashFor(W, H);
+      this.splashFade = art ? Math.min(1, (this.splashFade || 0) + dt * 2.5) : 0;
       this.fx.update(dt);
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
@@ -324,10 +384,13 @@
       if (GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
-      // any other tap begins: the journey map is the game's home page
+      // any other tap begins: the journey map is the game's home page.
+      // In portrait the map would be unplayable, so a tap only wakes audio
+      // and makes the rotate invitation answer back — rotating is the door.
       for (const tap of GOL.Input.taps) {
         if (!tap.ui && this.t > 0.5) {
           GOL.audio.unlock();
+          if (portrait) { this.nudgePulse = 1; GOL.audio.sfx('tap'); return; }
           GOL.audio.sfx('unlockLevel');
           GOL.go('journeyMap');
           return;
@@ -346,15 +409,17 @@
           blink: Math.sin(t * 0.7) > 0.98, squashX: 1, squashY: 1, moving: false
         });
       }
-      if (splash.ready && fade > 0) {
+      if (splashFor(W, H) && fade > 0) {
         drawSplashArt(ctx, W, H, fade);
         drawPostcardFrame(ctx, W, H);
       }
       this.fx.draw(ctx);
-      const ty = H * 0.26;
-      GOL.star8(ctx, W / 2 - 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
-      GOL.star8(ctx, W / 2 + 150, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
-      GOL.text(ctx, 'Gems of Light', W / 2, ty - 8, { size: Math.min(46, W * 0.06), weight: '800', color: INK });
+      const portrait = H > W;
+      const ty = H * (portrait ? 0.21 : 0.26);
+      const starOff = portrait ? Math.min(150, W * 0.36) : 150;
+      GOL.star8(ctx, W / 2 - starOff, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
+      GOL.star8(ctx, W / 2 + starOff, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
+      GOL.text(ctx, 'Gems of Light', W / 2, ty - 8, { size: Math.min(46, W * (portrait ? 0.105 : 0.06)), weight: '800', color: INK });
       GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       for (const b of this.protoBtns || []) {
@@ -365,7 +430,12 @@
         GOL.text(ctx, String(b.id - 10), b.x, b.y, { size: 16, weight: '800', color: '#FFF6DC' });
         GOL.text(ctx, b.key, b.x, b.y + 39, { size: 9.5, weight: '700', color: alpha('#FFFFFF', 0.72) });
       }
-      if (!(this.protoBtns && this.protoBtns.length)) {
+      if (portrait) {
+        // in the open sky between the title and the horizon (~0.39H), so the
+        // invitation never sits on the garden itself
+        drawRotateNudge(ctx, W / 2, H * 0.312, t, this.nudgePulse || 0);
+        GOL.text(ctx, 'turn me sideways', W / 2, H * 0.312 + 50, { size: 13, weight: '700', color: alpha(INK, 0.45 + 0.25 * pulse) });
+      } else if (!(this.protoBtns && this.protoBtns.length)) {
         GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
