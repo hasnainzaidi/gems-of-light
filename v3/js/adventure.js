@@ -14,18 +14,18 @@
   // while a collected ayah plays so the child settles and holds still
   const NEUTRAL = { left: false, right: false, jumpHeld: false, consumeJump() { return false; } };
 
-  // Read-along colors, drawn from the game's approved palette (GOL.PALETTES /
-  // GOL.GEMS) rather than the earlier off-palette berry+violet — those were
-  // the only pink/purple in a world built entirely of green, gold, and cream.
-  // The mapping reinforces the core metaphor: the word being recited now glows
-  // with daybreak GOLD (the light of al-falaq resting on it), and each finished
-  // word settles to a GEM GREEN — gathered, like a collected gem, so the ayah
-  // visibly accumulates from right to left. Waiting words stay quiet cream.
-  const FOLLOW_REST = '#FFFBEE';         // parchment cream — words not yet reached
+  // Read-along colors: a single warm family in three values, not two clashing
+  // hues (the earlier berry+violet, then gold+green, both read as dissonant).
+  // All three are drawn from the game's approved daybreak golds. The word being
+  // recited now is the deepest, most saturated GOLD and quietly glows; a word
+  // already read stays a LIGHTER YELLOW; words not yet reached are the palest
+  // near-white. The ayah fills in as one warm light passes right to left,
+  // leaving a paler trail — no colour change, only a shift in brightness.
+  const FOLLOW_REST = '#FFFBEE';         // near-white pale cream — words not yet reached
   const FOLLOW_ACTIVE = '#F4CD7E';       // fatiha daybreak gold — the word heard now
-  const FOLLOW_DONE = '#4FC08D';         // jade gem green — a word already gathered
+  const FOLLOW_DONE = '#FFE9A0';         // fatiha sunGlow — a lighter yellow, already read
   const FOLLOW_GLOW = 'rgba(244,205,126,0.55)'; // warm gold halo on the active word
-  const FOLLOW_DONE_SHADOW = 'rgba(20,44,34,0.42)'; // soft dark-green seat for legibility
+  const FOLLOW_DONE_SHADOW = 'rgba(92,70,26,0.40)'; // soft warm seat keeps the pale yellow legible
 
   // Paint one ayah as a quiet RTL read-along. The complete Arabic stays
   // visible, while light travels through each word from right to left using
@@ -64,17 +64,9 @@
       audioTime *= g.sourceDuration / g.audio.el.duration;
     }
 
-    // Restoration makes W1's sky very bright by its final gems. A borderless
-    // dusk aura keeps delicate tashkeel legible without turning the ayah into
-    // a card or panel.
-    const aura = ctx.createRadialGradient(W / 2, y, 8, W / 2, y, total / 2 + 64);
-    aura.addColorStop(0, 'rgba(31,48,48,0.3)');
-    aura.addColorStop(0.72, 'rgba(31,48,48,0.16)');
-    aura.addColorStop(1, 'rgba(31,48,48,0)');
-    ctx.globalAlpha = fade;
-    ctx.fillStyle = aura;
-    ctx.fillRect(W / 2 - total / 2 - 70, y - size * 1.25, total + 140, size * 2.5);
-
+    // The ayah sits directly on the sky — no card, panel, or dusk aura behind
+    // it. Each glyph carries its own soft dark shadow, which is enough to keep
+    // the delicate tashkeel legible even against W1's brightest restored sky.
     for (let i = 0; i < words.length; i++) {
       const width = widths[i];
       const cx = right - width / 2;
@@ -91,10 +83,10 @@
       ctx.fillText(words[i], cx, y);
 
       if (active || done) {
-        // A categorical color change is easier to follow than a pale partial
-        // fill: daybreak gold marks the word being heard now (with a warm
-        // halo, as if lit); finished words settle to gem green so the ayah
-        // visibly accumulates from right to left, like gathered gems.
+        // A shift in brightness within one warm family, easier on the eye
+        // than a categorical hue change: deep daybreak gold marks the word
+        // heard now (with a warm halo, as if lit); a word already read holds
+        // a lighter yellow, so the ayah brightens into place right to left.
         ctx.save();
         ctx.globalAlpha = fade;
         ctx.shadowColor = active ? FOLLOW_GLOW : FOLLOW_DONE_SHADOW;
@@ -107,9 +99,7 @@
     }
     ctx.restore();
     return true;
-  }
-  GOL._drawFollowAyah = drawFollowAyah; // TEMP: verification harness only
-  const adventure = {
+  }  const adventure = {
     t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
     sprites: null, player: null, cam: null, fx: null,
     found: [], paused: false, escDown: false, scale: 1,
