@@ -1,12 +1,13 @@
 // World Nine — Al-Ikhlas · The One Light
 // Oneness has no fork; it has a center. A single radiant monument — a pillar
 // of light beside the Wise Tree — stands at the world's heart, seen from
-// everywhere. The journey walks OUT past it to a quiet stone crescent that
-// says "turn home," then comes back along the same road to the center. The
-// only way onward is back to the One Light. Still, sparse, silent: small
-// clusters of cypress framing empty air, no water, and — as each ayah is
-// gathered — one more ring of light widens across the ground until, by the
-// last gem, the whole world stands inside the light.
+// everywhere along one straight, quiet road. The walk flows simply left to
+// right: up a small rise, past the monument's foot, across still open ground
+// to a stone crescent, and on to rest at the world's end. As each ayah is
+// gathered, one more ring of light widens across the ground until, by the
+// last gem, the whole world — and the resting child — stands inside the
+// light. Still, sparse, silent: small clusters of cypress framing empty air,
+// no water, two butterflies, nothing else moving.
 (function () {
   const GOL = window.GOL;
 
@@ -73,18 +74,24 @@
       // the point; the light does all the moving.
       b.ground(0, 83, 13);
 
-      // Start well to the west, so the whole out-and-back reads at a glance.
+      // Start at the far west: the pillar of light is already visible ahead,
+      // and the whole walk simply approaches, passes, and rests within it.
       b.start(2);
-      b.prop('cypress', 7).prop('cypress', 11); // a cluster framing empty air
+      b.prop('cypress', 6).prop('cypress', 10); // a cluster framing empty air
 
-      // AYAH 1 — the journey sets out with a small rise of two garden steps.
-      b.slab(14, 17, 11).slab(19, 22, 9);
-      b.gem(1, 20, 7);
-      b.prop('flowers', 21, { v: 1 });
+      // AYAH 1 — the road sets out with a small rise of two garden steps.
+      b.slab(13, 16, 11).slab(18, 21, 9);
+      b.gem(1, 18, 7);
+      b.prop('flowers', 20, { v: 1 });
 
-      // Between the first rise and the monument: long, open, quiet ground —
+      // THE SECRET — just past the rise, off the main rhythm: a bounce pad
+      // with the one hidden blossom straight above it, open sky overhead.
+      b.bounce(28);
+      b.blossom(28, 7);
+
+      // Between the rise and the monument: long, open, quiet ground —
       // cypresses stand apart, framing air, not filling it.
-      b.prop('cypress', 31).prop('cypress', 35);
+      b.prop('cypress', 33).prop('cypress', 37);
 
       // AYAH 2 — at the monument's very foot. The One Light rises here
       // (drawn by drawLandmark); the Wise Tree stands in front of it, and the
@@ -92,52 +99,42 @@
       b.gem(2, 40, 11);
       b.prop('olive', 40, { v: 1 }); // the Wise Tree, life before the light
 
-      // The resting place and the way onward BOTH sit at the monument's base:
-      // the destination is the One Light. (Brief asked campfire x44 / door x38,
-      // but the checker requires the door to stand a few tiles PAST the
-      // campfire — law wins — so they are flipped: campfire x42, door x46,
-      // still flanking the center, both flat with clear headroom.)
-      b.campfire(42);
-      b.door(46);
-      b.prop('lantern', 45);
+      // AYAH 3 — flat, still ground east of the center, marked only by a
+      // quiet pair of flowers. Nothing moves; the beat is pure stillness.
+      b.gem(3, 54, 11);
+      b.prop('flowers', 53, { v: 2 }).prop('flowers', 55, { v: 1 });
+      b.prop('cypress', 48); // one sentinel between the center and the crescent
 
-      // AYAH 3 — the far turn. A quiet stone crescent arcs up out of the
-      // ground: reaching it says, wordlessly, "now come home." Its gem crowns
-      // the arc's center.
-      b.stoneBlock(61, 62, 12, 12);
-      b.stoneBlock(63, 64, 11, 12);
-      b.stoneBlock(65, 67, 10, 12);
+      // AYAH 4 — the stone crescent, now simply the road's last waypoint.
+      // Its gem crowns the arc's center.
+      b.stoneBlock(60, 61, 12, 12);
+      b.stoneBlock(62, 63, 11, 12);
+      b.stoneBlock(64, 67, 10, 12);
       b.stoneBlock(68, 69, 11, 12);
-      b.stoneBlock(70, 71, 12, 12);
-      b.gem(3, 66, 8);
-      b.prop('cypress', 56).prop('cypress', 60) // framing the far turn
-       .prop('flowers', 66, { v: 1 });
+      b.gem(4, 66, 8);
+      b.prop('flowers', 65, { v: 1 });
 
-      // AYAH 4 — gathered WALKING BACK LEFT. Placed fourth in wake order, its
-      // gem waits on the return road between the crescent and the center, so
-      // the child meets it only after touching the turn and heading home.
-      b.gem(4, 50, 11);
-      b.prop('flowers', 50, { v: 2 });
+      // The resting place and the way onward stand at the world's end, on
+      // flat open ground past the crescent — by the time the child sits, the
+      // fourth ring has carried the light out to enclose this clearing too.
+      b.campfire(72);
+      b.door(76);
+      b.prop('lantern', 75).prop('cypress', 80);
 
-      // THE SECRET — just past the far crescent, the reward for touching the
-      // turn: a bounce pad with the one hidden blossom straight above it.
-      b.bounce(73);
-      b.blossom(73, 7);
-
-      // A single unbroken thread of singing light traces the road out and,
-      // being the same road, home again.
-      b.seedArc(3, 12, 13, 12, 6, 0.6);      // the opening flat
-      b.seedArc(14, 11, 20, 7, 5, 1.4);      // up the two steps to ayah 1
-      b.seed(23, 10).seed(25, 11).seed(27, 12).seed(29, 12); // back down
-      b.seedRun(31, 41, 2);                  // across to the monument's foot
-      b.seedRun(43, 59, 2);                  // out past the center to the turn
-      b.seedArc(59, 11, 66, 9, 6, 1.2);      // up the stone crescent to ayah 3
-      b.seed(69, 10).seed(71, 11).seed(72, 12); // down the crescent's far side
-      b.seed(73, 11).seed(73, 8);            // marking the bounce and its blossom
+      // A single unbroken thread of singing light traces the one-way road.
+      b.seedArc(3, 12, 12, 12, 6, 0.6);       // the opening flat
+      b.seedArc(13, 11, 18, 7, 5, 1.4);       // arcing up the two steps to ayah 1
+      b.seed(22, 9).seed(24, 11).seed(26, 12); // easing back down to the road
+      b.seed(28, 11).seed(28, 8);             // marking the bounce and its blossom
+      b.seedRun(31, 41, 2);                   // across to the monument's foot
+      b.seedRun(43, 57, 2);                   // the still stretch past ayah 3
+      b.seedArc(58, 11, 66, 9, 6, 1.2);       // arcing up the crescent to ayah 4
+      b.seed(68, 10).seed(70, 11);            // down the crescent's far side
+      b.seedRun(71, 79, 2);                   // into the lit clearing
 
       // The only life here: two butterflies. No tortoise, no birdsong —
       // silence is the luxury this world keeps.
-      b.creature('butterfly', 24, 7).creature('butterfly', 54, 7);
+      b.creature('butterfly', 25, 7).creature('butterfly', 51, 7);
     }
   });
 })();

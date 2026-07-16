@@ -1,10 +1,12 @@
 // World Fourteen — Al-Humazah · Gathered To Give
-// Nine dull grey hoard-piles line the road, each one a low stone cairn with
-// an open pocket the child simply walks into. Lift the gem out and the engine
-// blooms flowers over the abandoned grey heap (bloomScale 3): generosity told
-// entirely through restoration. The world never scolds — it blooms. The sky
-// warms from humazah's deep shade to the shared table of maun as each gift is
-// carried away, and two open stretches breathe between the hoards.
+// Nine dull grey hoard-piles line the road: seven are open pockets the child
+// simply walks into, and two (hoards 5 and 6) are boxes sealed on purpose
+// with pale OFFERING STONE (b.lid) — stand on the pile and it opens under
+// the child's feet, dropping them gently in beside the gem. Lift a gem out
+// and the engine blooms flowers over the abandoned grey heap (bloomScale 3):
+// generosity told entirely through restoration. The world never scolds — it
+// blooms. The sky warms from humazah's deep shade to the shared table of
+// maun as each gift is carried away; two open stretches breathe between.
 (function () {
   const GOL = window.GOL;
 
@@ -51,20 +53,28 @@
       b.gem(4, 46, 10);
       b.prop('cypress', 43);
 
-      // HOARD 5 — behind a low woven wall. A run of wall props screens the
-      // cairn; the gem nests in a roofed pocket that opens toward the road.
+      // HOARD 5 — behind a low woven wall, a box shut on purpose: the WHOLE
+      // cairn is pale offering stone (b.lid). Climb onto it and it opens
+      // under the child's feet, sinking them gently in beside the gem it
+      // kept. Gem and seeds here use explicit rows only — the surface over
+      // a lid column is the closed lid, and anchors to it would float.
       b.prop('wall', 52, { n: 3 });
-      b.stoneBlock(55, 57, 11, 12);
+      b.lid(55, 57, 11, 12);
       b.carve(56, 56, 12, 12);
       b.gem(5, 56, 12);
+      b.seed(56, 10); // an invitation hovering over the sealed pile
       b.prop('flowers', 59, { v: 0 });
 
       // HOARD 6 — half-ringed by column stubs, a hoard of fallen grandeur.
-      // Broken columns curl around a small cairn with its west pocket open.
+      // The grey shell stands, but its capstone is a single offering stone:
+      // stand on the crown and the seal opens, dropping the child into the
+      // little vault where the gem waits.
       b.prop('column', 63).prop('column', 68);
       b.stoneBlock(65, 67, 11, 12);
       b.carve(66, 66, 12, 12);
+      b.lid(66, 66, 11, 11);
       b.gem(6, 66, 12);
+      b.seed(66, 10); // the same wordless "stand here" over the capstone
       b.prop('tuft', 70, { v: 1 });
 
       // --- OPEN STRETCH TWO (x ~69–82): the secret lives here ---

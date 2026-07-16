@@ -563,6 +563,29 @@
     atlas.blockPlain = mkBlock(false, seed + 520);
     atlas.blockPlain2 = mkBlock(false, seed + 540);
 
+    // -- the offering stone: carved block gone PALE, as if lit from within.
+    // The breathing glow seam is painted live (adventure.js) — the atlas
+    // holds only the quiet stone so the invitation can pulse.
+    {
+      const c = makeCanvas(T, T);
+      const x = c.getContext('2d');
+      const vseed = seed + 560;
+      wobblePath(x, [[1.5, 1.5], [T - 1.5, 1.5], [T - 1.5, T - 1.5], [1.5, T - 1.5]], vseed, 2.5);
+      const g = x.createLinearGradient(0, 0, T, T);
+      g.addColorStop(0, tint(P.stone, 0.55));
+      g.addColorStop(1, tint(P.stoneShade, 0.3));
+      x.fillStyle = g; x.fill();
+      x.save();
+      wobblePath(x, [[1.5, 1.5], [T - 1.5, 1.5], [T - 1.5, T - 1.5], [1.5, T - 1.5]], vseed, 2.5);
+      x.clip();
+      dabs(x, 0, 0, T, T, alpha(P.stoneDark, 0.08), 4, vseed + 1, 1.5, 3.5);
+      dabs(x, 0, 0, T, 14, alpha(tint(P.stone, 0.7), 0.5), 3, vseed + 2, 2, 4);
+      x.strokeStyle = alpha(P.stoneDark, 0.18); x.lineWidth = 1.5;
+      x.strokeRect(7, 7, T - 14, T - 14);
+      x.restore();
+      atlas.lid = c;
+    }
+
     return atlas;
   }
   GOL.buildTileAtlas = buildTileAtlas;
