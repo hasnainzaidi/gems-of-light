@@ -225,15 +225,34 @@
   <ellipse cx="148" cy="-96" rx="10" ry="5.5" fill="#D6C9A2" opacity="0.8"/>
 </g>
 
-<!-- the stone channel carrying the spring's water toward the meadow -->
-<g fill="none" stroke-linecap="round">
-  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#C9B389" stroke-width="50" transform="translate(0,7)"/>
-  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#ECDFBE" stroke-width="42"/>
-  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#6FB6A4" stroke-width="26"/>
-  <path d="M905,742 C960,796 1060,832 1170,858 C1270,882 1350,896 1420,912" stroke="#8ECFBE" stroke-width="17"/>
-  <path d="M948,786 C980,812 1018,830 1056,842" stroke="#C8ECDB" stroke-width="5" opacity="0.8"/>
-  <path d="M1210,868 C1256,880 1300,890 1340,898" stroke="#C8ECDB" stroke-width="5" opacity="0.7"/>
+<!-- the fountain rising from the spring (the game's own fountain shape:
+     stone pillar, falling water arcs, droplets) -->
+<g>
+  <ellipse cx="880" cy="612" rx="70" ry="27" fill="none" stroke="#C8ECDB" stroke-width="3" opacity="0.35"/>
+  <ellipse cx="880" cy="612" rx="47" ry="18" fill="none" stroke="#C8ECDB" stroke-width="3" opacity="0.5"/>
+  <ellipse cx="880" cy="620" rx="28" ry="11.5" fill="#C9B389"/>
+  <ellipse cx="880" cy="614" rx="25" ry="10.5" fill="#ECDFBE"/>
+  <rect x="871" y="540" width="18" height="74" rx="8" fill="#ECDFBE"/>
+  <rect x="882" y="544" width="7" height="68" rx="3.5" fill="#D6C9A2" opacity="0.7"/>
+  <ellipse cx="880" cy="541" rx="14" ry="6" fill="#C9B389"/>
+  <ellipse cx="880" cy="538" rx="14" ry="6" fill="#FDF6E4"/>
+  <g fill="none" stroke="#C8ECDB" stroke-linecap="round">
+    <path d="M880,534 L880,508" stroke-width="7" opacity="0.9"/>
+    <path d="M880,508 C860,492 842,516 836,574" stroke-width="5" opacity="0.85"/>
+    <path d="M880,508 C900,492 918,516 924,574" stroke-width="5" opacity="0.85"/>
+    <path d="M880,508 C871,496 864,524 862,562" stroke-width="4" opacity="0.6"/>
+    <path d="M880,508 C889,496 896,524 898,562" stroke-width="4" opacity="0.6"/>
+  </g>
+  <circle cx="880" cy="502" r="7.5" fill="#E8F7EE"/>
+  <circle cx="839" cy="536" r="3" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="922" cy="546" r="3" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="866" cy="522" r="2.4" fill="#FFFFFF" opacity="0.8"/>
+  <ellipse cx="836" cy="580" rx="11" ry="4.5" fill="none" stroke="#C8ECDB" stroke-width="2.5" opacity="0.7"/>
+  <ellipse cx="924" cy="580" rx="11" ry="4.5" fill="none" stroke="#C8ECDB" stroke-width="2.5" opacity="0.7"/>
 </g>
+<!-- a little dressing where the meadow opens, lower right -->
+<use href="#tuft" transform="translate(1080,806) scale(1.5)"/>
+<use href="#bloom" transform="translate(1230,844) scale(1.4)"/>
 
 <!-- ===================== garden dressing ===================== -->
 <use href="#tree" transform="translate(1330,600) scale(1.25)"/>

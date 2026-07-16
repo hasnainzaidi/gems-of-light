@@ -214,7 +214,9 @@
       if (fade.t >= 1) fade.phase = 'idle';
     }
 
-    const portrait = H > W && GOL.Input.touchMode;
+    // scenes that paint their own portrait composition (the title's postcard
+    // is the rotate invitation itself) opt out of the sideways curtain
+    const portrait = H > W && GOL.Input.touchMode && !(current && current.ownsPortrait);
     if (!portrait || !current) {
       current.update(dt, W, H);
       current.draw(ctx, W, H);
