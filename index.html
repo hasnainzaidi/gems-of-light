@@ -35,9 +35,10 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-180.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Self-hosted fonts (fonts/), so the game reaches NO third-party origin
+       at load — first paint is network-independent and the App Store Kids
+       rules on third-party calls are satisfied. See v3/APP-STORE-PLAN.md. -->
+  <link rel="stylesheet" href="fonts/fonts.css" />
   <style>
     html, body {
       margin: 0; padding: 0;
@@ -65,7 +66,7 @@
   <script src="v3/js/core/art.js?v=356"></script>
   <script src="v3/js/core/props.js?v=321"></script>
   <script src="v3/js/core/actors.js?v=348"></script>
-  <script src="v3/js/core/audio.js?v=327"></script>
+  <script src="v3/js/core/audio.js?v=365"></script>
   <script src="v3/js/core/engine.js?v=356"></script>
   <script src="v3/js/ui.js?v=363"></script>
   <script src="v3/js/dsl.js?v=356"></script>
@@ -93,7 +94,7 @@
   <script src="v3/js/shrine.js?v=328"></script>
   <script src="v3/js/grownups.js?v=322"></script>
   <script src="v3/js/install.js?v=321"></script>
-  <script src="v3/js/boot.js?v=356"></script>
+  <script src="v3/js/boot.js?v=365"></script>
   <script>
     // offline keeper — same worker, refreshed for the v3 root (see sw.js)
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
