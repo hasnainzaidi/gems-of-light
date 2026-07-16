@@ -123,6 +123,20 @@
     maun: palO({ waterHi: '#C9ECDD' }),
     // The Caravan Rest — dust of the road, warm and settled.
     quraysh: palO({ skyLow: '#F5D294', soil: '#CDAB7C', hillFar: '#BBCB97', mist: '#F2E8CC' }),
+    // The Winter Road — Quraish's cool season; scenes lerp toward `quraysh`
+    // (the warm summer dust) as the caravan's gems are gathered.
+    quraishWinter: palO({
+      skyTop: '#8FB4BC', skyMid: '#C2D8CA', skyLow: '#E8E4D0',
+      sun: '#FFF6E2', sunGlow: '#EDE4C6', cloud: '#EFF2E8', ray: '#E8EED8',
+      hillFar: '#A9C2B4', hillMid: '#84A98E', hillNear: '#63946E',
+      mist: '#E2E8DC',
+      grass: '#7FAE74', grassLight: '#A6CD96', grassDark: '#5E8F58',
+      soil: '#B3A488', pebble: '#D2CBB4',
+      stone: '#DFDCC8', stoneShade: '#BFBCA2', stoneDark: '#9C9A82',
+      waterHi: '#C6E4E0', water: '#8FC2C2', waterDeep: '#5C9AA0',
+      leaf: '#6FA268', leafLight: '#96C384', leafDark: '#4E8050',
+      gold: '#E8C382', goldDeep: '#C9A050'
+    }),
     // The Bird Sky — wide bright air over the grove.
     fil: palO({ skyTop: '#9ECFC0', skyMid: '#DFEDC0', cloud: '#FFF8E6' }),
     // The Deep Shade — cool under heavy branches.

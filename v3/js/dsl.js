@@ -182,9 +182,14 @@
       start: b.startPos, campfire: b.campfirePos, door: b.doorPos,
       // per-prototype flavor hooks (all optional):
       //   weather: 'rain' — rain that thins as restoration rises
-      //   drawLandmark(ctx, t, P, L) — a huge fixture drawn in world space
+      //   drawLandmark(ctx, t, P, L, prog) — a huge fixture drawn in world
+      //     space; `prog` is the 0..1 fraction of gems gathered this visit
+      //   flock: { x, y, max } — an ambient wheeling flock (world-space
+      //     anchor tile x/y; `max` birds at full collection) that fills the
+      //     sky as gems are gathered. Drawn on the landmark layer.
       weather: def.weather || null,
       drawLandmark: def.drawLandmark || null,
+      flock: def.flock ? Object.assign({}, def.flock) : null,
       bloomScale: def.bloomScale,
       bloomBanks: Array.isArray(def.bloomBanks) ? def.bloomBanks.map((r) => r.slice()) : null,
       bloomAhead: def.bloomAhead ? Object.assign({}, def.bloomAhead) : null,

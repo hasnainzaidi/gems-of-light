@@ -69,18 +69,18 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 | Journey | Phase | Surah | Key | Ayat | Status | Grammar / seed |
 |---:|---:|---|---|---:|---|---|
 | 1 | 1 | Al-Fatiha (1) | `fatiha` | 7 | ✅ W8 | Cozy Garden / straight path |
-| 2 | 1 | Al-Ikhlas (112) | `ikhlas` | 4 | next new world | Landmark line / the One Light |
+| 2 | 1 | Al-Ikhlas (112) | `ikhlas` | 4 | ✅ W9 | Landmark line / the One Light |
 | 3 | 1 | Al-Falaq (113) | `falaq` | 5 | ✅ W1 | Cozy Garden / daybreak |
 | 4 | 1 | An-Nas (114) | `nas` | 6 | ✅ W2 | Cozy Garden / mirror-twin village |
 | 5 | 2 | Al-Kawthar (108) | `kawthar` | 3 | ✅ W5 | River Road / abundance |
-| 6 | 2 | An-Nasr (110) | `nasr` | 3 | planned | Guided garden road / opening gate |
-| 7 | 2 | Al-Masad (111) | `masad` | 5 | planned | Cozy Garden / palm grove |
-| 8 | 2 | Quraish (106) | `quraish` | 4 | planned | River Road / two seasons |
-| 9 | 2 | Al-Fil (105) | `fil` | 5 | planned | Cozy Garden / bird flocks |
-| 10 | 2 | Al-Humazah (104) | `humazah` | 9 | planned | Cozy Garden / hoards bloom |
-| 11 | 2 | Al-'Asr (103) | `asr` | 3 | planned | Guided Path / golden hour |
-| 12 | 3 | At-Takathur (102) | `takathur` | 8 | planned | Cozy + occluders / true garden |
-| 13 | 3 | Al-Qari'ah (101) | `qariah` | 11 | planned | Windy moor / balanced stone |
+| 6 | 2 | An-Nasr (110) | `nasr` | 3 | ✅ W10 | Guided garden road / opening gate |
+| 7 | 2 | Al-Masad (111) | `masad` | 5 | ✅ W11 | Cozy Garden / palm grove |
+| 8 | 2 | Quraish (106) | `quraish` | 4 | ✅ W12 | River Road / two seasons |
+| 9 | 2 | Al-Fil (105) | `fil` | 5 | ✅ W13 | Cozy Garden / bird flocks |
+| 10 | 2 | Al-Humazah (104) | `humazah` | 9 | ✅ W14 | Cozy Garden / hoards bloom |
+| 11 | 2 | Al-'Asr (103) | `asr` | 3 | ✅ W15 | Guided Path / golden hour |
+| 12 | 3 | At-Takathur (102) | `takathur` | 8 | ✅ W16 | Cozy + occluders / true garden |
+| 13 | 3 | Al-Qari'ah (101) | `qariah` | 11 | ✅ W17 | Windy moor / balanced stone |
 | 14 | 3 | Al-'Adiyat (100) | `adiyat` | 11 | ✅ W3 | River Road / momentum |
 | 15 | 3 | Az-Zalzalah (99) | `zalzalah` | 8 | planned | Soft mounds / earth offers gems |
 | 16 | 3 | Al-Bayyinah (98) | `bayyinah` | 8 | planned | Guided dusk lane / lanterns |
@@ -226,9 +226,13 @@ until the previous wave's worlds have been played by the nieces. Build in
 phase order so the earliest gap in the child's path always gets attention
 first; one bad assumption copied into later recipes is the expensive failure.
 
-> **NEXT NEW WORLD: AL-IKHLAS, ALONE.** It sits second in Phase 1 and is the
-> only gap in the child's first month. Build its existing One Light sketch,
-> playtest it, and record the verdict before opening Phase 2 work.
+> **2026-07-15: the momentum & patience wave built journeys 1–13 in one
+> approved pass** (Hasnain consolidated the per-wave gates into one staging
+> playtest of the whole span): W9 Ikhlas, W10 Nasr, W11 Masad, W12 Quraish,
+> W13 Fil, W14 Humazah, W15 'Asr, W16 Takathur, W17 Qari'ah — briefs in
+> `BRIEFS-2026-07-15-momentum-patience.md`, verdict pending on staging.
+> **NEXT NEW WORLDS: AZ-ZALZALAH + AL-BAYYINAH** (journeys 15–16, the last
+> Phase 3 gaps), after the wave's playtest verdict lands.
 
 - **Phase 1 gate — Al-Ikhlas alone.** The meaningful-landmark idea carries
   real design risk and earns an isolated child playtest.

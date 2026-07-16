@@ -9,10 +9,11 @@
 
   // ------------------------------------------------------------ reciters --
   // one voice at a time, chosen in the tuning panel; local files first,
-  // everyayah.com streaming as the fallback
+  // everyayah.com streaming as the fallback. Mishary is the default voice
+  // (2026-07-15); Abdul Basit remains one tap away in the tuning panel.
   GOL.RECITERS = {
     basit: { name: 'Abdul Basit (Murattal)', local: '../audio/basit/', remote: 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/' },
-    alafasy: { name: 'Mishary Alafasy', local: '../audio/', remote: 'https://everyayah.com/data/Alafasy_128kbps/' }
+    alafasy: { name: 'Mishary Alafasy', local: '../audio/alafasy/', remote: 'https://everyayah.com/data/Alafasy_128kbps/' }
   };
 
   // ------------------------------------------------------------ tunables --
@@ -51,12 +52,13 @@
     groundBias: parseFloat(q.get('groundY') || '0.50'),
     arabic: q.get('ar') !== '0',               // ayah script glow on collect
     surah: q.get('surah') ? parseInt(q.get('surah'), 10) : null,
-    reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'basit'
+    reciter: GOL.RECITERS[q.get('reciter')] ? q.get('reciter') : 'alafasy'
   };
   // the in-app tuning panel persists its choices; a URL param still wins as
   // an explicit override for that key. CFG_V lets a default change (like the
-  // echo one above) reset a stale persisted echo instead of stranding it.
-  const CFG_V = 2;
+  // echo one above, or the 2026-07-15 Mishary default) reset a stale
+  // persisted choice instead of stranding it.
+  const CFG_V = 3;
   try {
     const saved = JSON.parse(localStorage.getItem('gemsOfLight.v3cfg') || '{}');
     if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
@@ -64,7 +66,7 @@
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
     if (!q.has('cols') && saved.maxCols) GOL.V3.maxCols = saved.maxCols;
     if (!q.has('groundY') && saved.groundBias) GOL.V3.groundBias = saved.groundBias;
-    if (!q.has('reciter') && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
+    if (!q.has('reciter') && saved.v === CFG_V && GOL.RECITERS[saved.reciter]) GOL.V3.reciter = saved.reciter;
     // debug toggled from the tuning panel persists; ?debug=1 stays the boss
     if (!q.has('debug') && saved.debug != null) GOL.DEBUG = !!saved.debug;
   } catch (e) { /* private mode: play on */ }

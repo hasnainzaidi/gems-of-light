@@ -679,6 +679,36 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   delete"). `GOL.homeScene`: home means the map everywhere once
   visited (worlds, shrines, dreams, grown-ups). The P19 lab stays for
   future art rounds.
+- **THE MOMENTUM & PATIENCE WAVE — JOURNEYS 1–13 FULLY BUILT (2026-07-15,
+  on Hasnain's "build all the worlds to get to the first 13 surahs"):**
+  nine new worlds in one wave — W9 Ikhlas (One Light monument + prog-driven
+  light rings), W10 Nasr (the opening gate, doors swing in thirds per gem),
+  W11 Masad (palm grove — built twice as an Opus-vs-Sonnet bake-off on the
+  same locked brief; SONNET WON on tile-delivered cluster variety, a data
+  point for the model-tier rule: locked reskin briefs no longer need the
+  top tier), W12 Quraish (quraishWinter→quraysh palette drift = the two
+  seasons; the House constant at the end), W13 Fil (the ababil flock — new
+  engine hook `flock:{x,y,max}`, birds grow ceil(max·prog) with a 3-bird
+  floor; distant elephant-rock silhouette, resized once after browser
+  review caught it huge), W14 Humazah (nine varied stoneBlock hoard-cairns,
+  bloomScale 3 blooms each pile as its gem leaves), W15 'Asr (56-tile
+  golden-hour path, asr→qariah drift, sundial landmark), W16 Takathur
+  (occluders' first production home: six furnished veiled pockets + an
+  unveiled finale), W17 Qari'ah (windy moor, 70 drifting seeds, balanced-
+  stone skyline). Engine plumbing (one agent): drawLandmark grew a 5th
+  `prog` arg; dsl passes `flock` through. Orchestrator: quraishWinter
+  palette; 9 script tags ×2 entry points at ?v=363. Briefs:
+  `BRIEFS-2026-07-15-momentum-patience.md` (anti-template guardrails
+  distilled from the 2026-07-14 review). Checker green ×17 + 42-script
+  parity; browser-verified: flock growth, gate thirds, monument rings,
+  veil softening, map doors ×13, Mishary local audio 200s. ALSO: MISHARY
+  ALAFASY IS THE DEFAULT RECITER (per Hasnain) — 185 local mp3s fetched
+  (audio/alafasy/, 18 MB, everyayah 128kbps, all 24 journey surahs),
+  registry local path fixed, CFG_V 2→3 so pre-switch saves adopt the new
+  default; Abdul Basit stays one tap away in the tuning panel. The
+  per-wave playtest gates were consolidated by Hasnain into ONE staging
+  playtest of the whole 13-surah span — verdict pending, specifics to
+  land here.
 - **THE SPLASH IS A POSTCARD FROM THE GARDEN (2026-07-15, on Hasnain's
   request):** the title screen now opens on `v3/art/splash-postcard.svg`
   — the lightling beside the valley spring (the map's eight-point-star
