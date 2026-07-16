@@ -1,15 +1,17 @@
 # Showcase Mode — implementation plan
 
-Status: active workstream on `codex/showcase-mode`, branched from
-`origin/staging` at `d6d5940` on 2026-07-16.
+Status: initial runtime merged to `staging` on 2026-07-16; secular onboarding
+and PWA setup follow-up on `codex/showcase-onboarding`.
 
 ## Goal
 
 Add a religion-neutral, shareable Showcase experience without changing the
 default Quran-learning game. Showcase keeps the real worlds, movement,
 ordered gems, restoration, campfire, map, and return celebrations. It removes
-recitation, ayah script, the shrine/Remembering, progression locks, onboarding,
-grown-ups controls, install prompts, and developer chrome from the guest flow.
+recitation, ayah script, the shrine/Remembering, progression locks, grown-ups
+controls, and developer chrome from the guest flow. It retains the parent porch
+and optional installation journey with secular copy and a Showcase-specific PWA
+launch target.
 
 The first delivery is `?showcase=1` on the existing staging entry. A dedicated
 `/showcase/` entry with neutral social metadata is a follow-up after the runtime
@@ -28,6 +30,8 @@ experience passes phone review.
    enters the shrine or Remembering.
 6. `node v3/tools/check.mjs` remains green, including entry parity and existing
    onboarding contracts.
+7. Installing from Showcase launches back into `?showcase=1`; it must never
+   silently open the Quran-learning profile.
 
 ## Delegation waves
 
@@ -38,7 +42,9 @@ Files: `js/core/engine.js`, `js/core/audio.js`, `js/boot.js`, `js/worlds.js`.
 - Define one immutable experience profile selected by `?showcase=1`.
 - Select isolated save/config keys before storage loads.
 - Add central recitation/preload guards.
-- Bypass the grown-up porch and expose all built worlds only for Showcase.
+- Expose all built worlds only for Showcase. The initial delivery bypassed the
+  grown-up porch; the follow-up restores it with neutral copy and isolated
+  one-time migration state.
 - Keep the normal experience as the default branch through every decision.
 
 Wave 0 lands before scene agents begin, so they consume one stable contract.
@@ -56,15 +62,16 @@ Wave 0 lands before scene agents begin, so they consume one stable contract.
 **Guest surfaces agent — `js/ui.js` and `js/map.js` only**
 
 - Give Showcase neutral title treatment and no Arabic subtitle.
-- Hide tuning, grown-ups, install prompts, Remembering Moons, and debug chrome
-  from the guest flow.
+- Hide tuning, grown-ups, Remembering Moons, and debug chrome from the guest
+  flow. Installation remains available through the neutral parent porch.
 - Make all regions and built-world doors navigable; preserve map bloom/arrival
   feedback from the isolated Showcase completion state.
 
 **Contract-test agent — `tools/test-showcase-contract.mjs` and checker wiring**
 
-- Assert isolated keys, central audio guards, porch bypass, all-open access,
-  shrine bypass, and neutral-surface gates.
+- Assert isolated keys, central audio guards, secular porch wiring, all-open
+  access, shrine bypass, neutral-surface gates, and the dedicated manifest
+  launch target.
 - Add the test to the full checker without weakening existing tests.
 
 ### Wave 2 — orchestrator integration

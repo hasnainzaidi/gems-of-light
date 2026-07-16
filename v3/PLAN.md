@@ -801,9 +801,13 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 - **SHOWCASE MODE — ONE BUILD, TWO HONEST EXPERIENCES (built 2026-07-16;
   phone verdict pending):** `?showcase=1` selects an immutable guest profile
   before storage loads. It uses `gemsOfLight.v3.showcase` plus its own config,
-  centrally blocks recitation/preloads/ayah script, bypasses the grown-up porch,
-  opens every built world, and removes tuning, grown-ups, install, debug chrome,
-  and Remembering Moons from the guest surfaces. The game itself remains the
+  centrally blocks recitation/preloads/ayah script, opens every built world,
+  and removes tuning, grown-ups, debug chrome, and Remembering Moons from the
+  guest surfaces. Showcase retains the grown-up porch and optional PWA setup in
+  a secular form: Explore → Collect → Restore, neutral parent copy, no preview
+  recitation, and a dedicated manifest whose installed `start_url` is
+  `?showcase=1`. Existing Showcase saves receive this porch once without losing
+  their isolated completion state. The game itself remains the
   real platformer: ordered gems, restoration, creatures, seeds, campfire, and
   map. At the campfire the gathered lights merge into a World Gem; the existing
   arch returns to the journey and blooms that world's map spot instead of

@@ -12,8 +12,8 @@ verdict is logged.
 
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
-      and ordinary-mode regression — verdicts → `PLAN.md` §10; contract:
-      `SHOWCASE-PLAN.md`
+      secular parent porch + installed-PWA relaunch, and ordinary-mode
+      regression — verdicts → `PLAN.md` §10; contract: `SHOWCASE-PLAN.md`
 - [ ] Playtest the momentum & patience wave ON STAGING: journeys 1–13
       now fully built (W9–W17 new: Ikhlas, Nasr, Masad, Quraish, Fil,
       Humazah, 'Asr, Takathur, Qari'ah) + Mishary as default reciter —

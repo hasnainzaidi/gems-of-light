@@ -24,6 +24,15 @@ assert.match(onboarding, /completeParentOnboarding/,
   'handoff must persist the adult/child boundary');
 assert.match(onboarding, /childMode|childWelcome|handoff/,
   'handoff must enter the child postcard explicitly');
+assert.match(onboarding, /Explore\s+→\s+Collect\s+→\s+Restore/,
+  'Showcase onboarding must explain its secular loop');
+assert.match(onboarding, /Make Gems of Light yours/,
+  'Showcase setup must speak to the guest directly');
+
+assert.match(preview, /Explore\s+→\s+collect\s+→\s+restore/,
+  'Showcase preview must reinforce its secular loop');
+assert.match(preview, /GOL\.EXPERIENCE\.recitation/,
+  'Showcase preview must never request verse playback');
 
 const boot = read('js/boot.js');
 assert.match(boot, /parentComplete/);

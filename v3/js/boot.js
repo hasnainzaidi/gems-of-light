@@ -153,9 +153,18 @@
   {
     const hadJourney = GOL.hasJourneyProgress();
     const ob = (GOL.store.data.onboarding = GOL.store.data.onboarding || {});
-    if (ob.v == null) ob.v = 1;
-    if (ob.parentComplete == null) ob.parentComplete = hadJourney;
-    if (ob.childStarted == null) ob.childStarted = hadJourney;
+    // Showcase originally shipped without a porch. Give every existing guest
+    // save the new secular onboarding exactly once, while retaining its worlds.
+    // The marker is persisted when the handoff completes; leaving early means
+    // the calm invitation returns next time.
+    if (GOL.EXPERIENCE.showcase && ob.showcaseV !== 1) {
+      ob.v = 1; ob.showcaseV = 1;
+      ob.parentComplete = false; ob.childStarted = false;
+    } else {
+      if (ob.v == null) ob.v = 1;
+      if (ob.parentComplete == null) ob.parentComplete = hadJourney;
+      if (ob.childStarted == null) ob.childStarted = hadJourney;
+    }
   }
   GOL.onboardingStatus = () => GOL.store.data.onboarding;
   GOL.completeParentOnboarding = function () {
