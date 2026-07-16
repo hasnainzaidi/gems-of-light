@@ -10,6 +10,11 @@ verdict is logged.
 
 ## Now
 
+- [ ] Playtest the momentum & patience wave ON STAGING: journeys 1–13
+      now fully built (W9–W17 new: Ikhlas, Nasr, Masad, Quraish, Fil,
+      Humazah, 'Asr, Takathur, Qari'ah) + Mishary as default reciter —
+      verdicts → `PLAN.md` §10 (briefs:
+      `BRIEFS-2026-07-15-momentum-patience.md`)
 - [ ] Phone-verdict the round-4 map ON STAGING (`?lab=19`): four
       islands 6/6/6/6, waypoint walk, arrival entry, rail camera,
       eight wired surah doors — verdicts →

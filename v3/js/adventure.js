@@ -14,6 +14,19 @@
   // while a collected ayah plays so the child settles and holds still
   const NEUTRAL = { left: false, right: false, jumpHeld: false, consumeJump() { return false; } };
 
+  // Read-along colors, drawn from the game's approved palette (GOL.PALETTES /
+  // GOL.GEMS) rather than the earlier off-palette berry+violet — those were
+  // the only pink/purple in a world built entirely of green, gold, and cream.
+  // The mapping reinforces the core metaphor: the word being recited now glows
+  // with daybreak GOLD (the light of al-falaq resting on it), and each finished
+  // word settles to a GEM GREEN — gathered, like a collected gem, so the ayah
+  // visibly accumulates from right to left. Waiting words stay quiet cream.
+  const FOLLOW_REST = '#FFFBEE';         // parchment cream — words not yet reached
+  const FOLLOW_ACTIVE = '#F4CD7E';       // fatiha daybreak gold — the word heard now
+  const FOLLOW_DONE = '#4FC08D';         // jade gem green — a word already gathered
+  const FOLLOW_GLOW = 'rgba(244,205,126,0.55)'; // warm gold halo on the active word
+  const FOLLOW_DONE_SHADOW = 'rgba(20,44,34,0.42)'; // soft dark-green seat for legibility
+
   // Paint one ayah as a quiet RTL read-along. The complete Arabic stays
   // visible, while light travels through each word from right to left using
   // timestamps from the world's own fixed recitation. Keeping the shaping
@@ -74,18 +87,19 @@
       ctx.globalAlpha = fade * 0.52;
       ctx.shadowColor = 'rgba(20,34,33,0.72)';
       ctx.shadowBlur = 5;
-      ctx.fillStyle = '#FFFBEE';
+      ctx.fillStyle = FOLLOW_REST;
       ctx.fillText(words[i], cx, y);
 
       if (active || done) {
         // A categorical color change is easier to follow than a pale partial
-        // fill: berry marks the word being heard now; completed words remain
-        // violet so the ayah visibly accumulates from right to left.
+        // fill: daybreak gold marks the word being heard now (with a warm
+        // halo, as if lit); finished words settle to gem green so the ayah
+        // visibly accumulates from right to left, like gathered gems.
         ctx.save();
         ctx.globalAlpha = fade;
-        ctx.shadowColor = 'rgba(38,25,67,0.42)';
-        ctx.shadowBlur = 2;
-        ctx.fillStyle = active ? '#C94F73' : '#6840A8';
+        ctx.shadowColor = active ? FOLLOW_GLOW : FOLLOW_DONE_SHADOW;
+        ctx.shadowBlur = active ? 7 : 2;
+        ctx.fillStyle = active ? FOLLOW_ACTIVE : FOLLOW_DONE;
         ctx.fillText(words[i], cx, y);
         ctx.restore();
       }
@@ -94,7 +108,7 @@
     ctx.restore();
     return true;
   }
-
+  GOL._drawFollowAyah = drawFollowAyah; // TEMP: verification harness only
   const adventure = {
     t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
     sprites: null, player: null, cam: null, fx: null,
@@ -199,6 +213,31 @@
       });
       this.strips = mkStrips(this.P, 100 + L.id * 11);
       this.strips2 = this.endP ? mkStrips(this.endP, 100 + L.id * 11) : null;
+
+      // the ababil flock (P.2): a pool of ambient birds wheeling around the
+      // world-space anchor. Deterministic per-bird orbits (no per-frame
+      // randomness); how many actually fly grows with collection. Capped at
+      // 40 for perf; silhouette colour comes from the live palette at draw.
+      this.flock = null;
+      if (L.flock) {
+        const cap = Math.min(40, Math.max(3, L.flock.max | 0));
+        const birds = [];
+        for (let i = 0; i < cap; i++) {
+          const u = i * 2.399963;                          // golden-angle spread
+          birds.push({
+            a: u % (Math.PI * 2),                          // orbit phase
+            r: 34 + (i % 5) * 17,                          // 34..102px radius
+            sp: (0.22 + (i % 4) * 0.06) * (i % 2 ? -1 : 1), // gentle, mixed spin
+            yr: 0.42 + (i % 3) * 0.11,                     // flattened sky ellipse
+            ph: u * 1.7,                                   // spread/flap offset
+            sweep: i % 3 === 0,                            // a third roam wider
+            sweepAt: (i * 3.3) % 10,                       // staggered ~10s cycle
+            sweepDir: i % 2 ? 1 : -1,
+            sweepSpan: 150 + (i % 4) * 40
+          });
+        }
+        this.flock = { def: L.flock, birds };
+      }
 
       this.stoneTiles = new Set();
       for (const p of L.props) {
@@ -1206,6 +1245,45 @@
       pl.lastSafe = { x: pl.x, y: pl.y };
     },
 
+    // A single flock bird's world-space position at time `tt`: a loose
+    // wheeling orbit around the anchor, with a gentle sinusoidal spread. A
+    // sweeper bird also arcs a long way across the sky and back once every
+    // ~10s (staggered per bird), rising a touch as it goes — never diving.
+    flockPos(b, cx, cy, tt) {
+      const ang = tt * b.sp + b.a;
+      let x = cx + Math.cos(ang) * b.r;
+      let y = cy + Math.sin(ang) * b.r * b.yr + Math.sin(tt * 0.6 + b.ph) * 9;
+      if (b.sweep) {
+        const u = ((((tt + b.sweepAt) / 10) % 1) + 1) % 1;   // 0..1 each ~10s
+        const env = u < 0.45 ? Math.sin((u / 0.45) * Math.PI) : 0;
+        x += b.sweepDir * env * b.sweepSpan;
+        y -= env * 24;
+      }
+      return { x, y };
+    },
+
+    // the ababil flock: reuse the ambient bird painter in its flight mode
+    // (fleeing → no legs, wings beating). Count grows with collection, a
+    // floor of 3 keeps the sky alive; birds far off-camera are skipped.
+    drawFlock(ctx, t, P, cam) {
+      const L = this.L, fk = this.flock, d = fk.def;
+      const prog = L.gems.length ? this.found.length / L.gems.length : 0;
+      const n = Math.min(fk.birds.length, Math.max(3, Math.ceil(d.max * prog)));
+      const cx = d.x * TILE, cy = d.y * TILE;
+      const col = GOL.color.shade(P.hillNear, 0.28);
+      const st = { col, facing: 1, fleeing: true, phase: 0 };
+      for (let i = 0; i < n; i++) {
+        const b = fk.birds[i];
+        const p = this.flockPos(b, cx, cy, t);
+        if (p.x < cam.x - 120 || p.x > cam.x + cam.viewW + 120) continue;
+        // face the way it is travelling (sample a moment ahead)
+        const ahead = this.flockPos(b, cx, cy, t + 0.06);
+        st.facing = ahead.x >= p.x ? 1 : -1;
+        st.phase = b.ph;
+        GOL.drawBird(ctx, p.x, p.y, t + b.a, P, st);
+      }
+    },
+
     // -------------------------------------------------------------- draw --
     draw(ctx, W, H) {
       const L = this.L, t = this.t, cam = this.cam || { x: 0, y: 0, viewW: W, viewH: H };
@@ -1254,8 +1332,16 @@
       for (const w of this.waterRects) GOL.drawWater(ctx, w.x, w.y, w.w, w.h, t, P);
 
       // the prototype's own landmark (a great tree, lighthouse, ruin…),
-      // drawn behind the props so life gathers in front of it
-      if (L.drawLandmark) L.drawLandmark(ctx, t, P, L);
+      // drawn behind the props so life gathers in front of it. `prog` is the
+      // fraction of this world's gems already gathered this visit (0..1).
+      if (L.drawLandmark) {
+        const prog = L.gems.length ? this.found.length / L.gems.length : 0;
+        L.drawLandmark(ctx, t, P, L, prog);
+      }
+      // the ababil flock — ambient wheeling birds on the landmark layer, in
+      // front of the hills and behind the props. The sky fills as gems are
+      // gathered; it wheels and drifts, never dives, never sounds.
+      if (this.flock) this.drawFlock(ctx, t, P, cam);
 
       for (const p of L.props) {
         if (p.x < cam.x - 220 || p.x > cam.x + cam.viewW + 220) continue;

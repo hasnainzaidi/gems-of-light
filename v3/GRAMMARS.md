@@ -102,18 +102,29 @@ then the quiet campfire clearing and door.
 
 Journey order lives in four pedagogical phases in `GOL.WORLD_ORDER`; file
 numbers remain stable and do not control unlock order. Until missing recipes
-are built, the eight grown worlds appear in this order:
+are built, the seventeen grown worlds appear in this order (the first
+thirteen are now consecutive — the child's journey has no gaps through
+Al-Qari'ah):
 
 | order | phase | file | surah | key | grammar |
 |---:|---:|---:|---|---|---|
 | 1 | 1 | W8 | Al-Fatiha (1) | fatiha | Cozy Garden / Guided Path |
-| 2 | 1 | W1 | Al-Falaq (113) | falaq | Cozy Garden |
-| 3 | 1 | W2 | An-Nas (114) | nas | Cozy Garden |
-| 4 | 2 | W5 | Al-Kawthar (108) | kawthar | River Road |
-| 5 | 3 | W3 | Al-'Adiyat (100) | adiyat | River Road |
-| 6 | 4 | W4 | Al-Qadr (97) | qadr | The Climb |
-| 7 | 4 | W6 | Ad-Duha (93) | duha | Cozy Garden |
-| 8 | 4 | W7 | Al-Lail (92) | lail | The Climb |
+| 2 | 1 | W9 | Al-Ikhlas (112) | ikhlas | Landmark line |
+| 3 | 1 | W1 | Al-Falaq (113) | falaq | Cozy Garden |
+| 4 | 1 | W2 | An-Nas (114) | nas | Cozy Garden |
+| 5 | 2 | W5 | Al-Kawthar (108) | kawthar | River Road |
+| 6 | 2 | W10 | An-Nasr (110) | nasr | Guided garden road |
+| 7 | 2 | W11 | Al-Masad (111) | masad | Cozy Garden |
+| 8 | 2 | W12 | Quraish (106) | quraish | River Road |
+| 9 | 2 | W13 | Al-Fil (105) | fil | Cozy Garden + flock |
+| 10 | 2 | W14 | Al-Humazah (104) | humazah | Cozy Garden |
+| 11 | 2 | W15 | Al-'Asr (103) | asr | Guided Path |
+| 12 | 3 | W16 | At-Takathur (102) | takathur | Cozy + occluders |
+| 13 | 3 | W17 | Al-Qari'ah (101) | qariah | Windy moor |
+| 14 | 3 | W3 | Al-'Adiyat (100) | adiyat | River Road |
+| 15 | 4 | W4 | Al-Qadr (97) | qadr | The Climb |
+| 16 | 4 | W6 | Ad-Duha (93) | duha | Cozy Garden |
+| 17 | 4 | W7 | Al-Lail (92) | lail | The Climb |
 
 New world: pick the grammar that fits the surah's character, copy its recipe,
 keep every invariant, and run `node v3/tools/check.mjs wN` until it is ✓.
