@@ -321,7 +321,7 @@
     dragPrev: null, dragMoved: false, camFree: 0, ceremony: null,
     hero: null, spotPulse: null, pendingBloom: false,
 
-    enter() {
+    enter(params) {
       // from here on, "home" means the map — for worlds, shrines, dreams
       GOL.homeScene = 'journeyMap';
       this.t = 0;
@@ -336,6 +336,11 @@
       this.hero = null;
       this.spotPulse = null;
       this.pendingBloom = false;
+      this.firstInvite = null;
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() :
+        (GOL.store.data && GOL.store.data.onboarding);
+      this.firstHandoff = !!(params && params.firstHandoff) ||
+        !!(ob && ob.parentComplete && !ob.childStarted);
       this.kbdFollow = 0;
       this.kbdActHeld = false;
       this.railS = null;
@@ -363,6 +368,9 @@
         if (this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
           this.startAnchorS = 0;
           if (this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
+          if (this.firstHandoff && !returnState) {
+            this.firstInvite = { t: 0, answered: false, response: 0 };
+          }
         }
         if (returnState) {
           // back from a world: she stands exactly where she left, and the
@@ -505,6 +513,7 @@
     // world opens when she arrives (motion belongs to the path).
     walkToStar() {
       if (!this.star || !this.map || !this.hero || this.ceremony) return;
+      this.answerFirstInvite();
       const sT = this.spotS[this.star.ri][this.star.j];
       // A fresh journey spawns her right ON the breathing star (Al-Fatiha),
       // where the walk buttons have nowhere to step. Tapping the star she
@@ -528,10 +537,28 @@
         cam: { x: this.cam.x, y: this.cam.y },
         heroS: this.hero.s
       };
+      // Adult setup becomes child progress only at this boundary: the first
+      // real world is opening. The parent preview and postcard never mark it.
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete && !ob.childStarted && GOL.markChildStarted) {
+        GOL.markChildStarted();
+      }
       GOL.audio.unlock();
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: sp.n });
       return true;
+    },
+
+    answerFirstInvite() {
+      if (!this.firstInvite || this.firstInvite.answered) return false;
+      this.firstInvite.answered = true;
+      this.firstInvite.response = 1;
+      if (this.star) this.spotPulse = { ri: this.star.ri, j: this.star.j, t: 1 };
+      return true;
+    },
+
+    firstFocus() {
+      return !!(this.firstInvite && !this.firstInvite.answered);
     },
 
     // Landing on a waypoint: the breathing star opens its world at once;
@@ -590,10 +617,13 @@
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       const y = H - 58 - sa.b * 0.5;
       const x2 = W - 60 - sa.r;
-      return [
+      const buttons = [
         { x: x2 - 74, y, r: 30, dir: -1 },
         { x: x2, y, r: 30, dir: 1 }
       ];
+      // At handoff there is exactly one useful direction. Removing the inert
+      // back control makes the forward invitation legible without words.
+      return this.firstFocus() ? [buttons[1]] : buttons;
     },
 
     mapCamMax(W, H) {
@@ -642,7 +672,9 @@
     // steps; the little × dismisses it for good. Installed players, debug, and
     // anyone who's hidden it never see it. One geometry source for tap + draw.
     installNudge(W, H) {
-      if (GOL.isStandalone() || GOL.DEBUG) return null;
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (ob && ob.parentComplete) return null;
+      if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
       const ins = GOL.store.data.install || {};
       if (ins.ribbonHidden) return null;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
@@ -690,6 +722,10 @@
 
     update(dt, W, H) {
       this.t += dt;
+      if (this.firstInvite) {
+        this.firstInvite.t += dt;
+        this.firstInvite.response = Math.max(0, this.firstInvite.response - dt * 1.8);
+      }
       this.camFree = Math.max(0, this.camFree - dt);
       if (this.spotPulse) {
         this.spotPulse.t = Math.max(0, this.spotPulse.t - dt * 1.7);
@@ -701,13 +737,14 @@
         return;
       }
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
-      const nudge = this.installNudge(W, H); // the home-screen reminder (or null)
+      const firstFocus = this.firstFocus();
+      const nudge = firstFocus ? null : this.installNudge(W, H); // never competes with the first star
       // The grown-ups doorway lives here on the home map now — the splash is
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
       // just pulses; the hold gate keeps children out gently.
-      const gb = (this.grownBtn = { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
-      {
+      const gb = (this.grownBtn = firstFocus ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      if (gb) {
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
           if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
@@ -762,6 +799,7 @@
             this.dwell = null;
             this.stepCool = 0.12;
             this.kbdFollow = 2.2;
+            if (dir > 0 && this.answerFirstInvite() && GOL.audio) GOL.audio.sfx('tap');
           }
         }
         if (!arrived) this.kbdFollow = Math.max(this.kbdFollow, 0.8);
@@ -799,7 +837,7 @@
       // it moves <12px, so it never scrolls; only a real drag-from-ribbon does.
       const dragOnBtns = drag && (
         (walkBtnsNow && walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10)) ||
-        GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14);
+        (gb && GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14));
       if (drag && !this.ceremony && !dragOnBtns) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
           // rail scroll: project the drag onto the trail's local direction
@@ -858,8 +896,8 @@
         }
       }
       // a plain tap on the grown-ups star only pulses — it opens on hold
-      if (GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
-      if (GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
+      if (gb && GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
+      if (!firstFocus && GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
         GOL.go('title');
         return;
       }
@@ -990,6 +1028,7 @@
       }
 
       this.drawMoon(ctx);
+      this.drawFirstInvitation(ctx);
       if (this.hero) {
         const pos = pointAtSamples(this.map.walkSamples, this.hero.s);
         const ahead = pointAtSamples(this.map.walkSamples, this.hero.s + 6);
@@ -1007,13 +1046,50 @@
         }
       }
       const nest = this.missSpot || this.star;
-      if (nest && !this.ceremony) {
+      if (nest && !this.ceremony && !this.firstFocus()) {
         const s = this.map.spots[nest.ri][nest.j];
         GOL.drawFirefly(ctx,
           s.x + 32 + Math.cos(this.t * 0.9) * 8,
           s.y - 32 + Math.sin(this.t * 1.7) * 8,
           this.t, 1.15);
       }
+    },
+
+    // Noor writes the first route in light exactly once. The trail builds
+    // from the waiting lightling toward Al-Fatiha, then rests at the star;
+    // the child's first forward/tap response sends a bright answer back.
+    drawFirstInvitation(ctx) {
+      const inv = this.firstInvite;
+      if (!inv || !this.map || !this.hero || !this.star) return;
+      const start = this.startAnchorS == null ? this.hero.s : this.startAnchorS;
+      const end = this.spotS[this.star.ri][this.star.j];
+      const reveal = inv.answered ? 1 : ease(clamp(inv.t / 2.7, 0, 1));
+      const span = Math.max(1, end - start);
+      const step = Math.max(6, span / 24);
+      ctx.save();
+      ctx.lineCap = 'round';
+      for (let s = start; s <= end; s += step) {
+        const f = (s - start) / span;
+        if (f > reveal + 0.015) break;
+        const p = pointAtSamples(this.map.walkSamples, s);
+        const nearHead = clamp(1 - Math.abs(f - reveal) / 0.20, 0, 1);
+        ctx.fillStyle = alpha('#FFE9A8', 0.10 + nearHead * 0.62 + inv.response * 0.18);
+        ctx.beginPath(); ctx.arc(p.x, p.y - 3, 2.2 + nearHead * 2.2, 0, TAU); ctx.fill();
+      }
+      const head = pointAtSamples(this.map.walkSamples, lerp(start, end, reveal));
+      GOL.drawFirefly(ctx, head.x, head.y - 12, this.t, 1.45 + inv.response * 0.35);
+      const star = this.map.spots[this.star.ri][this.star.j];
+      const breathe = 0.5 + 0.5 * Math.sin(this.t * 2.2);
+      ctx.strokeStyle = alpha('#FFE9A8', 0.34 + breathe * 0.36 + inv.response * 0.25);
+      ctx.lineWidth = 2.4 + inv.response * 2;
+      ctx.beginPath(); ctx.arc(star.x, star.y - 7, 23 + breathe * 4 + inv.response * 7, 0, TAU); ctx.stroke();
+      if (inv.response > 0 && this.hero) {
+        const hp = pointAtSamples(this.map.walkSamples, this.hero.s);
+        ctx.strokeStyle = alpha('#FFF6DC', inv.response * 0.8);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(hp.x, hp.y - 4, 18 + (1 - inv.response) * 18, 0, TAU); ctx.stroke();
+      }
+      ctx.restore();
     },
 
     draw(ctx, W, H) {
@@ -1070,7 +1146,7 @@
       ctx.drawImage(this.map.images.over, dx, dy, dw, dh);
 
       const sa = GOL.SAFE || { l: 0, t: 0 };
-      GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
+      if (!this.firstFocus()) GOL.drawButton(ctx, sa.l + 40, sa.t * 0.5 + 34, 22, 'back', { alpha: 0.76 });
 
       // the grown-ups doorway, beside the back arrow — a cream chip with a
       // quiet star, a hold-progress ring, and a small label
@@ -1094,7 +1170,8 @@
           ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 4, -Math.PI / 2, -Math.PI / 2 + gp * TAU); ctx.stroke();
           ctx.lineCap = 'butt';
         }
-        GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 12, { size: 9.5, weight: '700', color: alpha('#3B2E14', 0.55), shadow: false });
+        // The patient-hold star is learned by the grown-up during setup; the
+        // child's home remains wordless after handoff.
       }
 
       this.drawInstallNudge(ctx, W, H);
@@ -1104,7 +1181,12 @@
       if (btns && this.map && !this.ceremony) {
         for (const b of btns) {
           ctx.save();
-          ctx.globalAlpha = 0.78;
+          const invited = this.firstFocus() && b.dir > 0;
+          ctx.globalAlpha = invited ? 0.88 + Math.sin(this.t * 2.4) * 0.1 : 0.78;
+          if (invited) {
+            ctx.shadowColor = alpha('#FFE9A8', 0.9);
+            ctx.shadowBlur = 16;
+          }
           ctx.fillStyle = '#FDF6E4';
           ctx.strokeStyle = '#C9B98F'; ctx.lineWidth = 3;
           ctx.beginPath(); ctx.arc(b.x, b.y, b.r - 4, 0, TAU); ctx.fill(); ctx.stroke();

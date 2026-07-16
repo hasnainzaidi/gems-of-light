@@ -764,3 +764,37 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   ship again. Hoard 5 is a whole-cairn lid, hoard 6 a capstone vault
   (two flavors on purpose). Verified end-to-end in-engine: land on lid
   → 0.25s beat → open → child settles at the gem.
+- **FRESH-PLAYER ONBOARDING VERDICT (2026-07-16, Codex browser pass):**
+  staging loaded without console errors across landscape, iPhone Safari,
+  iPhone in-app-browser, Android-install, and portrait→landscape handoffs.
+  The postcard, setup cards, one-tap escape, and rotation door all read
+  cleanly at 390×844 / 844×390. Two papercuts were accepted for polish:
+  (1) choosing “Just play — you can add it later” now defers the map's
+  install ribbon for the rest of that visit instead of immediately asking
+  again; a reload may invite again, while the grown-ups page remains an
+  intentional route; (2) the `v3 · sound · echo` diagnostic is debug-only,
+  keeping production's first postcard wholly in the child's voice.
+- **DELIGHTFUL ONBOARDING — VALUE BEFORE INSTALLATION (2026-07-16,
+  user-approved first-principles rebuild):** the PWA prompt is no longer the
+  onboarding. A clean family now crosses one canonical grown-up porch:
+  welcome → non-saving interactive garden preview → Explore/Listen/Remember
+  method → make-it-theirs → real sound check → handoff. Platform variation is
+  confined to the setup card; Android retains its genuine one-tap browser
+  prompt, and every path has Not now. Preview uses the real lightling, gem,
+  ayah, Noor, bloom, and particle language but cannot touch the child save.
+  Handoff persists one additive `{v,parentComplete,childStarted}` boundary,
+  enters a wordless child postcard, and gives Al-Fatiha's first map star
+  exclusive priority: Noor writes the route once, the forward control answers,
+  and child progress begins only when the real world opens. Existing saves
+  bypass the porch; reloads between handoff and first play resume safely.
+  Responsive verdict: 390×844 and 844×390, Safari/in-app/Android/desktop cards,
+  full preview→handoff path, returning-save path — no overlap and no console
+  warnings/errors. Contract and wave ownership: `ONBOARDING-PLAN-2026-07-16.md`.
+- **ONBOARDING PHONE VERDICT — TEACH ONCE (2026-07-16, Hasnain):** the first
+  porch shipped with an empty-looking middle and made “How it works” optional;
+  later it repeated audio in a separate sound/reciter checkpoint even though
+  the parent had already heard a real ayah in the garden. Accepted correction:
+  welcome now has one clear **See how it works** action and a living garden
+  vignette; the required preview itself teaches Explore → Listen → Remember and
+  proves sound. Its completion card goes directly to optional home-screen setup,
+  then handoff. No separate method branch, sound check, or reciter choice.

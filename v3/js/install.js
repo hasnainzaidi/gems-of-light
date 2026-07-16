@@ -61,6 +61,24 @@
   }
   GOL.classifyIOSBrowser = classifyIOSBrowser; // console-testable, not used in draw/update
   const FORCED_ANDROID = q.get('installPlatform') === 'android';
+  // Small public bridge for the grown-up porch. The canonical onboarding shell
+  // owns the sequence; this module remains the one owner of Android's captured
+  // browser prompt so two flows cannot race or disagree about availability.
+  GOL.installGuide = {
+    platform: detectOS,
+    canPrompt: () => !!deferredPrompt,
+    prompt() {
+      const dp = deferredPrompt;
+      if (!dp) return Promise.resolve({ outcome: 'unavailable' });
+      deferredPrompt = null;
+      try {
+        dp.prompt();
+        return Promise.resolve(dp.userChoice).catch(() => ({ outcome: 'dismissed' }));
+      } catch (e) {
+        return Promise.resolve({ outcome: 'unavailable' });
+      }
+    }
+  };
 
   // ------------------------------------------------------------ palette -----
   const GOLD_D = '#B98A3E', GOLD = '#D9A44A', GOLD_L = '#FFE9A8', CREAM = '#FAF4E0';
@@ -344,6 +362,10 @@
     leave() {
       if (GOL.audio) GOL.audio.sfx('tap');
       const dest = this.from || 'title';
+      // The title's secondary action says "you can add it later". Respect
+      // that choice for the rest of this visit instead of immediately showing
+      // the landscape ribbon on the map. A reload offers it again gently.
+      if (dest === 'title') GOL.installNudgeDeferred = true;
       GOL.go(dest, dest === 'title' ? { proceed: true } : undefined);
     },
 

@@ -134,6 +134,37 @@
   // met; { ribbonHidden } once a grown-up dismisses the quiet map reminder.
   // Both persist in the save; init here so every reader can trust it exists.
   GOL.store.data.install = GOL.store.data.install || {};
+  // The grown-up porch is additive and save-safe. Existing families should
+  // never be sent backward through setup merely because their save predates
+  // this schema; any real journey trace counts as an already-started child.
+  GOL.hasJourneyProgress = function () {
+    const d = GOL.store.data || {};
+    return !!(
+      (d.grand && Object.keys(d.grand).length) ||
+      (d.levels && Object.keys(d.levels).length) ||
+      (d.opened && d.opened.length) ||
+      (d.unlocked && d.unlocked > 0)
+    );
+  };
+  {
+    const hadJourney = GOL.hasJourneyProgress();
+    const ob = (GOL.store.data.onboarding = GOL.store.data.onboarding || {});
+    if (ob.v == null) ob.v = 1;
+    if (ob.parentComplete == null) ob.parentComplete = hadJourney;
+    if (ob.childStarted == null) ob.childStarted = hadJourney;
+  }
+  GOL.onboardingStatus = () => GOL.store.data.onboarding;
+  GOL.completeParentOnboarding = function () {
+    const ob = GOL.store.data.onboarding;
+    ob.v = 1; ob.parentComplete = true;
+    GOL.store.save();
+  };
+  GOL.markChildStarted = function () {
+    const ob = GOL.store.data.onboarding;
+    if (ob.childStarted) return;
+    ob.v = 1; ob.parentComplete = true; ob.childStarted = true;
+    GOL.store.save();
+  };
   GOL.preserveVisitedWorlds();
   GOL.Input.init(canvas);
 
@@ -174,12 +205,9 @@
     GOL.sceneName = name;
     current.enter(params || {});
   }
-  // No install gate at boot (softened 2026-07-15): the game never walls the
-  // door. Un-installed browser visits meet the "add to home screen" pitch in
-  // the portrait splash (title.js) — a dead state for play, since you must
-  // rotate anyway — with a one-tap "Just play". The quiet map ribbon and the
-  // grown-ups page carry the reminder from then on. install.js still owns the
-  // full per-platform steps, reached from those surfaces on demand.
+  // A clean family begins on the grown-up porch. Installation lives inside
+  // that value-first sequence; it is never a boot gate. Existing saves and
+  // completed handoffs keep the familiar child postcard doorway.
   const directDef = (GOL.DEBUG || !!directLab) && directProto && GOL.PROTOTYPES[directProto];
   // A targeted clean start for prototype playtests. It never touches real
   // world progress, and removes itself from the URL so a later refresh resumes
@@ -198,7 +226,13 @@
     const start = directCamp === 1 ? 1 : directDef.campShrines[directCamp - 2].afterAyah;
     directParams.checkpoint = { index: directCamp - 1, start, len: c.afterAyah - start + 1, afterAyah: c.afterAyah };
   }
-  switchTo(directDef ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure')) : 'title', directParams);
+  const forceOnboarding = q.get('onboarding') === '1';
+  const needsPorch = forceOnboarding ||
+    (!GOL.onboardingStatus().parentComplete && !GOL.hasJourneyProgress());
+  const initialScene = directDef
+    ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure'))
+    : (needsPorch ? 'onboarding' : 'title');
+  switchTo(initialScene, directParams);
 
   // --------------------------------------------------------------- loop ---
   let last = performance.now();
