@@ -57,6 +57,16 @@ const GOL = global.GOL;
 
 GOL.DEBUG = false;
 GOL.SAFE = { l: 0, r: 0, t: 0, b: 0 };
+// helpers that live in engine.js / actors.js / props.js (not loaded here:
+// they attach to a real canvas) — faithful math, no-op drawing
+GOL.dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+GOL.rnd = (a, b) => a + Math.random() * (b - a);
+GOL.ease = { inOut: (t) => t * t * (3 - 2 * t), out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t };
+for (const fn of ['drawArch', 'drawBird', 'drawBounceBlossom', 'drawButterfly', 'drawButton',
+  'drawDriftLeaf', 'drawFountain', 'drawFirefly', 'drawGem', 'drawHudBand', 'drawMoon',
+  'drawPanel', 'drawRahmaBlossom', 'drawSeed', 'drawSprite', 'drawTortoise',
+  'drawTouchControls', 'drawVeiledGem', 'drawWater', 'drawWaterfall']) GOL[fn] = () => {};
+GOL.roundRect = () => {};
 // helpers that live in ui.js (which needs a real DOM) — harmless fallbacks
 GOL.text = () => {};
 GOL.todayKey = () => '2026-01-01';
@@ -96,6 +106,18 @@ GOL.audio = {
 
 require(join(V3, 'js', 'worlds', 'follow-estimated.js'));
 require(join(V3, 'js', 'prototypes', 'quraysh-rooms.js'));
+
+// FakeAudio never advances currentTime, so QROOMS.playSlice's cut-poll (and
+// its real setTimeout guards, which would outlive the synchronous frame
+// loop) never fire. Route slices through the same simulated-completion
+// queue as full verses so onend-driven scene logic always advances.
+GOL.QROOMS.playSlice = (n, i0, i1, opts) => {
+  later(opts && opts.onend);
+  return { done: false, stop() { this.done = true; } };
+};
+GOL.QROOMS.firstWord = (n, opts) => GOL.QROOMS.playSlice(n, 0, 0, opts);
+GOL.QROOMS.openingPhrase = (n, opts) => GOL.QROOMS.playSlice(n, 0, 1, opts);
+GOL.QROOMS.stopSlice = () => {};
 
 // ---------------------------------------------------------- load the lab --
 require(join(V3, 'js', 'prototypes', 'p' + N + '.js'));
