@@ -287,7 +287,29 @@
     // pre-generated with ElevenLabs into audio/voice/<id>.mp3 and cached like
     // recitations. If a file is missing the garden simply stays quiet —
     // NO synthetic/robot voice fallback, ever. Never speaks over the Qur'an.
-    _speakEls: {}, _speakMissing: {}, _speaking: null,
+    _speakEls: {}, _speakMissing: {}, _voicePrimes: {}, _speaking: null,
+    // Safari grants media playback to the element touched during a gesture,
+    // not to every future <audio> element. Bless the exact welcome clip while
+    // the map tap is still active; speak() waits for this silent prime before
+    // starting it normally after the scene fade.
+    primeVoice(id) {
+      if (!id || this._speakMissing[id] || this._voicePrimes[id]) return;
+      this.preloadVoice([id]);
+      const el = this._speakEls[id];
+      if (!el) return;
+      el.muted = true;
+      el.currentTime = 0;
+      let played;
+      try { played = el.play(); } catch (e) { el.muted = this.muted; return; }
+      const settle = () => {
+        try { el.pause(); el.currentTime = 0; } catch (e) {}
+        el.muted = this.muted;
+        delete this._voicePrimes[id];
+      };
+      this._voicePrimes[id] = played && played.then
+        ? played.then(settle, settle)
+        : Promise.resolve().then(settle);
+    },
     speak(id, onend) {
       if (this.reciting) { if (onend) onend(); return null; } // the Qur'an has the room
       if (this._speakMissing[id]) { if (onend) onend(); return null; }
@@ -321,8 +343,19 @@
       h.guard = setTimeout(() => finish(false), 30000);
       this._speaking = h;
       this.duck(true);
-      const p = el.play();
-      if (p && p.catch) p.catch(() => finish(true));
+      const start = () => {
+        if (h.done) return;
+        el.muted = this.muted;
+        el.currentTime = 0;
+        let p;
+        try { p = el.play(); } catch (e) { finish(false); return; }
+        // A blocked autoplay is transient, not a missing file. Only the media
+        // error event may poison the id for the rest of the visit.
+        if (p && p.catch) p.catch(() => finish(false));
+      };
+      const prime = this._voicePrimes[id];
+      if (prime && prime.then) prime.then(start, start);
+      else start();
       return h;
     },
     stopSpeak() {
