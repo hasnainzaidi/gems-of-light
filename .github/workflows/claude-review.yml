@@ -1,22 +1,15 @@
 name: Claude Auto Review
 
-# Reviews every pull request when it is opened or updated, using Anthropic's
-# official Claude Code action. Claude reads the diff, checks it against the
-# conventions in CLAUDE.md, and then EITHER approves the PR (nothing
-# significant found) OR posts its findings without approving (something worth
-# a human look). For a solo project this means: a green Claude approval = safe
-# to merge without reading; anything else = go look.
+# Paused as an automatic PR gate while no Anthropic credential is configured.
+# Keep the review available as a manual experiment; restore the pull_request
+# trigger only after a manual run proves that the review is useful and reliable.
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch:
 
 jobs:
   review:
     runs-on: ubuntu-latest
-    # Until the ANTHROPIC_API_KEY repo secret is configured, the action
-    # fails at startup — don't paint every PR red for missing plumbing.
-    continue-on-error: true
     permissions:
       contents: read
       pull-requests: write # post reviews / comments and approve

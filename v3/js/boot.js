@@ -227,9 +227,10 @@
     GOL.sceneName = name;
     current.enter(params || {});
   }
-  // A clean family begins on the grown-up porch. Installation lives inside
-  // that value-first sequence; it is never a boot gate. Existing saves and
-  // completed handoffs keep the familiar child postcard doorway.
+  // A clean family begins on the grown-up porch, where value still comes before
+  // installation. On later browser launches, an uninstalled family meets the
+  // full-screen setup checkpoint before the child-facing doorway. Installed
+  // launches, debug labs, and the first value-first visit never see that gate.
   const directDef = (GOL.DEBUG || !!directLab) && directProto && GOL.PROTOTYPES[directProto];
   // A targeted clean start for prototype playtests. It never touches real
   // world progress, and removes itself from the URL so a later refresh resumes
@@ -251,9 +252,11 @@
   const forceOnboarding = q.get('onboarding') === '1';
   const needsPorch = GOL.EXPERIENCE.onboarding && (forceOnboarding ||
     (!GOL.onboardingStatus().parentComplete && !GOL.hasJourneyProgress()));
+  const needsInstallCheckpoint = !needsPorch && GOL.EXPERIENCE.install &&
+    !GOL.isStandalone() && !GOL.DEBUG;
   const initialScene = directDef
     ? (directDef.scene || ((directShrine || directFocus || directParams.checkpoint) ? 'shrine' : 'adventure'))
-    : (needsPorch ? 'onboarding' : 'title');
+    : (needsPorch ? 'onboarding' : (needsInstallCheckpoint ? 'install' : 'title'));
   switchTo(initialScene, directParams);
 
   // --------------------------------------------------------------- loop ---

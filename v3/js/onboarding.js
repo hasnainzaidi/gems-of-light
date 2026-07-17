@@ -182,6 +182,13 @@
       }
       this.setStage('handoff');
     },
+    remindLater() {
+      // This is a promise about timing, not a notification subscription. Keep
+      // the handoff clear today; a later browser visit can show the quiet map
+      // ribbon. Installed mode and explicit ribbon dismissal still win.
+      GOL.installNudgeDeferred = true;
+      this.setStage('handoff');
+    },
     update(dt, W, H) {
       this.t += dt; this.stageT += dt;
       const L = this.layout(W, H), a = this.actions(L); this.buttons = a;
@@ -210,7 +217,7 @@
         }
         if (hit(a.secondary, tap)) {
           tap.ui = true;
-          if (this.stage === 'setup') this.setStage('handoff');
+          if (this.stage === 'setup') this.remindLater();
           return;
         }
       }
@@ -284,7 +291,7 @@
         drawButton(ctx, a.primary, this.journeyStage == null ? 'Choose one to continue' : 'Continue', this.journeyStage != null);
       } else if (this.stage === 'setup') {
         const c = setupCopy(this.os);
-        GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Make Gems of Light yours' : 'Make Gems of Light theirs',
+        GOL.text(ctx, 'Best in full screen',
           L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
         GOL.text(ctx, c.title, L.cx, contentY, { size: 15, weight: '800', color: GOLD, shadow: false });
         const rowH = Math.min(L.portrait ? 52 : 38, (L.by - contentY - 58) / Math.max(1, c.steps.length));
@@ -295,7 +302,7 @@
           GOL.text(ctx, s, L.px + 70, y, { size: 12.5, weight: '700', color: INK, align: 'left', shadow: false });
         });
         GOL.text(ctx, c.note, L.cx, L.by - 17, { size: 10.5, weight: '600', color: SOFT, shadow: false });
-        drawButton(ctx, a.secondary, 'Not now', false); drawButton(ctx, a.primary, c.primary, true);
+        drawButton(ctx, a.secondary, 'Remind me later', false); drawButton(ctx, a.primary, c.primary, true);
       } else {
         GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Your garden is ready' : 'Their garden is ready',
           L.cx, titleY, { size: titleSize + 2, weight: '800', color: INK, shadow: false });
