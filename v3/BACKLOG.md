@@ -25,6 +25,11 @@ verdict is logged.
       `map-artist-pack/drafts/r1/LOG.md`
 - [ ] Detailed per-world playtest with the girls (first pass 2026-07-15:
       "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
+- [ ] Playtest the five Quraysh learning rooms ON STAGING
+      (`?lab=20`–`?lab=24` with `&debug=1`, landscape; suggested order:
+      Night Watch 23 → Caravan Road 20 → Camel 22 → House 21 → Feast 24)
+      — each room states its test question in `QURAYSH-PROTOTYPE-ROOMS.md`;
+      verdicts → `PLAN.md` §10; strategy: `LEARNING-LOOPS-STRATEGY.md`
 
 ## Next
 
@@ -37,9 +42,6 @@ verdict is logged.
 
 ## Later
 
-- [ ] Quraysh learning-loop prototype rooms (five paradigms, build order
-      Night Watch first) — design: `QURAYSH-PROTOTYPE-ROOMS.md`, strategy:
-      `LEARNING-LOOPS-STRATEGY.md`
 - [ ] New surah worlds per `WORLDS-PLAN.md` waves (audio pipeline
       already fed for the next batch)
 - [ ] Map expansion panel when the journey grows past the third island
