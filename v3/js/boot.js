@@ -262,11 +262,38 @@
   // --------------------------------------------------------------- loop ---
   let last = performance.now();
   let frameCount = 0;
+  let frameRequest = null;
+  let frameEpoch = 0;
+  let lastFrameAt = last;
   // ?fps=1 readout state (rolling second: average fps + worst frame)
   let fpsAcc = 0, fpsN = 0, fpsWorst = 0, fpsShown = '', fpsFrameStart = performance.now();
+  function queueFrame() {
+    if (frameRequest !== null) return;
+    const epoch = frameEpoch;
+    frameRequest = requestAnimationFrame((now) => {
+      // A canceled callback should not run, but the epoch also makes any late
+      // delivery inert before it can create another self-scheduling chain.
+      if (epoch !== frameEpoch) return;
+      frameRequest = null;
+      frame(now);
+    });
+  }
+  function restartFrameLoop(now) {
+    // A suspended iOS PWA can retain its old pending rAF while timers resume.
+    // Cancel that request before replacing it: adding a second self-scheduling
+    // callback would permanently double the game update/draw workload.
+    frameEpoch++;
+    if (frameRequest !== null) cancelAnimationFrame(frameRequest);
+    frameRequest = null;
+    last = now;
+    lastFrameAt = now;
+    fpsFrameStart = now;
+    queueFrame();
+  }
   function frame(now) {
-    requestAnimationFrame(frame);
+    queueFrame();
     frameCount++;
+    lastFrameAt = now;
     let dt = Math.min(0.033, (now - last) / 1000);
     last = now;
 
@@ -325,19 +352,26 @@
     }
     GOL.Input.endFrame();
   }
-  requestAnimationFrame(frame);
+  queueFrame();
+
+  // Installed PWAs are commonly reopened by resuming a suspended page rather
+  // than by booting a fresh document. Re-own the single pending rAF on every
+  // foreground transition so a delayed watchdog tick and the old request can
+  // never become two independent render loops.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) restartFrameLoop(performance.now());
+  });
 
   // uncaught errors are easy to miss on a phone — surface them, and keep the
   // loop alive if the rAF chain is ever dropped (some embedded webviews do)
   addEventListener('error', (e) => {
     try { console.error('[gol]', e.message, e.filename + ':' + e.lineno); } catch (_) {}
   });
-  let lastSeen = 0;
   setInterval(() => {
-    if (frameCount === lastSeen) {
+    const now = performance.now();
+    if (!document.hidden && now - lastFrameAt > 1500) {
       console.warn('[gol] render loop stalled at frame ' + frameCount + ' — rekicking');
-      requestAnimationFrame(frame);
+      restartFrameLoop(now);
     }
-    lastSeen = frameCount;
   }, 1000);
 })();
