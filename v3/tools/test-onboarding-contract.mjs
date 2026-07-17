@@ -22,6 +22,12 @@ assert.doesNotMatch(onboarding, /stage === ['"]sound['"]|tap to change|I can hea
   'the playable preview already proves sound; onboarding must not repeat it');
 assert.match(onboarding, /completeParentOnboarding/,
   'handoff must persist the adult/child boundary');
+assert.match(onboarding, /Best in full screen/,
+  'device setup must clearly explain the preferred play mode');
+assert.match(onboarding, /Remind me later/,
+  'device setup must offer a positive defer choice');
+assert.match(onboarding, /remindLater[\s\S]{0,300}installNudgeDeferred\s*=\s*true/,
+  'remind-later must defer the map nudge for the current visit');
 assert.match(onboarding, /journeyStageDraft/,
   'parent journey placement must remain a draft until handoff');
 assert.match(onboarding, /Where are they in their memorisation journey/,
@@ -34,8 +40,8 @@ assert.match(onboarding, /childMode|childWelcome|handoff/,
   'handoff must enter the child postcard explicitly');
 assert.match(onboarding, /Explore\s+→\s+Collect\s+→\s+Restore/,
   'Showcase onboarding must explain its secular loop');
-assert.match(onboarding, /Make Gems of Light yours/,
-  'Showcase setup must speak to the guest directly');
+assert.match(onboarding, /Best in full screen/,
+  'Showcase setup must retain the direct, secular full-screen message');
 
 assert.match(preview, /Explore\s+→\s+collect\s+→\s+restore/,
   'Showcase preview must reinforce its secular loop');
@@ -55,6 +61,10 @@ assert.match(map, /markChildStarted/,
   'child progress must begin at the real journey boundary');
 assert.match(map, /firstInvite/,
   'fresh handoff must have a dedicated first-map invitation');
+assert.match(map, /Play full-screen/,
+  'returning browser journeys must carry a quiet full-screen reminder');
+assert.doesNotMatch(map, /installNudge\(W, H\)[\s\S]{0,300}parentComplete/,
+  'completing parent onboarding must not permanently suppress the map reminder');
 assert.match(map, /handoffStartSlot/,
   'prepared handoff must start on the previous island endpoint');
 
