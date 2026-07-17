@@ -620,7 +620,14 @@
       }
       GOL.audio.unlock();
       const surah = GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
-      if (surah && GOL.EXPERIENCE.recitation) GOL.audio.preloadVoice(['surah-' + surah.slug]);
+      if (surah && GOL.EXPERIENCE.recitation) {
+        const voiceId = 'surah-' + surah.slug;
+        GOL.audio.preloadVoice([voiceId]);
+        // Al-Fatiha is the first real media clip for a fresh family. Prime the
+        // exact element inside this map tap so iOS permits adventure to play it
+        // after the fade; later worlds get the same protection for free.
+        GOL.audio.primeVoice(voiceId);
+      }
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: sp.n });
       return true;

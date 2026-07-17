@@ -865,6 +865,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   voice and longer tail are a better fit; all 24 earlier clips were replaced.
   Missing/unapproved clips stay silent. Showcase remains secular and does not
   show or announce surah names.
+- **AL-FATIHA TITLE AUDIO — PRIME THE EXACT MEDIA ELEMENT (fixed
+  2026-07-17):** on a fresh iPhone, Al-Fatiha's name could stay silent even
+  though its MP3 was present. The map unlocked WebAudio during the tap, but the
+  title's separate HTMLAudioElement did not call `play()` until adventure
+  entered after the 0.32s fade; Safari no longer counted that as the gesture.
+  Entering a world now silently primes that exact `surah-<slug>` element while
+  the map tap is active, and welcome playback waits for the prime to settle.
+  A rejected autoplay attempt is also no longer cached as a missing asset —
+  only a real media error may suppress the clip for the rest of the visit.
 - **ALL MAP BLOOMS REQUIRE A REST (accepted 2026-07-16, Hasnain):** Al-Fatiha
   no longer has an immediate-on-arrival exception. The breathing star, earned
   blooms, and parent-opened practice doors all arm the same visible pause before

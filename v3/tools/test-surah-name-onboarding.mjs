@@ -12,6 +12,7 @@ const read = (name) => fs.readFileSync(path.resolve(here, '..', name), 'utf8');
 const worlds = read('js/worlds.js');
 const map = read('js/map.js');
 const adventure = read('js/adventure.js');
+const audio = read('js/core/audio.js');
 const generator = fs.readFileSync(path.resolve(here, '..', '..', 'tools', 'generate-narration.mjs'), 'utf8');
 
 assert.match(worlds, /GOL\.surahNameForWorld\s*=\s*function/,
@@ -42,6 +43,14 @@ assert.match(adventure, /GOL\.audio\.speak\(this\.welcomeVoiceId\)/,
   'world entrance must attempt the matching human-voice name clip');
 assert.match(adventure, /this\.welcomeT > 0 && this\.welcomeName/,
   'world entrance needs a timed visible welcome title');
+assert.match(map, /GOL\.audio\.primeVoice\(voiceId\)[\s\S]{0,180}GOL\.go\('adventure'/,
+  'the exact title clip must be primed during the map gesture before the scene fade');
+assert.match(audio, /primeVoice\(id\)[\s\S]*?_voicePrimes\[id\]/,
+  'the audio layer must support gesture-priming one named voice element');
+assert.match(audio, /const prime = this\._voicePrimes\[id\][\s\S]{0,140}prime\.then\(start, start\)/,
+  'welcome playback must wait for its silent Safari prime to settle');
+assert.doesNotMatch(audio, /p\.catch\(\(\) => finish\(true\)\)/,
+  'a transient autoplay rejection must never mark a valid title clip missing');
 
 assert.match(generator, /LINES\['surah-' \+ s\.slug\]\s*=\s*'سُورَةُ ' \+ s\.arabicName/,
   'the narration batch must speak the canonical Arabic name, never transliteration');
