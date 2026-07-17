@@ -337,6 +337,7 @@
       this.spotPulse = null;
       this.pendingBloom = false;
       this.firstInvite = null;
+      this.firstInviteSpot = null;
       const ob = GOL.onboardingStatus ? GOL.onboardingStatus() :
         (GOL.store.data && GOL.store.data.onboarding);
       this.firstHandoff = !!(params && params.firstHandoff) ||
@@ -358,6 +359,29 @@
         this.spotS = map.spots.map((row) => row.map((sp) => nearestLength(map.walkSamples, sp)));
         this.waypoints = this.spotS.flat().sort((a, b) => a - b);
         this.readSave();
+        const findSlot = (slot) => {
+          if (!Number.isInteger(slot) || slot < 0) return null;
+          let k = 0;
+          for (let ri = 0; ri < REGIONS.length; ri++) {
+            for (let j = 0; j < REGIONS[ri].count; j++, k++) {
+              if (k === slot) return { ri, j };
+            }
+          }
+          return null;
+        };
+        // A prepared garden begins at the LAST slot of the previous island.
+        // Every earlier slot is already in bloom; the next forward step goes
+        // straight to the selected island's first surah (the breathing star).
+        const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+        const placement = this.firstHandoff && !returnState && ob &&
+          Number.isInteger(ob.journeyStage) ? findSlot(ob.handoffStartSlot) : null;
+        if (this.firstHandoff && !returnState && ob && Number.isInteger(ob.journeyStage)) {
+          const start = placement;
+          this.firstInviteSpot = this.star;
+          this.startAnchorS = start ? this.spotS[start.ri][start.j] : 0;
+          if (this.startAnchorS === 0 && this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
+          this.firstInvite = { t: 0, answered: false, response: 0 };
+        }
         // A brand-new journey (the breathing star is the very first spot and
         // nothing has bloomed yet) stands her at the TRAILHEAD — the start of
         // the painted walk, a step shy of Al-Fatiha — and adds it to the
@@ -365,10 +389,11 @@
         // which walks her INTO the first bloom and opens it. Before this she
         // spawned ON the star with both walk buttons dead and only a
         // non-obvious tap to enter — a new child could get stuck on world one.
-        if (this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
+        if (!this.firstInvite && this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
           this.startAnchorS = 0;
           if (this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
           if (this.firstHandoff && !returnState) {
+            this.firstInviteSpot = this.star;
             this.firstInvite = { t: 0, answered: false, response: 0 };
           }
         }
@@ -392,7 +417,8 @@
     },
 
     // ── the journey, read from the real save ──────────────────────
-    // spotInfo[ri][j] = {n, key, surahId, done, open} or null (still growing)
+    // spotInfo[ri][j] = a playable world, a visual-only onboarding bloom, or
+    // null (still growing). Auto blooms are never doors and carry no telemetry.
     readSave() {
       this.spotInfo = [];
       this.star = null;
@@ -406,7 +432,9 @@
           row.push(w ? {
             n: w.n, key: w.key, surahId: w.surahId,
             done: GOL.worldDone(w.n), open: GOL.worldOpen(w.n)
-          } : null);
+          } : (GOL.journeySlotAutoBloomed && GOL.journeySlotAutoBloomed(k)
+            ? { n: null, key, surahId: null, done: true, open: false, auto: true }
+            : null));
         }
         this.spotInfo.push(row);
       }
@@ -438,13 +466,14 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           if (!sp || !sp.done || !this.map) continue;
+          if (sp.auto) continue;
           const pos = this.map.spots[ri][j];
           const st = GOL.store.level(sp.surahId);
-          if (remembering && st.moonWaxedDay !== GOL.todayKey()) {
+          if (remembering && (!GOL.worldEarned || GOL.worldEarned(sp.n)) && st.moonWaxedDay !== GOL.todayKey()) {
             this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
           }
           const lp = st.lastPlayed || 0;
-          if (Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) {
+          if (lp > 0 && Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) {
             oldest = lp;
             this.missSpot = { ri, j };
           }
@@ -503,7 +532,7 @@
     // or, in debug, any built-and-open world (worldOpen is universally true in
     // debug), so every level is reachable. The breathing star is separate.
     isDoor(sp) {
-      return !!(sp && (sp.done ||
+      return !!(sp && !sp.auto && (sp.done ||
         ((GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG) && sp.open)));
     },
 
@@ -599,7 +628,8 @@
       if (!this.firstInvite || this.firstInvite.answered) return false;
       this.firstInvite.answered = true;
       this.firstInvite.response = 1;
-      if (this.star) this.spotPulse = { ri: this.star.ri, j: this.star.j, t: 1 };
+      const focus = this.firstInviteSpot || this.star;
+      if (focus) this.spotPulse = { ri: focus.ri, j: focus.j, t: 1 };
       return true;
     },
 
@@ -700,6 +730,8 @@
         // the rail (r4.1 verdict): looking around slides along the journey's
         // own axis — you can scroll, but never get lost in empty sky
         point = pointAtSamples(this.map.walkSamples, this.railS);
+      } else if (this.firstFocus() && this.firstInviteSpot) {
+        point = this.map.spots[this.firstInviteSpot.ri][this.firstInviteSpot.j];
       } else if (this.star) {
         point = this.map.spots[this.star.ri][this.star.j];
       } else {
@@ -1033,6 +1065,7 @@
             ? this.spotPulse.t : 0;
           if (sp && sp.done) {
             drawBloom(ctx, s.x, s.y, 11, this.t + ri * 5 + j, REGIONS[ri].bloom, pulse);
+            if (sp.auto) continue;
             const st = GOL.store.level(sp.surahId);
             // the hidden Rahma blossom, once found, blooms at the brow
             if (st.blossom) GOL.drawRahmaBlossom(ctx, s.x + 16, s.y - 24, 5, this.t + j);

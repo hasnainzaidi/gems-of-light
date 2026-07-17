@@ -169,6 +169,15 @@
   GOL.onboardingStatus = () => GOL.store.data.onboarding;
   GOL.completeParentOnboarding = function () {
     const ob = GOL.store.data.onboarding;
+    // Commit the grown-up's draft only at handoff. Before this boundary the
+    // family can leave setup without creating child progress or a half-made
+    // journey that would bypass the porch on reload.
+    if (!GOL.EXPERIENCE.showcase && GOL.applyJourneyStage) {
+      const stage = ob.journeyStageDraft != null ? ob.journeyStageDraft : (ob.journeyStage || 0);
+      GOL.applyJourneyStage(stage, Date.now());
+    }
+    delete ob.journeyStageDraft;
+    delete ob.knownSurahsDraft;
     ob.v = 1; ob.parentComplete = true;
     GOL.store.save();
   };
