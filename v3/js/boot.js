@@ -119,15 +119,34 @@
   const ctx = canvas.getContext('2d');
   let W = 0, H = 0, dpr = 1;
 
+  function viewportSize() {
+    // iOS can update the visible viewport before window.innerHeight catches
+    // up (notably when an installed PWA resumes or browser chrome changes).
+    // visualViewport is the space the child can actually see, so it is the
+    // authoritative canvas size whenever available.
+    const vv = window.visualViewport;
+    return {
+      // Round outward: fractional CSS pixels should be clipped, never expose
+      // a hairline of the body background along the right or bottom edge.
+      w: Math.max(1, Math.ceil((vv && vv.width) || window.innerWidth)),
+      h: Math.max(1, Math.ceil((vv && vv.height) || window.innerHeight))
+    };
+  }
+
   function resize() {
+    const size = viewportSize();
     dpr = Math.min(2, window.devicePixelRatio || 1); // 3x on a 6.1" phone is wasted work
-    W = window.innerWidth;
-    H = window.innerHeight;
+    W = size.w;
+    H = size.h;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
     measureSafe();
+  }
+  function syncViewport() {
+    const size = viewportSize();
+    if (size.w !== W || size.h !== H) resize();
   }
   addEventListener('resize', resize);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
@@ -262,11 +281,41 @@
   // --------------------------------------------------------------- loop ---
   let last = performance.now();
   let frameCount = 0;
+  let frameRequest = null;
+  let frameEpoch = 0;
+  let lastFrameAt = last;
   // ?fps=1 readout state (rolling second: average fps + worst frame)
   let fpsAcc = 0, fpsN = 0, fpsWorst = 0, fpsShown = '', fpsFrameStart = performance.now();
+  function queueFrame() {
+    if (frameRequest !== null) return;
+    const epoch = frameEpoch;
+    frameRequest = requestAnimationFrame((now) => {
+      // A canceled callback should not run, but the epoch also makes any late
+      // delivery inert before it can create another self-scheduling chain.
+      if (epoch !== frameEpoch) return;
+      frameRequest = null;
+      frame(now);
+    });
+  }
+  function restartFrameLoop(now) {
+    // A suspended iOS PWA can retain its old pending rAF while timers resume.
+    // Cancel that request before replacing it: adding a second self-scheduling
+    // callback would permanently double the game update/draw workload.
+    frameEpoch++;
+    if (frameRequest !== null) cancelAnimationFrame(frameRequest);
+    frameRequest = null;
+    last = now;
+    lastFrameAt = now;
+    fpsFrameStart = now;
+    queueFrame();
+  }
   function frame(now) {
-    requestAnimationFrame(frame);
+    queueFrame();
+    // Some iOS lifecycle transitions fail to send a final resize event. This
+    // cheap guard makes a stale short canvas repair itself on the next frame.
+    syncViewport();
     frameCount++;
+    lastFrameAt = now;
     let dt = Math.min(0.033, (now - last) / 1000);
     last = now;
 
@@ -325,19 +374,30 @@
     }
     GOL.Input.endFrame();
   }
-  requestAnimationFrame(frame);
+  queueFrame();
+
+  // Installed PWAs are commonly reopened by resuming a suspended page rather
+  // than by booting a fresh document. Re-own the single pending rAF on every
+  // foreground transition so a delayed watchdog tick and the old request can
+  // never become two independent render loops.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      resize();
+      restartFrameLoop(performance.now());
+    }
+  });
+  addEventListener('pageshow', resize);
 
   // uncaught errors are easy to miss on a phone — surface them, and keep the
   // loop alive if the rAF chain is ever dropped (some embedded webviews do)
   addEventListener('error', (e) => {
     try { console.error('[gol]', e.message, e.filename + ':' + e.lineno); } catch (_) {}
   });
-  let lastSeen = 0;
   setInterval(() => {
-    if (frameCount === lastSeen) {
+    const now = performance.now();
+    if (!document.hidden && now - lastFrameAt > 1500) {
       console.warn('[gol] render loop stalled at frame ' + frameCount + ' — rekicking');
-      requestAnimationFrame(frame);
+      restartFrameLoop(now);
     }
-    lastSeen = frameCount;
   }, 1000);
 })();

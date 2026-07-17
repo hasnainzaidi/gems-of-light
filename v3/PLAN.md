@@ -868,3 +868,13 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   Al-Fatiha toward a grown-up-opened surah without falling into world one. The
   map contract now rejects both immediate entry on crossing and any regression
   that stops onward movement from cancelling the pause.
+- **THE CANVAS FOLLOWS THE VISIBLE IOS VIEWPORT (fixed 2026-07-16):** a
+  resumed PWA or changing browser chrome could leave `window.innerHeight`
+  briefly shorter than the space actually visible on screen. Although boot
+  listened to `visualViewport.resize`, it then ignored that measurement and
+  froze the canvas to the stale inner height, exposing the body's green band
+  below until an orientation round-trip forced another resize. Canvas sizing
+  now prefers `visualViewport`, refreshes on foreground/page-cache restores,
+  and cheaply verifies the dimensions each render frame so even a missed iOS
+  resize event repairs itself immediately. Regression contract:
+  `tools/test-viewport-lifecycle.mjs`.
