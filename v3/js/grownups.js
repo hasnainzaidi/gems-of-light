@@ -144,7 +144,10 @@
           d.opened = d.opened || [];
           const idx = d.opened.indexOf(r.w.surahId);
           if (idx >= 0) { d.opened.splice(idx, 1); GOL.audio.sfx('tap'); }
-          else { d.opened.push(r.w.surahId); GOL.audio.unlock(); GOL.audio.sfx('unlockLevel'); }
+          // a single soft bell for opening a surah — the two-note 'unlockLevel'
+          // chime rang out as a slight echo here (its bells overlap as they
+          // decay); one clear 'hint' bell reads cleaner on this quiet page
+          else { d.opened.push(r.w.surahId); GOL.audio.unlock(); GOL.audio.sfx('hint'); }
           GOL.store.save();
           return;
         }
