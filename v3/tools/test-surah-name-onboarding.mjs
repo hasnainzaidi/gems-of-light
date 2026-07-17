@@ -47,7 +47,9 @@ assert.match(generator, /LINES\['surah-' \+ s\.slug\]\s*=\s*'سُورَةُ ' \+
   'the narration batch must speak the canonical Arabic name, never transliteration');
 assert.match(generator, /NAMES_ONLY[\s\S]*id\.startsWith\('surah-'\)/,
   'the short surah-name batch must be independently generatable');
-assert.match(generator, /NAME_VOICE\s*=.*ELEVEN_NAME_VOICE_ID.*qi4PkV9c01kb869Vh7Su/,
-  'the Arabic-name batch must default to the selected Asmaa MSA voice');
+assert.match(generator, /NAME_VOICE\s*=.*ELEVEN_NAME_VOICE_ID.*xvhpbk8otnNHtT3fjCpr/,
+  'the Arabic-name batch must default to the selected Omar MSA voice');
+assert.match(generator, /<break time="0\.45s" \/>/,
+  'short Arabic-name clips must preserve a natural tail after the final word');
 
 console.log('✓ surah-name onboarding contract');
