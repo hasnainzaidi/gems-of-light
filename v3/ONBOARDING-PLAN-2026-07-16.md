@@ -47,6 +47,11 @@ they must never reorder or replace stages.
   cause a second prompt in the same visit, and makes no notification promise.
   A later uninstalled browser visit carries a quiet full-screen reminder on
   the journey map until the grown-up installs or explicitly dismisses it.
+- Every later non-standalone launch pauses before the child-facing doorway on
+  **Best in full screen**, with **I've added it** and **Remind me later**. Both
+  continue immediately and suppress the map ribbon for that visit; neither
+  creates a permanent browser dismissal. A true installed relaunch is the only
+  durable bypass.
 
 ## Scene and API contract
 

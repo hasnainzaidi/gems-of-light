@@ -840,3 +840,12 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   browser visit, the map quietly offers **Play full-screen** until installation
   or explicit dismissal. The child's first-map invitation still has exclusive
   priority.
+- **FULL-SCREEN CHECKPOINT ESCALATION (accepted 2026-07-16 after immediate
+  parent playtest):** the quiet map ribbon was still too easy to miss; the
+  observed browser chrome remained annoying even directly after setup. Every
+  later non-standalone launch now pauses before the child-facing doorway on
+  **Best in full screen**, offering **I've added it** or **Remind me later**.
+  Either choice continues at once and clears the ribbon for that visit, but no
+  browser dismissal is stored: another browser launch asks again. Only a true
+  standalone relaunch durably bypasses the checkpoint. The first visit still
+  gets value before installation through the grown-up porch.

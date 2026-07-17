@@ -14,6 +14,7 @@ assert.match(preview, /registerScene\(['"]parentPreview['"]/,
   'parent preview scene is not registered');
 
 const onboarding = read('js/onboarding.js');
+const install = read('js/install.js');
 for (const stage of ['welcome', 'preview', 'knowledge', 'setup', 'handoff']) {
   assert.match(onboarding, new RegExp("['\"]" + stage + "['\"]"),
     `canonical onboarding stage missing: ${stage}`);
@@ -55,6 +56,16 @@ assert.match(boot, /hasJourneyProgress/,
   'existing saves need a backward-compatible porch bypass');
 assert.match(boot, /q\.get\(['"]onboarding['"]\) === ['"]1['"]/,
   'visual QA must be able to force onboarding without clearing a save');
+assert.match(boot, /needsInstallCheckpoint[\s\S]{0,180}!GOL\.isStandalone\(\)[\s\S]{0,120}!GOL\.DEBUG/,
+  'returning browser launches must pause for full-screen setup');
+assert.match(boot, /needsPorch\s*\?\s*['"]onboarding['"][\s\S]{0,120}needsInstallCheckpoint\s*\?\s*['"]install['"]/,
+  'the first value-first porch must keep priority over the returning install checkpoint');
+assert.match(install, /Best in full screen/,
+  'the returning checkpoint must lead with the play benefit');
+assert.match(install, /Remind me later/,
+  'the returning checkpoint must always have an immediate escape');
+assert.match(install, /I've added it/,
+  'manual install branches must let the grown-up acknowledge setup');
 
 const map = read('js/map.js');
 assert.match(map, /markChildStarted/,
