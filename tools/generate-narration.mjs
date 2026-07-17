@@ -10,7 +10,7 @@
 // Optional env:
 //   ELEVEN_VOICE_ID   voice to use (default: Hope — a warm storyteller)
 //   ELEVEN_MODEL_ID   default: eleven_multilingual_v2
-//   ELEVEN_NAME_VOICE_ID  override the default Asmaa MSA voice
+//   ELEVEN_NAME_VOICE_ID  override the default Omar MSA voice
 //   ELEVEN_NAME_MODEL_ID  default: eleven_multilingual_v2
 import fs from 'fs';
 import path from 'path';
@@ -34,7 +34,9 @@ for (const s of global.GOL_DATA.surahs) {
   // also safe to generate ahead of recipes that have not been built yet. Feed
   // the model Arabic script, never English transliteration: the visible label
   // is for recognition, but it is not a pronunciation specification.
-  LINES['surah-' + s.slug] = 'سُورَةُ ' + s.arabicName;
+  // These phrases are unusually short, so preserve a small natural tail. It
+  // keeps the final consonant from feeling chopped off when the clip ends.
+  LINES['surah-' + s.slug] = 'سُورَةُ ' + s.arabicName + '. <break time="0.45s" />';
   if (!s.story) continue;
   s.story.pages.forEach((text, i) => {
     LINES[GOL.storyVoiceId(s.slug, i)] = text;
@@ -45,10 +47,10 @@ const FORCE = process.argv.includes('--force');
 const DRY = process.argv.includes('--dry');
 const NAMES_ONLY = process.argv.includes('--names');
 const KEY = process.env.ELEVENLABS_API_KEY;
-// Asmaa: young female, gentle conversational narration, explicitly trained
-// for Modern Standard Arabic. A caller can override this without changing the
-// checked-in default, but every resulting clip still needs a listening pass.
-const NAME_VOICE = process.env.ELEVEN_NAME_VOICE_ID || 'qi4PkV9c01kb869Vh7Su';
+// Omar: warm male Modern Standard Arabic with a light Saudi character. A
+// caller can override this without changing the checked-in default, but every
+// resulting clip still needs a native-speaker listening pass.
+const NAME_VOICE = process.env.ELEVEN_NAME_VOICE_ID || 'xvhpbk8otnNHtT3fjCpr';
 const VOICE = NAMES_ONLY ? NAME_VOICE
   : (process.env.ELEVEN_VOICE_ID || 'uYXf8XasLslADfZ2MB4u'); // "Hope", warm & calm
 const MODEL = NAMES_ONLY
@@ -81,8 +83,11 @@ for (const id of todo) {
       body: JSON.stringify({
         text,
         model_id: MODEL,
-        // calm, even, storybook delivery
-        voice_settings: { stability: 0.55, similarity_boost: 0.75, style: 0.25, use_speaker_boost: true }
+        // The surah names are invitations, not announcements: slightly slower,
+        // steadier, and less stylized than the English storyteller.
+        voice_settings: NAMES_ONLY
+          ? { stability: 0.68, similarity_boost: 0.78, style: 0.08, speed: 0.92, use_speaker_boost: true }
+          : { stability: 0.55, similarity_boost: 0.75, style: 0.25, use_speaker_boost: true }
       })
     });
     if (!res.ok) throw new Error(res.status + ' ' + (await res.text()).slice(0, 140));

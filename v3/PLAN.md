@@ -856,10 +856,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   data, so map and world cannot drift. The existing human narration pipeline
   now defines `surah-<slug>` clips from Arabic script (`سُورَةُ` + the shared
   Arabic name), and adventure plays the matching clip when present. The name
-  batch is isolated from English narration and defaults to Asmaa (Modern
-  Standard Arabic, gentle young female narration; ElevenLabs voice
-  `qi4PkV9c01kb869Vh7Su`). It must still pass native-speaker listening review;
-  missing/unapproved clips stay silent. Showcase remains secular and does not
+  batch is isolated from English narration and defaults to **Omar** (male
+  Modern Standard Arabic, warm and clear, with light Saudi character;
+  ElevenLabs voice `xvhpbk8otnNHtT3fjCpr`). Name generations run slightly
+  slower and steadier with minimal style exaggeration, and each phrase carries
+  an explicit 0.45s trailing break so its final consonant and cadence are never
+  cut off. **Listening verdict (Hasnain, 2026-07-17):** approved — the male
+  voice and longer tail are a better fit; all 24 earlier clips were replaced.
+  Missing/unapproved clips stay silent. Showcase remains secular and does not
   show or announce surah names.
 - **ALL MAP BLOOMS REQUIRE A REST (accepted 2026-07-16, Hasnain):** Al-Fatiha
   no longer has an immediate-on-arrival exception. The breathing star, earned
