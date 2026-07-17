@@ -619,6 +619,8 @@
         GOL.markChildStarted();
       }
       GOL.audio.unlock();
+      const surah = GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
+      if (surah && GOL.EXPERIENCE.recitation) GOL.audio.preloadVoice(['surah-' + surah.slug]);
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: sp.n });
       return true;
@@ -637,13 +639,14 @@
       return !!(this.firstInvite && !this.firstInvite.answered);
     },
 
-    // Landing on a waypoint: the breathing star opens its world at once;
-    // an old bloom arms the visible hesitation, then re-enters.
+    // Landing on a waypoint: every real door pauses long enough to name the
+    // surah. The ring still closes wordlessly around the lightling, while the
+    // parchment caption answers the child's new question: where am I going?
     _onArrive() {
       if (!this.map || !this.spotS || this.ceremony) return;
       if (this.star && Math.abs(this.hero.s - this.spotS[this.star.ri][this.star.j]) <= 2) {
         this.pendingBloom = false;
-        this.enterWorld(this.star.ri, this.star.j);
+        this.dwell = { t: 0, ri: this.star.ri, j: this.star.j };
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -1281,6 +1284,31 @@
       }
 
       this.drawInstallNudge(ctx, W, H);
+
+      // The selected destination's transliterated surah name. It appears only
+      // during the short arrival pause, so the painted journey remains quiet
+      // while walking and the child sees the name before crossing the door.
+      if (this.dwell && GOL.EXPERIENCE.recitation) {
+        const sp = this.spotInfo[this.dwell.ri] && this.spotInfo[this.dwell.ri][this.dwell.j];
+        const name = sp && GOL.surahNameForWorld ? GOL.surahNameForWorld(sp.n) : '';
+        if (name) {
+          const k = clamp(this.dwell.t / 0.22, 0, 1);
+          const w = Math.max(150, Math.min(250, 72 + name.length * 9));
+          const h = 38, x = (W - w) / 2;
+          const y = (GOL.SAFE ? GOL.SAFE.t * 0.5 : 0) + 14;
+          ctx.save();
+          ctx.globalAlpha = k;
+          ctx.shadowColor = alpha('#6D5128', 0.22); ctx.shadowBlur = 10;
+          ctx.fillStyle = 'rgba(250,244,224,0.95)';
+          GOL.roundRect(ctx, x, y, w, h, h / 2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = alpha('#C89B55', 0.82); ctx.lineWidth = 1.5;
+          GOL.roundRect(ctx, x, y, w, h, h / 2); ctx.stroke();
+          GOL.text(ctx, name, W / 2, y + h / 2,
+            { size: 17, weight: '800', color: '#6D5128', shadow: false });
+          ctx.restore();
+        }
+      }
 
       // touch walk buttons: back / forward along the trail
       const btns = this.walkButtons(W, H);

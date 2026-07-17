@@ -5,12 +5,13 @@
 // file simply stays silent until this script has been run.
 //
 // Usage:
-//   ELEVENLABS_API_KEY=sk-...  node tools/generate-narration.mjs [--force] [--dry]
+//   ELEVENLABS_API_KEY=sk-...  node tools/generate-narration.mjs [--names] [--force] [--dry]
 //
 // Optional env:
 //   ELEVEN_VOICE_ID   voice to use (default: Hope — a warm storyteller)
-//   ELEVEN_MODEL_ID   default: eleven_multilingual_v2 (handles the Arabic
-//                     names inside English sentences gracefully)
+//   ELEVEN_MODEL_ID   default: eleven_multilingual_v2
+//   ELEVEN_NAME_VOICE_ID  override the default Asmaa MSA voice
+//   ELEVEN_NAME_MODEL_ID  default: eleven_multilingual_v2
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,6 +30,11 @@ const GOL = global.GOL;
 const LINES = {};
 for (const [id, text] of Object.entries(GOL.VOICE_LINES)) LINES[id] = text;
 for (const s of global.GOL_DATA.surahs) {
+  // A short, consistent welcome at the door of every v3 world. These ids are
+  // also safe to generate ahead of recipes that have not been built yet. Feed
+  // the model Arabic script, never English transliteration: the visible label
+  // is for recognition, but it is not a pronunciation specification.
+  LINES['surah-' + s.slug] = 'سُورَةُ ' + s.arabicName;
   if (!s.story) continue;
   s.story.pages.forEach((text, i) => {
     LINES[GOL.storyVoiceId(s.slug, i)] = text;
@@ -37,11 +43,21 @@ for (const s of global.GOL_DATA.surahs) {
 
 const FORCE = process.argv.includes('--force');
 const DRY = process.argv.includes('--dry');
+const NAMES_ONLY = process.argv.includes('--names');
 const KEY = process.env.ELEVENLABS_API_KEY;
-const VOICE = process.env.ELEVEN_VOICE_ID || 'uYXf8XasLslADfZ2MB4u'; // "Hope", warm & calm
-const MODEL = process.env.ELEVEN_MODEL_ID || 'eleven_multilingual_v2';
+// Asmaa: young female, gentle conversational narration, explicitly trained
+// for Modern Standard Arabic. A caller can override this without changing the
+// checked-in default, but every resulting clip still needs a listening pass.
+const NAME_VOICE = process.env.ELEVEN_NAME_VOICE_ID || 'qi4PkV9c01kb869Vh7Su';
+const VOICE = NAMES_ONLY ? NAME_VOICE
+  : (process.env.ELEVEN_VOICE_ID || 'uYXf8XasLslADfZ2MB4u'); // "Hope", warm & calm
+const MODEL = NAMES_ONLY
+  ? (process.env.ELEVEN_NAME_MODEL_ID || 'eleven_multilingual_v2')
+  : (process.env.ELEVEN_MODEL_ID || 'eleven_multilingual_v2');
 
-const ids = Object.keys(LINES);
+// Names are deliberately a separate batch: the ordinary English narration
+// command must never generate them accidentally with its English storyteller.
+const ids = Object.keys(LINES).filter((id) => NAMES_ONLY ? id.startsWith('surah-') : !id.startsWith('surah-'));
 const todo = ids.filter((id) => FORCE || !fs.existsSync(path.join(OUT, id + '.mp3')));
 console.log(ids.length + ' lines total · ' + (ids.length - todo.length) + ' already cached · ' + todo.length + ' to generate');
 if (DRY || todo.length === 0) {

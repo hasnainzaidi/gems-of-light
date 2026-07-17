@@ -304,6 +304,7 @@ if (!arg) {
     execFileSync(process.execPath, [join(V3, 'tools', 'test-onboarding-contract.mjs')], { stdio: 'inherit' });
     execFileSync(process.execPath, [join(V3, 'tools', 'test-journey-stage-onboarding.mjs')], { stdio: 'inherit' });
     execFileSync(process.execPath, [join(V3, 'tools', 'test-showcase-contract.mjs')], { stdio: 'inherit' });
+    execFileSync(process.execPath, [join(V3, 'tools', 'test-surah-name-onboarding.mjs')], { stdio: 'inherit' });
   } catch (e) {
     failures++;
   }

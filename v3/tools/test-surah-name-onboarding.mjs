@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+// Contract for the two child-facing surah-name moments: destination on the
+// journey map, then the same canonical transliteration on world entrance.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const read = (name) => fs.readFileSync(path.resolve(here, '..', name), 'utf8');
+
+const worlds = read('js/worlds.js');
+const map = read('js/map.js');
+const adventure = read('js/adventure.js');
+const generator = fs.readFileSync(path.resolve(here, '..', '..', 'tools', 'generate-narration.mjs'), 'utf8');
+
+assert.match(worlds, /GOL\.surahNameForWorld\s*=\s*function/,
+  'surah names need one canonical shared-data lookup');
+assert.match(worlds, /surah\.englishName/,
+  'the canonical child-facing label must use shared englishName transliteration');
+
+assert.match(map, /this\.dwell\s*=\s*\{\s*t:\s*0,\s*ri:\s*this\.star\.ri/,
+  'the next-world star must pause before opening so its name can be read');
+assert.match(map, /GOL\.surahNameForWorld\(sp\.n\)/,
+  'the map arrival caption must use the canonical surah name');
+assert.match(map, /if \(this\.dwell && GOL\.EXPERIENCE\.recitation\)/,
+  'the learning-only map caption must not leak into Showcase');
+
+assert.match(adventure, /this\.welcomeName\s*=.*englishName/,
+  'world entrance must show the same shared transliteration');
+assert.match(adventure, /this\.welcomeVoiceId\s*=\s*entranceSurah\s*&&\s*GOL\.EXPERIENCE\.recitation/,
+  'Showcase must never announce the surah name');
+assert.match(adventure, /GOL\.audio\.speak\(this\.welcomeVoiceId\)/,
+  'world entrance must attempt the matching human-voice name clip');
+assert.match(adventure, /this\.welcomeT > 0 && this\.welcomeName/,
+  'world entrance needs a timed visible welcome title');
+
+assert.match(generator, /LINES\['surah-' \+ s\.slug\]\s*=\s*'سُورَةُ ' \+ s\.arabicName/,
+  'the narration batch must speak the canonical Arabic name, never transliteration');
+assert.match(generator, /NAMES_ONLY[\s\S]*id\.startsWith\('surah-'\)/,
+  'the short surah-name batch must be independently generatable');
+assert.match(generator, /NAME_VOICE\s*=.*ELEVEN_NAME_VOICE_ID.*qi4PkV9c01kb869Vh7Su/,
+  'the Arabic-name batch must default to the selected Asmaa MSA voice');
+
+console.log('✓ surah-name onboarding contract');

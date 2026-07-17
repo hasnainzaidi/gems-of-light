@@ -849,3 +849,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   browser dismissal is stored: another browser launch asks again. Only a true
   standalone relaunch durably bypasses the checkpoint. The first visit still
   gets value before installation through the grown-up porch.
+- **NAME THE SURAH AT BOTH DOORS (accepted 2026-07-16, Hasnain):** reaching a
+  real map spot now pauses briefly and shows that world's canonical English
+  transliteration before entry; the world then opens with the same name in a
+  soft, non-blocking sky welcome. Both read `englishName` from shared surah
+  data, so map and world cannot drift. The existing human narration pipeline
+  now defines `surah-<slug>` clips from Arabic script (`سُورَةُ` + the shared
+  Arabic name), and adventure plays the matching clip when present. The name
+  batch is isolated from English narration and defaults to Asmaa (Modern
+  Standard Arabic, gentle young female narration; ElevenLabs voice
+  `qi4PkV9c01kb869Vh7Su`). It must still pass native-speaker listening review;
+  missing/unapproved clips stay silent. Showcase remains secular and does not
+  show or announce surah names.
