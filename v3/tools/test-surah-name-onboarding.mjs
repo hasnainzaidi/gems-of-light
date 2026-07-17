@@ -21,6 +21,14 @@ assert.match(worlds, /surah\.englishName/,
 
 assert.match(map, /this\.dwell\s*=\s*\{\s*t:\s*0,\s*ri:\s*this\.star\.ri/,
   'the next-world star must pause before opening so its name can be read');
+const arriveBody = map.match(/_onArrive\(\)\s*\{([\s\S]*?)\n    \},\n\n    \/\/ Keyboard navigation/);
+assert.ok(arriveBody, 'the map arrival handler must remain inspectable');
+assert.doesNotMatch(arriveBody[1], /enterWorld\(/,
+  'crossing a bloom must never enter its world immediately');
+assert.match(arriveBody[1], /this\.dwell\s*=\s*\{\s*t:\s*0,\s*ri,\s*j\s*\}/,
+  'finished and parent-opened blooms must use the same deliberate pause');
+assert.match(map, /this\.hero\.sT\s*=\s*target;[\s\S]{0,180}this\.dwell\s*=\s*null/,
+  'continuing along the trail must cancel a bloom pause');
 assert.match(map, /GOL\.surahNameForWorld\(sp\.n\)/,
   'the map arrival caption must use the canonical surah name');
 assert.match(map, /if \(this\.dwell && GOL\.EXPERIENCE\.recitation\)/,

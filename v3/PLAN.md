@@ -861,3 +861,10 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   `qi4PkV9c01kb869Vh7Su`). It must still pass native-speaker listening review;
   missing/unapproved clips stay silent. Showcase remains secular and does not
   show or announce surah names.
+- **ALL MAP BLOOMS REQUIRE A REST (accepted 2026-07-16, Hasnain):** Al-Fatiha
+  no longer has an immediate-on-arrival exception. The breathing star, earned
+  blooms, and parent-opened practice doors all arm the same visible pause before
+  entry; another forward/back step cancels that pause, so a child can walk past
+  Al-Fatiha toward a grown-up-opened surah without falling into world one. The
+  map contract now rejects both immediate entry on crossing and any regression
+  that stops onward movement from cancelling the pause.
