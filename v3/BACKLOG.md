@@ -37,6 +37,9 @@ verdict is logged.
 
 ## Later
 
+- [ ] Quraysh learning-loop prototype rooms (five paradigms, build order
+      Night Watch first) — design: `QURAYSH-PROTOTYPE-ROOMS.md`, strategy:
+      `LEARNING-LOOPS-STRATEGY.md`
 - [ ] New surah worlds per `WORLDS-PLAN.md` waves (audio pipeline
       already fed for the next batch)
 - [ ] Map expansion panel when the journey grows past the third island
