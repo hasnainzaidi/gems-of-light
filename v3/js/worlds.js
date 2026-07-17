@@ -46,6 +46,19 @@
     return GOL.WORLDS3.filter(Boolean).sort((a, b) => pos(a) - pos(b));
   };
 
+  // Child-facing surah identity lives in the shared Quran data, never in a
+  // world recipe. The map and the entrance title both use this helper so a
+  // spelling correction cannot leave the two surfaces disagreeing.
+  GOL.surahForWorld = function (world) {
+    const w = typeof world === 'number' ? GOL.WORLDS3[world - 1] : world;
+    return w && window.GOL_DATA && window.GOL_DATA.surahs
+      ? window.GOL_DATA.surahs.find((s) => s.id === w.surahId) : null;
+  };
+  GOL.surahNameForWorld = function (world) {
+    const surah = GOL.surahForWorld(world);
+    return surah ? surah.englishName : '';
+  };
+
   // A grown-up may tell us which surahs were already known before this
   // garden existed. Keep that claim separate from an earned Grand Gem:
   // parent preparation may paint a world complete, but it must never invent
