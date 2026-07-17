@@ -5,8 +5,8 @@
   'use strict';
   const GOL = window.GOL;
   const { alpha } = GOL.color;
-  const STAGES = ['welcome', 'preview', 'setup', 'handoff'];
-  const DRAWABLE = new Set(['welcome', 'setup', 'handoff']);
+  const STAGES = ['welcome', 'preview', 'knowledge', 'setup', 'handoff'];
+  const DRAWABLE = new Set(['welcome', 'knowledge', 'setup', 'handoff']);
   const CREAM = '#FAF4E0', INK = GOL.INK || '#3E5340';
   const SOFT = GOL.INK_SOFT || '#6B7D66', GOLD = '#B98A3E', GOLD_L = '#FFE9A8';
   const q = new URLSearchParams(location.search);
@@ -85,6 +85,15 @@
   }
 
   function setupCopy(os) {
+    if (GOL.EXPERIENCE.showcase) {
+      if (GOL.isStandalone && GOL.isStandalone()) return { title: 'Already at home', note: 'Gems of Light is ready to open full-screen.', steps: ['Your garden is ready'], primary: 'Continue' };
+      if (os === 'ios') return { title: 'On iPhone with Safari', note: 'A little home of its own, easy to find.', steps: ['Tap Share below', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
+      if (os === 'iosChrome') return { title: 'On iPhone with Chrome', note: 'The Share button is at the top right.', steps: ['Tap Share', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
+      if (os === 'iosInApp') return { title: 'Open in Safari first', note: 'In-app browsers cannot make the full-screen garden.', steps: ['Open this page in Safari', 'Tap Share', 'Choose Add to Home Screen'], primary: "I've added it" };
+      if (os === 'android' && GOL.installGuide && GOL.installGuide.canPrompt()) return { title: 'On your Android phone', note: 'One tap makes the garden full-screen and easy to find.', steps: ['Add Gems of Light to your home screen'], primary: 'Add to home screen' };
+      if (os === 'android') return { title: 'On your Android phone', note: 'Keep the garden full-screen and close at hand.', steps: ['Open the browser menu', 'Tap Add to Home screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
+      return { title: 'Keep it close', note: 'The garden is made for a phone, but you can continue here.', steps: ['Open this Showcase link on your phone'], primary: 'Continue here' };
+    }
     if (GOL.isStandalone && GOL.isStandalone()) return { title: 'Already at home', note: 'Gems of Light is ready to open full-screen.', steps: ['The garden is ready for your child'], primary: 'Continue' };
     if (os === 'ios') return { title: 'On iPhone with Safari', note: 'A little home of its own, easy for your child to find.', steps: ['Tap Share below', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
     if (os === 'iosChrome') return { title: 'On iPhone with Chrome', note: 'The Share button is at the top right.', steps: ['Tap Share', 'Choose Add to Home Screen', 'Open Gems of Light from its new icon'], primary: "I've added it" };
@@ -97,9 +106,13 @@
   const scene = {
     ownsPortrait: true,
     stage: 'welcome', t: 0, stageT: 0, os: 'desktop', buttons: {}, installPending: false, bd: null,
+    journeyStage: null,
     enter(params) {
       this.t = 0; this.stageT = 0; this.installPending = false; this.os = platform();
       this.bd = GOL.buildBackdrop ? GOL.buildBackdrop('falaq', 814) : null;
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : {};
+      const draft = ob.journeyStageDraft != null ? ob.journeyStageDraft : ob.journeyStage;
+      this.journeyStage = Number.isInteger(draft) ? draft : null;
       const requested = params && params.stage;
       this.stage = DRAWABLE.has(requested) ? requested : (qaStage() || 'welcome');
     },
@@ -114,9 +127,10 @@
       const portrait = H > W;
       const marginX = Math.max(18, sa.l + 14, sa.r + 14);
       const pw = Math.min(portrait ? 390 : 680, W - marginX * 2);
-      const top = Math.max(sa.t + 14, portrait ? H * .16 : 46);
+      const knowledge = this.stage === 'knowledge';
+      const top = Math.max(sa.t + 14, portrait ? (knowledge ? H * .09 : H * .16) : (knowledge ? 22 : 46));
       const bottom = Math.max(sa.b + 16, 18);
-      const ph = Math.min(portrait ? 490 : 270, H - top - bottom);
+      const ph = Math.min(portrait ? (knowledge ? 560 : 490) : (knowledge ? 340 : 270), H - top - bottom);
       const px = (W - pw) / 2, py = top;
       const bh = Math.max(40, Math.min(50, ph * .15));
       const by = py + ph - bh - 20;
@@ -129,6 +143,28 @@
         return { secondary: { x: L.cx - w - gap / 2, y: L.by, w, h: L.bh }, primary: { x: L.cx + gap / 2, y: L.by, w, h: L.bh } };
       }
       return { primary: { x: L.cx - max / 2, y: L.by, w: max, h: L.bh } };
+    },
+    stageCards(L) {
+      const choices = GOL.JOURNEY_STAGE_CHOICES || [];
+      const cols = L.portrait ? 1 : 2;
+      const rows = Math.ceil(choices.length / cols);
+      const gapX = 10, gapY = 9;
+      const gridX = L.px + 26;
+      const gridY = L.py + (L.portrait ? 135 : 104);
+      const gridW = L.pw - 52;
+      const availableH = Math.max(80, L.by - gridY - 14);
+      const h = Math.min(L.portrait ? 74 : 68, (availableH - gapY * (rows - 1)) / rows);
+      const w = (gridW - gapX * (cols - 1)) / cols;
+      return choices.map((choice, i) => {
+        const col = i % cols, row = Math.floor(i / cols);
+        return { choice, x: gridX + col * (w + gapX), y: gridY + row * (h + gapY), w, h };
+      });
+    },
+    saveJourneyStage() {
+      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+      if (!ob) return;
+      ob.journeyStageDraft = this.journeyStage;
+      GOL.store.save();
     },
     finish() {
       if (GOL.completeParentOnboarding) GOL.completeParentOnboarding();
@@ -151,9 +187,23 @@
       const L = this.layout(W, H), a = this.actions(L); this.buttons = a;
       for (const tap of GOL.Input.taps) {
         if (tap.ui) continue;
+        if (this.stage === 'knowledge') {
+          const card = this.stageCards(L).find((b) => hit(b, tap));
+          if (card) {
+            tap.ui = true;
+            this.journeyStage = card.choice.index;
+            this.saveJourneyStage();
+            if (GOL.audio) GOL.audio.sfx('tap');
+            return;
+          }
+        }
         if (hit(a.primary, tap)) {
           tap.ui = true;
           if (this.stage === 'welcome') GOL.go('parentPreview');
+          else if (this.stage === 'knowledge') {
+            if (this.journeyStage == null) return;
+            this.saveJourneyStage(); this.setStage('setup');
+          }
           else if (this.stage === 'setup') this.finishSetup();
           else if (this.stage === 'handoff') this.finish();
           return;
@@ -177,7 +227,10 @@
       if (this.stage === 'welcome') {
         GOL.star8(ctx, L.cx, titleY - 1, 12 + Math.sin(this.t * 2) * 1.2, Math.PI / 8 + this.t * .08, GOLD);
         GOL.text(ctx, 'Gems of Light', L.cx, titleY + 36, { size: titleSize + 4, weight: '800', color: INK, shadow: false });
-        wrapped(ctx, 'A gentle Quran memorisation adventure for young children.', L.cx, contentY + 52, L.inner, bodySize, SOFT, '700', 2);
+        wrapped(ctx, GOL.EXPERIENCE.showcase
+          ? 'A gentle platform adventure through living gardens.'
+          : 'A gentle Quran memorisation adventure for young children.',
+        L.cx, contentY + 52, L.inner, bodySize, SOFT, '700', 2);
         const gardenY = L.portrait ? contentY + 180 : contentY + 77;
         const gardenW = Math.min(L.inner - 24, L.portrait ? 250 : 300);
         ctx.fillStyle = alpha('#7BA267', .16);
@@ -196,13 +249,43 @@
           squashX: 1, squashY: 1, blink: Math.sin(this.t * .71) > .985, groundDist: 0
         });
         if (GOL.GEMS && GOL.GEMS[0]) GOL.drawGem(ctx, L.cx + gardenW * .31, gardenY - 4, 14, GOL.GEMS[0], this.t, { glow: 1 });
-        GOL.text(ctx, 'Explore  →  Listen  →  Remember', L.cx, gardenY + (L.portrait ? 83 : 56), {
+        GOL.text(ctx, GOL.EXPERIENCE.showcase
+          ? 'Explore  →  Collect  →  Restore'
+          : 'Explore  →  Listen  →  Remember', L.cx, gardenY + (L.portrait ? 83 : 56), {
           size: L.portrait ? 13 : 11.5, weight: '800', color: SOFT, shadow: false
         });
         drawButton(ctx, a.primary, 'See how it works', true);
+      } else if (this.stage === 'knowledge') {
+        GOL.text(ctx, 'Make it their garden', L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
+        GOL.text(ctx, 'Where are they in their memorisation journey?', L.cx, contentY, {
+          size: bodySize, weight: '700', color: SOFT, shadow: false
+        });
+        GOL.text(ctx, 'Choose the closest fit — the surahs below are just examples.', L.cx, contentY + (L.portrait ? 23 : 18), {
+          size: L.portrait ? 11.5 : 10.5, weight: '700', color: alpha(SOFT, .78), shadow: false
+        });
+        for (const b of this.stageCards(L)) {
+          const selected = this.journeyStage === b.choice.index;
+          ctx.fillStyle = selected ? alpha('#DCEBCB', .98) : alpha('#F7EFD9', .72);
+          GOL.roundRect(ctx, b.x, b.y, b.w, b.h, 12); ctx.fill();
+          ctx.strokeStyle = selected ? alpha('#4E8C52', .9) : alpha(GOLD, .35);
+          ctx.lineWidth = selected ? 1.8 : 1.1;
+          GOL.roundRect(ctx, b.x, b.y, b.w, b.h, 12); ctx.stroke();
+          if (selected) GOL.star8(ctx, b.x + 18, b.y + b.h / 2, 6.5, Math.PI / 8, '#D09B38');
+          const tx = b.x + (selected ? 34 : 18);
+          GOL.text(ctx, b.choice.label, tx, b.y + b.h * .36, {
+            size: L.portrait ? 14.5 : 14, weight: '800', color: selected ? '#355F3B' : INK,
+            align: 'left', shadow: false
+          });
+          GOL.text(ctx, 'Around: ' + b.choice.examples, tx, b.y + b.h * .69, {
+            size: L.portrait ? 11.5 : 10.5, weight: '700', color: selected ? alpha('#355F3B', .72) : SOFT,
+            align: 'left', shadow: false
+          });
+        }
+        drawButton(ctx, a.primary, this.journeyStage == null ? 'Choose one to continue' : 'Continue', this.journeyStage != null);
       } else if (this.stage === 'setup') {
         const c = setupCopy(this.os);
-        GOL.text(ctx, 'Make Gems of Light theirs', L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
+        GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Make Gems of Light yours' : 'Make Gems of Light theirs',
+          L.cx, titleY, { size: titleSize, weight: '800', color: INK, shadow: false });
         GOL.text(ctx, c.title, L.cx, contentY, { size: 15, weight: '800', color: GOLD, shadow: false });
         const rowH = Math.min(L.portrait ? 52 : 38, (L.by - contentY - 58) / Math.max(1, c.steps.length));
         c.steps.forEach((s, i) => {
@@ -214,12 +297,16 @@
         GOL.text(ctx, c.note, L.cx, L.by - 17, { size: 10.5, weight: '600', color: SOFT, shadow: false });
         drawButton(ctx, a.secondary, 'Not now', false); drawButton(ctx, a.primary, c.primary, true);
       } else {
-        GOL.text(ctx, 'Their garden is ready', L.cx, titleY, { size: titleSize + 2, weight: '800', color: INK, shadow: false });
+        GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Your garden is ready' : 'Their garden is ready',
+          L.cx, titleY, { size: titleSize + 2, weight: '800', color: INK, shadow: false });
         const py = contentY + (L.portrait ? 62 : 45);
         ctx.save(); ctx.translate(L.cx + Math.sin(this.t * .8) * 10, py); ctx.rotate(-Math.PI / 2 * (.5 + .5 * Math.sin(this.t * .75)));
         ctx.strokeStyle = GOLD; ctx.lineWidth = 3; GOL.roundRect(ctx, -17, -29, 34, 58, 8); ctx.stroke(); ctx.restore();
-        wrapped(ctx, 'Turn the phone sideways, then hand the adventure to your child.', L.cx, py + 56, L.inner, bodySize, SOFT, '700', 2);
-        drawButton(ctx, a.primary, 'Hand it over', true);
+        wrapped(ctx, GOL.EXPERIENCE.showcase
+          ? 'Turn the phone sideways, then begin the adventure.'
+          : 'Turn the phone sideways, then hand the adventure to your child.',
+        L.cx, py + 56, L.inner, bodySize, SOFT, '700', 2);
+        drawButton(ctx, a.primary, GOL.EXPERIENCE.showcase ? 'Begin adventure' : 'Hand it over', true);
       }
       GOL.drawVignette(ctx, W, H, .12);
     }
@@ -231,7 +318,9 @@
       if (stage === 'preview') { GOL.go('parentPreview'); return; }
       GOL.go('onboarding', { stage: DRAWABLE.has(stage) ? stage : 'welcome' });
     },
-    previewComplete() { GOL.go('onboarding', { stage: 'setup' }); },
+    previewComplete() {
+      GOL.go('onboarding', { stage: GOL.EXPERIENCE.showcase ? 'setup' : 'knowledge' });
+    },
     finishHandoff() { scene.finish(); }
   };
   GOL.registerScene('onboarding', scene);

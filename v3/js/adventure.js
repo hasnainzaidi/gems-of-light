@@ -110,7 +110,7 @@
     phase: 'roam', fireT: 0, doorK: 0, reciteI: -1,
     gemPause: null, memState: null, gallopFxT: 0,
     boxes: null, orb: null, darkBuf: null,
-    protoN: null, campDone: 0, campEntering: false,
+    protoN: null, campDone: 0, campEntering: false, showcaseGemK: 0,
 
     enter(params) {
       // every entry names its world now (the ten-prototype lab retired
@@ -150,6 +150,7 @@
       this.reciteI = -1;
       this.gemPause = null;
       this.campEntering = false;
+      this.showcaseGemK = 0;
       this.restoreK = 0;
       this.glowAr = null;
       this.echoT = 5; // let the garden breathe before the first echo
@@ -333,7 +334,7 @@
       // NIGHT CAMPS: only completed camp shrines survive a return. Partial
       // climbing never pretends to be learned; a lit camp is the checkpoint.
       this.campDone = 0;
-      if (L.campShrines && L.campShrines.length && !resume) {
+      if (GOL.EXPERIENCE.shrine && L.campShrines && L.campShrines.length && !resume) {
         const labGrand = GOL.store.data.grand && GOL.store.data.grand[this.storeId];
         // An explicit return belongs to THIS run and is authoritative. Stale
         // campDone from an earlier completed replay must not jump 1 → 3.
@@ -398,7 +399,7 @@
       GOL.store.save();
       if (!returning) GOL.stamp('v3walkStart');
 
-      GOL.audio.preloadSurah(L.surah);
+      if (GOL.EXPERIENCE.recitation) GOL.audio.preloadSurah(L.surah);
       GOL.audio.startAmbience('garden');
       if (!returning) GOL.audio.enterFlourish(); // waking at a checkpoint is quiet
     },
@@ -671,6 +672,7 @@
     // hidden gem) | 'world' (periodic, wherever the child is, quieter with
     // distance). Never interrupts a recitation; long, gentle cooldowns.
     updateEcho(dt) {
+      if (!GOL.EXPERIENCE.recitation) return;
       const mode = GOL.V3.echo;
       if (mode === 'off' || GOL.audio.reciting) return;
       this.echoT -= dt;
@@ -717,7 +719,7 @@
       this.bloomBanks();
       this.runGemFx(g);
 
-      if (GOL.DEBUG_ACCEL) return; // speed runs skip the recitation
+      if (GOL.DEBUG_ACCEL || !GOL.EXPERIENCE.recitation) return; // speed runs and Showcase skip recitation
       // A held beat for the ayah: gameplay stops so the child can settle and
       // listen. The ayah does not begin until the wanderer is back on the
       // ground (they may have leapt to reach the gem) — see updateGemPause.
@@ -753,7 +755,7 @@
           });
           // dur is a ceiling only — the script really ends with the ayah above
           const verse = this.L.surah.verses.find((v) => v.n === gp.ayah);
-          if (verse && GOL.V3.arabic) {
+          if (verse && GOL.EXPERIENCE.arabic && GOL.V3.arabic) {
             const follow = this.ayahFollow && this.ayahFollow.verses
               ? this.ayahFollow.verses[gp.ayah] : null;
             const words = follow ? follow.map((word) => word.text) : verse.ar.trim().split(/\s+/);
@@ -859,14 +861,18 @@
     updateOrbit(dt) {
       const pl = this.player;
       const camp = this.phase !== 'roam';
+      const merging = GOL.EXPERIENCE.showcase && this.phase === 'campfire';
       const n = this.orbit.length || 1;
       this.orbit.forEach((o, i) => {
         o.join = Math.min(1, o.join + dt / 0.9);
         o.angle += dt * (camp ? 0.55 : 0.85);
-        const rad = camp ? 64 : 36 + n * 1.5;
+        const mergeK = merging ? this.showcaseGemK : 0;
+        const rad = camp ? 64 * (1 - mergeK) : 36 + n * 1.5;
         const a = o.angle + (i / n) * Math.PI * 2;
-        const tx = pl.x + Math.cos(a) * rad;
-        const ty = pl.y - (camp ? 34 : 40) + Math.sin(a) * rad * 0.55;
+        const centerX = merging ? pl.x + (this.L.campfire.x - pl.x) * mergeK : pl.x;
+        const centerY = merging ? pl.y - 34 + ((this.L.campfire.y - 66) - (pl.y - 34)) * mergeK : pl.y - (camp ? 34 : 40);
+        const tx = centerX + Math.cos(a) * rad;
+        const ty = centerY + Math.sin(a) * rad * 0.55;
         o.x += (tx - o.x) * Math.min(1, dt * (o.join < 1 ? 2.2 : 6));
         o.y += (ty - o.y) * Math.min(1, dt * (o.join < 1 ? 2.2 : 6));
       });
@@ -998,6 +1004,9 @@
     },
 
     pendingCamp() {
+      // Showcase keeps long worlds as one uninterrupted collection journey:
+      // the learning game's stanza shrines remain inert scenery here.
+      if (!GOL.EXPERIENCE.shrine) return null;
       const camps = this.L && this.L.campShrines;
       if (!camps || this.campDone >= camps.length) return null;
       const c = camps[this.campDone];
@@ -1009,6 +1018,7 @@
     },
 
     updateCampShrine(c, dt) {
+      if (!GOL.EXPERIENCE.shrine) return;
       const p = this.campWorldPos(c), pl = this.player;
       if (Math.random() < dt * 8) {
         this.fx.spawn('sparkle', p.x + GOL.rnd(-24, 24), p.y + GOL.rnd(-28, 18), { color: '#FFE9A8' });
@@ -1056,7 +1066,10 @@
           // listening rings and per-ayah chime) was cut 2026-07-12: with the
           // shrine's one-socket recall right after, it added no value. The
           // focus-on-the-ayah beat now lives at each gem's collection instead.
-          if (GOL.DEBUG_ACCEL) {
+          if (GOL.EXPERIENCE.showcase) {
+            // A short, wordless ceremony: the gathered lights tighten into
+            // one World Gem while the fire and quiet ambience carry the beat.
+          } else if (GOL.DEBUG_ACCEL) {
             setTimeout(() => { if (this.phase === 'campfire') this.openDoor(); }, 800);
           } else {
             GOL.audio.playSurah(L.surah, {
@@ -1067,6 +1080,10 @@
         }
       } else if (this.phase === 'campfire') {
         pl.idleT += dt;
+        if (GOL.EXPERIENCE.showcase) {
+          this.showcaseGemK = Math.min(1, Math.max(0, (this.fireT - 0.45) / 1.35));
+          if (this.fireT > 2.25) this.openDoor();
+        }
         // embers rising
         if (Math.random() < dt * 8) {
           this.fx.spawn('sparkle', L.campfire.x + GOL.rnd(-10, 10), L.campfire.y - GOL.rnd(8, 30), { color: Math.random() < 0.5 ? '#F7D98C' : '#E8896B' });
@@ -1081,23 +1098,44 @@
         GOL.updatePlayer(pl, L, GOL.Input, dt, this.fx);
         this.updateGallopFx(dt);
         // the memory stone can now be woken — deliberately, off to the side
-        this.updateMemoryStone(dt);
+        if (GOL.EXPERIENCE.remembering) this.updateMemoryStone(dt);
         if (Math.random() < dt * 8 && L.door) {
           this.fx.spawn('sparkle', L.door.x + GOL.rnd(-40, 40), L.door.y - GOL.rnd(10, 170), { color: '#FFE9A8' });
         }
         if (L.door && Math.abs(pl.x - L.door.x) < 50 && Math.abs(pl.y - L.door.y) < 60) {
-          GOL.go('shrine', { proto: this.protoN, world: this.worldN });
+          if (GOL.EXPERIENCE.showcase) this.completeShowcase();
+          else GOL.go('shrine', { proto: this.protoN, world: this.worldN });
           return;
         }
       }
+    },
+    completeShowcase() {
+      // The active store is selected by the experience profile before load,
+      // so these familiar completion fields can safely drive map blooms
+      // without ever touching the learning journey.
+      const d = GOL.store.data;
+      const st = GOL.store.level(this.storeId);
+      const first = !st.completed;
+      st.completed = true;
+      st.completedAt = Date.now();
+      d.grand = d.grand || {};
+      if (!d.grand[this.storeId]) d.grand[this.storeId] = st.completedAt;
+      GOL.store.save();
+      if (first) GOL.stamp('v3showcaseWorld');
+      GOL.go(GOL.homeScene || 'title', this.worldN ? { celebrate: this.worldN } : undefined);
     },
     openDoor() {
       this.phase = 'ember';
       this.reciteI = -1;
       this.orbit = []; // the ayat settle back into the child; the band holds them
       const st = GOL.store.level(this.storeId);
-      st.heardFull = (st.heardFull || 0) + 1;
+      if (!GOL.EXPERIENCE.showcase) st.heardFull = (st.heardFull || 0) + 1;
       GOL.store.save();
+      if (GOL.EXPERIENCE.showcase) {
+        this.showcaseGemK = 1;
+        this.fx.spawn('ring', this.L.campfire.x, this.L.campfire.y - 66, { color: '#FFF3C4', size: 34 });
+        this.fx.burst(this.L.campfire.x, this.L.campfire.y - 66, '#F0C878', 20);
+      }
       GOL.audio.sfx('door');
       GOL.audio.startAmbience('garden');
       // STONES DISARMED (PLAN §10 verdict 2026-07-12): the ember-phase
@@ -1519,6 +1557,15 @@
         GOL.drawGem(ctx, o.x, o.y, lit ? r + 3 : r, o.C, t, { phase: i * 1.3, glow: lit ? 1 : 0.55 });
         ctx.globalAlpha = 1;
       });
+      // In Showcase the collected lights visibly become one keepsake before
+      // the arch opens. It remains over the fire while the player walks into
+      // the return portal, keeping the ending wordless and legible.
+      if (GOL.EXPERIENCE.showcase && this.showcaseGemK > 0) {
+        const C = GOL.GEMS[((this.worldN || this.L.id || 1) - 1) % GOL.GEMS.length];
+        const k = GOL.ease.out(this.showcaseGemK);
+        const gy = this.L.campfire.y - 66 + Math.sin(t * 2.1) * 3;
+        GOL.drawGem(ctx, this.L.campfire.x, gy, 5 + 14 * k, C, t, { glow: k, phase: 0.4 });
+      }
 
       if (this.fly) GOL.drawFirefly(ctx, this.fly.x, this.fly.y, this.t + 2, this.fly.mode === 'guide' ? 1.25 : 1);
       this.fx.draw(ctx);
@@ -1573,7 +1620,7 @@
 
       // the found ayah, glowing softly in the air — script, not a card
       // (drawn well below the gem band so the two never overlap)
-      if (this.glowAr) {
+      if (GOL.EXPERIENCE.arabic && this.glowAr) {
         const g = this.glowAr;
         const k = Math.min(1, g.t / 0.6) * Math.min(1, (g.dur - g.t) / 0.9);
         const fade = Math.max(0, k);
@@ -1608,7 +1655,7 @@
         const bandY = worldBottomY - (H - z.stick.y) - 26;      // = z.stick.y-26 exactly when the camera is clamped
         const starY = bandY - 15;                     // camp-progress pips ride just above
         if (bandY - 22 > H) { /* slid fully below the view — nothing to draw */ }
-        else if (L.campShrines && L.campShrines.length) {
+        else if (GOL.EXPERIENCE.shrine && L.campShrines && L.campShrines.length) {
           const start = this.campDone === 0 ? 1 : L.campShrines[this.campDone - 1].afterAyah + 1;
           const end = this.campDone < L.campShrines.length
             ? L.campShrines[this.campDone].afterAyah : L.gems.length;
@@ -1649,8 +1696,8 @@
       for (let i = 0; i < camps.length; i++) {
         const c = Object.assign({ index: i }, camps[i]);
         const p = { x: (c.x + 0.5) * TILE, y: c.row * TILE };
-        const done = i < this.campDone;
-        const ready = i === this.campDone && this.found.length >= c.afterAyah;
+        const done = GOL.EXPERIENCE.shrine && i < this.campDone;
+        const ready = GOL.EXPERIENCE.shrine && i === this.campDone && this.found.length >= c.afterAyah;
         const pulse = 0.5 + 0.5 * Math.sin(t * 2.4 + i);
         const open = done || ready;
         const gateW = 92, gateH = 116, innerW = 48;

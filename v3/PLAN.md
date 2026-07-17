@@ -798,3 +798,37 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   vignette; the required preview itself teaches Explore → Listen → Remember and
   proves sound. Its completion card goes directly to optional home-screen setup,
   then handoff. No separate method branch, sound check, or reciter choice.
+- **SHOWCASE MODE — ONE BUILD, TWO HONEST EXPERIENCES (built 2026-07-16;
+  phone verdict pending):** `?showcase=1` selects an immutable guest profile
+  before storage loads. It uses `gemsOfLight.v3.showcase` plus its own config,
+  centrally blocks recitation/preloads/ayah script, opens every built world,
+  and removes tuning, grown-ups, debug chrome, and Remembering Moons from the
+  guest surfaces. Showcase retains the grown-up porch and optional PWA setup in
+  a secular form: Explore → Collect → Restore, neutral parent copy, no preview
+  recitation, and a dedicated manifest whose installed `start_url` is
+  `?showcase=1`. Existing Showcase saves receive this porch once without losing
+  their isolated completion state. The game itself remains the
+  real platformer: ordered gems, restoration, creatures, seeds, campfire, and
+  map. At the campfire the gathered lights merge into a World Gem; the existing
+  arch returns to the journey and blooms that world's map spot instead of
+  entering the shrine. The learning profile remains the no-query default and
+  retains its original save, onboarding, recitations, shrine, Remembering, and
+  progression. Contract: `SHOWCASE-PLAN.md`; checker now enforces both sides in
+  `tools/test-showcase-contract.mjs`. Desktop phone-viewport browser verdict:
+  neutral title/map/direct-world/campfire all render without console errors;
+  real-phone staging verdict is still required before promotion.
+- **JOURNEY-PLACEMENT ONBOARDING EXPERIMENT (built 2026-07-16; phone verdict
+  pending):** “Make it their garden” asks one question—where is the child in
+  their memorisation journey?—with one warm, surah-example-led choice per
+  painted island: Planting the first seeds / Finding their rhythm / Growing in
+  confidence / Taking on longer surahs. The choice places the Lightling at that
+  island's first built world and blooms earlier-island worlds, while keeping
+  the parent placement separate from earned Grand Gems and knowledge telemetry.
+  The named surahs are explicitly “just examples” and each card says “Around:”
+  so no three-item list reads as the full contents of an island.
+  Every earlier six-slot island is completely bloomed (unbuilt worlds use
+  visual-only auto-blooms with no door or telemetry); the selected island's
+  first surah remains the breathing star. The Lightling stands on the previous
+  island's final slot, so one forward step begins the selected island—no replay
+  detour. The mapping expands cleanly when a fifth or sixth island arrives. Contract:
+  `ONBOARDING-PLAN-2026-07-16.md`; staging phone verdict pending.

@@ -337,6 +337,7 @@
       this.spotPulse = null;
       this.pendingBloom = false;
       this.firstInvite = null;
+      this.firstInviteSpot = null;
       const ob = GOL.onboardingStatus ? GOL.onboardingStatus() :
         (GOL.store.data && GOL.store.data.onboarding);
       this.firstHandoff = !!(params && params.firstHandoff) ||
@@ -358,6 +359,29 @@
         this.spotS = map.spots.map((row) => row.map((sp) => nearestLength(map.walkSamples, sp)));
         this.waypoints = this.spotS.flat().sort((a, b) => a - b);
         this.readSave();
+        const findSlot = (slot) => {
+          if (!Number.isInteger(slot) || slot < 0) return null;
+          let k = 0;
+          for (let ri = 0; ri < REGIONS.length; ri++) {
+            for (let j = 0; j < REGIONS[ri].count; j++, k++) {
+              if (k === slot) return { ri, j };
+            }
+          }
+          return null;
+        };
+        // A prepared garden begins at the LAST slot of the previous island.
+        // Every earlier slot is already in bloom; the next forward step goes
+        // straight to the selected island's first surah (the breathing star).
+        const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
+        const placement = this.firstHandoff && !returnState && ob &&
+          Number.isInteger(ob.journeyStage) ? findSlot(ob.handoffStartSlot) : null;
+        if (this.firstHandoff && !returnState && ob && Number.isInteger(ob.journeyStage)) {
+          const start = placement;
+          this.firstInviteSpot = this.star;
+          this.startAnchorS = start ? this.spotS[start.ri][start.j] : 0;
+          if (this.startAnchorS === 0 && this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
+          this.firstInvite = { t: 0, answered: false, response: 0 };
+        }
         // A brand-new journey (the breathing star is the very first spot and
         // nothing has bloomed yet) stands her at the TRAILHEAD — the start of
         // the painted walk, a step shy of Al-Fatiha — and adds it to the
@@ -365,10 +389,11 @@
         // which walks her INTO the first bloom and opens it. Before this she
         // spawned ON the star with both walk buttons dead and only a
         // non-obvious tap to enter — a new child could get stuck on world one.
-        if (this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
+        if (!this.firstInvite && this.star && this.star.ri === 0 && this.star.j === 0 && !this.lastBloom()) {
           this.startAnchorS = 0;
           if (this.waypoints[0] !== 0) this.waypoints = [0, ...this.waypoints];
           if (this.firstHandoff && !returnState) {
+            this.firstInviteSpot = this.star;
             this.firstInvite = { t: 0, answered: false, response: 0 };
           }
         }
@@ -392,7 +417,8 @@
     },
 
     // ── the journey, read from the real save ──────────────────────
-    // spotInfo[ri][j] = {n, key, surahId, done, open} or null (still growing)
+    // spotInfo[ri][j] = a playable world, a visual-only onboarding bloom, or
+    // null (still growing). Auto blooms are never doors and carry no telemetry.
     readSave() {
       this.spotInfo = [];
       this.star = null;
@@ -406,7 +432,9 @@
           row.push(w ? {
             n: w.n, key: w.key, surahId: w.surahId,
             done: GOL.worldDone(w.n), open: GOL.worldOpen(w.n)
-          } : null);
+          } : (GOL.journeySlotAutoBloomed && GOL.journeySlotAutoBloomed(k)
+            ? { n: null, key, surahId: null, done: true, open: false, auto: true }
+            : null));
         }
         this.spotInfo.push(row);
       }
@@ -431,19 +459,21 @@
       // the Remembering's doors (one dream per surah per day) and the
       // done garden that misses its child (>20h unheard, oldest first)
       this.moonBtns = [];
+      const remembering = GOL.EXPERIENCE.remembering;
       this.missSpot = null;
       let oldest = Infinity;
       for (let ri = 0; ri < REGIONS.length; ri++) {
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           if (!sp || !sp.done || !this.map) continue;
+          if (sp.auto) continue;
           const pos = this.map.spots[ri][j];
           const st = GOL.store.level(sp.surahId);
-          if (st.moonWaxedDay !== GOL.todayKey()) {
+          if (remembering && (!GOL.worldEarned || GOL.worldEarned(sp.n)) && st.moonWaxedDay !== GOL.todayKey()) {
             this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
           }
           const lp = st.lastPlayed || 0;
-          if (Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) {
+          if (lp > 0 && Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) {
             oldest = lp;
             this.missSpot = { ri, j };
           }
@@ -493,12 +523,47 @@
     activeRegion() { return this.star ? this.star.ri : null; },
     // Debug wakes every island so a grown-up can walk the whole journey and
     // audit each world's art without earning it first.
-    regionAwake(i) { return GOL.DEBUG || !!(this.awake && this.awake[i]); },
+    regionAwake(i) {
+      return GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG ||
+        !!(this.awake && this.awake[i]);
+    },
 
     // A spot is a door when its world is finished (a bloom re-opens on rest) —
     // or, in debug, any built-and-open world (worldOpen is universally true in
     // debug), so every level is reachable. The breathing star is separate.
-    isDoor(sp) { return !!(sp && (sp.done || (GOL.DEBUG && sp.open))); },
+    isDoor(sp) {
+      return !!(sp && !sp.auto && (sp.done ||
+        ((GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG) && sp.open)));
+    },
+
+    // A practice door: a surah a grown-up opened on the map that the natural
+    // journey has not reached yet — open, not yet bloomed, and not the star.
+    // These sit BEYOND the breathing star, so they get their own way in (a tap
+    // or the walk buttons carry her past the unsolved blooms between). Debug and
+    // all-open already make every open world a door, so this is real play only.
+    isPracticeDoor(ri, j) {
+      if (GOL.DEBUG || GOL.EXPERIENCE.progression === 'all-open') return false;
+      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
+      return !!(sp && sp.open && !sp.done &&
+        !(this.star && this.star.ri === ri && this.star.j === j));
+    },
+
+    // How far along the walk she may travel in normal play: to the breathing
+    // star, or — when a grown-up has opened a later surah for practice — out to
+    // that opened spot, past the unsolved blooms between (a practice door is a
+    // real destination, not a wall she gets stuck on).
+    furthestReachS() {
+      let maxS = this.star ? this.spotS[this.star.ri][this.star.j] : this.map.walkSamples.len;
+      if (this.spotInfo) {
+        for (let ri = 0; ri < REGIONS.length; ri++) {
+          for (let j = 0; j < REGIONS[ri].count; j++) {
+            const sp = this.spotInfo[ri][j];
+            if (sp && sp.open) maxS = Math.max(maxS, this.spotS[ri][j]);
+          }
+        }
+      }
+      return maxS;
+    },
 
     traceK() { return this.ceremony ? ease(clamp(this.ceremony.t / 1.5, 0, 1)) : 0; },
     travelK() { return this.ceremony ? ease(clamp((this.ceremony.t - 1.7) / 2.4, 0, 1)) : 0; },
@@ -524,6 +589,16 @@
         return;
       }
       this.hero.sT = sT;
+      if (GOL.audio) GOL.audio.sfx('tap');
+    },
+
+    // Walk the trail to a reachable spot, entering when she arrives (motion
+    // belongs to the path). A grown-up's practice door uses this to speed-run
+    // there, gliding straight past the unsolved blooms between.
+    walkToSpot(ri, j) {
+      if (!this.map || !this.hero || this.ceremony) return;
+      this.hero.sT = this.spotS[ri][j];
+      this.dwell = null;
       if (GOL.audio) GOL.audio.sfx('tap');
     },
 
@@ -553,7 +628,8 @@
       if (!this.firstInvite || this.firstInvite.answered) return false;
       this.firstInvite.answered = true;
       this.firstInvite.response = 1;
-      if (this.star) this.spotPulse = { ri: this.star.ri, j: this.star.j, t: 1 };
+      const focus = this.firstInviteSpot || this.star;
+      if (focus) this.spotPulse = { ri: focus.ri, j: focus.j, t: 1 };
       return true;
     },
 
@@ -571,10 +647,12 @@
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
-        if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
+          if (Math.abs(this.hero.s - this.spotS[ri][j]) > 2) continue;
           const sp = this.spotInfo[ri][j];
-          if (this.isDoor(sp) && Math.abs(this.hero.s - this.spotS[ri][j]) <= 2) {
+          // a finished bloom (in a woken island) or a grown-up's practice door
+          // both hesitate visibly, then open
+          if ((this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j)) {
             this.dwell = { t: 0, ri, j };
             return;
           }
@@ -596,11 +674,11 @@
         }
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
-        if (!this.regionAwake(ri)) continue;
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          if (this.isDoor(sp) && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
+          const openHere = (this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j);
+          if (openHere && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this.enterWorld(ri, j);
             return;
           }
@@ -652,6 +730,8 @@
         // the rail (r4.1 verdict): looking around slides along the journey's
         // own axis — you can scroll, but never get lost in empty sky
         point = pointAtSamples(this.map.walkSamples, this.railS);
+      } else if (this.firstFocus() && this.firstInviteSpot) {
+        point = this.map.spots[this.firstInviteSpot.ri][this.firstInviteSpot.j];
       } else if (this.star) {
         point = this.map.spots[this.star.ri][this.star.j];
       } else {
@@ -672,6 +752,7 @@
     // steps; the little × dismisses it for good. Installed players, debug, and
     // anyone who's hidden it never see it. One geometry source for tap + draw.
     installNudge(W, H) {
+      if (!GOL.EXPERIENCE.install) return null;
       const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
       if (ob && ob.parentComplete) return null;
       if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
@@ -743,7 +824,8 @@
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
       // just pulses; the hold gate keeps children out gently.
-      const gb = (this.grownBtn = firstFocus ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      const gb = (this.grownBtn = (!GOL.EXPERIENCE.grownups || firstFocus)
+        ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
       if (gb) {
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
@@ -782,10 +864,12 @@
         }
         this.stepCool = Math.max(0, (this.stepCool || 0) - dt);
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
-          // Debug lifts the star's cap so a grown-up can step to any built
-          // world along the whole trail; normal play stops at the next star.
-          const maxS = (this.star && !GOL.DEBUG)
-            ? this.spotS[this.star.ri][this.star.j]
+          // Debug and all-open lift the star's cap so a grown-up can step to
+          // any built world along the whole trail; normal play stops at the
+          // next star — or, if a grown-up opened a later surah for practice,
+          // walks on past the unsolved blooms to reach that opened spot.
+          const maxS = (this.star && !GOL.DEBUG && GOL.EXPERIENCE.progression !== 'all-open')
+            ? this.furthestReachS()
             : this.map.walkSamples.len;
           let target = null;
           if (dir > 0) {
@@ -920,6 +1004,20 @@
           return;
         }
       }
+      // a grown-up's practice door: tap to speed-run there along the trail,
+      // past the unsolved blooms between — it opens on arrival (like the star)
+      if (this.hero) {
+        for (let ri = 0; ri < REGIONS.length; ri++) {
+          for (let j = 0; j < REGIONS[ri].count; j++) {
+            if (!this.isPracticeDoor(ri, j)) continue;
+            const b = this.map.spots[ri][j];
+            if (GOL.dist(wx, wy, b.x, b.y) <= 34) {
+              this.walkToSpot(ri, j);
+              return;
+            }
+          }
+        }
+      }
       // every finished bloom is a door into its world; home leads back here
       if (this.hero) {
         for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -937,7 +1035,7 @@
     },
 
     drawMoon(ctx) {
-      if (!this.map || !this.regionAwake(1)) return;
+      if (!GOL.EXPERIENCE.remembering || !this.map || !this.regionAwake(1)) return;
       const m = this.map.moon;
       const breathe = 0.5 + 0.5 * Math.sin(this.t * 1.5);
       ctx.fillStyle = alpha('#FFFFFF', 0.16 + breathe * 0.13);
@@ -967,6 +1065,7 @@
             ? this.spotPulse.t : 0;
           if (sp && sp.done) {
             drawBloom(ctx, s.x, s.y, 11, this.t + ri * 5 + j, REGIONS[ri].bloom, pulse);
+            if (sp.auto) continue;
             const st = GOL.store.level(sp.surahId);
             // the hidden Rahma blossom, once found, blooms at the brow
             if (st.blossom) GOL.drawRahmaBlossom(ctx, s.x + 16, s.y - 24, 5, this.t + j);
@@ -978,7 +1077,7 @@
               ctx.fillStyle = alpha('#CFE0FF', br);
               ctx.beginPath(); ctx.arc(s.x - 18, s.y - 26, 12 + Math.sin(this.t * 1.8) * 1.5, 0, TAU); ctx.fill();
             }
-            if (inviting || (st.moon || 0) > 0.01) {
+            if (GOL.EXPERIENCE.remembering && (inviting || (st.moon || 0) > 0.01)) {
               GOL.drawMoon(ctx, s.x - 18, s.y - 26, 7, st.moon || 0, this.t, { glow: false });
             }
             // a done garden long unheard breathes a soft golden ring
@@ -993,6 +1092,14 @@
             GOL.star8Path(ctx, s.x, s.y - 7, 11 + b * 2 + pulse * 2, Math.PI / 8);
             ctx.fillStyle = alpha('#F0C878', 0.35 + b * 0.34); ctx.fill();
             ctx.strokeStyle = alpha('#B98A3E', 0.9); ctx.lineWidth = 2; ctx.stroke();
+          } else if (this.isPracticeDoor(ri, j)) {
+            // a grown-up opened this surah for practice: a green open-door
+            // star, gentler than the golden journey star — an invitation to
+            // go, not "the next step". Drawn even on a still-sleeping island.
+            const b = 0.6 + 0.4 * Math.sin(this.t * 2 + j);
+            GOL.star8Path(ctx, s.x, s.y - 7, 10 + b * 2, Math.PI / 8);
+            ctx.fillStyle = alpha('#BFE0A6', 0.28 + b * 0.28); ctx.fill();
+            ctx.strokeStyle = alpha('#6DA84E', 0.85); ctx.lineWidth = 2; ctx.stroke();
           } else if (awake) {
             // a bud: built-but-waiting stirs; a still-growing key sleeps soft
             drawBud(ctx, s.x, s.y, sp ? 0.82 : 0.5);

@@ -25,6 +25,17 @@
     'kafirun', 'maun', 'qadr', 'alaq', 'tin', 'sharh', 'duha', 'lail',
   ];
 
+  // One parent-facing choice per painted island. The value is the first
+  // WORLD_ORDER slot on that island (six spots per island in the live map).
+  // Examples describe the neighbourhood, so the grown-up can recognise a
+  // fit without auditing every surah their child knows.
+  GOL.JOURNEY_STAGE_CHOICES = [
+    { index: 0, frontier: 0, label: 'Planting the first seeds', examples: 'Al-Fatihah · Al-Ikhlas · Al-Falaq' },
+    { index: 1, frontier: 6, label: 'Finding their rhythm', examples: 'Al-Masad · Quraysh · Al-Fil' },
+    { index: 2, frontier: 12, label: 'Growing in confidence', examples: "Al-Qari'ah · Al-'Adiyat · Az-Zalzalah" },
+    { index: 3, frontier: 18, label: 'Taking on longer surahs', examples: "Al-Qadr · Al-'Alaq · At-Tin" }
+  ];
+
   // registered worlds in journey order; a key missing from the list keeps
   // its file order at the end (so nothing ever vanishes from the journey)
   GOL.orderedWorlds = function () {
@@ -33,6 +44,85 @@
       return i < 0 ? GOL.WORLD_ORDER.length + w.n : i;
     };
     return GOL.WORLDS3.filter(Boolean).sort((a, b) => pos(a) - pos(b));
+  };
+
+  // A grown-up may tell us which surahs were already known before this
+  // garden existed. Keep that claim separate from an earned Grand Gem:
+  // parent preparation may paint a world complete, but it must never invent
+  // shrine runs, listens, misses, or a completion timestamp.
+  GOL.normaliseKnownSurahs = function (ids) {
+    const wanted = new Set((ids || []).map(Number));
+    return GOL.orderedWorlds()
+      .filter((w) => w.build && w.surahId != null && wanted.has(w.surahId))
+      .map((w) => w.surahId);
+  };
+  GOL.worldPriorKnown = function (n) {
+    const w = GOL.WORLDS3[n - 1];
+    const ob = GOL.store && GOL.store.data && GOL.store.data.onboarding;
+    return !!(w && ob && Array.isArray(ob.knownSurahs) && ob.knownSurahs.includes(w.surahId));
+  };
+  GOL.worldEarned = function (n) {
+    const w = GOL.WORLDS3[n - 1];
+    return !!(w && GOL.store.data.grand && GOL.store.data.grand[w.surahId]);
+  };
+  GOL.knownSurahHandoff = function (ids) {
+    const seq = GOL.orderedWorlds().filter((w) => w.build && w.surahId != null);
+    const known = new Set(GOL.normaliseKnownSurahs(ids));
+    let prefix = 0;
+    while (prefix < seq.length && known.has(seq[prefix].surahId)) prefix++;
+    return {
+      knownSurahs: seq.filter((w) => known.has(w.surahId)).map((w) => w.surahId),
+      // Re-enter the last familiar world, beginning one bloom behind it. A
+      // gap ends the familiar runway even if later surahs were also checked.
+      startSurahId: prefix > 1 ? seq[prefix - 2].surahId : null,
+      recognitionSurahId: prefix > 0 ? seq[prefix - 1].surahId : null,
+      nextSurahId: prefix < seq.length ? seq[prefix].surahId : null
+    };
+  };
+  GOL.journeyStageHandoff = function (stageIndex) {
+    const stage = Math.max(0, Math.min(GOL.JOURNEY_STAGE_CHOICES.length - 1,
+      Number.isFinite(Number(stageIndex)) ? Math.floor(Number(stageIndex)) : 0));
+    const frontier = GOL.JOURNEY_STAGE_CHOICES[stage].frontier;
+    const ids = GOL.orderedWorlds()
+      .filter((w) => w.build && w.surahId != null && GOL.WORLD_ORDER.indexOf(w.key) < frontier)
+      .map((w) => w.surahId);
+    const plan = GOL.knownSurahHandoff(ids);
+    // Placement begins at the final MAP SLOT of the previous island. It is
+    // deliberately not another world replay: the very next step is the first
+    // surah on the selected island.
+    plan.startSlot = frontier > 0 ? frontier - 1 : null;
+    plan.startSurahId = null;
+    plan.recognitionSurahId = null;
+    plan.journeyStage = stage;
+    plan.frontier = frontier;
+    return plan;
+  };
+  GOL.applyKnownSurahs = function (ids, at) {
+    const ob = (GOL.store.data.onboarding = GOL.store.data.onboarding || {});
+    const plan = GOL.knownSurahHandoff(ids);
+    ob.knownSurahs = plan.knownSurahs;
+    ob.knownSelectedAt = at || Date.now();
+    ob.handoffStartSurahId = plan.startSurahId;
+    ob.handoffRecognitionSurahId = plan.recognitionSurahId;
+    ob.handoffNextSurahId = plan.nextSurahId;
+    return plan;
+  };
+  GOL.applyJourneyStage = function (stageIndex, at) {
+    const plan = GOL.journeyStageHandoff(stageIndex);
+    GOL.applyKnownSurahs(plan.knownSurahs, at);
+    const ob = GOL.store.data.onboarding;
+    ob.journeyStage = plan.journeyStage;
+    ob.placementFrontier = plan.frontier;
+    ob.handoffStartSlot = plan.startSlot;
+    ob.handoffStartSurahId = null;
+    ob.handoffRecognitionSurahId = null;
+    ob.handoffNextSurahId = plan.nextSurahId;
+    return plan;
+  };
+  GOL.journeySlotAutoBloomed = function (slot) {
+    const ob = GOL.store && GOL.store.data && GOL.store.data.onboarding;
+    return !!(ob && ob.parentComplete && Number.isFinite(ob.placementFrontier) &&
+      slot >= 0 && slot < ob.placementFrontier);
   };
 
   // Natural journey access, deliberately separate from a grown-up's practice
@@ -44,15 +134,16 @@
     const seq = GOL.orderedWorlds();
     const i = seq.findIndex((x) => x.n === n);
     for (let j = i - 1; j >= 0; j--) {
-      if (seq[j].build) return !!(GOL.store.data.grand && GOL.store.data.grand[seq[j].surahId]);
+      if (seq[j].build && !GOL.worldDone(seq[j].n)) return false;
     }
-    return true; // nothing playable stands before it
+    return true; // every built world before it is complete (or none exists)
   };
   // A world is playable when naturally reached OR explicitly opened by a
   // grown-up. The latter is practice access, not fabricated journey progress.
   GOL.worldOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
+    if (GOL.EXPERIENCE && GOL.EXPERIENCE.progression === 'all-open') return !!w.build;
     if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldProgressOpen(n)) return true;
     return !!(w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
@@ -63,8 +154,7 @@
       GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
   };
   GOL.worldDone = function (n) {
-    const w = GOL.WORLDS3[n - 1];
-    return !!(w && GOL.store.data.grand && GOL.store.data.grand[w.surahId]);
+    return GOL.worldEarned(n) || GOL.worldPriorKnown(n);
   };
 
   // 2026-07-14 journey resequence: a child never loses a world they have

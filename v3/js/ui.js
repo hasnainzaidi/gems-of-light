@@ -246,7 +246,7 @@
       // Just play flips to the rotate nudge; install.js returns here with
       // { proceed:true } to do the same. Installed (standalone) skips straight
       // to the rotate nudge — its window is already full-screen.
-      this.portraitProceed = this.childMode || !!(params && params.proceed);
+      this.portraitProceed = !GOL.EXPERIENCE.install || this.childMode || !!(params && params.proceed);
       this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
@@ -257,6 +257,7 @@
     // geometry for update (taps) and draw. Null when there's nothing to pitch:
     // installed (standalone), or the grown-up already tapped Just play.
     portraitInvite(W, H) {
+      if (!GOL.EXPERIENCE.install) return null;
       const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
       if (ob && ob.parentComplete) return null;
       if (GOL.isStandalone() || this.portraitProceed) return null;
@@ -374,8 +375,8 @@
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
-      this.gearBtn = this.childMode ? null : { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
-      this.grownBtn = { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 };
+      this.gearBtn = (!GOL.EXPERIENCE.grownups || this.childMode) ? null : { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
+      this.grownBtn = GOL.EXPERIENCE.grownups ? { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 } : null;
       // The numbered prototype shelf was retired with the ten-prototype lab
       // (its lanterns are the old game language). Debug now audits the REAL
       // journey: tap through to the map, where every built world is openable
@@ -398,7 +399,7 @@
       // the grown-ups doorway: a quiet star, bottom-right, that opens only on
       // a patient press-and-hold (~1s). A plain tap just pulses — this keeps
       // children out gently, the way v1's hold-the-star did.
-      {
+      if (this.grownBtn) {
         const gb = this.grownBtn;
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
@@ -475,7 +476,12 @@
       GOL.star8(ctx, W / 2 - starOff, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
       GOL.star8(ctx, W / 2 + starOff, ty - 6, 6, Math.PI / 8, alpha(GOLD, 0.85));
       GOL.text(ctx, 'Gems of Light', W / 2, ty - 8, { size: Math.min(46, W * (portrait ? 0.105 : 0.06)), weight: '800', color: INK });
-      GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
+      if (!GOL.EXPERIENCE.arabic) {
+        GOL.text(ctx, 'A gentle platform adventure', W / 2, ty + 31,
+          { size: portrait ? 15 : 17, weight: '700', color: GOLD });
+      } else {
+        GOL.text(ctx, 'جواهر النور', W / 2, ty + 34, { size: 27, ar: true, color: GOLD });
+      }
       const pulse = 0.6 + 0.4 * Math.sin(t * 2.6);
       for (const b of this.protoBtns || []) {
         ctx.fillStyle = alpha('#273C35', 0.82);
@@ -525,11 +531,11 @@
       }
       // Keep engine diagnostics out of the child's first impression. They are
       // still useful in an explicit debug session alongside the DEBUG badge.
-      if (GOL.DEBUG && !this.childMode) {
+      if (GOL.DEBUG && !GOL.EXPERIENCE.showcase && !this.childMode) {
         const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
         GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
       }
-      if (this.settingsOpen) this.drawSettings(ctx, W, H);
+      if (this.settingsOpen && !GOL.EXPERIENCE.showcase) this.drawSettings(ctx, W, H);
       GOL.drawVignette(ctx, W, H, 0.12);
     }
   };

@@ -224,15 +224,17 @@
         this.recitationDone = false;
         p.vx = 0;
         p.moving = false;
-        p.eyesClosed = true;
+        p.eyesClosed = !GOL.EXPERIENCE.showcase;
         this.fx.burst(L.gemX, L.groundY - 53, GEM.base, 22);
         this.fx.spawn('ring', L.gemX, L.groundY - 53, { color: GEM.glow, size: 18 });
         if (GOL.audio) {
           GOL.audio.chime(this.collected);
-          GOL.audio.playVerse(113, Math.min(2, this.collected + 1), () => {
-            p.eyesClosed = false;
-            this.recitationDone = true;
-          });
+          if (GOL.EXPERIENCE.recitation) {
+            GOL.audio.playVerse(113, Math.min(2, this.collected + 1), () => {
+              p.eyesClosed = false;
+              this.recitationDone = true;
+            });
+          } else this.recitationDone = true;
         } else this.recitationDone = true;
       }
 
@@ -305,16 +307,20 @@
         GOL.text(ctx, this.cardRound ? 'The garden keeps growing' : 'That is the heart of it', W / 2, titleY, {
           size: L.portrait ? 22 : 24, weight: '900', color: '#36533E', shadow: false
         });
-        GOL.text(ctx, 'Explore  →  listen  →  remember', W / 2, titleY + 38, {
+        GOL.text(ctx, GOL.EXPERIENCE.showcase
+          ? 'Explore  →  collect  →  restore'
+          : 'Explore  →  listen  →  remember', W / 2, titleY + 38, {
           size: L.portrait ? 15 : 17, weight: '700', color: '#6B7D66', shadow: false
         });
         if (!L.stacked) {
-          GOL.text(ctx, 'The real journey will begin fresh for your child.', W / 2, titleY + 70, {
+          GOL.text(ctx, GOL.EXPERIENCE.showcase
+            ? 'The full journey will begin fresh when you continue.'
+            : 'The real journey will begin fresh for your child.', W / 2, titleY + 70, {
             size: 13.5, weight: '700', color: '#7A806F', shadow: false
           });
         }
         pill(ctx, L.continueBtn, 'Continue exploring', false);
-        pill(ctx, L.setupBtn, 'Make it theirs', true);
+        pill(ctx, L.setupBtn, GOL.EXPERIENCE.showcase ? 'Make it yours' : 'Make it theirs', true);
       }
     }
   };
