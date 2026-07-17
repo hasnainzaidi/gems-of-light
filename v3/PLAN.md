@@ -865,6 +865,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   voice and longer tail are a better fit; all 24 earlier clips were replaced.
   Missing/unapproved clips stay silent. Showcase remains secular and does not
   show or announce surah names.
+- **AL-HUMAZAH PRONUNCIATION (corrected 2026-07-17, Hasnain):** the shared
+  unvocalized spelling `الهمزة` let ElevenLabs guess *al-hamzah* (the
+  letter hamza) instead of the surah name *al-humazah*. The narration source
+  now gives all 24 spoken titles explicit Arabic vowels (including
+  `الْهُمَزَة`) while leaving the clean canonical display data unchanged. The
+  generator fails if a future surah lacks a vocalized title, and accepts
+  `--only=slug` so a pronunciation repair can replace one clip rather than
+  accidentally resampling the approved set.
 - **AL-FATIHA TITLE AUDIO — PRIME THE EXACT MEDIA ELEMENT (fixed
   2026-07-17):** on a fresh iPhone, Al-Fatiha's name could stay silent even
   though its MP3 was present. The map unlocked WebAudio during the tap, but the
