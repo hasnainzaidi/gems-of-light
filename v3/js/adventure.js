@@ -111,6 +111,7 @@
     gemPause: null, memState: null, gallopFxT: 0,
     boxes: null, orb: null, darkBuf: null,
     protoN: null, campDone: 0, campEntering: false, showcaseGemK: 0,
+    welcomeT: 0, welcomeName: '', welcomeVoiceId: '',
 
     enter(params) {
       // every entry names its world now (the ten-prototype lab retired
@@ -119,6 +120,9 @@
         : GOL.PROTOTYPES[params.proto];
       this.worldN = params.world || null;
       this.protoN = params.proto || null;
+      const entranceSurah = this.worldN && GOL.surahForWorld ? GOL.surahForWorld(this.worldN) : null;
+      this.welcomeName = entranceSurah && GOL.EXPERIENCE.recitation ? entranceSurah.englishName : '';
+      this.welcomeVoiceId = entranceSurah && GOL.EXPERIENCE.recitation ? 'surah-' + entranceSurah.slug : '';
       const exactFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
         ? GOL.WORD_FOLLOW[GOL.V3.reciter][def.surahId] : null;
       const prototypeFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW.basit
@@ -140,6 +144,7 @@
       // A dream round-trip is NOT a new visit: grow, but don't count it.
       this.applyReplayGrowth(L, returning);
       this.t = 0;
+      this.welcomeT = returning ? 0 : (this.welcomeName ? 3.4 : 0);
       this.paused = false;
       this.found = [];
       this.orbit = [];
@@ -401,7 +406,10 @@
 
       if (GOL.EXPERIENCE.recitation) GOL.audio.preloadSurah(L.surah);
       GOL.audio.startAmbience('garden');
-      if (!returning) GOL.audio.enterFlourish(); // waking at a checkpoint is quiet
+      if (!returning) {
+        GOL.audio.enterFlourish(); // waking at a checkpoint is quiet
+        if (this.welcomeVoiceId) GOL.audio.speak(this.welcomeVoiceId);
+      }
     },
 
     exit() {
@@ -419,6 +427,7 @@
     // ------------------------------------------------------------ update --
     update(dt, W, H) {
       this.t += dt;
+      this.welcomeT = Math.max(0, this.welcomeT - dt);
       const L = this.L;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       // Height fits `rows` tile-rows; width would otherwise spill to whatever
@@ -1629,6 +1638,27 @@
           GOL.text(ctx, g.text, W / 2, H * 0.32, { size: Math.min(30, W * 0.045), ar: true, weight: '400', color: '#FFFBEE' });
           ctx.globalAlpha = 1;
         }
+      }
+
+      // A world opens by naming the surah before its first gem is found. This
+      // is a translucent welcome, not a modal gate: the child can already move
+      // while the name settles into memory and then fades into the sky.
+      if (this.welcomeT > 0 && this.welcomeName) {
+        const age = 3.4 - this.welcomeT;
+        const a = Math.min(1, age / 0.45) * Math.min(1, this.welcomeT / 0.75);
+        const cy = H * 0.23;
+        const w = Math.max(190, Math.min(310, 96 + this.welcomeName.length * 11));
+        ctx.save();
+        ctx.globalAlpha = a;
+        const glow = ctx.createRadialGradient(W / 2, cy, 8, W / 2, cy, w * 0.72);
+        glow.addColorStop(0, alpha('#FFF6DC', 0.82));
+        glow.addColorStop(1, alpha('#FFF6DC', 0));
+        ctx.fillStyle = glow;
+        ctx.fillRect(W / 2 - w, cy - 58, w * 2, 116);
+        GOL.star8(ctx, W / 2, cy - 31, 7, Math.PI / 8 + this.t * 0.08, '#F0C878');
+        GOL.text(ctx, this.welcomeName, W / 2, cy,
+          { size: Math.min(30, W * 0.045), weight: '800', color: '#FFF6DC' });
+        ctx.restore();
       }
 
       // the gem band: collected ayat resting in their star settings — the
