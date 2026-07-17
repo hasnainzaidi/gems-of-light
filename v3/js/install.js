@@ -1,18 +1,19 @@
 // Gems of Light v3 — install.js
-// The PWA install steps (softened from the old boot gate, 2026-07-15). A warm,
+// The PWA install steps. A warm,
 // wordless-game-adjacent, per-platform walkthrough of adding Gems of Light to
 // the home screen, where it opens full-screen with no browser chrome. It is a
-// destination reached on demand — never a wall the game hides behind.
+// destination reached on demand and on returning non-standalone launches.
 //
 // This page is GROWN-UP-FACING (same precedent as grownups.js): short, gentle
-// text IS welcome here. A single-tap "Just play" always walks straight back
-// into the game — no hold, no guilt.
+// text IS welcome here. "Remind me later" always walks straight back into the
+// game — no hold, no guilt, and no permanent dismissal.
 //
-// Contract with callers (boot no longer routes here):
+// Contract with callers:
 //   • Opened with GOL.go('install', { from }) from the portrait "add to home
 //     screen" card (from:'title'), the map ribbon (from:'journeyMap'), and the
-//     grown-ups page (from:'grownups'). `from` is where "Just play" returns to.
-//   • Exits: (a) "Just play" → leave() → GOL.go(from||'title'); from the title
+//     grown-ups page (from:'grownups'). `from` is where either footer choice returns.
+//   • Exits: (a) "Remind me later" / "I've added it" → leave() →
+//     GOL.go(from||'title'); from the title
 //     card it passes { proceed:true } so the splash flips to its rotate nudge.
 //     (b) Android native install accepted → same.
 //   • This file loads BEFORE boot.js, so the beforeinstallprompt capture below
@@ -239,14 +240,14 @@
     t: 0, shimmer: 0, fx: null, os: 'desktop', branch: 'desktop', from: null,
     // These steps ARE the portrait experience (setting the game up happens
     // upright), so own portrait — boot must render them, never overlay its
-    // "turn sideways" curtain. "Just play" is what leads to the rotate nudge.
+    // "turn sideways" curtain. Either footer choice leads to the rotate nudge.
     ownsPortrait: true,
 
     enter(params) {
       this.t = 0; this.shimmer = 0;
       this.os = detectOS();
       this.fx = GOL.makeFx ? GOL.makeFx() : null;
-      // where "Just play" returns to: the boot greeting has no home yet (→ the
+      // where the footer choices return: the boot checkpoint has no home yet (→ the
       // title splash), but when re-opened from the map ribbon or the grown-ups
       // page we hand the grown-up back exactly where they were.
       this.from = (params && params.from) || null;
@@ -319,7 +320,7 @@
 
       const headBlock = 52;
       const noteH = note ? 22 : 0;
-      // reserve room below for the mobile "Just play" pill so the centred block
+      // reserve room below for the mobile decision row so the centred block
       // never lets it collide with the locating note on a short landscape phone
       const footBlock = branch === 'desktop' ? 0 : 58;
       const blockH = headBlock + 16 + cardH + noteH + footBlock;
@@ -333,13 +334,20 @@
         headY, subY, noteY: cardY + cardH + 15
       };
 
-      // the quiet one-tap "Just play" — a soft secondary pill under the card.
-      // No hold: we greet, we never wall. Present on every mobile branch (the
-      // desktop branch has its own in-card continue below).
+      // The explicit returning-session choice under the card. Manual install
+      // branches can acknowledge completion; Android's native prompt already
+      // owns the primary action, so it needs only the defer escape here.
       if (branch !== 'desktop') {
-        const bw = Math.min(200, cardW - 40), bh = 42;
+        const gap = 10, bh = 42;
         const by = Math.min(H - sa.b * 0.5 - 12 - bh, lay.noteY + (note ? 16 : 8));
-        lay.justBtn = { x: (W - bw) / 2, y: by, w: bw, h: bh };
+        if (branch === 'androidPrompt') {
+          const bw = Math.min(210, cardW - 40);
+          lay.laterBtn = { x: (W - bw) / 2, y: by, w: bw, h: bh };
+        } else {
+          const bw = Math.min(190, (cardW - 20 - gap) / 2);
+          lay.laterBtn = { x: W / 2 - gap / 2 - bw, y: by, w: bw, h: bh };
+          lay.doneBtn = { x: W / 2 + gap / 2, y: by, w: bw, h: bh };
+        }
       }
 
       // Android native-install button (inside the card)
@@ -355,16 +363,16 @@
       return lay;
     },
 
-    // "Just play" / done here → return to wherever this was opened from. From
+    // Either decision → return to wherever this was opened from. From
     // the portrait card we hand back { proceed:true } so the title flips to its
     // rotate nudge rather than pitching the card again; the map ribbon and the
     // grown-ups page just return to themselves.
     leave() {
       if (GOL.audio) GOL.audio.sfx('tap');
       const dest = this.from || 'title';
-      // The title's secondary action says "you can add it later". Respect
-      // that choice for the rest of this visit instead of immediately showing
-      // the landscape ribbon on the map. A reload offers it again gently.
+      // Respect the checkpoint decision for the rest of this visit instead of
+      // immediately showing the landscape ribbon. A browser reload asks again;
+      // installed relaunches skip this scene because display-mode is standalone.
       if (dest === 'title') GOL.installNudgeDeferred = true;
       GOL.go(dest, dest === 'title' ? { proceed: true } : undefined);
     },
@@ -413,13 +421,13 @@
         return; // desktop has its own in-card continue
       }
 
-      // Mobile paths: one gentle tap on "Just play" walks straight into the
-      // game — the invitation is a greeting, never a wall. A brief shimmer
-      // acknowledges the tap on the frame it lands.
+      // Mobile paths: either explicit decision walks straight into the game.
+      // A brief shimmer acknowledges the defer choice on the frame it lands.
       this.shimmer = Math.max(0, this.shimmer - dt * 2.5);
       for (const tap of GOL.Input.taps) {
         if (tap.ui) continue;
-        if (hitRect(lay.justBtn, tap)) { tap.ui = true; this.shimmer = 1; this.skip(); return; }
+        if (hitRect(lay.laterBtn, tap)) { tap.ui = true; this.shimmer = 1; this.skip(); return; }
+        if (hitRect(lay.doneBtn, tap)) { tap.ui = true; this.leave(); return; }
       }
     },
 
@@ -439,9 +447,9 @@
       const cx = W / 2;
 
       // heading + subline (adult-facing warmth)
-      GOL.text(ctx, 'Add Gems of Light to your home screen', cx, lay.headY,
+      GOL.text(ctx, 'Best in full screen', cx, lay.headY,
         { size: Math.min(21, W * 0.05), weight: '800', color: '#F5EDD4' });
-      GOL.text(ctx, 'so it opens full-screen, the way it wants to be played', cx, lay.subY,
+      GOL.text(ctx, 'Add Gems of Light to your home screen', cx, lay.subY,
         { size: Math.min(13, W * 0.033), weight: '600', color: alpha('#F5EDD4', 0.6), shadow: false });
 
       // a small Noor firefly hovering by the heading
@@ -499,9 +507,10 @@
           { size: 11.5, weight: '600', color: alpha('#F5EDD4', 0.55), shadow: false });
       }
 
-      // the one-tap "Just play" (mobile paths only) — a soft, unpushy
-      // secondary pill. The grown-up can always add it later from the map.
-      if (branch !== 'desktop' && lay.justBtn) this.drawJustPlay(ctx, lay.justBtn);
+      // The browser-launch checkpoint always asks for a clear decision. It
+      // never records a permanent dismissal: the next browser launch asks again.
+      if (branch !== 'desktop' && lay.laterBtn) this.drawLater(ctx, lay.laterBtn);
+      if (branch !== 'desktop' && lay.doneBtn) this.drawPillButton(ctx, lay.doneBtn, "I've added it", true);
     },
 
     drawPillButton(ctx, b, label, warm) {
@@ -517,7 +526,7 @@
         { size: warm ? 16 : 15, weight: '800', color: '#5A431C', shadow: false });
     },
 
-    drawJustPlay(ctx, b) {
+    drawLater(ctx, b) {
       // a soft shimmer acknowledges the tap on the frame it lands
       if (this.shimmer > 0) {
         ctx.strokeStyle = alpha(GOLD_L, 0.5 * this.shimmer); ctx.lineWidth = 2;
@@ -531,10 +540,8 @@
       GOL.roundRect(ctx, b.x, b.y, b.w, b.h, b.h / 2); ctx.fill();
       ctx.strokeStyle = alpha(CREAM, 0.4); ctx.lineWidth = 1.4;
       GOL.roundRect(ctx, b.x, b.y, b.w, b.h, b.h / 2); ctx.stroke();
-      GOL.text(ctx, 'Just play', b.x + b.w / 2, b.y + b.h / 2 - 6,
-        { size: 15, weight: '800', color: CREAM, shadow: false });
-      GOL.text(ctx, 'you can add it later', b.x + b.w / 2, b.y + b.h / 2 + 11,
-        { size: 10, weight: '600', color: alpha(CREAM, 0.55), shadow: false });
+      GOL.text(ctx, 'Remind me later', b.x + b.w / 2, b.y + b.h / 2,
+        { size: 14.5, weight: '800', color: CREAM, shadow: false });
     }
   };
 

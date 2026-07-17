@@ -14,6 +14,7 @@ assert.match(preview, /registerScene\(['"]parentPreview['"]/,
   'parent preview scene is not registered');
 
 const onboarding = read('js/onboarding.js');
+const install = read('js/install.js');
 for (const stage of ['welcome', 'preview', 'knowledge', 'setup', 'handoff']) {
   assert.match(onboarding, new RegExp("['\"]" + stage + "['\"]"),
     `canonical onboarding stage missing: ${stage}`);
@@ -22,6 +23,12 @@ assert.doesNotMatch(onboarding, /stage === ['"]sound['"]|tap to change|I can hea
   'the playable preview already proves sound; onboarding must not repeat it');
 assert.match(onboarding, /completeParentOnboarding/,
   'handoff must persist the adult/child boundary');
+assert.match(onboarding, /Best in full screen/,
+  'device setup must clearly explain the preferred play mode');
+assert.match(onboarding, /Remind me later/,
+  'device setup must offer a positive defer choice');
+assert.match(onboarding, /remindLater[\s\S]{0,300}installNudgeDeferred\s*=\s*true/,
+  'remind-later must defer the map nudge for the current visit');
 assert.match(onboarding, /journeyStageDraft/,
   'parent journey placement must remain a draft until handoff');
 assert.match(onboarding, /Where are they in their memorisation journey/,
@@ -34,8 +41,8 @@ assert.match(onboarding, /childMode|childWelcome|handoff/,
   'handoff must enter the child postcard explicitly');
 assert.match(onboarding, /Explore\s+→\s+Collect\s+→\s+Restore/,
   'Showcase onboarding must explain its secular loop');
-assert.match(onboarding, /Make Gems of Light yours/,
-  'Showcase setup must speak to the guest directly');
+assert.match(onboarding, /Best in full screen/,
+  'Showcase setup must retain the direct, secular full-screen message');
 
 assert.match(preview, /Explore\s+→\s+collect\s+→\s+restore/,
   'Showcase preview must reinforce its secular loop');
@@ -49,12 +56,26 @@ assert.match(boot, /hasJourneyProgress/,
   'existing saves need a backward-compatible porch bypass');
 assert.match(boot, /q\.get\(['"]onboarding['"]\) === ['"]1['"]/,
   'visual QA must be able to force onboarding without clearing a save');
+assert.match(boot, /needsInstallCheckpoint[\s\S]{0,180}!GOL\.isStandalone\(\)[\s\S]{0,120}!GOL\.DEBUG/,
+  'returning browser launches must pause for full-screen setup');
+assert.match(boot, /needsPorch\s*\?\s*['"]onboarding['"][\s\S]{0,120}needsInstallCheckpoint\s*\?\s*['"]install['"]/,
+  'the first value-first porch must keep priority over the returning install checkpoint');
+assert.match(install, /Best in full screen/,
+  'the returning checkpoint must lead with the play benefit');
+assert.match(install, /Remind me later/,
+  'the returning checkpoint must always have an immediate escape');
+assert.match(install, /I've added it/,
+  'manual install branches must let the grown-up acknowledge setup');
 
 const map = read('js/map.js');
 assert.match(map, /markChildStarted/,
   'child progress must begin at the real journey boundary');
 assert.match(map, /firstInvite/,
   'fresh handoff must have a dedicated first-map invitation');
+assert.match(map, /Play full-screen/,
+  'returning browser journeys must carry a quiet full-screen reminder');
+assert.doesNotMatch(map, /installNudge\(W, H\)[\s\S]{0,300}parentComplete/,
+  'completing parent onboarding must not permanently suppress the map reminder');
 assert.match(map, /handoffStartSlot/,
   'prepared handoff must start on the previous island endpoint');
 

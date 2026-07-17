@@ -747,14 +747,13 @@
     },
 
     // The quiet home-screen reminder: a small parchment ribbon at top-center,
-    // shown to any un-installed browser visit (this is the landscape counterpart
-    // to the portrait "add to home screen" card). Tapping it opens the install
+    // shown to any un-installed returning browser visit (this is the landscape
+    // counterpart to the grown-up setup card). Tapping it opens the install
     // steps; the little × dismisses it for good. Installed players, debug, and
-    // anyone who's hidden it never see it. One geometry source for tap + draw.
+    // anyone who's hidden or deferred it this visit never see it. One geometry
+    // source for tap + draw.
     installNudge(W, H) {
       if (!GOL.EXPERIENCE.install) return null;
-      const ob = GOL.onboardingStatus ? GOL.onboardingStatus() : null;
-      if (ob && ob.parentComplete) return null;
       if (GOL.isStandalone() || GOL.DEBUG || GOL.installNudgeDeferred) return null;
       const ins = GOL.store.data.install || {};
       if (ins.ribbonHidden) return null;
@@ -787,7 +786,7 @@
       sg.addColorStop(0, GRAND.light); sg.addColorStop(1, GRAND.dark);
       ctx.fillStyle = sg; ctx.fill();
       // the line, gold-ink, sitting between the star and the ×
-      GOL.text(ctx, 'Add to home screen', starX + 14 + (n.w - 78) / 2, midY,
+      GOL.text(ctx, 'Play full-screen', starX + 14 + (n.w - 78) / 2, midY,
         { size: 12.5, weight: '800', color: '#7A5A24', shadow: false });
       // the dismiss × — a faint ring with a soft cross
       const c = n.close;

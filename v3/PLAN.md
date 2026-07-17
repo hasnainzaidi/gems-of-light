@@ -832,3 +832,20 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   island's final slot, so one forward step begins the selected island—no replay
   detour. The mapping expands cleanly when a fifth or sixth island arrives. Contract:
   `ONBOARDING-PLAN-2026-07-16.md`; staging phone verdict pending.
+- **RETURNING FULL-SCREEN INVITATION (accepted 2026-07-16):** completing the
+  grown-up porch no longer permanently suppresses the map's installation
+  ribbon. The setup card now leads with **Best in full screen** and offers
+  **Remind me later** instead of a passive skip. That choice clears the rest of
+  the current visit (and does not imply a notification); on a later uninstalled
+  browser visit, the map quietly offers **Play full-screen** until installation
+  or explicit dismissal. The child's first-map invitation still has exclusive
+  priority.
+- **FULL-SCREEN CHECKPOINT ESCALATION (accepted 2026-07-16 after immediate
+  parent playtest):** the quiet map ribbon was still too easy to miss; the
+  observed browser chrome remained annoying even directly after setup. Every
+  later non-standalone launch now pauses before the child-facing doorway on
+  **Best in full screen**, offering **I've added it** or **Remind me later**.
+  Either choice continues at once and clears the ribbon for that visit, but no
+  browser dismissal is stored: another browser launch asks again. Only a true
+  standalone relaunch durably bypasses the checkpoint. The first visit still
+  gets value before installation through the grown-up porch.

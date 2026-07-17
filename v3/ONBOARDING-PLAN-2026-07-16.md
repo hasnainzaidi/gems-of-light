@@ -43,8 +43,15 @@ they must never reorder or replace stages.
 - Entering the real first journey sets `childStarted`.
 - Existing saves with any journey progress bypass the grown-up porch.
 - `?onboarding=1` forces the porch for visual QA without clearing progress.
-- Installation is optional. “Not now” advances to handoff, and does not cause a
-  second prompt in the same visit.
+- Installation is optional. “Remind me later” advances to handoff, does not
+  cause a second prompt in the same visit, and makes no notification promise.
+  A later uninstalled browser visit carries a quiet full-screen reminder on
+  the journey map until the grown-up installs or explicitly dismisses it.
+- Every later non-standalone launch pauses before the child-facing doorway on
+  **Best in full screen**, with **I've added it** and **Remind me later**. Both
+  continue immediately and suppress the map ribbon for that visit; neither
+  creates a permanent browser dismissal. A true installed relaunch is the only
+  durable bypass.
 
 ## Scene and API contract
 
@@ -62,8 +69,9 @@ Owns the canonical grown-up shell and these internal stages:
    the built worlds on earlier islands. A global “closest fit” reassurance and
    each card's “Around:” prefix make clear that named surahs are examples, not
    a complete checklist or eligibility test.
-4. `setup`: the same card shell for every platform; uses the existing platform
-   detector and illustrated step language; **Not now** is always available.
+4. `setup`: the same **Best in full screen** card shell for every platform;
+   uses the existing platform detector and illustrated step language;
+   **Remind me later** is always available.
 5. `handoff`: “Their garden is ready”; animated rotate-and-pass invitation.
 
 Public hooks:
