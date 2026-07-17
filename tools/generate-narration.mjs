@@ -5,7 +5,7 @@
 // file simply stays silent until this script has been run.
 //
 // Usage:
-//   ELEVENLABS_API_KEY=sk-...  node tools/generate-narration.mjs [--names] [--force] [--dry]
+//   ELEVENLABS_API_KEY=sk-...  node tools/generate-narration.mjs [--names] [--only=slug] [--force] [--dry]
 //
 // Optional env:
 //   ELEVEN_VOICE_ID   voice to use (default: Hope — a warm storyteller)
@@ -26,6 +26,42 @@ global.window = global;
 require(path.join(ROOT, 'js', 'data.js'));
 require(path.join(ROOT, 'js', 'voice-lines.js'));
 const GOL = global.GOL;
+// ElevenLabs must never guess the vowels in a surah title. Keep these
+// speech-only: shared arabicName remains the clean canonical display spelling,
+// while every generated title gets an exact pausal pronunciation guide.
+const SPOKEN_ARABIC_NAMES = {
+  kawthar: 'الْكَوْثَر',
+  kafirun: 'الْكَافِرُون',
+  nasr: 'النَّصْر',
+  masad: 'الْمَسَد',
+  ikhlas: 'الْإِخْلَاص',
+  asr: 'الْعَصْر',
+  falaq: 'الْفَلَق',
+  nas: 'النَّاس',
+  fatiha: 'الْفَاتِحَة',
+  maun: 'الْمَاعُون',
+  quraysh: 'قُرَيْش',
+  fil: 'الْفِيل',
+  humazah: 'الْهُمَزَة',
+  takathur: 'التَّكَاثُر',
+  qariah: 'الْقَارِعَة',
+  zalzalah: 'الزَّلْزَلَة',
+  adiyat: 'الْعَادِيَات',
+  bayyinah: 'الْبَيِّنَة',
+  qadr: 'الْقَدْر',
+  lail: 'اللَّيْل',
+  duha: 'الضُّحَى',
+  tin: 'التِّين',
+  sharh: 'الشَّرْح',
+  alaq: 'الْعَلَق'
+};
+
+const missingSpokenNames = global.GOL_DATA.surahs
+  .filter((s) => !SPOKEN_ARABIC_NAMES[s.slug])
+  .map((s) => s.slug);
+if (missingSpokenNames.length) {
+  throw new Error('Missing vocalized Arabic surah names: ' + missingSpokenNames.join(', '));
+}
 
 const LINES = {};
 for (const [id, text] of Object.entries(GOL.VOICE_LINES)) LINES[id] = text;
@@ -36,7 +72,8 @@ for (const s of global.GOL_DATA.surahs) {
   // is for recognition, but it is not a pronunciation specification.
   // These phrases are unusually short, so preserve a small natural tail. It
   // keeps the final consonant from feeling chopped off when the clip ends.
-  LINES['surah-' + s.slug] = 'سُورَةُ ' + s.arabicName + '. <break time="0.45s" />';
+  const spokenName = SPOKEN_ARABIC_NAMES[s.slug];
+  LINES['surah-' + s.slug] = 'سُورَةُ ' + spokenName + '. <break time="0.45s" />';
   if (!s.story) continue;
   s.story.pages.forEach((text, i) => {
     LINES[GOL.storyVoiceId(s.slug, i)] = text;
@@ -46,6 +83,10 @@ for (const s of global.GOL_DATA.surahs) {
 const FORCE = process.argv.includes('--force');
 const DRY = process.argv.includes('--dry');
 const NAMES_ONLY = process.argv.includes('--names');
+const ONLY_ARG = process.argv.find((arg) => arg.startsWith('--only='));
+const ONLY = ONLY_ARG
+  ? new Set(ONLY_ARG.slice('--only='.length).split(',').map((slug) => 'surah-' + slug.trim()).filter((id) => id !== 'surah-'))
+  : null;
 const KEY = process.env.ELEVENLABS_API_KEY;
 // Omar: warm male Modern Standard Arabic with a light Saudi character. A
 // caller can override this without changing the checked-in default, but every
@@ -59,7 +100,9 @@ const MODEL = NAMES_ONLY
 
 // Names are deliberately a separate batch: the ordinary English narration
 // command must never generate them accidentally with its English storyteller.
-const ids = Object.keys(LINES).filter((id) => NAMES_ONLY ? id.startsWith('surah-') : !id.startsWith('surah-'));
+const ids = Object.keys(LINES)
+  .filter((id) => NAMES_ONLY ? id.startsWith('surah-') : !id.startsWith('surah-'))
+  .filter((id) => !ONLY || ONLY.has(id));
 const todo = ids.filter((id) => FORCE || !fs.existsSync(path.join(OUT, id + '.mp3')));
 console.log(ids.length + ' lines total · ' + (ids.length - todo.length) + ' already cached · ' + todo.length + ' to generate');
 if (DRY || todo.length === 0) {
