@@ -324,6 +324,12 @@
     enter(params) {
       // from here on, "home" means the map — for worlds, shrines, dreams
       GOL.homeScene = 'journeyMap';
+      // Refresh today's Morning Walk set once on entry, so the practice
+      // gate's state is current (guarded: the scheduler script may be absent,
+      // and it stays silent for a brand-new child or in showcase).
+      if (GOL.practice && GOL.EXPERIENCE.remembering && GOL.practice.enabled()) {
+        GOL.practice.ensureToday();
+      }
       this.t = 0;
       this.map = null;
       this.loadError = null;
@@ -996,6 +1002,15 @@
       }
       const wx = clickAt.x / scale + this.cam.x;
       const wy = clickAt.y / scale + this.cam.y;
+      // the Morning Walk gate: tapping it enters the day's practice walk
+      // (only when it is actually drawn — same visibility conditions)
+      const pgate = this.practiceGate();
+      if (pgate && GOL.dist(wx, wy, pgate.x, pgate.y) < 26) {
+        GOL.audio.unlock();
+        GOL.audio.sfx('tap');
+        GOL.go('practiceWalk');
+        return;
+      }
       // the Remembering Moon over a bloom's shoulder: tapping it dreams
       // rather than re-entering (test before the bloom, like the old title)
       for (const m of this.moonBtns || []) {
@@ -1053,6 +1068,67 @@
       ctx.beginPath(); ctx.arc(m.x, m.y, 12, 0, TAU); ctx.fill();
       ctx.fillStyle = '#BFDCC2';
       ctx.beginPath(); ctx.arc(m.x + 6, m.y - 2, 10, 0, TAU); ctx.fill();
+    },
+
+    // The Morning Walk's entry gate (world/map coordinates), seated on the
+    // open ground on the valley fountain's right shoulder — clear of every
+    // spot, the trail, the hero's waypoints, and the daytime moon seat.
+    // Returns null (never drawn, never tappable) unless the daily-practice
+    // scheduler exists, the child knows at least one surah, and we are not in
+    // showcase (the same EXPERIENCE.remembering flag that hides the moons).
+    practiceGate() {
+      if (!GOL.practice || !GOL.EXPERIENCE.remembering) return null;
+      if (!this.map || !this.map.hearts || !this.map.hearts[0]) return null;
+      if (!GOL.practice.enabled()) return null;
+      const h = this.map.hearts[0];
+      return { x: h.x + 100, y: h.y - 18 };
+    },
+
+    // A small stone lantern-gate: two posts, a rounded arch lintel, and a
+    // hanging lantern holding an eight-point star. While today's walk is
+    // unfinished the star breathes a warm-gold halo (the moons' exact
+    // invitation idiom); once the day's star is earned the halo rests and the
+    // star sits bright and still.
+    drawPracticeGate(ctx) {
+      const gate = this.practiceGate();
+      if (!gate) return;
+      const cx = gate.x, cy = gate.y;
+      const done = !!GOL.practice.todayStar();
+      const ly = cy - 1; // the lantern star's center, hanging under the arch
+      ctx.save();
+      ctx.lineCap = 'round';
+      // the two stone posts
+      ctx.strokeStyle = '#C9B98F'; ctx.lineWidth = 4.5;
+      for (const dx of [-10, 10]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + dx, cy + 12);
+        ctx.lineTo(cx + dx, cy - 6);
+        ctx.stroke();
+      }
+      // the rounded arch lintel across the posts
+      ctx.strokeStyle = '#8A7A55'; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, cy - 6);
+      ctx.quadraticCurveTo(cx, cy - 17, cx + 10, cy - 6);
+      ctx.stroke();
+      // the warm-gold halo, breathing only while today's walk is unfinished
+      // (copied from the Remembering moons' inviting halo, ~line 1085)
+      if (!done) {
+        const br = 0.2 + 0.12 * Math.sin(this.t * 1.8);
+        ctx.fillStyle = alpha('#FFE9A8', br);
+        ctx.beginPath();
+        ctx.arc(cx, ly, 11 + Math.sin(this.t * 1.8) * 1.5, 0, TAU);
+        ctx.fill();
+      }
+      // the little hanger from the arch crown to the lantern
+      ctx.strokeStyle = '#8A7A55'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(cx, cy - 13); ctx.lineTo(cx, ly - 6); ctx.stroke();
+      // the eight-point star inside the lantern — bright in both states
+      GOL.star8Path(ctx, cx, ly, 6, Math.PI / 8);
+      const sg = ctx.createLinearGradient(0, ly - 6, 0, ly + 6);
+      sg.addColorStop(0, GRAND.lighter); sg.addColorStop(1, GRAND.dark);
+      ctx.fillStyle = sg; ctx.fill();
+      ctx.restore();
     },
 
     drawLiving(ctx) {
@@ -1144,6 +1220,7 @@
       }
 
       this.drawMoon(ctx);
+      this.drawPracticeGate(ctx);
       this.drawFirstInvitation(ctx);
       if (this.hero) {
         const pos = pointAtSamples(this.map.walkSamples, this.hero.s);

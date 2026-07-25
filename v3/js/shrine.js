@@ -309,9 +309,13 @@
             if (tap.ui) continue;
             tap.ui = true;
             // a dream entered from a world's ember returns to that ember;
-            // one entered from the journey's moon door drifts home to the
-            // journey, where the freshly waxed moon rests by its disc
-            if (this.memory.returnWorld) {
+            // one walked into from the Morning Walk returns to the walk,
+            // where its arch has bloomed; one entered from the journey's
+            // moon door drifts home to the journey, where the freshly
+            // waxed moon rests by its disc
+            if (this.memory.returnScene) {
+              GOL.go(this.memory.returnScene, { from: 'dream', surahId: this.surahId });
+            } else if (this.memory.returnWorld) {
               GOL.go('adventure', { world: this.memory.returnWorld, resume: 'ember' });
             } else {
               GOL.go('title');
@@ -658,6 +662,15 @@
           stanzas: this.stanzaRanges.length, longMode: this.longMode || 'stanzas'
         });
         if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
+      }
+      // daily practice: every completed dream is a rep, walked into from the
+      // Morning Walk or moon-tapped on the journey — the same act, counted
+      // once. Debug-assisted runs keep the door's flow but never count.
+      if (GOL.practice && GOL.practice.creditDream) {
+        GOL.practice.creditDream(this.surahId, {
+          source: (this.memory && this.memory.source) || 'moon',
+          counted: !this._debugAccel && !this._usedDebugAssist
+        });
       }
       GOL.store.save();
       GOL.stamp('v3remember');
