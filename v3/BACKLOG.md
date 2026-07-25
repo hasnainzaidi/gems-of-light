@@ -25,14 +25,14 @@ verdict is logged.
       `map-artist-pack/drafts/r1/LOG.md`
 - [ ] Detailed per-world playtest with the girls (first pass 2026-07-15:
       "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
+- [ ] Playtest the Morning Walk ON STAGING (daily 2+1 practice mode —
+      lantern-gate by the valley fountain, three practice doors, star
+      garland, grown-ups sun/log; needs a save that knows ≥1 surah, or
+      mark a priority sun on the grown-ups page): built 2026-07-25,
+      verdicts → `PLAN.md` §10; design: `DAILY-PRACTICE-PLAN.md`
 
 ## Next
 
-- [ ] The Morning Walk — daily practice mode (three doors: two refreshes
-      + one parent-priority newer surah, practice star, rotation toward
-      per-surah rep targets): plan drafted, awaiting Hasnain's read →
-      `DAILY-PRACTICE-PLAN.md`; on approval, Wave 0 (scheduler + contract)
-      is pickable
 - [ ] Map polish once the promotion settles: port the disc row's two
       remaining dressings to map spots (memory-bloom arcs from
       heardFull, ayah-count pips on the open world) — see PLAN §10

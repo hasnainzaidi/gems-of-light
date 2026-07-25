@@ -899,3 +899,46 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   and cheaply verifies the dimensions each render frame so even a missed iOS
   resize event repairs itself immediately. Regression contract:
   `tools/test-viewport-lifecycle.mjs`.
+- **THE MORNING WALK — DAILY 2+1 PRACTICE MODE (built 2026-07-25, on
+  Hasnain's "build it"; staging phone verdict pending):** the daily-practice
+  scheduler from `DAILY-PRACTICE-PLAN.md`, built to its recommended answers.
+  A lantern-gate on the valley fountain's open shoulder (breathing the moons'
+  exact invitation halo; resting once today's star is earned) opens a
+  one-screen dawn path (`practiceWalk`, fatiha palette) with up to three
+  stone arches — each tinted by its surah's world palette, its Grand Gem
+  floating in the archway. Set = two refreshes chosen by need (days-since-
+  practiced desc, building-band +3, weakness then fewest-reps tie-breaks; no
+  randomness, stored per `todayKey` so reloads never reshuffle) + the newer
+  one (parent's priority, else the journey frontier) last. An arch whispers
+  its first ayah on arrival (`echoVerse`, identity before consent) and a
+  1.4s consent ring opens the door: earned surahs dream their shrine
+  (`memory.returnScene: 'practiceWalk'`, `source: 'walk'`; the ceremony
+  waxes the moon under the unchanged once-a-day rule and returns to the
+  walk), an unearned newer surah opens its real world and credits at the
+  campfire's full recitation (heardFull baseline). All doors done → the
+  door-stars spiral into one practice star (~3.4s ceremony), the garland
+  along the fence keeps the last ~7 star days — accumulate-only, no gaps,
+  no streaks, nothing gated. Reps count once per completed ceremony (walk
+  or moon-tap alike; debug-assisted runs keep the flow but never count) into
+  `st.practiceReps` toward a target of 20 (building/keeping bands; keeping
+  surahs still rotate back ~weekly). Grown-ups page: a per-row "practicing
+  now" sun (the priority picker; frontier default shown half-lit), plain
+  "practiced 13 of 20" status text, and "The morning walk" log (today +
+  last 7 days, gold star on star days, blank otherwise — never a grey
+  mark). `enabled()` requires a known surah or a deliberately chosen
+  priority — the frontier fallback alone never shows the gate, so a fresh
+  family's first world remains the journey's own invitation; showcase never
+  sees any of it (same `EXPERIENCE.remembering` gate as the moons). Save
+  schema additive only (`data.practice` + per-level practiceReps/
+  lastPracticeDay); `sw`-safe; scripts `practice.js` + `practice-walk.js`
+  wired into both entry points. Contract: `tools/test-practice-contract.mjs`
+  (day reset/determinism, composition guards, shrink, 30-day rotation
+  coverage, moon-tap sync, star lifecycle, log cap) runs inside `check.mjs`.
+  Browser-verified end-to-end at 852×393 on a seeded save: gate → walk →
+  door ritual → dream → credit → return → second door → world-walk routing
+  for the unearned newer → campfire credit → star ceremony → rest state →
+  grown-ups controls; fresh-save and showcase visibility both confirmed
+  clean. Build: four parallel Opus agents on disjoint files (scheduler+
+  contract, walk scene, map gate, grown-ups) against a locked API brief;
+  one orchestrator spec bug caught in browser verification (the `enabled()`
+  frontier fallback) and fixed with its contract assertion inverted.

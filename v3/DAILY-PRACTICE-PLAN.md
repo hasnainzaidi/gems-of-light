@@ -1,6 +1,13 @@
 # The Morning Walk — a daily practice mode (2 + 1)
 
-**Status: proposal — awaiting Hasnain's read. Verdicts → `PLAN.md` §10.**
+**Status: BUILT 2026-07-25 (on Hasnain's "build it") — staging phone verdict
+pending; verdicts → `PLAN.md` §10.** The open questions below were resolved by
+their recommended answers (gate over Noor; unearned newer door = world walk
+credited at the campfire; rep target 20, parents see progress only; newer door
+last; garland on the path). One refinement over the text below, found in
+browser verification: `enabled()` requires a non-empty pool OR an explicitly
+chosen priority — the automatic frontier fallback alone never shows the gate,
+so a brand-new family's first world stays the journey's own invitation.
 **Grounded in [LEARNING-LOOPS-STRATEGY.md](./LEARNING-LOOPS-STRATEGY.md); reuses the
 Remembering (dream-shrine, moons, `GOL.todayKey`) rather than adding a second economy.**
 
