@@ -10,6 +10,11 @@ verdict is logged.
 
 ## Now
 
+- [ ] Playtest Kafirun (journey #18) + AYAT AL-KURSI (journey #5, the
+      first passage world: 9 phrase-gems, windowed audio, the guarded
+      night) on staging — verdicts → `PLAN.md` §10; Kursi's estimated
+      segment boundaries refine by ear if any maqta' cuts oddly
+
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
       secular parent porch + installed-PWA relaunch, and ordinary-mode

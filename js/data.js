@@ -5,6 +5,174 @@
 window.GOL_DATA = {
   "surahs": [
     {
+      "id": 255,
+      "slug": "kursi",
+      "arabicName": "آية الكرسي",
+      "englishName": "Ayat al-Kursi",
+      "meaningName": "The Verse of the Throne",
+      "passage": {
+        "surah": 2,
+        "ayah": 255,
+        "file": "002255"
+      },
+      "kidIntro": "This is the greatest ayah in the whole Quran — Ayat al-Kursi, the Verse of the Throne. It tells us that Allah never sleeps and never gets tired of guarding everything He made. Many children whisper it before bed, and fall asleep feeling perfectly safe.",
+      "story": {
+        "title": "The night guard",
+        "pages": [
+          "The Prophet Muhammad, peace be upon him, once asked a friend to guard the charity food at night. In the dark, someone crept in and began scooping up the food!",
+          "The friend caught him. The stranger begged: let me go, and I will teach you words that will keep you safe all night. The friend was curious, so he listened.",
+          "The stranger said: when you lie down to sleep, recite Ayat al-Kursi — then a guardian from Allah will stay over you all night long, and no harm can come near you till morning.",
+          "When the friend told the Prophet, he smiled and said: he told you the truth, even though he is a great liar. So every night, millions of children say this ayah — and sleep in Allah's care."
+        ]
+      },
+      "verses": [
+        {
+          "n": 1,
+          "ar": "ٱللَّهُ لَآ إِلَـٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ",
+          "tr": "al-lahu lā ilāha illā huwa l-ḥayu l-qayūmu",
+          "meaning": "Allah — there is no god but Him, the Ever-Living, the One who keeps everything going.",
+          "win": {
+            "basit": [
+              0.0,
+              6.35
+            ],
+            "alafasy": [
+              0.0,
+              6.12
+            ]
+          }
+        },
+        {
+          "n": 2,
+          "ar": "لَا تَأْخُذُهُۥ سِنَةٌۭ وَلَا نَوْمٌۭ",
+          "tr": "lā takhudhuhu sinatun walā nawmun",
+          "meaning": "No sleepiness ever touches Him, and no sleep.",
+          "win": {
+            "basit": [
+              6.35,
+              11.76
+            ],
+            "alafasy": [
+              6.12,
+              11.27
+            ]
+          }
+        },
+        {
+          "n": 3,
+          "ar": "لَّهُۥ مَا فِى ٱلسَّمَـٰوَٰتِ وَمَا فِى ٱلْأَرْضِ",
+          "tr": "lahu mā fī l-samāwāti wamā fī l-arḍi",
+          "meaning": "Everything in the heavens and everything on earth belongs to Him.",
+          "win": {
+            "basit": [
+              11.76,
+              17.87
+            ],
+            "alafasy": [
+              11.27,
+              17.15
+            ]
+          }
+        },
+        {
+          "n": 4,
+          "ar": "مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ",
+          "tr": "man dhā alladhī yashfaʿu ʿindahu illā bi-idh'nihi",
+          "meaning": "No one may speak for another before Him, except by His permission.",
+          "win": {
+            "basit": [
+              17.87,
+              24.8
+            ],
+            "alafasy": [
+              17.15,
+              23.87
+            ]
+          }
+        },
+        {
+          "n": 5,
+          "ar": "يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ",
+          "tr": "yaʿlamu mā bayna aydīhim wamā khalfahum",
+          "meaning": "He knows what is ahead of everyone, and what is behind them.",
+          "win": {
+            "basit": [
+              24.8,
+              30.94
+            ],
+            "alafasy": [
+              23.87,
+              29.78
+            ]
+          }
+        },
+        {
+          "n": 6,
+          "ar": "وَلَا يُحِيطُونَ بِشَىْءٍۢ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ",
+          "tr": "walā yuḥīṭūna bishayin min ʿil'mihi illā bimā shāa",
+          "meaning": "And no one can hold a single drop of His knowledge — except what He chooses to share.",
+          "win": {
+            "basit": [
+              30.94,
+              38.76
+            ],
+            "alafasy": [
+              29.78,
+              37.43
+            ]
+          }
+        },
+        {
+          "n": 7,
+          "ar": "وَسِعَ كُرْسِيُّهُ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضَ",
+          "tr": "wasiʿa kur'siyyuhu l-samāwāti wal-arḍa",
+          "meaning": "His Kursi is wider than the heavens and the earth together.",
+          "win": {
+            "basit": [
+              38.76,
+              44.42
+            ],
+            "alafasy": [
+              37.43,
+              42.84
+            ]
+          }
+        },
+        {
+          "n": 8,
+          "ar": "وَلَا يَـُٔودُهُۥ حِفْظُهُمَا",
+          "tr": "walā yaūduhu ḥif'ẓuhumā",
+          "meaning": "And guarding them both never, ever makes Him tired.",
+          "win": {
+            "basit": [
+              44.42,
+              48.86
+            ],
+            "alafasy": [
+              42.84,
+              46.98
+            ]
+          }
+        },
+        {
+          "n": 9,
+          "ar": "وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ",
+          "tr": "wahuwa l-ʿaliyu l-ʿaẓīmu",
+          "meaning": "And He is the Most High, the Most Great.",
+          "win": {
+            "basit": [
+              48.86,
+              54.52
+            ],
+            "alafasy": [
+              46.98,
+              51.96
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": 108,
       "slug": "kawthar",
       "arabicName": "الكوثر",
