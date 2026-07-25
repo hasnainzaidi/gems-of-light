@@ -28,6 +28,11 @@ verdict is logged.
 
 ## Next
 
+- [ ] The Morning Walk — daily practice mode (three doors: two refreshes
+      + one parent-priority newer surah, practice star, rotation toward
+      per-surah rep targets): plan drafted, awaiting Hasnain's read →
+      `DAILY-PRACTICE-PLAN.md`; on approval, Wave 0 (scheduler + contract)
+      is pickable
 - [ ] Map polish once the promotion settles: port the disc row's two
       remaining dressings to map spots (memory-bloom arcs from
       heardFull, ayah-count pips on the open world) — see PLAN §10
