@@ -23,7 +23,8 @@ const defs = [
   [8, 1, 'fatiha'], [9, 112, 'ikhlas'], [1, 113, 'falaq'], [2, 114, 'nas'],
   [5, 108, 'kawthar'], [10, 110, 'nasr'], [11, 111, 'masad'], [12, 106, 'quraish'],
   [13, 105, 'fil'], [14, 104, 'humazah'], [15, 103, 'asr'], [16, 102, 'takathur'],
-  [17, 101, 'qariah'], [3, 100, 'adiyat'], [4, 97, 'qadr'], [6, 93, 'duha'], [7, 92, 'lail']
+  [17, 101, 'qariah'], [3, 100, 'adiyat'], [4, 97, 'qadr'], [6, 93, 'duha'], [7, 92, 'lail'],
+  [18, 109, 'kafirun'], [19, 255, 'kursi']
 ];
 for (const [n, surahId, key] of defs) GOL.registerWorld(n, { surahId, key, build() {} });
 
@@ -36,11 +37,11 @@ assert.equal(plan.startSlot, null);
 assert.equal(plan.nextSurahId, 1);
 
 plan = GOL.applyJourneyStage(1, 1234);
-assert.deepEqual(Array.from(plan.knownSurahs), [1, 112, 113, 114, 108, 110]);
+assert.deepEqual(Array.from(plan.knownSurahs), [1, 112, 113, 114, 255, 108]);
 assert.equal(plan.startSlot, 5, 'handoff should stand on the previous island endpoint');
 assert.equal(plan.startSurahId, null);
 assert.equal(plan.recognitionSurahId, null, 'placement must not force a replay detour');
-assert.equal(plan.nextSurahId, 111, 'stage two should begin at island two');
+assert.equal(plan.nextSurahId, 110, 'stage two should begin at island two');
 assert.equal(GOL.worldDone(8), true, 'earlier-island world should paint as complete');
 assert.equal(GOL.store.data.grand[1], undefined, 'placement fabricated an earned Grand Gem');
 assert.equal(levelCalls.length, 0, 'placement fabricated level or knowledge telemetry');
@@ -48,7 +49,7 @@ assert.equal(levelCalls.length, 0, 'placement fabricated level or knowledge tele
 plan = GOL.applyJourneyStage(2, 2345);
 assert.equal(plan.startSlot, 11);
 assert.equal(plan.recognitionSurahId, null);
-assert.equal(plan.nextSurahId, 101, 'stage three should begin at island three');
+assert.equal(plan.nextSurahId, 102, 'stage three should begin at island three');
 
 // Unbuilt spots do not break the six-slot island boundary.
 plan = GOL.applyJourneyStage(3, 3456);
@@ -56,7 +57,7 @@ assert.equal(plan.startSlot, 17, 'stage four starts from the final slot of islan
 assert.equal(plan.recognitionSurahId, null);
 assert.equal(plan.nextSurahId, 97, 'stage four should begin at the first built world on island four');
 assert.equal(plan.frontier, 18);
-assert.equal(GOL.JOURNEY_STAGE_CHOICES[3].examples, "Al-Qadr · Al-'Alaq · At-Tin",
+assert.equal(GOL.JOURNEY_STAGE_CHOICES[3].examples, "Al-Ma'un · Al-Qadr · Al-'Alaq",
   'each card must show the selected island\'s first three surahs');
 GOL.store.data.onboarding.parentComplete = true;
 assert.equal(GOL.journeySlotAutoBloomed(17), true, 'last earlier-island slot should auto-bloom');

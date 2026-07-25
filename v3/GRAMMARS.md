@@ -128,3 +128,15 @@ Al-Qari'ah):
 
 New world: pick the grammar that fits the surah's character, copy its recipe,
 keep every invariant, and run `node v3/tools/check.mjs wN` until it is ✓.
+
+## Passage worlds (added 2026-07-16)
+
+A PASSAGE world teaches one great ayah rather than a surah (first: Ayat
+al-Kursi, `w19-kursi.js`, surahId 255). The data entry in `js/data.js`
+carries `passage: { surah, ayah, file }` and its `verses` are the passage's
+traditional maqati' — each with per-reciter `win: [from, to]` windows into
+the ONE recording. Gems == segments (the invariant bends only in name: one
+gem per memorized unit, always in order). Audio, campfire, shrine, and
+dreams all work unchanged; `core/audio.js` plays each segment as a window
+(blob-backed, seek-confirmed). Estimated windows refine by ear exactly like
+read-along timings.

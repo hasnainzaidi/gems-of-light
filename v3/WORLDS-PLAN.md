@@ -66,6 +66,15 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 
 ## 2. The map
 
+> **2026-07-16: AYAT AL-KURSI joins the ladder** as journey slot 5 (end of
+> Phase 1, after An-Nas — Hasnain's placement): the game's first PASSAGE
+> world, `w19-kursi.js`, surah id 255 in `js/data.js` (2:255 split into its
+> nine traditional maqati', windowed audio over one recording per reciter).
+> Every journey number in the table below shifts +1 after slot 4; Al-Lail
+> becomes journey #25 and waits off-map for the map expansion. Kafirun and
+> Kursi briefs: `BRIEFS-2026-07-16-kafirun-kursi.md`.
+
+
 | Journey | Phase | Surah | Key | Ayat | Status | Grammar / seed |
 |---:|---:|---|---|---:|---|---|
 | 1 | 1 | Al-Fatiha (1) | `fatiha` | 7 | ✅ W8 | Cozy Garden / straight path |
@@ -84,7 +93,7 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 | 14 | 3 | Al-'Adiyat (100) | `adiyat` | 11 | ✅ W3 | River Road / momentum |
 | 15 | 3 | Az-Zalzalah (99) | `zalzalah` | 8 | planned | Soft mounds / earth offers gems |
 | 16 | 3 | Al-Bayyinah (98) | `bayyinah` | 8 | planned | Guided dusk lane / lanterns |
-| 17 | 4 | Al-Kafirun (109) | `kafirun` | 6 | planned | Guided Path / reflection |
+| 17 | 4 | Al-Kafirun (109) | `kafirun` | 6 | ✅ W18 | Guided Path / reflection |
 | 18 | 4 | Al-Ma'un (107) | `maun` | 7 | planned | Cozy Garden / small kindnesses |
 | 19 | 4 | Al-Qadr (97) | `qadr` | 5 | ✅ W4 | The Climb / blessed night |
 | 20 | 4 | Al-'Alaq (96) | `alaq` | 19 | planned | Stanza Climb / Hira light |

@@ -899,3 +899,24 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   and cheaply verifies the dimensions each render frame so even a missed iOS
   resize event repairs itself immediately. Regression contract:
   `tools/test-viewport-lifecycle.mjs`.
+- **KAFIRUN + AYAT AL-KURSI (2026-07-16, on Hasnain's "two new levels"):**
+  W18 Kafirun executes the §3.E sketch — bayyinah dusk road, NO palette
+  drift (steadfastness), the still river + inverted reflection as pure
+  drawLandmark painting (zero water tiles = unwalkable by construction).
+  W19 AYAT AL-KURSI is the game's first PASSAGE world: pseudo-surah id 255
+  in js/data.js, 2:255 split at the mushaf's own pause marks into the nine
+  traditional maqati' (canonical QDC text), per-reciter windowed playback
+  over one recording (002255.mp3 ×2 reciters, estimated boundaries à la
+  follow-estimated — refine by ear later). Placement: journey slot 5, end
+  of Phase 1 (Hasnain chose vs. slot 2 / end-of-ladder); WORLD_ORDER
+  insert + kursiInsert20260716 visited-sweep migration; the journey-stage
+  onboarding cards + test updated to the shifted islands; Al-Lail (#25)
+  waits off-map for the expansion. World soul: "the guarded night" —
+  falaqNoor→qadrEnd (night never becomes day, it becomes GUARDED), night
+  0.8 with lightboxes, sleeping creatures, and THE VAST LIGHT aurora
+  growing phrase by phrase to span heavens-and-earth. Browser
+  verification caught and fixed in-wave: windowed seeks silently clamp
+  to 0 on Range-less servers/slow networks (fix: confirmed-landing seek
+  machinery + passage files load as instantly-seekable blob object
+  URLs), and the aurora was invisible under the night mask (fix: warm
+  gold re-anchor + bigger alpha budget). Verdicts on staging pending.
