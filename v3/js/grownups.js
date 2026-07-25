@@ -23,6 +23,55 @@
     return days + ' days ago';
   }
 
+  // "today / yesterday / Jul 22" from a calendar-day key ('2026-07-22') — the
+  // walk log's dates are day-keys (GOL.todayKey shape), not timestamps, so
+  // this is a sibling of relDay() rather than a reuse of it.
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function relDayKey(dayKey) {
+    if (!dayKey) return '';
+    if (dayKey === GOL.todayKey()) return 'today';
+    const p = String(dayKey).split('-').map(Number);
+    if (p.length !== 3 || p.some((n) => !Number.isFinite(n))) return String(dayKey);
+    const d = new Date(p[0], p[1] - 1, p[2]);
+    const now = new Date();
+    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = Math.round((t0 - d) / (24 * 3600 * 1000));
+    if (diff === 1) return 'yesterday';
+    return (MONTHS[p[1] - 1] || '') + ' ' + p[2];
+  }
+
+  // the child-facing surah name for an id, from the shared Quran data
+  function surahName(id) {
+    const s = (window.GOL_DATA && id != null)
+      ? window.GOL_DATA.surahs.find((x) => x.id === id) : null;
+    return s ? s.englishName : ('surah ' + id);
+  }
+
+  // a small sun: a filled/outlined core ringed by short rays. Gold when this
+  // surah is the active priority, half-lit for the auto-frontier default,
+  // a faint ink outline otherwise. Matches the page's quiet ink/gold palette.
+  const SUN_GOLD = '#E0A93E';
+  function drawSun(ctx, x, y, r, mode) {
+    ctx.save();
+    let coreFill = null, coreStroke = null, rayColor;
+    if (mode === 'active') { coreFill = SUN_GOLD; rayColor = alpha(SUN_GOLD, 0.95); }
+    else if (mode === 'frontier') { coreFill = alpha(SUN_GOLD, 0.4); coreStroke = alpha(SUN_GOLD, 0.7); rayColor = alpha(SUN_GOLD, 0.55); }
+    else { coreStroke = alpha(INK, 0.32); rayColor = alpha(INK, 0.28); }
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = rayColor; ctx.lineWidth = 1.3;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a) * (r + 2), y + Math.sin(a) * (r + 2));
+      ctx.lineTo(x + Math.cos(a) * (r + 4.5), y + Math.sin(a) * (r + 4.5));
+      ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (coreFill) { ctx.fillStyle = coreFill; ctx.fill(); }
+    if (coreStroke) { ctx.strokeStyle = coreStroke; ctx.lineWidth = 1.4; ctx.stroke(); }
+    ctx.restore();
+  }
+
   // a small on/off switch (parchment track, cream knob)
   function drawToggle(ctx, x, y, w, h, on, enabled) {
     const r = h / 2;
@@ -77,20 +126,58 @@
       const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
         .filter((w) => w.build && w.surahId != null); // only surahs a child can play
       const rH = 50;
-      const maxScroll = Math.max(0, worlds.length * rH - viewH);
+
+      // The Morning Walk section scrolls WITH the list, above the surah rows.
+      // When the scheduler isn't loaded (GOL.practice absent) the section has
+      // zero height and the page reads exactly as before.
+      const P = GOL.practice;
+      const hasPractice = !!P;
+      const practiceOn = !!(P && P.enabled && P.enabled());
+      const logHeaderH = 30, logRowH = 26, sectionGap = 16;
+      let logRows = [];
+      if (practiceOn) {
+        const today = P.ensureToday ? P.ensureToday() : null;
+        const recent = P.recentLog ? (P.recentLog(7) || []) : [];
+        if (today) logRows.push({ day: today.day, set: today.set || [], star: !!today.star, isToday: true });
+        // recentLog is oldest→newest; show newest first under today
+        recent.slice().reverse().forEach((r) => logRows.push({ day: r.day, set: r.set || [], star: !!r.star }));
+      }
+      const bodyRows = practiceOn ? Math.max(1, logRows.length) : 1; // 1 = the soft not-yet line
+      const sectionH = hasPractice ? (logHeaderH + bodyRows * logRowH + sectionGap) : 0;
+
+      const priorityId = practiceOn ? P.priorityId() : null;
+      const frontierId = practiceOn ? P.frontierId() : null;
+      const pool = practiceOn && P.pool ? (P.pool() || []) : [];
+
+      const maxScroll = Math.max(0, sectionH + worlds.length * rH - viewH);
       const scroll = Math.max(0, Math.min(maxScroll, this.scroll || 0));
 
       const toggleW = 46, toggleH = 24;
       const rows = worlds.map((w, i) => {
-        const y = viewTop + i * rH - scroll;
+        const y = viewTop + sectionH + i * rH - scroll;
         const reached = GOL.worldProgressOpen(w.n); // reachable by natural play
         const opened = !!(GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
         const tx = ix + iw - toggleW, ty = y + rH / 2 - toggleH / 2;
         // a generous tap target spanning the "on the map" label and the switch
         const hit = { x: tx - 92, y: y + 4, w: toggleW + 92, h: rH - 8 };
-        return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit };
+        // the "practicing now" sun sits just left of the map control. Any built
+        // world can be marked, so every row carries a sun + generous hit-rect.
+        const sunX = tx - 114, sunY = y + rH / 2;
+        let sunMode = 'idle', reps = null;
+        if (practiceOn) {
+          if (priorityId != null && w.surahId === priorityId) sunMode = 'active';
+          else if (priorityId == null && frontierId != null && w.surahId === frontierId) sunMode = 'frontier';
+          if (pool.includes(w.surahId) && P.reps) reps = P.reps(w.surahId);
+        }
+        const sunHit = { x: sunX - 17, y: y + 4, w: 34, h: rH - 8 };
+        return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit, sunX, sunY, sunMode, sunHit, reps };
       });
-      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll, installLink };
+      const sectionTop = viewTop - scroll; // the walk-log block's top, scrolled
+      return {
+        px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows,
+        maxScroll, scroll, installLink,
+        hasPractice, practiceOn, logRows, logHeaderH, logRowH, sectionGap, sectionH, sectionTop
+      };
     },
 
     update(dt, W, H) {
@@ -133,6 +220,21 @@
         GOL.audio.sfx('tap');
         GOL.go('install', { from: 'grownups' });
         return;
+      }
+      // a surah's "practicing now" sun — sets that surah as the priority; tap
+      // the active one to clear it (back to the auto frontier). Any built row
+      // can be marked. Only live when the scheduler is present.
+      const P = GOL.practice;
+      if (lay.practiceOn && P) {
+        for (const r of lay.rows) {
+          const h = r.sunHit;
+          if (clickAt.x >= h.x && clickAt.x <= h.x + h.w && clickAt.y >= h.y && clickAt.y <= h.y + h.h) {
+            const cur = P.priorityId();
+            P.setPriority(cur != null && cur === r.w.surahId ? null : r.w.surahId);
+            GOL.audio.sfx('tap');
+            return;
+          }
+        }
       }
       // a surah's "on the map" toggle — only worlds not already reachable can
       // be opened or closed; reached worlds are on the map for good
@@ -179,6 +281,40 @@
       GOL.roundRect(ctx, lay.px + 10, lay.panelTop + 9, lay.pw - 20, lay.panelH - 18, 12);
       ctx.clip();
 
+      // The Morning Walk log — scrolls with the list, above the surah rows.
+      if (lay.hasPractice) {
+        const secTop = lay.sectionTop;
+        const clipTop = lay.panelTop, clipBot = lay.panelTop + lay.panelH;
+        GOL.text(ctx, 'The morning walk', lay.ix, secTop + lay.logHeaderH / 2,
+          { size: 13.5, weight: '800', color: INK, align: 'left', shadow: false });
+        if (lay.practiceOn) {
+          lay.logRows.forEach((row, j) => {
+            const mid = secTop + lay.logHeaderH + j * lay.logRowH + lay.logRowH / 2;
+            if (mid + lay.logRowH < clipTop || mid - lay.logRowH > clipBot) return; // off-screen
+            const when = row.isToday ? 'today' : relDayKey(row.day);
+            GOL.text(ctx, when, lay.ix, mid,
+              { size: 11, weight: '700', color: alpha(INK, row.isToday ? 0.75 : 0.55), align: 'left', shadow: false });
+            const names = (row.set || []).map(surahName).join(' · ');
+            GOL.text(ctx, names, lay.ix + 74, mid,
+              { size: 11, weight: '600', color: alpha(INK, 0.6), align: 'left', shadow: false });
+            // a small gold star only when the day's practice star was earned —
+            // a missed day shows nothing here, never a broken or grey mark
+            if (row.star) GOL.star8(ctx, lay.ix + lay.iw - 8, mid, 5.5, Math.PI / 8 + t * 0.15, GOLD);
+          });
+        } else {
+          // enabled becomes true once a surah is learned; until then, one line
+          const mid = secTop + lay.logHeaderH + lay.logRowH / 2;
+          GOL.text(ctx, 'The morning walk begins once a surah is learned.', lay.ix, mid,
+            { size: 11, weight: '600', color: alpha(INK, 0.5), align: 'left', shadow: false });
+        }
+        // a faint hairline closing the section before the surah rows
+        const divY = secTop + lay.sectionH - lay.sectionGap + 6;
+        if (divY > clipTop && divY < clipBot) {
+          ctx.strokeStyle = alpha(INK, 0.12); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(lay.ix - 8, divY); ctx.lineTo(lay.ix + lay.iw + 8, divY); ctx.stroke();
+        }
+      }
+
       for (const r of lay.rows) {
         const w = r.w;
         const ry = r.y, mid = ry + lay.rH / 2;
@@ -218,9 +354,20 @@
         let status = priorKnown ? 'already knew' : (done ? 'completed' : (visited ? 'in progress' : 'not started yet'));
         const when = relDay(st && st.lastPlayed);
         if (when && (done || visited)) status += ' · last played ' + when;
+        // reps toward the target for surahs in the practice pool (plain count,
+        // typographic — this page stays quiet), then the auto-frontier hint
+        if (r.reps) {
+          status += r.reps.band === 'keeping'
+            ? ' · practiced ' + r.reps.target + ' of ' + r.reps.target + ' ✓'
+            : ' · practiced ' + Math.min(r.reps.reps, r.reps.target) + ' of ' + r.reps.target;
+        }
+        if (r.sunMode === 'frontier') status += ' · practicing next';
         const meaning = surah && surah.meaningName ? surah.meaningName + ' · ' : '';
         GOL.text(ctx, meaning + status, nx, mid + 9,
           { size: 10.5, weight: '600', color: alpha(INK, done ? 0.62 : 0.5), align: 'left', shadow: false });
+
+        // "practicing now" sun, left of the map control (scheduler present only)
+        if (lay.practiceOn) drawSun(ctx, r.sunX, r.sunY, 5, r.sunMode);
 
         // "on the map" control, right
         const lx = r.tx - 10;
@@ -268,7 +415,7 @@
       }
 
       // footer reassurance
-      GOL.text(ctx, 'Turn a switch on to let your child reach that surah on the map. Everything stays on this device.',
+      GOL.text(ctx, 'Mark a sun to choose the surah they are practicing. Turn a switch on to open a surah on the map. Everything stays on this device.',
         cx, lay.footerY, { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
 
       // home button
