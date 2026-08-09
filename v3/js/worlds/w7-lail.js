@@ -178,10 +178,13 @@
        .prop('column', 44, { y: 47 * GOL.TILE })
        .prop('column', 1).prop('flowers', 5, { v: 1 });
 
-      // creatures: butterflies low over the trailhead, night birds higher
+      // creatures: butterflies low over the trailhead, night birds higher.
+      // Each bird perches ON a ledge (creature row = ledge top − 1) —
+      // the old rows left them pecking in open sky.
       b.creature('butterfly', 12, 64).creature('butterfly', 24, 58)
-       .creature('bird', 20, 40).creature('bird', 30, 24)
-       .creature('bird', 22, 12);
+       .creature('bird', 26, 42)   // the rejoin ledge, west of gem 9
+       .creature('bird', 28, 25)   // B3, clear of gem 14
+       .creature('bird', 22, 13);  // C1, the last rungs
 
       b.start(4); // at the very bottom of the dark valley, looking up
     }
