@@ -920,3 +920,22 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   machinery + passage files load as instantly-seekable blob object
   URLs), and the aurora was invisible under the night mask (fix: warm
   gold re-anchor + bigger alpha budget). Verdicts on staging pending.
+- **PLAYTEST VERDICTS (2026-08-09, Hasnain on staging):**
+  - **Quraysh learning rooms (P20–P24, `?lab=20`–`24`): ALL SCRAPPED.**
+    "All bad" — none of the five rooms earns a second round. The
+    workstream (strategy doc, shared plumbing, five prototypes) stays
+    parked on the abandoned local branch `quraysh-learning-rooms`;
+    nothing merges to staging.
+  - **Passage concept (windowed audio): SCRAPPED.** The per-reciter
+    `win` time windows + blob/seek machinery in `core/audio.js` are
+    removed; Ayat al-Kursi's recording is instead pre-cut offline into
+    nine per-maqta' files (`audio/<reciter>/255001`–`255009.mp3`, split
+    at the same estimated boundaries), so id 255 now rides the ordinary
+    one-file-per-ayah path with zero special-casing. GRAMMARS "Passage
+    worlds" rewritten as "Ayah worlds". Note: everyayah remote fallback
+    does not know the 255NNN names (the old windowed path could stream
+    002255 remotely) — kursi audio is local/SW-cache only, which is the
+    normal case anyway.
+  - **W18 Kafirun + W19 Kursi (the worlds themselves): KEPT.** "Need
+    work but aren't fully broken" — specific improvement notes to
+    come from Hasnain; rework item added to BACKLOG NOW.

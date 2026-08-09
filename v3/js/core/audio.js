@@ -114,57 +114,12 @@
       }
       return this._verseEl;
     },
-    // ------------------------------------------------- passage blob cache --
-    // A passage recording (e.g. Ayat al-Kursi's single 002255.mp3) must be
-    // SEEKABLE the moment it loads: its segments start mid-file, and playback
-    // is deferred until the seek confirms. But a network src on a Range-less
-    // server (python http.server; slow networks early on) is a catch-22 —
-    // with play() deferred the browser never buffers past the metadata probe,
-    // el.seekable stays empty forever, and the seek can never land. So the
-    // whole file is fetched ONCE (local first, remote on failure; the service
-    // worker answers cache-first offline) and wrapped in a blob object URL,
-    // which is byte-addressable and instantly seekable on every server and
-    // platform. One entry lives at a time (~1MB): keyed by reciter + file,
-    // reused across all nine segments AND the campfire chain — never revoked
-    // just because a segment finished, only when replaced (reciter change).
-    // The PROMISE is cached, not just the URL, so concurrent calls share one
-    // fetch.
-    _passageCache: {},
-    _passageBlob(rec, file) {
-      const ck = ((GOL.V3 && GOL.V3.reciter) || 'default') + '/' + file;
-      let e = this._passageCache[ck];
-      if (e) return e;
-      for (const k of Object.keys(this._passageCache)) {
-        const old = this._passageCache[k];
-        if (old.url) { try { URL.revokeObjectURL(old.url); } catch (err) { /* ignore */ } }
-        delete this._passageCache[k];
-      }
-      e = { url: null, promise: null };
-      const grab = (src) => fetch(src).then((r) => {
-        if (!r.ok) throw new Error('http ' + r.status);
-        return r.blob();
-      });
-      e.promise = grab(rec.local + file + '.mp3')
-        .catch(() => grab(rec.remote + file + '.mp3'))
-        .then((blob) => { e.url = URL.createObjectURL(blob); return e.url; });
-      // a genuine double failure (rare: SW answers offline) empties the slot
-      // so the next attempt refetches; _verse falls back to the network src
-      e.promise.catch(() => { if (this._passageCache[ck] === e) delete this._passageCache[ck]; });
-      this._passageCache[ck] = e;
-      return e;
-    },
     // Warm the cache without holding media elements: a plain fetch lets the
     // service worker (cache-first for mp3s) keep each ayah for instant — and
     // offline — playback, with no element-count pressure.
     preloadSurah(surah) {
       if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) return;
       const rec = this._reciter();
-      // A passage surah (e.g. Ayat al-Kursi, id 255) is ONE recording that all
-      // its "verses" window into — warm the blob (which also warms the SW).
-      if (surah.passage) {
-        try { this._passageBlob(rec, surah.passage.file); } catch (e) { /* ignore */ }
-        return;
-      }
       for (const v of surah.verses) {
         try { fetch(rec.local + this.key(surah.id, v.n) + '.mp3').catch(() => {}); } catch (e) { /* ignore */ }
       }
@@ -193,121 +148,34 @@
     // recitation can call it verse after verse without ending itself.
     _verse(surahId, n, onend, inSeq) {
       const rec = this._reciter();
-      // A PASSAGE surah (e.g. Ayat al-Kursi, id 255) is ONE recording; each of
-      // its "verses" is a contiguous [from,to] time window into that single
-      // file (win[reciter], falling back to win.basit for an unknown voice).
-      // Resolve the shared file key and this segment's window once, up front —
-      // every ordinary surah keeps the one-file-per-ayah path untouched (win
-      // stays null, so nothing below the resolve changes for them).
-      const surah = (window.GOL_DATA && window.GOL_DATA.surahs)
-        ? window.GOL_DATA.surahs.find((s) => s.id === surahId) : null;
-      const passage = surah && surah.passage;
-      let win = null;
-      if (passage && surah.verses) {
-        const v = surah.verses.find((x) => x.n === n) || surah.verses[n - 1];
-        const w = v && v.win;
-        if (w) win = w[GOL.V3.reciter] || w.basit || null;
-      }
-      const key = passage ? passage.file : this.key(surahId, n);
-      const seekFrom = win ? win[0] : 0;
-      const stopAt = win ? win[1] : null;
+      const key = this.key(surahId, n);
       const el = this._verseAudio();
       // detach any listeners still bound from the previous ayah on this element
       if (el._detach) el._detach();
       const h = { el, done: false, timer: null, guard: null };
-      let seekPoll = null;
-      const stopSeekPoll = () => { if (seekPoll) { clearInterval(seekPoll); seekPoll = null; } };
       const finish = () => {
         if (h.done) return;
         h.done = true;
         clearTimeout(h.timer);
         clearTimeout(h.guard);
-        stopSeekPoll();
         if (el._detach) el._detach();
-        // A window ends MID-FILE, so it must pause the element — otherwise the
-        // shared recording would bleed on into the next segment. (An ordinary
-        // ayah already stopped at its own file end, so this is a no-op there.)
-        if (win) { try { el.pause(); } catch (e) { /* already stopped */ } }
         if (this._current === h) this._current = null;
         if (!inSeq) this.duck(false);
         if (onend) onend();
       };
       h.finish = finish;
       let triedRemote = false;
-      // -------- windowed seek machinery (win only; ordinary ayat skip it) --
-      // Setting currentTime before el.seekable covers the target SILENTLY
-      // clamps to 0 (no throw; the 'seeked' event lands at 0) — seen on any
-      // Range-less server (python http.server) and on slow networks. So the
-      // seek is only ATTEMPTED once a seekable range reaches seekFrom, only
-      // CONFIRMED by reading the position back, and playback is DEFERRED
-      // until it lands — a window must never run audibly from 0. Retries ride
-      // progress/canplay/canplaythrough plus a 250ms poll; after ~6s we give
-      // up and play from wherever we are (never block the child — the guard
-      // still bounds the segment).
-      let seeked = false, playStarted = false, seekDeadline = 0;
-      const seekableCovers = () => {
-        try {
-          const s = el.seekable;
-          for (let i = 0; i < s.length; i++) if (s.end(i) >= seekFrom + 0.1) return true;
-        } catch (e) { /* treat as not yet seekable */ }
-        return false;
-      };
-      const landed = () => Math.abs((el.currentTime || 0) - seekFrom) < 0.5;
-      const beginPlay = () => {
-        if (h.done || playStarted) return;
-        playStarted = true;
-        // the segment guard runs from ACTUAL playback (window length + slack),
-        // so a slow seek-wait can never eat into the segment's own time
-        clearTimeout(h.guard);
-        h.guard = setTimeout(finish, (stopAt - seekFrom) * 1000 + 4000);
-        const p = el.play();
-        if (p && p.catch) p.catch(() => { /* load failures surface via 'error' */ });
-      };
-      const trySeek = () => {
-        if (h.done || seeked) return;
-        if (!landed() && seekableCovers()) {
-          try { el.currentTime = seekFrom; } catch (e) { /* retry next tick */ }
-        }
-        if (landed()) { // confirmed by read-back, not by the assignment
-          seeked = true;
-          stopSeekPoll();
-          beginPlay();
-          return;
-        }
-        if (Date.now() >= seekDeadline) { // give up: play from here, stay bounded
-          seeked = true;
-          stopSeekPoll();
-          beginPlay();
-        }
-      };
-      const startSeekWait = () => {
-        seeked = false;
-        seekDeadline = Date.now() + 6000;
-        stopSeekPoll();
-        seekPoll = setInterval(trySeek, 250);
-        trySeek(); // seekFrom 0 (or an already-buffered file) confirms instantly
-      };
-      const onReady = () => trySeek();
-      // Finish the moment playback crosses the window's end.
-      const onTimeUpdate = () => { if (win && !h.done && el.currentTime >= stopAt) finish(); };
       const onEnded = () => finish();
       const onError = () => {
         // local miss or a stalled load: fall back to the streaming reciter
         // ONCE, and actually resume playback on it — otherwise the fallback
-        // loads but stays silent (the child pauses and hears nothing). The
-        // remote path uses the SAME (passage) file key and gets the same
-        // confirmed-seek treatment before it is allowed to sound.
+        // loads but stays silent (the child pauses and hears nothing)
         if (!triedRemote) {
           triedRemote = true;
           el.src = rec.remote + key + '.mp3';
           el.load();
-          if (win) {
-            playStarted = false;
-            startSeekWait();
-          } else {
-            const p = el.play();
-            if (p && p.catch) p.catch(() => {});
-          }
+          const p = el.play();
+          if (p && p.catch) p.catch(() => {});
         } else {
           finish();
         }
@@ -315,60 +183,22 @@
       el._detach = () => {
         el.removeEventListener('ended', onEnded);
         el.removeEventListener('error', onError);
-        el.removeEventListener('loadedmetadata', onReady);
-        el.removeEventListener('canplay', onReady);
-        el.removeEventListener('canplaythrough', onReady);
-        el.removeEventListener('progress', onReady);
-        el.removeEventListener('timeupdate', onTimeUpdate);
-        stopSeekPoll(); // the shared element must never leak a poller onward
         el._detach = null;
       };
       el.addEventListener('ended', onEnded);
       el.addEventListener('error', onError);
-      if (win) {
-        el.addEventListener('loadedmetadata', onReady);
-        el.addEventListener('canplay', onReady);
-        el.addEventListener('canplaythrough', onReady);
-        el.addEventListener('progress', onReady);
-        el.addEventListener('timeupdate', onTimeUpdate);
-      }
       el.muted = this.muted;
       el.volume = 1;
-      if (win) {
-        // A window plays from the passage's BLOB object URL (see
-        // _passageBlob): byte-addressable, so el.seekable covers the whole
-        // file the instant it loads and the confirmed seek lands on the
-        // first or second attempt — the machinery above becomes
-        // belt-and-braces rather than load-bearing. If the blob is still
-        // fetching, wait for the shared in-flight promise; only a genuine
-        // double fetch failure falls back to the direct network src (the
-        // old streaming machinery, bounded by deadline + guards as before).
-        const entry = this._passageBlob(rec, key);
-        const useSrc = (src) => {
-          if (h.done) return; // stopped while the blob was still fetching
-          el.src = src;
-          el.load();
-          startSeekWait(); // playback starts only once the seek has confirmed
-        };
-        if (entry.url) useSrc(entry.url);
-        else entry.promise.then(useSrc, () => useSrc(rec.local + key + '.mp3'));
-      } else {
-        el.src = rec.local + key + '.mp3';
-        el.load();
-        try { el.currentTime = 0; } catch (e) { /* fresh src starts at 0 anyway */ }
-      }
-      // if audio can't load at all (fully offline + streamed surah), move on.
-      // The window's seek-wait deadline (6s) sits under this 7s stall check,
-      // so a deferred play() has always been attempted before it can fire.
+      el.src = rec.local + key + '.mp3';
+      el.load();
+      try { el.currentTime = 0; } catch (e) { /* fresh src starts at 0 anyway */ }
+      // if audio can't load at all (fully offline + streamed surah), move on
       h.timer = setTimeout(() => { if (el.paused || el.readyState < 2) finish(); }, 7000);
-      // and nothing may stall the garden forever, no matter what (beginPlay
-      // re-arms this as a tighter window-length guard once a window sounds)
+      // and nothing may stall the garden forever, no matter what
       h.guard = setTimeout(finish, 30000);
       this.duck(true);
-      if (!win) {
-        const p = el.play();
-        if (p && p.catch) p.catch(() => { /* real load failures surface via 'error' → remote */ });
-      }
+      const p = el.play();
+      if (p && p.catch) p.catch(() => { /* real load failures surface via 'error' → remote */ });
       this._current = h;
       return h;
     },
