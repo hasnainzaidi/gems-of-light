@@ -954,3 +954,32 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     255NNN names — without the bump a playtest phone keeps the stale
     wrong cuts. Lesson for future passage-style splits: never ship
     estimated timings; detect pauses first.
+  - **Round 2 (same day, on Hasnain's ear + whisper verification):**
+    silence dips lie — Hasnain caught segment 5 ending at "khalfahum
+    wa lā yuḥī": the micro-dip used as the boundary was the ṭāʾ closure
+    INSIDE yuḥīṭūna, not the phrase break. New method: TRANSCRIPTION
+    BISECTION with the v2 lab's Quran-tuned whisper-tiny
+    (`v2/models/whisper-tiny-ar-quran`, run via v2's
+    @huggingface/transformers under Node) — cut a region at a candidate
+    point, transcribe head and tail, and the boundary is right when the
+    head ends with the phrase's last word and the tail starts with the
+    next phrase's first. Fixed alafasy b5 (30.20), basit b5 (33.25);
+    the full-transcript gate over all 18 files then caught basit b8
+    also wrong (ḥifẓuhumā split mid-word; refixed at 50.76). VERIFIED:
+    every one of the 18 segment files now transcribes to exactly its
+    canonical maqta'. sw.js CACHE v41→v42 (same stale-mp3 reason).
+    Lesson upgraded: dips locate candidates, only transcription
+    CONFIRMS a boundary; the whisper gate is the checker for audio
+    cuts.
+  - **Kursi read-along highlighting (2026-08-09):** Hasnain reported
+    "text highlighting is gone" — in truth W19 never had it: the
+    read-along light needs `GOL.WORD_FOLLOW` word timings
+    (follow-estimated.js), never generated for pseudo-surah 255.
+    Added now for BOTH reciters from the final cut files: mora-weighted
+    estimates over each file's measured spoken span (silence-detected
+    lead-in and tail excluded), last word held to the audio's end, same
+    format + provenance line as the 16-surah rollout, refine-by-ear
+    path unchanged. Verified in-game: all nine phrases pass
+    adventure.js's exact-text gate (words join === verse.ar) for the
+    default reciter, so the light engages through the same render path
+    every other world uses.

@@ -1606,4 +1606,154 @@
     }
   };
 
+  // kursi (pseudo-surah 255, Ayat al-Kursi's nine maqati')
+  GOL.WORD_FOLLOW.alafasy[255] = {
+    provenance: "ESTIMATED (mora-weighted, unvalidated) from local alafasy mp3 durations; refine by ear",
+    audioDurations: [7.917, 5.764, 4.414, 7.683, 4.422, 9.761, 4.348, 3.433, 4.176],
+    verses: {
+      1: [
+        { text: "ٱللَّهُ", from: 0.00, to: 1.12 },
+        { text: "لَآ", from: 1.12, to: 2.06 },
+        { text: "إِلَـٰهَ", from: 2.06, to: 3.10 },
+        { text: "إِلَّا", from: 3.10, to: 4.13 },
+        { text: "هُوَ", from: 4.13, to: 4.70 },
+        { text: "ٱلْحَىُّ", from: 4.70, to: 5.92 },
+        { text: "ٱلْقَيُّومُ", from: 5.92, to: 7.92 }
+      ],
+      2: [
+        { text: "لَا", from: 0.00, to: 1.01 },
+        { text: "تَأْخُذُهُۥ", from: 1.01, to: 2.34 },
+        { text: "سِنَةٌۭ", from: 2.34, to: 3.15 },
+        { text: "وَلَا", from: 3.15, to: 4.49 },
+        { text: "نَوْمٌۭ", from: 4.49, to: 5.76 }
+      ],
+      3: [
+        { text: "لَّهُۥ", from: 0.00, to: 0.60 },
+        { text: "مَا", from: 0.60, to: 0.95 },
+        { text: "فِى", from: 0.95, to: 1.29 },
+        { text: "ٱلسَّمَـٰوَٰتِ", from: 1.29, to: 2.71 },
+        { text: "وَمَا", from: 2.71, to: 3.28 },
+        { text: "فِى", from: 3.28, to: 3.62 },
+        { text: "ٱلْأَرْضِ", from: 3.62, to: 4.41 }
+      ],
+      4: [
+        { text: "مَن", from: 0.00, to: 0.65 },
+        { text: "ذَا", from: 0.65, to: 1.30 },
+        { text: "ٱلَّذِى", from: 1.30, to: 2.71 },
+        { text: "يَشْفَعُ", from: 2.71, to: 3.79 },
+        { text: "عِندَهُۥٓ", from: 3.79, to: 5.09 },
+        { text: "إِلَّا", from: 5.09, to: 6.28 },
+        { text: "بِإِذْنِهِۦ", from: 6.28, to: 7.68 }
+      ],
+      5: [
+        { text: "يَعْلَمُ", from: 0.00, to: 0.78 },
+        { text: "مَا", from: 0.78, to: 1.17 },
+        { text: "بَيْنَ", from: 1.17, to: 1.70 },
+        { text: "أَيْدِيهِمْ", from: 1.70, to: 2.75 },
+        { text: "وَمَا", from: 2.75, to: 3.41 },
+        { text: "خَلْفَهُمْ", from: 3.41, to: 4.42 }
+      ],
+      6: [
+        { text: "وَلَا", from: 0.00, to: 1.09 },
+        { text: "يُحِيطُونَ", from: 1.09, to: 3.05 },
+        { text: "بِشَىْءٍۢ", from: 3.05, to: 4.14 },
+        { text: "مِّنْ", from: 4.14, to: 4.90 },
+        { text: "عِلْمِهِۦٓ", from: 4.90, to: 6.21 },
+        { text: "إِلَّا", from: 6.21, to: 7.41 },
+        { text: "بِمَا", from: 7.41, to: 8.28 },
+        { text: "شَآءَ", from: 8.28, to: 9.76 }
+      ],
+      7: [
+        { text: "وَسِعَ", from: 0.00, to: 0.67 },
+        { text: "كُرْسِيُّهُ", from: 0.67, to: 1.61 },
+        { text: "ٱلسَّمَـٰوَٰتِ", from: 1.61, to: 3.17 },
+        { text: "وَٱلْأَرْضَ", from: 3.17, to: 4.35 }
+      ],
+      8: [
+        { text: "وَلَا", from: 0.00, to: 1.07 },
+        { text: "يَـُٔودُهُۥ", from: 1.07, to: 2.15 },
+        { text: "حِفْظُهُمَا", from: 2.15, to: 3.43 }
+      ],
+      9: [
+        { text: "وَهُوَ", from: 0.00, to: 1.15 },
+        { text: "ٱلْعَلِىُّ", from: 1.15, to: 2.57 },
+        { text: "ٱلْعَظِيمُ", from: 2.57, to: 4.18 }
+      ]
+    }
+  };
+  // kursi (pseudo-surah 255, Ayat al-Kursi's nine maqati')
+  GOL.WORD_FOLLOW.basit[255] = {
+    provenance: "ESTIMATED (mora-weighted, unvalidated) from local basit mp3 durations; refine by ear",
+    audioDurations: [8.383, 5.572, 5.19, 8.441, 5.664, 9.387, 4.868, 3.255, 3.7576],
+    verses: {
+      1: [
+        { text: "ٱللَّهُ", from: 0.00, to: 2.04 },
+        { text: "لَآ", from: 2.04, to: 2.86 },
+        { text: "إِلَـٰهَ", from: 2.86, to: 3.77 },
+        { text: "إِلَّا", from: 3.77, to: 4.67 },
+        { text: "هُوَ", from: 4.67, to: 5.16 },
+        { text: "ٱلْحَىُّ", from: 5.16, to: 6.23 },
+        { text: "ٱلْقَيُّومُ", from: 6.23, to: 8.38 }
+      ],
+      2: [
+        { text: "لَا", from: 0.00, to: 1.35 },
+        { text: "تَأْخُذُهُۥ", from: 1.35, to: 2.42 },
+        { text: "سِنَةٌۭ", from: 2.42, to: 3.06 },
+        { text: "وَلَا", from: 3.06, to: 4.13 },
+        { text: "نَوْمٌۭ", from: 4.13, to: 5.57 }
+      ],
+      3: [
+        { text: "لَّهُۥ", from: 0.00, to: 1.05 },
+        { text: "مَا", from: 1.05, to: 1.38 },
+        { text: "فِى", from: 1.38, to: 1.71 },
+        { text: "ٱلسَّمَـٰوَٰتِ", from: 1.71, to: 3.09 },
+        { text: "وَمَا", from: 3.09, to: 3.64 },
+        { text: "فِى", from: 3.64, to: 3.97 },
+        { text: "ٱلْأَرْضِ", from: 3.97, to: 5.19 }
+      ],
+      4: [
+        { text: "مَن", from: 0.00, to: 1.15 },
+        { text: "ذَا", from: 1.15, to: 1.76 },
+        { text: "ٱلَّذِى", from: 1.76, to: 3.08 },
+        { text: "يَشْفَعُ", from: 3.08, to: 4.09 },
+        { text: "عِندَهُۥٓ", from: 4.09, to: 5.30 },
+        { text: "إِلَّا", from: 5.30, to: 6.42 },
+        { text: "بِإِذْنِهِۦ", from: 6.42, to: 8.44 }
+      ],
+      5: [
+        { text: "يَعْلَمُ", from: 0.00, to: 1.76 },
+        { text: "مَا", from: 1.76, to: 2.17 },
+        { text: "بَيْنَ", from: 2.17, to: 2.72 },
+        { text: "أَيْدِيهِمْ", from: 2.72, to: 3.83 },
+        { text: "وَمَا", from: 3.83, to: 4.52 },
+        { text: "خَلْفَهُمْ", from: 4.52, to: 5.66 }
+      ],
+      6: [
+        { text: "وَلَا", from: 0.00, to: 0.95 },
+        { text: "يُحِيطُونَ", from: 0.95, to: 2.67 },
+        { text: "بِشَىْءٍۢ", from: 2.67, to: 3.63 },
+        { text: "مِّنْ", from: 3.63, to: 4.30 },
+        { text: "عِلْمِهِۦٓ", from: 4.30, to: 5.44 },
+        { text: "إِلَّا", from: 5.44, to: 6.49 },
+        { text: "بِمَا", from: 6.49, to: 7.26 },
+        { text: "شَآءَ", from: 7.26, to: 9.39 }
+      ],
+      7: [
+        { text: "وَسِعَ", from: 0.00, to: 1.45 },
+        { text: "كُرْسِيُّهُ", from: 1.45, to: 2.29 },
+        { text: "ٱلسَّمَـٰوَٰتِ", from: 2.29, to: 3.69 },
+        { text: "وَٱلْأَرْضَ", from: 3.69, to: 4.87 }
+      ],
+      8: [
+        { text: "وَلَا", from: 0.00, to: 0.86 },
+        { text: "يَـُٔودُهُۥ", from: 0.86, to: 1.93 },
+        { text: "حِفْظُهُمَا", from: 1.93, to: 3.26 }
+      ],
+      9: [
+        { text: "وَهُوَ", from: 0.00, to: 0.75 },
+        { text: "ٱلْعَلِىُّ", from: 0.75, to: 1.87 },
+        { text: "ٱلْعَظِيمُ", from: 1.87, to: 3.76 }
+      ]
+    }
+  };
 })();
