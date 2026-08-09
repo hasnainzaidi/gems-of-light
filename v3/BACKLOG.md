@@ -10,10 +10,12 @@ verdict is logged.
 
 ## Now
 
-- [ ] Playtest Kafirun (journey #18) + AYAT AL-KURSI (journey #5, the
-      first passage world: 9 phrase-gems, windowed audio, the guarded
-      night) on staging — verdicts → `PLAN.md` §10; Kursi's estimated
-      segment boundaries refine by ear if any maqta' cuts oddly
+- [ ] Rework Kafirun (#18) + Ayat al-Kursi (#5) — playtested 2026-08-09:
+      kept, "need work but aren't fully broken" (verdict `PLAN.md` §10;
+      passage audio machinery scrapped there too, mp3s now pre-cut).
+      Gather Hasnain's specific notes on WHAT to improve, then fix on
+      staging; Kursi's cut points refine by re-splitting if any maqta'
+      sounds odd (`255001`–`255009.mp3`)
 
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
