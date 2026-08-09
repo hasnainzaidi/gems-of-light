@@ -97,7 +97,7 @@ Reviewed 2026-07-12; the corrections from that review are folded in below.
 | 18 | 4 | Al-Ma'un (107) | `maun` | 7 | planned | Cozy Garden / small kindnesses |
 | 19 | 4 | Al-Qadr (97) | `qadr` | 5 | ✅ W4 | The Climb / blessed night |
 | 20 | 4 | Al-'Alaq (96) | `alaq` | 19 | planned | Stanza Climb / Hira light |
-| 21 | 4 | At-Tin (95) | `tin` | 8 | planned | Orchard terraces / holy mount |
+| 21 | 4 | At-Tin (95) | `tin` | 8 | ✅ W20 | Orchard terraces / holy mount |
 | 22 | 4 | Ash-Sharh (94) | `sharh` | 8 | planned | Terrain-opening / relief |
 | 23 | 4 | Ad-Duha (93) | `duha` | 11 | ✅ W6 | Cozy Garden / Qadr's dawn |
 | 24 | 4 | Al-Lail (92) | `lail` | 21 | ✅ W7 | The Climb / braided ways |

@@ -145,6 +145,14 @@
     takathur: palO({ skyLow: '#F9D794', gold: '#F5CB74', leafLight: '#A2CE7E' }),
     // The Weighing Light — shimmer before evening.
     qariah: palO({ skyTop: '#A9C3A4', skyMid: '#E3DEA8', skyLow: '#F4C98E', mist: '#EFE0BC' }),
+    // The Fig and the Olive — silvered orchard light; drifts toward the
+    // honeyed late gold of `tinEnd` as the ayat are gathered on the mount.
+    tin: palO({ skyTop: '#9FC9B4', skyMid: '#DBEAC0', skyLow: '#F4DCA8', leafLight: '#A6CE8E', mist: '#EAE4C8' }),
+    tinEnd: palO({
+      skyTop: '#A8C4A2', skyMid: '#EBDFB0', skyLow: '#F6C994',
+      sun: '#FFF2C8', sunGlow: '#FFDC96', ray: '#FFEDB2',
+      stone: '#F1E1BE', stoneShade: '#D4BE92', gold: '#F5C876', mist: '#F0E2C2'
+    }),
     // ------------------------------------------------ World Three · Courtyard
     // The Trembling Steps — warm stone, the courtyard opens.
     zalzalah: palC({}),
