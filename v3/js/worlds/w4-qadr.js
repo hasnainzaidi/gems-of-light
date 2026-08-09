@@ -92,10 +92,13 @@
        .prop('bush', 13).prop('lantern', 4).prop('column', 30)
        .prop('flowers', 5, { v: 1 }).prop('flowers', 33);
 
-      // creatures: butterflies low, birds higher, and the summit kept quiet
+      // creatures: butterflies low, birds higher, and the summit kept quiet.
+      // Each bird perches ON a slab ledge (feet row = ledge top, so the
+      // creature row is top−1) — they used to hang pecking in open sky.
       b.creature('butterfly', 12, 36).creature('butterfly', 24, 27)
-       .creature('bird', 18, 14).creature('bird', 9, 9)
-       .creature('bird', 8, 6);
+       .creature('bird', 16, 16)  // ledge 8, clear of gem 4
+       .creature('bird', 9, 10)   // ledge 10, the high left buttress
+       .creature('bird', 11, 7);  // the last rung, left of gem 5
 
       b.start(4); // at the very bottom, looking up into the gathering night
     }
