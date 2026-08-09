@@ -10,6 +10,10 @@ verdict is logged.
 
 ## Now
 
+- [ ] Playtest AT-TIN (journey #21, `w20-tin.js`: fig & olive
+      orchard, safe-city skyline, spring hollow, holy-mount summit)
+      on staging — verdict → `PLAN.md` §10
+
 - [ ] Rework Kafirun (#18) + Ayat al-Kursi (#5) — playtested 2026-08-09:
       kept, "need work but aren't fully broken" (verdict `PLAN.md` §10;
       passage audio machinery scrapped there too, mp3s now pre-cut).

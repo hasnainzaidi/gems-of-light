@@ -2062,6 +2062,7 @@
         lantern: () => S.lantern, sundial: () => S.sundial,
         stepStone: () => S.stepStone[p.v % 2],
         fruit: () => S.fruit[p.v % 3], palm: () => S.palm[p.v % 2],
+        fig: () => S.fig[p.v % 2],
         column: () => S.column[p.v % 2]
       }[p.type];
       if (p.type === 'wall') {
