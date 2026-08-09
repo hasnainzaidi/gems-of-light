@@ -1014,3 +1014,11 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     every other world uses. CONFIRMED on Hasnain's phone same day:
     "ayat al kursi works great" — cuts and read-along both. W19 is
     done; the rework item narrows to Kafirun.
+  - **Kafirun read-along (2026-08-09):** Hasnain's rework note was one
+    item — "missing the words lighting up" — the same gap as Kursi: no
+    WORD_FOLLOW[109] tables (W18 landed after the 16-surah rollout).
+    Generated for both reciters from the local 109001–109006 mp3s
+    (mora-weighted over silence-measured spoken spans, standard
+    provenance + refine-by-ear path). Exact-text gate passes for all
+    six ayat. With this, W18's rework verdict closes and staging
+    promotes to prod on Hasnain's go.
