@@ -982,4 +982,6 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     path unchanged. Verified in-game: all nine phrases pass
     adventure.js's exact-text gate (words join === verse.ar) for the
     default reciter, so the light engages through the same render path
-    every other world uses.
+    every other world uses. CONFIRMED on Hasnain's phone same day:
+    "ayat al kursi works great" — cuts and read-along both. W19 is
+    done; the rework item narrows to Kafirun.
