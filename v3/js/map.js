@@ -1316,7 +1316,7 @@
       const dw = this.map.w * scale;
       const dh = this.map.h * scale;
       ctx.drawImage(this.map.images.base, dx, dy, dw, dh);
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < this.map.images.water.length; i++) {
         const a = this.waterAlpha(i);
         if (a <= 0.001) continue;
         ctx.save(); ctx.globalAlpha = a; ctx.drawImage(this.map.images.water[i], dx, dy, dw, dh); ctx.restore();
