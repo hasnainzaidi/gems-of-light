@@ -128,3 +128,17 @@ Al-Qari'ah):
 
 New world: pick the grammar that fits the surah's character, copy its recipe,
 keep every invariant, and run `node v3/tools/check.mjs wN` until it is ✓.
+
+## Ayah worlds (passage machinery scrapped 2026-08-09)
+
+An AYAH world teaches one great ayah rather than a surah (first: Ayat
+al-Kursi, `w19-kursi.js`, surahId 255). It is data-identical to a surah
+world: a pseudo-surah entry in `js/data.js` whose `verses` are the ayah's
+traditional maqati', each with its own pre-cut mp3 (`255001`–`255009`, per
+reciter). Gems == segments (the invariant bends only in name: one gem per
+memorized unit, always in order); audio, campfire, shrine, and dreams work
+unchanged with zero special-casing. The original windowed-playback
+"passage" machinery (per-reciter `win` time windows seeking into one
+recording, blob cache in `core/audio.js`) was playtested 2026-08-09 and
+scrapped — cut the recording into per-maqta' files offline instead
+(PLAN §10).

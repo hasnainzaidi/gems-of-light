@@ -331,6 +331,56 @@
       return c;
     });
 
+    // -- fig tree: broad and low, great soft leaves, dusk-purple fruit
+    S.fig = [0, 1].map((v) => {
+      const w = 170, h = 150;
+      const c = makeCanvas(w, h);
+      const x = c.getContext('2d');
+      const r = GOL.rng(seed + 811 + v * 43);
+      const cx = w / 2, gy = h - 4;
+      // trunk: short and stout, forking low
+      x.strokeStyle = P.trunk; x.lineCap = 'round';
+      x.lineWidth = 14;
+      x.beginPath(); x.moveTo(cx, gy);
+      x.quadraticCurveTo(cx + (r() - 0.5) * 14, gy - 22, cx + (r() - 0.5) * 10, gy - 40);
+      x.stroke();
+      x.strokeStyle = alpha(P.trunkDark, 0.5); x.lineWidth = 5;
+      x.beginPath(); x.moveTo(cx - 4, gy - 2);
+      x.quadraticCurveTo(cx - 7, gy - 20, cx - 3, gy - 34);
+      x.stroke();
+      // two low limbs reaching wide
+      x.strokeStyle = P.trunk; x.lineWidth = 7;
+      x.beginPath(); x.moveTo(cx, gy - 34); x.quadraticCurveTo(cx - 28, gy - 52, cx - 46, gy - 58); x.stroke();
+      x.beginPath(); x.moveTo(cx, gy - 36); x.quadraticCurveTo(cx + 26, gy - 54, cx + 44, gy - 62); x.stroke();
+      // canopy: wider than tall, big blobs for the fig's great soft leaves
+      const cy = gy - 76;
+      const layer = (col, dr, n, rad) => {
+        const rr = GOL.rng(seed + 823 + v * 17 + n);
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2 + rr() * 0.7;
+          const dist = dr * (0.5 + rr() * 0.6);
+          blob(x, cx + Math.cos(a) * dist * 1.55, cy + Math.sin(a) * dist * 0.62, rad * (0.85 + rr() * 0.4), col);
+        }
+      };
+      layer(shade(P.leafDark, 0.1), 30, 8, 24);
+      layer(P.leaf, 27, 8, 20);
+      layer(P.leafLight, 21, 6, 14);
+      dabs(x, cx - 12, cy - 30, 64, 30, alpha(tint(P.leafLight, 0.35), 0.75), 8, seed + v * 11, 3.5, 7);
+      // ripe figs: teardrops of dusk-purple with a warm blush
+      const rf = GOL.rng(seed + 851 + v * 9);
+      for (let i = 0; i < 6; i++) {
+        const fx = cx - 52 + rf() * 104;
+        const fy = cy + 2 + rf() * 30;
+        x.fillStyle = '#7B5578';
+        x.beginPath(); x.ellipse(fx, fy, 3.4, 4.4, 0, 0, Math.PI * 2); x.fill();
+        blob(x, fx - 1, fy - 1.6, 1.3, alpha('#C98BA8', 0.85));
+        x.strokeStyle = alpha(P.trunkDark, 0.7); x.lineWidth = 1;
+        x.beginPath(); x.moveTo(fx, fy - 4.2); x.lineTo(fx + 1, fy - 6); x.stroke();
+      }
+      c._anchor = { x: cx, y: gy + 2 };
+      return c;
+    });
+
     // -- carved courtyard column, standing alone (decor, not solid)
     S.column = [0, 1].map((v) => {
       const w = 56, h = 158;

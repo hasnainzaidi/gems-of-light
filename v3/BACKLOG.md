@@ -10,6 +10,16 @@ verdict is logged.
 
 ## Now
 
+- [ ] Playtest the FOUNTAIN STONE on staging: the memory stone floats
+      over island 1's star fountain, gold star while a dream still
+      waits, tap → the neediest surah's dream-shrine; per-disc moons
+      unchanged beside it — verdict → `PLAN.md` §9 fountain-stone entry
+      (and decide whether moon taps retire)
+
+- [ ] Playtest AT-TIN (journey #21, `w20-tin.js`: fig & olive
+      orchard, safe-city skyline, spring hollow, holy-mount summit)
+      on staging — verdict → `PLAN.md` §10
+
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
       secular parent porch + installed-PWA relaunch, and ordinary-mode
@@ -43,5 +53,9 @@ verdict is logged.
       (the open upper-right seam is the join; brief §3)
 - [ ] Guiding-light mechanic verdict (P15, from the cloud sessions —
       needs a child playtest before it's adopted or parked)
+- [ ] The Moonveil cape (design in `PLAN.md` §9, after the fountain
+      stone's verdict): first full moon weaves a cape at the stone;
+      moonbeam updrafts + one high sleeping Rahma bud per finished
+      world wake with it
 - [ ] Voice input / recitation checking (v2's QRC lab is the starting
       point: `v2/RECITATION-CHECKER-PLAN.md`)

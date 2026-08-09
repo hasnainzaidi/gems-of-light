@@ -15,8 +15,8 @@
   // The child-facing journey is one ordered list of keys — pedagogy can be
   // retuned by editing this list alone; files and saves never move.
   GOL.WORLD_ORDER = [
-    // Phase 1 — the essentials of prayer
-    'fatiha', 'ikhlas', 'falaq', 'nas',
+    // Phase 1 — the essentials of prayer (closing on the greatest ayah)
+    'fatiha', 'ikhlas', 'falaq', 'nas', 'kursi',
     // Phase 2 — short surahs that build momentum
     'kawthar', 'nasr', 'masad', 'quraish', 'fil', 'humazah', 'asr',
     // Phase 3 — medium lengths that ask for patience
@@ -31,9 +31,9 @@
   // fit without auditing every surah their child knows.
   GOL.JOURNEY_STAGE_CHOICES = [
     { index: 0, frontier: 0, label: 'Planting the first seeds', examples: 'Al-Fatihah · Al-Ikhlas · Al-Falaq' },
-    { index: 1, frontier: 6, label: 'Finding their rhythm', examples: 'Al-Masad · Quraysh · Al-Fil' },
-    { index: 2, frontier: 12, label: 'Growing in confidence', examples: "Al-Qari'ah · Al-'Adiyat · Az-Zalzalah" },
-    { index: 3, frontier: 18, label: 'Taking on longer surahs', examples: "Al-Qadr · Al-'Alaq · At-Tin" }
+    { index: 1, frontier: 6, label: 'Finding their rhythm', examples: 'An-Nasr · Al-Masad · Quraysh' },
+    { index: 2, frontier: 12, label: 'Growing in confidence', examples: "At-Takathur · Al-Qari'ah · Al-'Adiyat" },
+    { index: 3, frontier: 18, label: 'Taking on longer surahs', examples: "Al-Ma'un · Al-Qadr · Al-'Alaq" }
   ];
 
   // registered worlds in journey order; a key missing from the list keeps
@@ -173,21 +173,32 @@
   // 2026-07-14 journey resequence: a child never loses a world they have
   // already visited. Practice-opening preserves access without fabricating
   // progression or awarding anything.
+  // Each journey reshuffle reruns the SAME sweep under its own flag: any world
+  // a child has already visited is practice-opened so the reorder can never
+  // lock it away. A new insert (2026-07-16: Ayat al-Kursi after An-Nas) only
+  // needs a new flag in the list — the sweep body is shared and re-idempotent.
   GOL.preserveVisitedWorlds = function () {
     const d = GOL.store.data;
     d.migrations = d.migrations || {};
-    if (d.migrations.resequence20260714) return;
-    d.opened = [...new Set(d.opened || [])];
-    for (const w of GOL.WORLDS3.filter((x) => x && x.build)) {
-      const st = d.levels && d.levels[w.surahId];
-      const visited = st && ((st.lastPlayed || 0) > 0 || (st.seeds || 0) > 0 ||
-        (st.heardFull || 0) > 0);
-      if (visited && !GOL.worldProgressOpen(w.n) && !d.opened.includes(w.surahId)) {
-        d.opened.push(w.surahId);
+    const sweep = () => {
+      d.opened = [...new Set(d.opened || [])];
+      for (const w of GOL.WORLDS3.filter((x) => x && x.build)) {
+        const st = d.levels && d.levels[w.surahId];
+        const visited = st && ((st.lastPlayed || 0) > 0 || (st.seeds || 0) > 0 ||
+          (st.heardFull || 0) > 0);
+        if (visited && !GOL.worldProgressOpen(w.n) && !d.opened.includes(w.surahId)) {
+          d.opened.push(w.surahId);
+        }
       }
+    };
+    let changed = false;
+    for (const flag of ['resequence20260714', 'kursiInsert20260716']) {
+      if (d.migrations[flag]) continue;
+      sweep();
+      d.migrations[flag] = true;
+      changed = true;
     }
-    d.migrations.resequence20260714 = true;
-    GOL.store.save();
+    if (changed) GOL.store.save();
   };
 
   // the world a fresh "tap anywhere" should enter: the furthest open one

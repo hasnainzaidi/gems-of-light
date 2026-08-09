@@ -555,12 +555,25 @@
         }
         if (c.fleeing) {
           c.fleeT += dt;
-          c.x += c.fleeDir * 150 * dt;
-          c.y -= (200 - c.fleeT * 120) * dt;
-          c.facing = c.fleeDir;
-          if (c.fleeT > 2.6) { // settle back home a while later
-            c.fleeing = false;
-            c.x = c.homeX; c.y = c.homeY;
+          if (c.fleeT <= 2.6) {
+            // each bird flies its own speed so a startled pair never reads
+            // as one rigid shape; the climb levels off instead of sinking
+            c.x += c.fleeDir * (135 + (c.phase % 1) * 40) * dt;
+            c.y -= Math.max(0, 200 - c.fleeT * 120) * dt;
+            c.facing = c.fleeDir;
+          } else if (Math.abs(pl.x - c.homeX) > 120 || Math.abs(pl.y - c.homeY) > 100) {
+            // the child has moved on — glide back to the roost and land,
+            // never teleport home in front of them (it re-fled instantly)
+            const hx = c.homeX - c.x, hy = c.homeY - c.y, hd = Math.hypot(hx, hy);
+            if (hd < 8) { c.fleeing = false; c.x = c.homeX; c.y = c.homeY; }
+            else {
+              const sp = Math.min(170, 50 + hd * 0.8);
+              c.x += hx / hd * sp * dt; c.y += hy / hd * sp * dt;
+              c.facing = hx > 0 ? 1 : -1;
+            }
+          } else {
+            // waiting out the child: a slow outward drift, not a hover
+            c.x += c.fleeDir * 26 * dt;
           }
         } else {
           c.pecking = Math.sin(c.t * 0.7 + c.phase) > 0.3;
@@ -570,9 +583,13 @@
         c.x = c.homeX + Math.sin(c.t * 0.6 + c.phase) * 46 + Math.sin(c.t * 1.7 + c.phase * 2) * 12;
         c.y = c.homeY + Math.sin(c.t * 0.9 + c.phase * 1.3) * 26 - Math.abs(Math.sin(c.t * 2.3)) * 8;
       } else if (c.type === 'tortoise') {
-        c.x += c.dir * 12 * dt;
-        if (c.x > c.homeX + c.range) c.dir = -1;
-        if (c.x < c.homeX - c.range) c.dir = 1;
+        // range 0 means curled asleep — moving it anyway made the turn test
+        // flip dir every frame, mirroring the sprite into a vibrating pair
+        if (c.range > 0) {
+          c.x += c.dir * 12 * dt;
+          if (c.x > c.homeX + c.range) c.dir = -1;
+          if (c.x < c.homeX - c.range) c.dir = 1;
+        }
       } else if (c.type === 'chargers') {
         if (c.sweep == null && c.rest == null) {
           c.sweep = 0;

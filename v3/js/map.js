@@ -461,6 +461,12 @@
       this.moonBtns = [];
       const remembering = GOL.EXPERIENCE.remembering;
       this.missSpot = null;
+      // the fountain stone (the memory stone's map home, island-1 heart):
+      // it stands once the Remembering exists, and holds the dream most in
+      // need — never-waxed first, then the longest-ago moon, oldest play
+      // breaking ties
+      this.stoneOn = false;
+      this.stoneBtn = null;
       let oldest = Infinity;
       for (let ri = 0; ri < REGIONS.length; ri++) {
         for (let j = 0; j < REGIONS[ri].count; j++) {
@@ -469,7 +475,20 @@
           if (sp.auto) continue;
           const pos = this.map.spots[ri][j];
           const st = GOL.store.level(sp.surahId);
-          if (remembering && (!GOL.worldEarned || GOL.worldEarned(sp.n)) && st.moonWaxedDay !== GOL.todayKey()) {
+          const earned = !GOL.worldEarned || GOL.worldEarned(sp.n);
+          // the stone reaches every done world — prior-known surahs are
+          // exactly the old surahs the Remembering exists to keep alive —
+          // while the per-disc moon door stays earned-only
+          if (remembering) this.stoneOn = true;
+          if (remembering && st.moonWaxedDay !== GOL.todayKey()) {
+            const waxed = st.moonWaxedDay || '';
+            const played = st.lastPlayed || 0;
+            const b = this.stoneBtn;
+            if (!b || waxed < b.waxed || (waxed === b.waxed && played < b.played)) {
+              this.stoneBtn = { surahId: sp.surahId, waxed, played };
+            }
+          }
+          if (remembering && earned && st.moonWaxedDay !== GOL.todayKey()) {
             this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
           }
           const lp = st.lastPlayed || 0;
@@ -847,6 +866,7 @@
         this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
         if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
       }
+      this.stonePulse = Math.max(0, (this.stonePulse || 0) - dt * 1.8);
       const scale = this.mapScale(H);
       const camMax = this.mapCamMax(W, H);
       if (this.cam == null) this.cam = this.targetCam(W, H);
@@ -996,6 +1016,23 @@
       }
       const wx = clickAt.x / scale + this.cam.x;
       const wy = clickAt.y / scale + this.cam.y;
+      // the fountain stone: the island heart's monument. Armed, a tap
+      // carries the child into the dream it holds; a day whose moons have
+      // all waxed answers with a quiet ripple instead
+      if (this.stoneOn && this.map) {
+        const h = this.map.hearts[0];
+        if (GOL.dist(wx, wy, h.x, h.y - 32) < 36) {
+          if (this.stoneBtn) {
+            GOL.audio.unlock();
+            GOL.audio.sfx('yourTurn');
+            GOL.go('shrine', { memory: { surahId: this.stoneBtn.surahId, returnWorld: null } });
+          } else {
+            GOL.audio.sfx('tap');
+            this.stonePulse = 1;
+          }
+          return;
+        }
+      }
       // the Remembering Moon over a bloom's shoulder: tapping it dreams
       // rather than re-entering (test before the bloom, like the old title)
       for (const m of this.moonBtns || []) {
@@ -1055,6 +1092,67 @@
       ctx.beginPath(); ctx.arc(m.x + 6, m.y - 2, 10, 0, TAU); ctx.fill();
     },
 
+    // The memory stone, reborn at the island heart (PLAN §9: after two
+    // in-world failures the stone lives on the MAP, where no collection can
+    // collide with it). It floats in island 1's star-fountain spray; while
+    // any moon can still wax today a small gold star burns above it and a
+    // tap enters that dream. Waxed-out days leave a quiet monument riding
+    // the water.
+    drawMemoryStone(ctx) {
+      if (!this.stoneOn || !this.map) return;
+      const h = this.map.hearts[0];
+      const t = this.t;
+      const bob = Math.sin(t * 1.2) * 2.5;
+      const x = h.x, base = h.y - 9 + bob;
+      // its footprint on the water: a shade that deepens as the stone dips,
+      // and ripples breathing in bob-time
+      ctx.fillStyle = alpha('#6FA898', 0.3 + bob * 0.02);
+      ctx.beginPath(); ctx.ellipse(x, h.y + 1, 10 + bob * 0.4, 5 + bob * 0.2, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = alpha('#C4E4D2', 0.4); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(x, h.y + 1, 14.5 + bob * 0.6, 7.4 + bob * 0.3, 0, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = alpha('#C4E4D2', 0.2);
+      ctx.beginPath(); ctx.ellipse(x, h.y + 1, 19 + bob * 0.9, 9.8 + bob * 0.45, 0, 0, TAU); ctx.stroke();
+      if (this.stonePulse > 0) {
+        ctx.strokeStyle = alpha('#FFF6DC', 0.7 * this.stonePulse); ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(x, h.y + 1, 12 + (1 - this.stonePulse) * 16, 6 + (1 - this.stonePulse) * 8, 0, 0, TAU);
+        ctx.stroke();
+      }
+      // the slab, stamped downward exactly like the artist's monuments
+      for (const [dy, color] of [[4, '#B7A177'], [2, '#DECCA4'], [0, '#F6ECD2']]) {
+        ctx.fillStyle = color;
+        GOL.roundRect(ctx, x - 8, base - 46 + dy, 16, 46, 8); ctx.fill();
+      }
+      ctx.fillStyle = alpha('#FDF6E4', 0.8);
+      ctx.beginPath(); ctx.ellipse(x - 3.6, base - 36, 2.2, 6, 0, 0, TAU); ctx.fill();
+      // the carved star — the same sign the in-world stones bear
+      GOL.star8(ctx, x, base - 30, 6.4, Math.PI / 8, '#C6B288');
+      ctx.fillStyle = '#D8C8A0';
+      ctx.beginPath(); ctx.arc(x, base - 30, 2.3, 0, TAU); ctx.fill();
+      // fountain droplets drift up past the stone, carrying it
+      for (let i = 0; i < 4; i++) {
+        const k = (t * 0.4 + i * 0.27) % 1;
+        const dir = i % 2 ? 1 : -1;
+        ctx.fillStyle = alpha(i % 2 ? '#DCF2E6' : '#FDF6E4', 0.55 * Math.sin(k * Math.PI));
+        ctx.beginPath();
+        ctx.arc(x + dir * (11 + (i % 3) * 2.5), base - 6 - k * 36, 1.6 - k * 0.5, 0, TAU);
+        ctx.fill();
+      }
+      // armed: the gold star that says a dream still waits today
+      if (this.stoneBtn) {
+        const br = 0.5 + 0.5 * Math.sin(t * 1.8);
+        const sy = base - 60 - br * 1.5;
+        const glow = ctx.createRadialGradient(x, sy, 1, x, sy, 16);
+        glow.addColorStop(0, alpha('#FDF4D8', 0.35 + br * 0.2));
+        glow.addColorStop(1, 'rgba(253,244,216,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(x, sy, 16, 0, TAU); ctx.fill();
+        GOL.star8(ctx, x, sy, 7, Math.PI / 8 + t * 0.15, '#F3C572');
+        ctx.fillStyle = '#F6D68C';
+        ctx.beginPath(); ctx.arc(x, sy, 2.1, 0, TAU); ctx.fill();
+      }
+    },
+
     drawLiving(ctx) {
       const active = this.activeRegion();
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -1064,6 +1162,7 @@
           drawFountain(ctx, h.x, h.y, this.t + ri * 2.1, wa);
         }
       }
+      this.drawMemoryStone(ctx);
       for (let ri = 0; ri < REGIONS.length; ri++) {
         const awake = this.regionAwake(ri);
         for (let j = 0; j < REGIONS[ri].count; j++) {

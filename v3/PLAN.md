@@ -383,6 +383,42 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   itself carries the once-a-day rhythm. No interruption is possible:
   the dream never sounds inside another surah's world. Stones disarmed
   (plain scenery); dream-shrine scene, moons, telemetry all reused.
+- **THE FOUNTAIN STONE (built 2026-08-09, awaiting phone verdict)** —
+  memory stone v4: the stone finally lives on the MAP, the one place no
+  active collection can collide with it (the lesson both in-world
+  failures taught). Runtime-drawn by map.js at the island-1 heart —
+  the star fountain — so the artist asset is untouched and every draft
+  map inherits it: a small beige slab bearing the in-world stones'
+  carved star floats in the fountain spray (bob, water-shade, ripples,
+  drifting droplets). While any Remembering Moon can still wax today a
+  gold star burns above it; tapping the stone enters the dream MOST IN
+  NEED — never-waxed moons first, then the longest-ago moonWaxedDay,
+  oldest lastPlayed breaking ties — the spaced-repetition schedule made
+  physical. Once every moon has waxed the star rests and a tap answers
+  with only a soft ripple (no punishment). Per-disc moon taps stay live
+  alongside it; if the stone wins on the phone they can retire into
+  progress jewelry. Identity-before-consent is carried by the
+  dream-shrine's own moonlit opening for now; add a first-ayah whisper
+  on tap if the playtest asks for it. **Prior-known reach (2026-08-09):**
+  the stone dreams ANY done world, including parent-declared
+  prior-known surahs (the moon door never reached them — first staging
+  playtest surfaced this: an all-prior-known island showed no stone at
+  all). Those are exactly the old surahs the Remembering exists to
+  keep alive; the per-disc moon door stays earned-only as the control,
+  and a stone dream waxes a moon onto a prior-known bloom like any
+  other.
+- **THE MOONVEIL (proposed 2026-08-09, design only — build after the
+  fountain stone's verdict)** — the stone's upgrade loop: dreams charge
+  the stone, and when the child's FIRST moon waxes full the stone
+  weaves her a moonlit cape in a small wordless ceremony at the
+  fountain. In worlds the cape catches marked moonbeam updrafts (hold
+  jump inside the beam to rise, gentle glide on the way down) — each
+  finished world seeds ONE extra hidden Rahma blossom high in open
+  sky, visible from day one as a dim sleeping bud that only wakes once
+  the cape exists. Review feeds flight; flight feeds return replays;
+  replays feed tomorrow's dream. Constraints: the cape is never lost,
+  buds never taunt (dim and closed until wakeable), updrafts appear
+  only in FINISHED worlds so first walks stay untouched.
 - **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
   full recitation of an *earlier* surah, mid-collection of the *current*
   one, fires by accident and collides two surahs — very confusing. The
@@ -899,3 +935,89 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   and cheaply verifies the dimensions each render frame so even a missed iOS
   resize event repairs itself immediately. Regression contract:
   `tools/test-viewport-lifecycle.mjs`.
+- **KAFIRUN + AYAT AL-KURSI (2026-07-16, on Hasnain's "two new levels"):**
+  W18 Kafirun executes the §3.E sketch — bayyinah dusk road, NO palette
+  drift (steadfastness), the still river + inverted reflection as pure
+  drawLandmark painting (zero water tiles = unwalkable by construction).
+  W19 AYAT AL-KURSI is the game's first PASSAGE world: pseudo-surah id 255
+  in js/data.js, 2:255 split at the mushaf's own pause marks into the nine
+  traditional maqati' (canonical QDC text), per-reciter windowed playback
+  over one recording (002255.mp3 ×2 reciters, estimated boundaries à la
+  follow-estimated — refine by ear later). Placement: journey slot 5, end
+  of Phase 1 (Hasnain chose vs. slot 2 / end-of-ladder); WORLD_ORDER
+  insert + kursiInsert20260716 visited-sweep migration; the journey-stage
+  onboarding cards + test updated to the shifted islands; Al-Lail (#25)
+  waits off-map for the expansion. World soul: "the guarded night" —
+  falaqNoor→qadrEnd (night never becomes day, it becomes GUARDED), night
+  0.8 with lightboxes, sleeping creatures, and THE VAST LIGHT aurora
+  growing phrase by phrase to span heavens-and-earth. Browser
+  verification caught and fixed in-wave: windowed seeks silently clamp
+  to 0 on Range-less servers/slow networks (fix: confirmed-landing seek
+  machinery + passage files load as instantly-seekable blob object
+  URLs), and the aurora was invisible under the night mask (fix: warm
+  gold re-anchor + bigger alpha budget). Verdicts on staging pending.
+- **PLAYTEST VERDICTS (2026-08-09, Hasnain on staging):**
+  - **Quraysh learning rooms (P20–P24, `?lab=20`–`24`): ALL SCRAPPED.**
+    "All bad" — none of the five rooms earns a second round. The
+    workstream (strategy doc, shared plumbing, five prototypes) stays
+    parked on the abandoned local branch `quraysh-learning-rooms`;
+    nothing merges to staging.
+  - **Passage concept (windowed audio): SCRAPPED.** The per-reciter
+    `win` time windows + blob/seek machinery in `core/audio.js` are
+    removed; Ayat al-Kursi's recording is instead pre-cut offline into
+    nine per-maqta' files (`audio/<reciter>/255001`–`255009.mp3`, split
+    at the same estimated boundaries), so id 255 now rides the ordinary
+    one-file-per-ayah path with zero special-casing. GRAMMARS "Passage
+    worlds" rewritten as "Ayah worlds". Note: everyayah remote fallback
+    does not know the 255NNN names (the old windowed path could stream
+    002255 remotely) — kursi audio is local/SW-cache only, which is the
+    normal case anyway.
+  - **W18 Kafirun + W19 Kursi (the worlds themselves): KEPT.** "Need
+    work but aren't fully broken" — specific improvement notes to
+    come from Hasnain; rework item added to BACKLOG NOW.
+  - **Kursi cut points refined by silence detection (2026-08-09,
+    same day):** Hasnain's playtest caught every estimated boundary
+    landing EARLY and compounding (seg 1 ended mid-"qay[yūm]", 5
+    mid-"khalfa[hum]", etc.). Fix: ffmpeg `silencedetect` on the
+    original recordings finds the real inter-maqta' pauses (alafasy
+    -25dB, basit -22dB; the khalfahum→walā boundary sits inside one
+    continuous breath in BOTH recordings and needed a finer -18/-16dB
+    micro-dip scan), and the nine files are re-cut at pause MIDPOINTS
+    (each segment starts and ends in quiet). Old estimates were 1.5–4.5s
+    early. Verified: every re-cut segment's speech ends before the file
+    does (trailing-silence check per segment, both reciters). sw.js
+    CACHE bumped v39→v41 because mp3s are cache-first under unchanged
+    255NNN names — without the bump a playtest phone keeps the stale
+    wrong cuts. Lesson for future passage-style splits: never ship
+    estimated timings; detect pauses first.
+  - **Round 2 (same day, on Hasnain's ear + whisper verification):**
+    silence dips lie — Hasnain caught segment 5 ending at "khalfahum
+    wa lā yuḥī": the micro-dip used as the boundary was the ṭāʾ closure
+    INSIDE yuḥīṭūna, not the phrase break. New method: TRANSCRIPTION
+    BISECTION with the v2 lab's Quran-tuned whisper-tiny
+    (`v2/models/whisper-tiny-ar-quran`, run via v2's
+    @huggingface/transformers under Node) — cut a region at a candidate
+    point, transcribe head and tail, and the boundary is right when the
+    head ends with the phrase's last word and the tail starts with the
+    next phrase's first. Fixed alafasy b5 (30.20), basit b5 (33.25);
+    the full-transcript gate over all 18 files then caught basit b8
+    also wrong (ḥifẓuhumā split mid-word; refixed at 50.76). VERIFIED:
+    every one of the 18 segment files now transcribes to exactly its
+    canonical maqta'. sw.js CACHE v41→v42 (same stale-mp3 reason).
+    Lesson upgraded: dips locate candidates, only transcription
+    CONFIRMS a boundary; the whisper gate is the checker for audio
+    cuts.
+  - **Kursi read-along highlighting (2026-08-09):** Hasnain reported
+    "text highlighting is gone" — in truth W19 never had it: the
+    read-along light needs `GOL.WORD_FOLLOW` word timings
+    (follow-estimated.js), never generated for pseudo-surah 255.
+    Added now for BOTH reciters from the final cut files: mora-weighted
+    estimates over each file's measured spoken span (silence-detected
+    lead-in and tail excluded), last word held to the audio's end, same
+    format + provenance line as the 16-surah rollout, refine-by-ear
+    path unchanged. Verified in-game: all nine phrases pass
+    adventure.js's exact-text gate (words join === verse.ar) for the
+    default reciter, so the light engages through the same render path
+    every other world uses. CONFIRMED on Hasnain's phone same day:
+    "ayat al kursi works great" — cuts and read-along both. W19 is
+    done; the rework item narrows to Kafirun.
