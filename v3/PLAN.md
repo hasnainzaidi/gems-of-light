@@ -939,3 +939,18 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   - **W18 Kafirun + W19 Kursi (the worlds themselves): KEPT.** "Need
     work but aren't fully broken" — specific improvement notes to
     come from Hasnain; rework item added to BACKLOG NOW.
+  - **Kursi cut points refined by silence detection (2026-08-09,
+    same day):** Hasnain's playtest caught every estimated boundary
+    landing EARLY and compounding (seg 1 ended mid-"qay[yūm]", 5
+    mid-"khalfa[hum]", etc.). Fix: ffmpeg `silencedetect` on the
+    original recordings finds the real inter-maqta' pauses (alafasy
+    -25dB, basit -22dB; the khalfahum→walā boundary sits inside one
+    continuous breath in BOTH recordings and needed a finer -18/-16dB
+    micro-dip scan), and the nine files are re-cut at pause MIDPOINTS
+    (each segment starts and ends in quiet). Old estimates were 1.5–4.5s
+    early. Verified: every re-cut segment's speech ends before the file
+    does (trailing-silence check per segment, both reciters). sw.js
+    CACHE bumped v39→v41 because mp3s are cache-first under unchanged
+    255NNN names — without the bump a playtest phone keeps the stale
+    wrong cuts. Lesson for future passage-style splits: never ship
+    estimated timings; detect pauses first.

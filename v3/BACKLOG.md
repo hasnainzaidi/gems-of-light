@@ -14,8 +14,8 @@ verdict is logged.
       kept, "need work but aren't fully broken" (verdict `PLAN.md` §10;
       passage audio machinery scrapped there too, mp3s now pre-cut).
       Gather Hasnain's specific notes on WHAT to improve, then fix on
-      staging; Kursi's cut points refine by re-splitting if any maqta'
-      sounds odd (`255001`–`255009.mp3`)
+      staging (Kursi's cut points already re-done 2026-08-09 via
+      silence detection — verify on next playtest)
 
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
