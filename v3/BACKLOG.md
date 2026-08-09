@@ -20,11 +20,6 @@ verdict is logged.
       orchard, safe-city skyline, spring hollow, holy-mount summit)
       on staging — verdict → `PLAN.md` §10
 
-- [ ] Rework Kafirun (#18) — playtested 2026-08-09: kept, needs work
-      (verdict `PLAN.md` §10). Gather Hasnain's specific notes on WHAT
-      to improve, then fix on staging. (Ayat al-Kursi is DONE: cuts +
-      read-along confirmed "works great" on phone 2026-08-09.)
-
 - [ ] Phone-verdict Showcase mode ON STAGING (`?showcase=1`): neutral title,
       all-open map, silent ordered collection, World Gem campfire, return portal,
       secular parent porch + installed-PWA relaunch, and ordinary-mode

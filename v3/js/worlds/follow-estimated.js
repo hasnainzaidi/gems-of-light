@@ -1756,4 +1756,94 @@
       ]
     }
   };
+  // kafirun (surah 109)
+  GOL.WORD_FOLLOW.alafasy[109] = {
+    provenance: "ESTIMATED (mora-weighted, unvalidated) from local alafasy mp3 durations; refine by ear",
+    audioDurations: [7.4611, 7.4045, 8.1744, 6.6006, 8.3782, 6.2003],
+    verses: {
+      1: [
+        { text: "قُلْ", from: 0.00, to: 0.63 },
+        { text: "يَـٰٓأَيُّهَا", from: 0.63, to: 4.18 },
+        { text: "ٱلْكَـٰفِرُونَ", from: 4.18, to: 7.46 }
+      ],
+      2: [
+        { text: "لَآ", from: 0.00, to: 0.97 },
+        { text: "أَعْبُدُ", from: 0.97, to: 2.72 },
+        { text: "مَا", from: 2.72, to: 4.03 },
+        { text: "تَعْبُدُونَ", from: 4.03, to: 7.40 }
+      ],
+      3: [
+        { text: "وَلَآ", from: 0.00, to: 1.48 },
+        { text: "أَنتُمْ", from: 1.48, to: 2.84 },
+        { text: "عَـٰبِدُونَ", from: 2.84, to: 5.74 },
+        { text: "مَآ", from: 5.74, to: 6.42 },
+        { text: "أَعْبُدُ", from: 6.42, to: 8.17 }
+      ],
+      4: [
+        { text: "وَلَآ", from: 0.00, to: 1.08 },
+        { text: "أَنَا۠", from: 1.08, to: 2.07 },
+        { text: "عَابِدٌ", from: 2.07, to: 3.31 },
+        { text: "مَّا", from: 3.31, to: 4.42 },
+        { text: "عَبَدتُّمْ", from: 4.42, to: 6.60 }
+      ],
+      5: [
+        { text: "وَلَآ", from: 0.00, to: 1.49 },
+        { text: "أَنتُمْ", from: 1.49, to: 2.88 },
+        { text: "عَـٰبِدُونَ", from: 2.88, to: 5.84 },
+        { text: "مَآ", from: 5.84, to: 6.53 },
+        { text: "أَعْبُدُ", from: 6.53, to: 8.38 }
+      ],
+      6: [
+        { text: "لَكُمْ", from: 0.00, to: 0.79 },
+        { text: "دِينُكُمْ", from: 0.79, to: 2.37 },
+        { text: "وَلِىَ", from: 2.37, to: 3.68 },
+        { text: "دِينِ", from: 3.68, to: 6.20 }
+      ]
+    }
+  };
+  // kafirun (surah 109)
+  GOL.WORD_FOLLOW.basit[109] = {
+    provenance: "ESTIMATED (mora-weighted, unvalidated) from local basit mp3 durations; refine by ear",
+    audioDurations: [5.8306, 4.6813, 7.8682, 6.3008, 7.7376, 3.8715],
+    verses: {
+      1: [
+        { text: "قُلْ", from: 0.00, to: 1.28 },
+        { text: "يَـٰٓأَيُّهَا", from: 1.28, to: 3.52 },
+        { text: "ٱلْكَـٰفِرُونَ", from: 3.52, to: 5.83 }
+      ],
+      2: [
+        { text: "لَآ", from: 0.00, to: 0.95 },
+        { text: "أَعْبُدُ", from: 0.95, to: 1.88 },
+        { text: "مَا", from: 1.88, to: 2.58 },
+        { text: "تَعْبُدُونَ", from: 2.58, to: 4.68 }
+      ],
+      3: [
+        { text: "وَلَآ", from: 0.00, to: 1.80 },
+        { text: "أَنتُمْ", from: 1.80, to: 3.02 },
+        { text: "عَـٰبِدُونَ", from: 3.02, to: 5.60 },
+        { text: "مَآ", from: 5.60, to: 6.21 },
+        { text: "أَعْبُدُ", from: 6.21, to: 7.87 }
+      ],
+      4: [
+        { text: "وَلَآ", from: 0.00, to: 1.47 },
+        { text: "أَنَا۠", from: 1.47, to: 2.36 },
+        { text: "عَابِدٌ", from: 2.36, to: 3.48 },
+        { text: "مَّا", from: 3.48, to: 4.48 },
+        { text: "عَبَدتُّمْ", from: 4.48, to: 6.30 }
+      ],
+      5: [
+        { text: "وَلَآ", from: 0.00, to: 1.88 },
+        { text: "أَنتُمْ", from: 1.88, to: 3.06 },
+        { text: "عَـٰبِدُونَ", from: 3.06, to: 5.58 },
+        { text: "مَآ", from: 5.58, to: 6.17 },
+        { text: "أَعْبُدُ", from: 6.17, to: 7.74 }
+      ],
+      6: [
+        { text: "لَكُمْ", from: 0.00, to: 1.11 },
+        { text: "دِينُكُمْ", from: 1.11, to: 2.02 },
+        { text: "وَلِىَ", from: 2.02, to: 2.79 },
+        { text: "دِينِ", from: 2.79, to: 3.87 }
+      ]
+    }
+  };
 })();

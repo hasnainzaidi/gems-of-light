@@ -476,15 +476,20 @@
           const pos = this.map.spots[ri][j];
           const st = GOL.store.level(sp.surahId);
           const earned = !GOL.worldEarned || GOL.worldEarned(sp.n);
-          if (remembering && earned) this.stoneOn = true;
-          if (remembering && earned && st.moonWaxedDay !== GOL.todayKey()) {
-            this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
+          // the stone reaches every done world — prior-known surahs are
+          // exactly the old surahs the Remembering exists to keep alive —
+          // while the per-disc moon door stays earned-only
+          if (remembering) this.stoneOn = true;
+          if (remembering && st.moonWaxedDay !== GOL.todayKey()) {
             const waxed = st.moonWaxedDay || '';
             const played = st.lastPlayed || 0;
             const b = this.stoneBtn;
             if (!b || waxed < b.waxed || (waxed === b.waxed && played < b.played)) {
               this.stoneBtn = { surahId: sp.surahId, waxed, played };
             }
+          }
+          if (remembering && earned && st.moonWaxedDay !== GOL.todayKey()) {
+            this.moonBtns.push({ x: pos.x - 18, y: pos.y - 26, surahId: sp.surahId, ri, j });
           }
           const lp = st.lastPlayed || 0;
           if (lp > 0 && Date.now() - lp > 20 * 3600 * 1000 && lp < oldest) {

@@ -399,7 +399,14 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   alongside it; if the stone wins on the phone they can retire into
   progress jewelry. Identity-before-consent is carried by the
   dream-shrine's own moonlit opening for now; add a first-ayah whisper
-  on tap if the playtest asks for it.
+  on tap if the playtest asks for it. **Prior-known reach (2026-08-09):**
+  the stone dreams ANY done world, including parent-declared
+  prior-known surahs (the moon door never reached them — first staging
+  playtest surfaced this: an all-prior-known island showed no stone at
+  all). Those are exactly the old surahs the Remembering exists to
+  keep alive; the per-disc moon door stays earned-only as the control,
+  and a stone dream waxes a moon onto a prior-known bloom like any
+  other.
 - **THE MOONVEIL (proposed 2026-08-09, design only — build after the
   fountain stone's verdict)** — the stone's upgrade loop: dreams charge
   the stone, and when the child's FIRST moon waxes full the stone

@@ -169,7 +169,9 @@
       // One tortoise curled asleep (range 0), the two roosting birds on the
       // wall, and pale moth-butterflies gathered at each box of light.
       b.creature('tortoise', 48, null, { range: 0 });
-      b.creature('bird', 25, 11).creature('bird', 27, 11);
+      // feet on the wall top (row 13), so creature row is 12 — row 11 left
+      // them hovering a tile above their roost
+      b.creature('bird', 25, 12).creature('bird', 27, 12);
       const moth = { colA: '#EDE6C8', colB: '#F7F2E4' };
       const moth2 = { colA: '#E8E2C0', colB: '#F4EFDC' };
       b.creature('butterfly', 8, 10, moth)
