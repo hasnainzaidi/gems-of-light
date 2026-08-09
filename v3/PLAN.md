@@ -383,6 +383,35 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   itself carries the once-a-day rhythm. No interruption is possible:
   the dream never sounds inside another surah's world. Stones disarmed
   (plain scenery); dream-shrine scene, moons, telemetry all reused.
+- **THE FOUNTAIN STONE (built 2026-08-09, awaiting phone verdict)** —
+  memory stone v4: the stone finally lives on the MAP, the one place no
+  active collection can collide with it (the lesson both in-world
+  failures taught). Runtime-drawn by map.js at the island-1 heart —
+  the star fountain — so the artist asset is untouched and every draft
+  map inherits it: a small beige slab bearing the in-world stones'
+  carved star floats in the fountain spray (bob, water-shade, ripples,
+  drifting droplets). While any Remembering Moon can still wax today a
+  gold star burns above it; tapping the stone enters the dream MOST IN
+  NEED — never-waxed moons first, then the longest-ago moonWaxedDay,
+  oldest lastPlayed breaking ties — the spaced-repetition schedule made
+  physical. Once every moon has waxed the star rests and a tap answers
+  with only a soft ripple (no punishment). Per-disc moon taps stay live
+  alongside it; if the stone wins on the phone they can retire into
+  progress jewelry. Identity-before-consent is carried by the
+  dream-shrine's own moonlit opening for now; add a first-ayah whisper
+  on tap if the playtest asks for it.
+- **THE MOONVEIL (proposed 2026-08-09, design only — build after the
+  fountain stone's verdict)** — the stone's upgrade loop: dreams charge
+  the stone, and when the child's FIRST moon waxes full the stone
+  weaves her a moonlit cape in a small wordless ceremony at the
+  fountain. In worlds the cape catches marked moonbeam updrafts (hold
+  jump inside the beam to rise, gentle glide on the way down) — each
+  finished world seeds ONE extra hidden Rahma blossom high in open
+  sky, visible from day one as a dim sleeping bud that only wakes once
+  the cape exists. Review feeds flight; flight feeds return replays;
+  replays feed tomorrow's dream. Constraints: the cape is never lost,
+  buds never taunt (dim and closed until wakeable), updrafts appear
+  only in FINISHED worlds so first walks stay untouched.
 - **Memory stone v1 PARKED** (playtested 2026-07-12): a proximity-triggered
   full recitation of an *earlier* surah, mid-collection of the *current*
   one, fires by accident and collides two surahs — very confusing. The
@@ -982,4 +1011,6 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     path unchanged. Verified in-game: all nine phrases pass
     adventure.js's exact-text gate (words join === verse.ar) for the
     default reciter, so the light engages through the same render path
-    every other world uses.
+    every other world uses. CONFIRMED on Hasnain's phone same day:
+    "ayat al kursi works great" — cuts and read-along both. W19 is
+    done; the rework item narrows to Kafirun.
