@@ -10,6 +10,12 @@ verdict is logged.
 
 ## Now
 
+- [ ] Voice-clip babble gate: ElevenLabs hallucinated a trailing
+      utterance after the break tag on the kursi title (caught by ear
+      2026-08-10, trimmed). Teach generate-narration.mjs to
+      silence-scan its output and flag/trim any speech after the final
+      break — the whisper check pattern from PLAN §10
+
 
 - [ ] Playtest the 2026-08-10 journey resequence on staging (PLAN §10):
       island order, kursi still island-1 summit, stage cards' new
