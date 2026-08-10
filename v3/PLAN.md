@@ -1021,3 +1021,19 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     every other world uses. CONFIRMED on Hasnain's phone same day:
     "ayat al kursi works great" — cuts and read-along both. W19 is
     done; the rework item narrows to Kafirun.
+- **JOURNEY RESEQUENCE (2026-08-10, Hasnain's design, one asr↔nasr swap
+  on Claude's critique):** the full order becomes I1 fatiha ikhlas
+  falaq nas kawthar KURSI (Kursi stays island 1's summit — the map's
+  4×6 geometry turns Hasnain's "phase 2 opener" into the island closer,
+  which both sides preferred) · I2 asr masad kafirun nasr quraish tin ·
+  I3 fil qadr qariah humazah takathur adiyat · I4 duha lail + the
+  unbuilt tail (zalzalah bayyinah maun alaq), sharh off-map. Rationale:
+  Kawthar (shortest surah) joins the starter island; ALL unbuilt worlds
+  move to the journey's tail so the playable frontier has no holes;
+  Lail (21 ayat) caps the built content; Asr opens island 2 gently.
+  Mechanics: WORLD_ORDER edit + resequence20260810 flag in the shared
+  preserveVisitedWorlds sweep (visited worlds practice-open, nothing
+  fabricated); journey-stage cards re-exampled (Asr/Masad/Kafirun ·
+  Fil/Qadr/Qari'ah · Duha/Lail/Zalzalah) and the island contract test
+  retargeted. Known cost, accepted: island 4 shows only Duha + Lail
+  until the tail worlds are built. Staging playtest verdict pending.
