@@ -53,8 +53,13 @@ const SPOKEN_ARABIC_NAMES = {
   duha: 'الضُّحَى',
   tin: 'التِّين',
   sharh: 'الشَّرْح',
-  alaq: 'الْعَلَق'
+  alaq: 'الْعَلَق',
+  kursi: 'آيَةُ الْكُرْسِيّ'
 };
+
+// Ayat al-Kursi is an AYAH, not a surah — its welcome line must not carry
+// the 'سُورَةُ' prefix. Slugs listed here speak their vocalized name alone.
+const AYAH_SLUGS = new Set(['kursi']);
 
 const missingSpokenNames = global.GOL_DATA.surahs
   .filter((s) => !SPOKEN_ARABIC_NAMES[s.slug])
@@ -74,6 +79,8 @@ for (const s of global.GOL_DATA.surahs) {
   // keeps the final consonant from feeling chopped off when the clip ends.
   const spokenName = SPOKEN_ARABIC_NAMES[s.slug];
   LINES['surah-' + s.slug] = 'سُورَةُ ' + spokenName + '. <break time="0.45s" />';
+  // an ayah passage (AYAH_SLUGS) speaks its name alone — no Surah prefix
+  if (AYAH_SLUGS.has(s.slug)) LINES['surah-' + s.slug] = spokenName + '. <break time="0.45s" />';
   if (!s.story) continue;
   s.story.pages.forEach((text, i) => {
     LINES[GOL.storyVoiceId(s.slug, i)] = text;

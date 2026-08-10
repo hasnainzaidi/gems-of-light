@@ -58,6 +58,8 @@ assert.match(generator, /const spokenName = SPOKEN_ARABIC_NAMES\[s\.slug\]/,
   'the narration batch must use the explicit vocalized title');
 assert.match(generator, /LINES\['surah-' \+ s\.slug\]\s*=\s*'سُورَةُ ' \+ spokenName/,
   'the narration batch must speak Arabic script, never transliteration');
+assert.match(generator, /AYAH_SLUGS[\s\S]{0,200}kursi/,
+  'an ayah passage must speak its vocalized name without the Surah prefix');
 assert.match(generator, /NAMES_ONLY[\s\S]*id\.startsWith\('surah-'\)/,
   'the short surah-name batch must be independently generatable');
 assert.match(generator, /NAME_VOICE\s*=.*ELEVEN_NAME_VOICE_ID.*xvhpbk8otnNHtT3fjCpr/,
@@ -66,8 +68,8 @@ assert.match(generator, /<break time="0\.45s" \/>/,
   'short Arabic-name clips must preserve a natural tail after the final word');
 assert.match(generator, /humazah:\s*'الْهُمَزَة'/,
   'Al-Humazah must carry explicit hu-ma-zah vowels for TTS');
-assert.equal((generator.match(/^  [a-z]+:\s*'[^']+',?$/gm) || []).length, 24,
-  'every supported surah must have a vocalized TTS title');
+assert.equal((generator.match(/^  [a-z]+:\s*'[^']+',?$/gm) || []).length, 25,
+  'every supported surah must have a vocalized TTS title (24 surahs + Ayat al-Kursi)');
 assert.match(generator, /ONLY_ARG[\s\S]*?--only=[\s\S]*?!ONLY \|\| ONLY\.has\(id\)/,
   'one corrected name must be regeneratable without perturbing approved clips');
 
