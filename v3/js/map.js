@@ -672,7 +672,7 @@
       if (!this.map || !this.spotS || this.ceremony) return;
       if (this.star && Math.abs(this.hero.s - this.spotS[this.star.ri][this.star.j]) <= 2) {
         this.pendingBloom = false;
-        this.dwell = { t: 0, ri: this.star.ri, j: this.star.j };
+        this.dwell = { t: 0, ri: this.star.ri, j: this.star.j, dur: 1.0 };
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -680,9 +680,10 @@
           if (Math.abs(this.hero.s - this.spotS[ri][j]) > 2) continue;
           const sp = this.spotInfo[ri][j];
           // a finished bloom (in a woken island) or a grown-up's practice door
-          // both hesitate visibly, then open
+          // both hesitate visibly, then open — long enough to read the
+          // surah name before the door takes her
           if ((this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j)) {
-            this.dwell = { t: 0, ri, j };
+            this.dwell = { t: 0, ri, j, dur: 2.2 };
             return;
           }
         }
@@ -934,7 +935,7 @@
       }
       if (this.dwell && !this.ceremony) {
         this.dwell.t += dt;
-        if (this.dwell.t >= 1.0) {
+        if (this.dwell.t >= (this.dwell.dur || 1.0)) {
           const d = this.dwell;
           this.dwell = null;
           this.enterWorld(d.ri, d.j);
@@ -1252,7 +1253,7 @@
           ahead.x >= pos.x ? 1 : -1);
         if (this.dwell) {
           // the hesitation, visible: a ring closing in as entry nears
-          const k = clamp(this.dwell.t / 1.0, 0, 1);
+          const k = clamp(this.dwell.t / (this.dwell.dur || 1.0), 0, 1);
           ctx.strokeStyle = alpha('#FFE9A8', 0.25 + 0.55 * k);
           ctx.lineWidth = 2.5;
           ctx.beginPath();
