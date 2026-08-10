@@ -10,12 +10,6 @@ verdict is logged.
 
 ## Now
 
-- [ ] Generate the missing Kursi title announcement (found on prod
-      2026-08-10: audio/voice/surah-kursi.mp3 404s — the generator used
-      to throw on the pseudo-surah; now fixed to speak the vocalized
-      ayah name without the Surah prefix). Needs Hasnain's key:
-      `ELEVENLABS_API_KEY=sk-... node tools/generate-narration.mjs
-      --names --only=kursi`, then commit the mp3 to staging + promote
 
 - [ ] Playtest the 2026-08-10 journey resequence on staging (PLAN §10):
       island order, kursi still island-1 summit, stage cards' new
