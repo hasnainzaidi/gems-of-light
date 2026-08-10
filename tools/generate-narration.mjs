@@ -94,7 +94,17 @@ const ONLY_ARG = process.argv.find((arg) => arg.startsWith('--only='));
 const ONLY = ONLY_ARG
   ? new Set(ONLY_ARG.slice('--only='.length).split(',').map((slug) => 'surah-' + slug.trim()).filter((id) => id !== 'surah-'))
   : null;
-const KEY = process.env.ELEVENLABS_API_KEY;
+// The key comes from the environment, or from a git-ignored .env at the
+// repo root (KEY=value lines; no export needed) so Hasnain never has to
+// paste it inline again.
+function envFileKey() {
+  try {
+    const line = fs.readFileSync(path.join(ROOT, '.env'), 'utf8')
+      .split('\n').find((l) => l.startsWith('ELEVENLABS_API_KEY='));
+    return line ? line.slice('ELEVENLABS_API_KEY='.length).trim() : null;
+  } catch (e) { return null; }
+}
+const KEY = process.env.ELEVENLABS_API_KEY || envFileKey();
 // Omar: warm male Modern Standard Arabic with a light Saudi character. A
 // caller can override this without changing the checked-in default, but every
 // resulting clip still needs a native-speaker listening pass.
