@@ -78,8 +78,9 @@ for (const s of global.GOL_DATA.surahs) {
   // These phrases are unusually short, so preserve a small natural tail. It
   // keeps the final consonant from feeling chopped off when the clip ends.
   const spokenName = SPOKEN_ARABIC_NAMES[s.slug];
-  LINES['surah-' + s.slug] = (AYAH_SLUGS.has(s.slug) ? spokenName : 'سُورَةُ ' + spokenName)
-    + '. <break time="0.45s" />';
+  LINES['surah-' + s.slug] = 'سُورَةُ ' + spokenName + '. <break time="0.45s" />';
+  // an ayah passage (AYAH_SLUGS) speaks its name alone — no Surah prefix
+  if (AYAH_SLUGS.has(s.slug)) LINES['surah-' + s.slug] = spokenName + '. <break time="0.45s" />';
   if (!s.story) continue;
   s.story.pages.forEach((text, i) => {
     LINES[GOL.storyVoiceId(s.slug, i)] = text;

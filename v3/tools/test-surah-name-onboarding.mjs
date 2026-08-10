@@ -58,6 +58,8 @@ assert.match(generator, /const spokenName = SPOKEN_ARABIC_NAMES\[s\.slug\]/,
   'the narration batch must use the explicit vocalized title');
 assert.match(generator, /LINES\['surah-' \+ s\.slug\]\s*=\s*'سُورَةُ ' \+ spokenName/,
   'the narration batch must speak Arabic script, never transliteration');
+assert.match(generator, /AYAH_SLUGS[\s\S]{0,200}kursi/,
+  'an ayah passage must speak its vocalized name without the Surah prefix');
 assert.match(generator, /NAMES_ONLY[\s\S]*id\.startsWith\('surah-'\)/,
   'the short surah-name batch must be independently generatable');
 assert.match(generator, /NAME_VOICE\s*=.*ELEVEN_NAME_VOICE_ID.*xvhpbk8otnNHtT3fjCpr/,
