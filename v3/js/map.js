@@ -679,9 +679,10 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           if (Math.abs(this.hero.s - this.spotS[ri][j]) > 2) continue;
           const sp = this.spotInfo[ri][j];
-          // a finished bloom (in a woken island) or a grown-up's practice door
-          // both hesitate visibly, then open
-          if ((this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j)) {
+          // a finished bloom or a grown-up's practice door both hesitate
+          // visibly, then open — even on a still-sleeping island (a journey
+          // resequence can move a done world onto one; it stays hers)
+          if (this.isDoor(sp) || this.isPracticeDoor(ri, j)) {
             this.dwell = { t: 0, ri, j };
             return;
           }
@@ -706,7 +707,7 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          const openHere = (this.regionAwake(ri) && this.isDoor(sp)) || this.isPracticeDoor(ri, j);
+          const openHere = this.isDoor(sp) || this.isPracticeDoor(ri, j);
           if (openHere && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this.enterWorld(ri, j);
             return;
@@ -1064,10 +1065,11 @@
           }
         }
       }
-      // every finished bloom is a door into its world; home leads back here
+      // every finished bloom is a door into its world; home leads back here.
+      // No awake gate: a resequence can strand a done bloom on a sleeping
+      // island, and a world she finished must always answer her tap.
       if (this.hero) {
         for (let ri = 0; ri < REGIONS.length; ri++) {
-          if (!this.regionAwake(ri)) continue;
           for (let j = 0; j < REGIONS[ri].count; j++) {
             const sp = this.spotInfo[ri][j];
             const b = this.map.spots[ri][j];
