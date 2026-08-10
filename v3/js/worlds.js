@@ -15,14 +15,16 @@
   // The child-facing journey is one ordered list of keys — pedagogy can be
   // retuned by editing this list alone; files and saves never move.
   GOL.WORLD_ORDER = [
-    // Phase 1 — the essentials of prayer (closing on the greatest ayah)
-    'fatiha', 'ikhlas', 'falaq', 'nas', 'kursi',
-    // Phase 2 — short surahs that build momentum
-    'kawthar', 'nasr', 'masad', 'quraish', 'fil', 'humazah', 'asr',
-    // Phase 3 — medium lengths that ask for patience
-    'takathur', 'qariah', 'adiyat', 'zalzalah', 'bayyinah',
-    // Phase 4 — the rest of Juz 'Amma, shortest to longest
-    'kafirun', 'maun', 'qadr', 'alaq', 'tin', 'sharh', 'duha', 'lail',
+    // Island 1 — the essentials of prayer (closing on the greatest ayah)
+    'fatiha', 'ikhlas', 'falaq', 'nas', 'kawthar', 'kursi',
+    // Island 2 — short surahs that build momentum
+    'asr', 'masad', 'kafirun', 'nasr', 'quraish', 'tin',
+    // Island 3 — medium lengths that ask for patience
+    'fil', 'qadr', 'qariah', 'humazah', 'takathur', 'adiyat',
+    // Island 4 — the long capstones, then the unbuilt tail fills in
+    'duha', 'lail', 'zalzalah', 'bayyinah', 'maun', 'alaq',
+    // off-map until the next expansion
+    'sharh',
   ];
 
   // One parent-facing choice per painted island. The value is the first
@@ -31,9 +33,9 @@
   // fit without auditing every surah their child knows.
   GOL.JOURNEY_STAGE_CHOICES = [
     { index: 0, frontier: 0, label: 'Planting the first seeds', examples: 'Al-Fatihah · Al-Ikhlas · Al-Falaq' },
-    { index: 1, frontier: 6, label: 'Finding their rhythm', examples: 'An-Nasr · Al-Masad · Quraysh' },
-    { index: 2, frontier: 12, label: 'Growing in confidence', examples: "At-Takathur · Al-Qari'ah · Al-'Adiyat" },
-    { index: 3, frontier: 18, label: 'Taking on longer surahs', examples: "Al-Ma'un · Al-Qadr · Al-'Alaq" }
+    { index: 1, frontier: 6, label: 'Finding their rhythm', examples: 'Al-Asr · Al-Masad · Al-Kafirun' },
+    { index: 2, frontier: 12, label: 'Growing in confidence', examples: "Al-Fil · Al-Qadr · Al-Qari'ah" },
+    { index: 3, frontier: 18, label: 'Taking on longer surahs', examples: 'Ad-Duha · Al-Lail · Az-Zalzalah' }
   ];
 
   // registered worlds in journey order; a key missing from the list keeps
@@ -192,7 +194,7 @@
       }
     };
     let changed = false;
-    for (const flag of ['resequence20260714', 'kursiInsert20260716']) {
+    for (const flag of ['resequence20260714', 'kursiInsert20260716', 'resequence20260810']) {
       if (d.migrations[flag]) continue;
       sweep();
       d.migrations[flag] = true;
