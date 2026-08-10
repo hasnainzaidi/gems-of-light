@@ -10,6 +10,10 @@ verdict is logged.
 
 ## Now
 
+- [ ] Playtest the 2026-08-10 journey resequence on staging (PLAN §10):
+      island order, kursi still island-1 summit, stage cards' new
+      examples, existing-save migration (nothing a child visited locks)
+
 - [ ] Playtest the FOUNTAIN STONE on staging: the memory stone floats
       over island 1's star fountain, gold star while a dream still
       waits, tap → the neediest surah's dream-shrine; per-disc moons

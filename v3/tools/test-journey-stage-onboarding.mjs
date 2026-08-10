@@ -37,11 +37,11 @@ assert.equal(plan.startSlot, null);
 assert.equal(plan.nextSurahId, 1);
 
 plan = GOL.applyJourneyStage(1, 1234);
-assert.deepEqual(Array.from(plan.knownSurahs), [1, 112, 113, 114, 255, 108]);
+assert.deepEqual(Array.from(plan.knownSurahs), [1, 112, 113, 114, 108, 255]);
 assert.equal(plan.startSlot, 5, 'handoff should stand on the previous island endpoint');
 assert.equal(plan.startSurahId, null);
 assert.equal(plan.recognitionSurahId, null, 'placement must not force a replay detour');
-assert.equal(plan.nextSurahId, 110, 'stage two should begin at island two');
+assert.equal(plan.nextSurahId, 103, 'stage two should begin at island two');
 assert.equal(GOL.worldDone(8), true, 'earlier-island world should paint as complete');
 assert.equal(GOL.store.data.grand[1], undefined, 'placement fabricated an earned Grand Gem');
 assert.equal(levelCalls.length, 0, 'placement fabricated level or knowledge telemetry');
@@ -49,15 +49,15 @@ assert.equal(levelCalls.length, 0, 'placement fabricated level or knowledge tele
 plan = GOL.applyJourneyStage(2, 2345);
 assert.equal(plan.startSlot, 11);
 assert.equal(plan.recognitionSurahId, null);
-assert.equal(plan.nextSurahId, 102, 'stage three should begin at island three');
+assert.equal(plan.nextSurahId, 105, 'stage three should begin at island three');
 
 // Unbuilt spots do not break the six-slot island boundary.
 plan = GOL.applyJourneyStage(3, 3456);
 assert.equal(plan.startSlot, 17, 'stage four starts from the final slot of island three');
 assert.equal(plan.recognitionSurahId, null);
-assert.equal(plan.nextSurahId, 97, 'stage four should begin at the first built world on island four');
+assert.equal(plan.nextSurahId, 93, 'stage four should begin at the first built world on island four');
 assert.equal(plan.frontier, 18);
-assert.equal(GOL.JOURNEY_STAGE_CHOICES[3].examples, "Al-Ma'un · Al-Qadr · Al-'Alaq",
+assert.equal(GOL.JOURNEY_STAGE_CHOICES[3].examples, 'Ad-Duha · Al-Lail · Az-Zalzalah',
   'each card must show the selected island\'s first three surahs');
 GOL.store.data.onboarding.parentComplete = true;
 assert.equal(GOL.journeySlotAutoBloomed(17), true, 'last earlier-island slot should auto-bloom');
