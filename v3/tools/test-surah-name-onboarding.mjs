@@ -68,8 +68,8 @@ assert.match(generator, /<break time="0\.45s" \/>/,
   'short Arabic-name clips must preserve a natural tail after the final word');
 assert.match(generator, /humazah:\s*'الْهُمَزَة'/,
   'Al-Humazah must carry explicit hu-ma-zah vowels for TTS');
-assert.equal((generator.match(/^  [a-z]+:\s*'[^']+',?$/gm) || []).length, 24,
-  'every supported surah must have a vocalized TTS title');
+assert.equal((generator.match(/^  [a-z]+:\s*'[^']+',?$/gm) || []).length, 25,
+  'every supported surah must have a vocalized TTS title (24 surahs + Ayat al-Kursi)');
 assert.match(generator, /ONLY_ARG[\s\S]*?--only=[\s\S]*?!ONLY \|\| ONLY\.has\(id\)/,
   'one corrected name must be regeneratable without perturbing approved clips');
 
