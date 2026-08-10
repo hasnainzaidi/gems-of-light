@@ -12,7 +12,9 @@ verdict is logged.
 
 - [ ] Playtest the 2026-08-10 journey resequence on staging (PLAN §10):
       island order, kursi still island-1 summit, stage cards' new
-      examples, existing-save migration (nothing a child visited locks)
+      examples, existing-save migration (nothing a child visited locks);
+      note: Pages deploys can finish out of order — verify the live
+      build serves worlds.js?v=386 before judging
 
 - [ ] Playtest the FOUNTAIN STONE on staging: the memory stone floats
       over island 1's star fountain, gold star while a dream still
