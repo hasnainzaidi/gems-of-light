@@ -185,11 +185,17 @@
           y: H * 0.6 - Math.sin((i / Math.max(1, n - 1)) * Math.PI) * H * 0.05
         });
       }
-      // free gems rest in a loose bed of light along the bottom
+      // free gems rest in a loose bed of light along the bottom — but never so
+      // low that a pickup could begin inside the phone's home-indicator strip,
+      // where dragging upward leaves the app instead of lifting a gem. The bed
+      // clears that strip by the full reach of a grab: 14px of idle wobble plus
+      // the 46px pickup radius, and 6px to spare.
+      const bedFloor = H - Math.max(sa.b, 8) - 66;
+      const bedY = Math.max(H * 0.72, Math.min(H * 0.85, bedFloor));
       const per = Math.min(96, (W - 180 - sa.l - sa.r) / Math.max(1, n - 1) || 96);
       this.gems.forEach((g, i) => {
         g.homeX = W / 2 + (i - (n - 1) / 2) * per;
-        g.homeY = H * 0.85 + Math.sin(i * 2.1) * 6;
+        g.homeY = bedY + Math.sin(i * 2.1) * 6;
       });
       return { sockets, treeX, treeY, groundY: H * 0.68 };
     },
