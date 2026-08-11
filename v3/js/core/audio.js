@@ -358,6 +358,11 @@
       else start();
       return h;
     },
+    // Stop only if THIS handle is still the one speaking — a caller holding
+    // an old handle must never silence someone else's line.
+    stopSpeakIf(h) {
+      if (h && this._speaking === h) this.stopSpeak();
+    },
     stopSpeak() {
       if (!this._speaking) return;
       const h = this._speaking;

@@ -111,7 +111,7 @@
     gemPause: null, memState: null, gallopFxT: 0,
     boxes: null, orb: null, darkBuf: null,
     protoN: null, campDone: 0, campEntering: false, showcaseGemK: 0,
-    welcomeT: 0, welcomeName: '', welcomeVoiceId: '',
+    welcomeT: 0, welcomeName: '',
 
     enter(params) {
       // every entry names its world now (the ten-prototype lab retired
@@ -122,7 +122,6 @@
       this.protoN = params.proto || null;
       const entranceSurah = this.worldN && GOL.surahForWorld ? GOL.surahForWorld(this.worldN) : null;
       this.welcomeName = entranceSurah && GOL.EXPERIENCE.recitation ? entranceSurah.englishName : '';
-      this.welcomeVoiceId = entranceSurah && GOL.EXPERIENCE.recitation ? 'surah-' + entranceSurah.slug : '';
       const exactFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
         ? GOL.WORD_FOLLOW[GOL.V3.reciter][def.surahId] : null;
       const prototypeFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW.basit
@@ -408,7 +407,8 @@
       GOL.audio.startAmbience('garden');
       if (!returning) {
         GOL.audio.enterFlourish(); // waking at a checkpoint is quiet
-        if (this.welcomeVoiceId) GOL.audio.speak(this.welcomeVoiceId);
+        // (the surah's name is spoken on the map now, at the arrival dwell —
+        // the world greets her with its caption alone)
       }
     },
 

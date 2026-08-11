@@ -321,6 +321,10 @@
     dragPrev: null, dragMoved: false, camFree: 0, ceremony: null,
     hero: null, spotPulse: null, pendingBloom: false,
 
+    // leaving for a shrine, a dream, or the title mid-announcement must not
+    // carry the surah's name into the next scene
+    exit() { this._clearDwell(); },
+
     enter(params) {
       // from here on, "home" means the map — for worlds, shrines, dreams
       GOL.homeScene = 'journeyMap';
@@ -348,7 +352,7 @@
       this.spotS = null;
       this.waypoints = null;
       this.stepCool = 0;
-      this.dwell = null;
+      this._clearDwell();
       this.startAnchorS = null;
       this.heroArrived = true; // no arrival event on scene entry/return
       loadAsset().then((map) => {
@@ -604,9 +608,10 @@
       // already stands on must OPEN it — the same act the keyboard grants —
       // never a silent no-op that traps a new child on the first surah.
       if (Math.abs(this.hero.s - sT) <= 2 && Math.abs(this.hero.sT - sT) <= 2) {
-        this.enterWorld(this.star.ri, this.star.j);
+        this._beginDwell(this.star.ri, this.star.j);
         return;
       }
+      this._primeSpotVoice(this.star.ri, this.star.j);
       this.hero.sT = sT;
       if (GOL.audio) GOL.audio.sfx('tap');
     },
@@ -616,8 +621,15 @@
     // there, gliding straight past the unsolved blooms between.
     walkToSpot(ri, j) {
       if (!this.map || !this.hero || this.ceremony) return;
-      this.hero.sT = this.spotS[ri][j];
-      this.dwell = null;
+      const sT = this.spotS[ri][j];
+      // already standing on it: the tap opens it (announced), like the star
+      if (Math.abs(this.hero.s - sT) <= 2 && Math.abs(this.hero.sT - sT) <= 2) {
+        this._beginDwell(ri, j);
+        return;
+      }
+      this._primeSpotVoice(ri, j);
+      this.hero.sT = sT;
+      this._clearDwell();
       if (GOL.audio) GOL.audio.sfx('tap');
     },
 
@@ -638,15 +650,8 @@
         GOL.markChildStarted();
       }
       GOL.audio.unlock();
-      const surah = GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
-      if (surah && GOL.EXPERIENCE.recitation) {
-        const voiceId = 'surah-' + surah.slug;
-        GOL.audio.preloadVoice([voiceId]);
-        // Al-Fatiha is the first real media clip for a fresh family. Prime the
-        // exact element inside this map tap so iOS permits adventure to play it
-        // after the fade; later worlds get the same protection for free.
-        GOL.audio.primeVoice(voiceId);
-      }
+      // (the surah's name was already spoken during the arrival dwell —
+      // the world itself opens wordlessly now)
       if (GOL.audio) GOL.audio.sfx('unlockLevel');
       GOL.go('adventure', { world: sp.n });
       return true;
@@ -672,7 +677,7 @@
       if (!this.map || !this.spotS || this.ceremony) return;
       if (this.star && Math.abs(this.hero.s - this.spotS[this.star.ri][this.star.j]) <= 2) {
         this.pendingBloom = false;
-        this.dwell = { t: 0, ri: this.star.ri, j: this.star.j };
+        this._beginDwell(this.star.ri, this.star.j);
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -683,9 +688,58 @@
           // visibly, then open — even on a still-sleeping island (a journey
           // resequence can move a done world onto one; it stays hers)
           if (this.isDoor(sp) || this.isPracticeDoor(ri, j)) {
-            this.dwell = { t: 0, ri, j };
+            this._beginDwell(ri, j);
             return;
           }
+        }
+      }
+    },
+
+    // The arrival pause SPEAKS the surah's name (a pre-reader can't use the
+    // parchment), then crosses one breath after the voice finishes. Walking
+    // away mid-announcement stops the voice along with the dwell. Every
+    // door — landed-on, tapped, or keyboard-entered — passes through here,
+    // since the world itself no longer announces its own name.
+    _beginDwell(ri, j) {
+      if (this.dwell && this.dwell.ri === ri && this.dwell.j === j) return;
+      this._clearDwell();
+      const d = { t: 0, ri, j, wait: null, speech: null };
+      this.dwell = d;
+      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
+      const surah = sp && GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
+      if (surah && GOL.EXPERIENCE.recitation && GOL.audio && GOL.audio.speak) {
+        const id = 'surah-' + surah.slug;
+        GOL.audio.preloadVoice([id]);
+        d.speech = GOL.audio.speak(id, () => {
+          if (this.dwell === d) d.wait = 1.0;
+        });
+      }
+      // no voice (quiet mode, missing file) — keep the old wordless beat
+      if (!d.speech && d.wait == null) d.wait = 1.0;
+    },
+
+    _clearDwell() {
+      if (this.dwell && this.dwell.speech && GOL.audio && GOL.audio.stopSpeakIf) {
+        GOL.audio.stopSpeakIf(this.dwell.speech);
+      }
+      this.dwell = null;
+    },
+
+    // iOS grants media playback to elements played DURING a gesture. The tap
+    // that starts a walk primes the destination's title clip, so the arrival
+    // — seconds later, outside any gesture — is allowed to speak it.
+    _primeSpotVoice(ri, j) {
+      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
+      const surah = sp && GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
+      if (surah && GOL.EXPERIENCE.recitation && GOL.audio && GOL.audio.primeVoice) {
+        GOL.audio.primeVoice('surah-' + surah.slug);
+      }
+    },
+    _primeVoiceAtS(s) {
+      if (!this.spotS) return;
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        for (let j = 0; j < REGIONS[ri].count; j++) {
+          if (Math.abs(this.spotS[ri][j] - s) <= 2) this._primeSpotVoice(ri, j);
         }
       }
     },
@@ -699,7 +753,7 @@
       if (this.star) {
         const star = this.map.spots[this.star.ri][this.star.j];
         if (GOL.dist(pos.x, pos.y, star.x, star.y) <= 40) {
-          this.enterWorld(this.star.ri, this.star.j);
+          this._beginDwell(this.star.ri, this.star.j);
           return;
         }
       }
@@ -709,7 +763,7 @@
           const b = this.map.spots[ri][j];
           const openHere = this.isDoor(sp) || this.isPracticeDoor(ri, j);
           if (openHere && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
-            this.enterWorld(ri, j);
+            this._beginDwell(ri, j);
             return;
           }
         }
@@ -910,7 +964,8 @@
           if (target != null) {
             this.hero.sT = target;
             this.pendingBloom = false;
-            this.dwell = null;
+            this._clearDwell();
+            this._primeVoiceAtS(target);
             this.stepCool = 0.12;
             this.kbdFollow = 2.2;
             if (dir > 0 && this.answerFirstInvite() && GOL.audio) GOL.audio.sfx('tap');
@@ -931,16 +986,22 @@
         this._onArrive();
       } else if (!arrived) {
         this.heroArrived = false;
-        this.dwell = null;
+        this._clearDwell();
       }
-      if (this.dwell && !this.ceremony) {
+      // The dwell holds while the surah's name is spoken; the countdown to
+      // the door only starts once the voice has finished (or when there is
+      // no voice at all — then it's the old one-second hesitation).
+      if (this.dwell && !this.ceremony && this.dwell.wait != null) {
         this.dwell.t += dt;
-        if (this.dwell.t >= 1.0) {
+        this.dwell.wait -= dt;
+        if (this.dwell.wait <= 0) {
           const d = this.dwell;
           this.dwell = null;
           this.enterWorld(d.ri, d.j);
           return;
         }
+      } else if (this.dwell && !this.ceremony) {
+        this.dwell.t += dt;
       }
 
       const drag = GOL.Input.drag;
@@ -1068,13 +1129,15 @@
       // every finished bloom is a door into its world; home leads back here.
       // No awake gate: a resequence can strand a done bloom on a sleeping
       // island, and a world she finished must always answer her tap.
+      // She walks there first (motion belongs to the path) so the arrival
+      // dwell can speak the surah's name before the door opens.
       if (this.hero) {
         for (let ri = 0; ri < REGIONS.length; ri++) {
           for (let j = 0; j < REGIONS[ri].count; j++) {
             const sp = this.spotInfo[ri][j];
             const b = this.map.spots[ri][j];
             if (this.isDoor(sp) && GOL.dist(wx, wy, b.x, b.y) < 36) {
-              this.enterWorld(ri, j);
+              this.walkToSpot(ri, j);
               return;
             }
           }

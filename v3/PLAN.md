@@ -1037,3 +1037,17 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   Fil/Qadr/Qari'ah · Duha/Lail/Zalzalah) and the island contract test
   retargeted. Known cost, accepted: island 4 shows only Duha + Lail
   until the tail worlds are built. Staging playtest verdict pending.
+- **THE MAP SPEAKS THE SURAH'S NAME; THE WORLD OPENS QUIET (2026-08-11,
+  Hasnain, for his pre-reader son):** landing on any door — the breathing
+  star, a finished bloom, a grown-up's practice door, whether walked to,
+  tapped, or keyboard-entered — now plays the human-voice `surah-<slug>`
+  name clip during the arrival dwell, and the door opens ONE SECOND after
+  the voice finishes. Walking, dragging, or leaving the map mid-announcement
+  stops the voice with the dwell. A silent dwell (Showcase, missing clip,
+  blocked autoplay) keeps the old wordless one-second beat, so entry never
+  stalls. The in-world spoken welcome is removed — the child already heard
+  the name at the door — while the world's soft caption stays. Tapping a
+  finished bloom now walks Lumi there first (motion belongs to the path)
+  so the arrival can speak. iOS: the walk-starting gesture primes the
+  destination's title element so the arrival, outside any gesture, may
+  play it. Contract retargeted in `tools/test-surah-name-onboarding.mjs`.
