@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Contract for the two child-facing surah-name moments: destination on the
-// journey map, then the same canonical transliteration on world entrance.
+// Contract for the child-facing surah-name moments: the journey map SPEAKS
+// the destination's name during the arrival dwell (a pre-reader can't use
+// the caption), and world entrance shows the same canonical transliteration
+// silently — the name was already heard on the map.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,31 +22,41 @@ assert.match(worlds, /GOL\.surahNameForWorld\s*=\s*function/,
 assert.match(worlds, /surah\.englishName/,
   'the canonical child-facing label must use shared englishName transliteration');
 
-assert.match(map, /this\.dwell\s*=\s*\{\s*t:\s*0,\s*ri:\s*this\.star\.ri/,
-  'the next-world star must pause before opening so its name can be read');
-const arriveBody = map.match(/_onArrive\(\)\s*\{([\s\S]*?)\n    \},\n\n    \/\/ Keyboard navigation/);
+assert.match(map, /_beginDwell\(this\.star\.ri,\s*this\.star\.j\)/,
+  'the next-world star must pause before opening so its name can be heard');
+const arriveBody = map.match(/_onArrive\(\)\s*\{([\s\S]*?)\n    \},\n\n    \/\/ The arrival pause/);
 assert.ok(arriveBody, 'the map arrival handler must remain inspectable');
 assert.doesNotMatch(arriveBody[1], /enterWorld\(/,
   'crossing a bloom must never enter its world immediately');
-assert.match(arriveBody[1], /this\.dwell\s*=\s*\{\s*t:\s*0,\s*ri,\s*j\s*\}/,
+assert.match(arriveBody[1], /this\._beginDwell\(ri,\s*j\)/,
   'finished and parent-opened blooms must use the same deliberate pause');
-assert.match(map, /this\.hero\.sT\s*=\s*target;[\s\S]{0,180}this\.dwell\s*=\s*null/,
+assert.match(map, /_beginDwell\(ri,\s*j\)\s*\{[\s\S]{0,700}GOL\.audio\.speak\(id/,
+  'the arrival dwell must speak the human-voice surah name clip');
+assert.match(map, /d\.speech = GOL\.audio\.speak\(id, \(\) => \{[\s\S]{0,80}d\.wait = 1\.0/,
+  'the door must open one second AFTER the spoken name finishes');
+assert.match(map, /if \(!d\.speech && d\.wait == null\) d\.wait = 1\.0/,
+  'a silent dwell (Showcase, missing clip) must keep the old one-second beat');
+assert.match(map, /_clearDwell\(\)\s*\{[\s\S]{0,220}stopSpeakIf/,
+  'walking off a bloom must stop its spoken name with the dwell');
+assert.match(map, /this\.hero\.sT\s*=\s*target;[\s\S]{0,180}this\._clearDwell\(\)/,
   'continuing along the trail must cancel a bloom pause');
+assert.match(map, /exit\(\)\s*\{\s*this\._clearDwell\(\);\s*\},/,
+  'leaving the map mid-announcement must not carry the voice along');
 assert.match(map, /GOL\.surahNameForWorld\(sp\.n\)/,
   'the map arrival caption must use the canonical surah name');
 assert.match(map, /if \(this\.dwell && GOL\.EXPERIENCE\.recitation\)/,
   'the learning-only map caption must not leak into Showcase');
+assert.match(map, /_primeSpotVoice\(ri,\s*j\)\s*\{[\s\S]{0,320}GOL\.audio\.primeVoice\('surah-' \+ surah\.slug\)/,
+  'the walk-starting gesture must prime the destination title for iOS');
 
 assert.match(adventure, /this\.welcomeName\s*=.*englishName/,
   'world entrance must show the same shared transliteration');
-assert.match(adventure, /this\.welcomeVoiceId\s*=\s*entranceSurah\s*&&\s*GOL\.EXPERIENCE\.recitation/,
-  'Showcase must never announce the surah name');
-assert.match(adventure, /GOL\.audio\.speak\(this\.welcomeVoiceId\)/,
-  'world entrance must attempt the matching human-voice name clip');
 assert.match(adventure, /this\.welcomeT > 0 && this\.welcomeName/,
   'world entrance needs a timed visible welcome title');
-assert.match(map, /GOL\.audio\.primeVoice\(voiceId\)[\s\S]{0,180}GOL\.go\('adventure'/,
-  'the exact title clip must be primed during the map gesture before the scene fade');
+assert.doesNotMatch(adventure, /welcomeVoiceId|GOL\.audio\.speak\('surah-/,
+  'world entrance must NOT re-announce the name the map already spoke');
+assert.match(audio, /stopSpeakIf\(h\)\s*\{/,
+  'the audio layer must let the dwell stop only its own spoken line');
 assert.match(audio, /primeVoice\(id\)[\s\S]*?_voicePrimes\[id\]/,
   'the audio layer must support gesture-priming one named voice element');
 assert.match(audio, /const prime = this\._voicePrimes\[id\][\s\S]{0,140}prime\.then\(start, start\)/,
