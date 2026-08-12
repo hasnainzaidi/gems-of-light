@@ -28,6 +28,10 @@
     dark: '#D9A44A', darker: '#B98A3E', glow: '#FFE9A8'
   };
   let assetPromise = null;
+  // quiet beat a walked-into door rests before speaking its name — long
+  // enough that stepping straight through a flower stays silent, short
+  // enough that a real stop still answers promptly (playtest 2026-08-12)
+  const ARRIVE_GRACE = 0.5;
   // camera/hero preserved across a world visit (state itself re-reads the save)
   let returnState = null;
   // session memory for arrival celebrations: which regions were awake and
@@ -677,7 +681,7 @@
       if (!this.map || !this.spotS || this.ceremony) return;
       if (this.star && Math.abs(this.hero.s - this.spotS[this.star.ri][this.star.j]) <= 2) {
         this.pendingBloom = false;
-        this._beginDwell(this.star.ri, this.star.j);
+        this._beginDwell(this.star.ri, this.star.j, ARRIVE_GRACE);
         return;
       }
       for (let ri = 0; ri < REGIONS.length; ri++) {
@@ -688,7 +692,7 @@
           // visibly, then open — even on a still-sleeping island (a journey
           // resequence can move a done world onto one; it stays hers)
           if (this.isDoor(sp) || this.isPracticeDoor(ri, j)) {
-            this._beginDwell(ri, j);
+            this._beginDwell(ri, j, ARRIVE_GRACE);
             return;
           }
         }
@@ -700,22 +704,32 @@
     // away mid-announcement stops the voice along with the dwell. Every
     // door — landed-on, tapped, or keyboard-entered — passes through here,
     // since the world itself no longer announces its own name.
-    _beginDwell(ri, j) {
+    // A WALKED-INTO door keeps a short quiet grace before speaking (playtest
+    // 2026-08-12: stepping through a flower mid-journey fired its name), so a
+    // pass-through stays silent; a deliberate tap on the flower (grace 0)
+    // speaks at once. The door opens the moment the clip finishes — each
+    // name clip already carries its own 0.45s tail, so nothing feels cut.
+    _beginDwell(ri, j, grace) {
       if (this.dwell && this.dwell.ri === ri && this.dwell.j === j) return;
       this._clearDwell();
-      const d = { t: 0, ri, j, wait: null, speech: null };
-      this.dwell = d;
-      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
+      this.dwell = { t: 0, ri, j, grace: grace || 0, spoke: false, wait: null, speech: null };
+      if (!(grace > 0)) this._dwellSpeak(this.dwell);
+    },
+
+    _dwellSpeak(d) {
+      d.spoke = true;
+      const sp = this.spotInfo && this.spotInfo[d.ri] && this.spotInfo[d.ri][d.j];
       const surah = sp && GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
       if (surah && GOL.EXPERIENCE.recitation && GOL.audio && GOL.audio.speak) {
         const id = 'surah-' + surah.slug;
         GOL.audio.preloadVoice([id]);
         d.speech = GOL.audio.speak(id, () => {
-          if (this.dwell === d) d.wait = 1.0;
+          if (this.dwell === d) d.wait = 0;
         });
       }
-      // no voice (quiet mode, missing file) — keep the old wordless beat
-      if (!d.speech && d.wait == null) d.wait = 1.0;
+      // no voice (quiet mode, missing file) — keep the old wordless
+      // one-second hesitation, grace included
+      if (!d.speech && d.wait == null) d.wait = Math.max(0.2, 1.0 - d.grace);
     },
 
     _clearDwell() {
@@ -988,20 +1002,22 @@
         this.heroArrived = false;
         this._clearDwell();
       }
-      // The dwell holds while the surah's name is spoken; the countdown to
-      // the door only starts once the voice has finished (or when there is
-      // no voice at all — then it's the old one-second hesitation).
-      if (this.dwell && !this.ceremony && this.dwell.wait != null) {
-        this.dwell.t += dt;
-        this.dwell.wait -= dt;
-        if (this.dwell.wait <= 0) {
-          const d = this.dwell;
-          this.dwell = null;
-          this.enterWorld(d.ri, d.j);
-          return;
+      // The dwell rests quietly through its grace (a pass-through cancels
+      // before anything is heard), then speaks, holds while the name plays,
+      // and opens the door the moment the voice finishes (or after the old
+      // one-second hesitation when there is no voice at all).
+      if (this.dwell && !this.ceremony) {
+        const d = this.dwell;
+        d.t += dt;
+        if (!d.spoke && d.t >= d.grace) this._dwellSpeak(d);
+        if (d.wait != null) {
+          d.wait -= dt;
+          if (d.wait <= 0) {
+            this.dwell = null;
+            this.enterWorld(d.ri, d.j);
+            return;
+          }
         }
-      } else if (this.dwell && !this.ceremony) {
-        this.dwell.t += dt;
       }
 
       const drag = GOL.Input.drag;
