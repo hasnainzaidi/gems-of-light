@@ -1051,3 +1051,9 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   so the arrival can speak. iOS: the walk-starting gesture primes the
   destination's title element so the arrival, outside any gesture, may
   play it. Contract retargeted in `tools/test-surah-name-onboarding.mjs`.
+  - **Refined (2026-08-12, Hasnain's phone playtest):** (1) a walked-into
+    door now rests a 0.5s quiet grace before speaking, so stepping straight
+    through a flower never fires its name — a deliberate tap still speaks
+    at once; (2) the door opens the MOMENT the clip finishes (each name
+    clip already carries its baked 0.45s tail), dropping the extra
+    one-second wait. A silent dwell keeps the old one-second beat.
