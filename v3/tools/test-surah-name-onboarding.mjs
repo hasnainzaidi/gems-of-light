@@ -22,19 +22,23 @@ assert.match(worlds, /GOL\.surahNameForWorld\s*=\s*function/,
 assert.match(worlds, /surah\.englishName/,
   'the canonical child-facing label must use shared englishName transliteration');
 
-assert.match(map, /_beginDwell\(this\.star\.ri,\s*this\.star\.j\)/,
+assert.match(map, /_beginDwell\(this\.star\.ri,\s*this\.star\.j,\s*ARRIVE_GRACE\)/,
   'the next-world star must pause before opening so its name can be heard');
 const arriveBody = map.match(/_onArrive\(\)\s*\{([\s\S]*?)\n    \},\n\n    \/\/ The arrival pause/);
 assert.ok(arriveBody, 'the map arrival handler must remain inspectable');
 assert.doesNotMatch(arriveBody[1], /enterWorld\(/,
   'crossing a bloom must never enter its world immediately');
-assert.match(arriveBody[1], /this\._beginDwell\(ri,\s*j\)/,
+assert.match(arriveBody[1], /this\._beginDwell\(ri,\s*j,\s*ARRIVE_GRACE\)/,
   'finished and parent-opened blooms must use the same deliberate pause');
-assert.match(map, /_beginDwell\(ri,\s*j\)\s*\{[\s\S]{0,700}GOL\.audio\.speak\(id/,
+assert.match(map, /_dwellSpeak\(d\)\s*\{[\s\S]{0,700}GOL\.audio\.speak\(id/,
   'the arrival dwell must speak the human-voice surah name clip');
-assert.match(map, /d\.speech = GOL\.audio\.speak\(id, \(\) => \{[\s\S]{0,80}d\.wait = 1\.0/,
-  'the door must open one second AFTER the spoken name finishes');
-assert.match(map, /if \(!d\.speech && d\.wait == null\) d\.wait = 1\.0/,
+assert.match(map, /!d\.spoke && d\.t >= d\.grace/,
+  'a walked-into door must rest a quiet grace before speaking, so a pass-through stays silent');
+assert.match(map, /if \(!\(grace > 0\)\) this\._dwellSpeak\(this\.dwell\)/,
+  'a deliberate tap on the flower must speak at once, without the grace');
+assert.match(map, /d\.speech = GOL\.audio\.speak\(id, \(\) => \{[\s\S]{0,80}d\.wait = 0/,
+  'the door must open the moment the spoken name finishes');
+assert.match(map, /if \(!d\.speech && d\.wait == null\) d\.wait = Math\.max\(0\.2, 1\.0 - d\.grace\)/,
   'a silent dwell (Showcase, missing clip) must keep the old one-second beat');
 assert.match(map, /_clearDwell\(\)\s*\{[\s\S]{0,220}stopSpeakIf/,
   'walking off a bloom must stop its spoken name with the dwell');
