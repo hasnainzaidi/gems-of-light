@@ -12,7 +12,7 @@
     windGain: null, waterGain: null,
     muted: false, unlocked: false,
     _verseEl: null, _current: null, _birdTimer: 0, _birdsOn: false,
-    _seq: null,
+    _seq: null, _versePrimed: false,
 
     // -------------------------------------------------------------- boot --
     unlock() {
@@ -53,7 +53,69 @@
         if (p && p.then) p.then(welcome).catch(() => {});
       }
       welcome();
+      // the recitation element is blessed by this same tap (see _primeVerse):
+      // outside the welcome guard, because a grant can be withdrawn later and
+      // must be won back by an ordinary tap, not only by the first one
+      this._primeVerse();
       this.unlocked = true;
+    },
+    // The 0.05s silent WAV, built by hand — no asset needed. Used both to
+    // promote the media session (the kick below) and to bless the recitation
+    // element inside a gesture.
+    _silentWav() {
+      if (this._silence) return this._silence;
+      const rate = 8000, n = 400;
+      const bytes = new Uint8Array(44 + n * 2);
+      const dv = new DataView(bytes.buffer);
+      const wr = (o, s) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
+      wr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt ');
+      dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+      dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true);
+      dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+      wr(36, 'data'); dv.setUint32(40, n * 2, true);
+      let b64 = '';
+      for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
+      this._silence = 'data:audio/wav;base64,' + btoa(b64);
+      return this._silence;
+    },
+    // Safari grants media playback PER ELEMENT, to elements first played
+    // inside a user gesture — and withdraws the grant again whenever the audio
+    // session is interrupted (a call, Siri, another app, a route change). The
+    // shared verse element's first play() is otherwise ALWAYS outside a
+    // gesture — the first gem of a world — and a refusal there is silent: no
+    // 'error' event fires, so the held listening beat simply runs its stall
+    // timeout out and the child walks on having heard no ayah. Bless it with
+    // the same trick primeVoice uses for a title clip: a soundless play of the
+    // silent WAV, then pause. If an ayah is already waiting, refused, on the
+    // element, this very tap resumes it instead.
+    _primeVerse() {
+      const el = this._verseEl;
+      if (el && this._current && !this._current.done && el.paused) {
+        const p = el.play(); // a refused ayah gets its gesture and sounds
+        if (p && p.catch) p.catch(() => {});
+        return;
+      }
+      if (this.reciting || this._versePrimed) return;
+      this._versePrimed = true;
+      try {
+        const v = this._verseAudio();
+        const silent = this._silentWav();
+        // The blessing resolves a tick later, by which time a gem may already
+        // have claimed the element (a jump tap sits right before a collect) —
+        // never pause the Qur'an to tidy up a prime.
+        const settle = () => {
+          if (!this._current && v.src === silent) {
+            try { v.pause(); } catch (e) { /* never started */ }
+          }
+          v.muted = this.muted;
+        };
+        v.muted = true;
+        v.src = silent;
+        v.load();
+        const p = v.play();
+        if (p && p.then) p.then(settle, () => { settle(); this._versePrimed = false; });
+        else settle();
+      } catch (e) { this._versePrimed = false; }
     },
     // iOS mutes WebAudio (the "ambient" channel) when the silent switch is
     // on, while <audio> media plays regardless. Looping a silent media file
@@ -62,19 +124,7 @@
     _mediaKick() {
       if (this._kick) return;
       try {
-        // a 0.05s silent WAV, built by hand — no asset needed
-        const rate = 8000, n = 400;
-        const bytes = new Uint8Array(44 + n * 2);
-        const dv = new DataView(bytes.buffer);
-        const wr = (o, s) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
-        wr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt ');
-        dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
-        dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true);
-        dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
-        wr(36, 'data'); dv.setUint32(40, n * 2, true);
-        let b64 = '';
-        for (let i = 0; i < bytes.length; i++) b64 += String.fromCharCode(bytes[i]);
-        const el = new Audio('data:audio/wav;base64,' + btoa(b64));
+        const el = new Audio(this._silentWav());
         el.loop = true;
         el.volume = 0.01;
         const p = el.play();
@@ -105,7 +155,8 @@
     // choking. The old per-ayah pool meant a 21-ayah surah (Al-Lail) spawned
     // 21 media elements at once; iOS silently fails to load the last few, so
     // the recitation went mute near the end — on ANY reciter. One reused
-    // element also stays "unlocked" once the first tap has blessed audio.
+    // element also stays "unlocked" once a tap has blessed audio — which is
+    // what _primeVerse (called from every unlock) actually does for it.
     _verseAudio() {
       if (!this._verseEl) {
         const el = new Audio();
@@ -198,7 +249,11 @@
       h.guard = setTimeout(finish, 30000);
       this.duck(true);
       const p = el.play();
-      if (p && p.catch) p.catch(() => { /* real load failures surface via 'error' → remote */ });
+      // A REFUSED play() fires no 'error' event, so it can never reach the
+      // remote fallback — it just leaves the ayah silent. Drop the blessing so
+      // the child's next tap re-wins it (and resumes this very ayah, if it is
+      // still the one waiting). Load failures still surface via 'error'.
+      if (p && p.catch) p.catch(() => { this._versePrimed = false; });
       this._current = h;
       return h;
     },
