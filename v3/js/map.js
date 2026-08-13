@@ -815,6 +815,7 @@
       const viewW = W / scale;
       const viewH = H / scale;
       let point;
+      let rail = false;
       if (this.ceremony) {
         // v2: the light travels the WALK — from the heart's walk-by point,
         // over the bridge, through the gate, to the next island's first spot.
@@ -828,8 +829,20 @@
         // the rail (r4.1 verdict): looking around slides along the journey's
         // own axis — you can scroll, but never get lost in empty sky
         point = pointAtSamples(this.map.walkSamples, this.railS);
+        rail = true;
       } else if (this.firstFocus() && this.firstInviteSpot) {
         point = this.map.spots[this.firstInviteSpot.ri][this.firstInviteSpot.j];
+      } else if (this.hero) {
+        // At rest the CHILD is the camera's home — not the breathing star
+        // (playtest 2026-08-13: "walking on the main map, the camera randomly
+        // re-centres itself"). The follow above is only a timed window; when
+        // it ran out the target used to slide off to the star behind her back,
+        // seconds after she had stopped, which is the move he saw. Anchoring
+        // rest on her too means no timer expiry can ever change the target:
+        // the camera simply keeps holding her, and the only camera moves left
+        // are the deliberate ones (the wake ceremony, the handoff invite, the
+        // rail under a finger).
+        point = pointAtSamples(this.map.walkSamples, this.hero.s);
       } else if (this.star) {
         point = this.map.spots[this.star.ri][this.star.j];
       } else {
@@ -839,9 +852,17 @@
       }
       const max = this.mapCamMax(W, H);
       return {
+        rail,
         x: clamp(point.x - viewW * 0.46, 0, max.x),
         y: clamp(point.y - viewH * 0.58, 0, max.y)
       };
+    },
+
+    // the camera's opening frame (the rail flag belongs to the target, never
+    // to the camera itself)
+    startCam(W, H) {
+      const t = this.targetCam(W, H);
+      return { x: t.x, y: t.y };
     },
 
     // The quiet home-screen reminder: a small parchment ribbon at top-center,
@@ -937,8 +958,7 @@
       }
       this.stonePulse = Math.max(0, (this.stonePulse || 0) - dt * 1.8);
       const scale = this.mapScale(H);
-      const camMax = this.mapCamMax(W, H);
-      if (this.cam == null) this.cam = this.targetCam(W, H);
+      if (this.cam == null) this.cam = this.startCam(W, H);
 
       if (this.hero) {
         // she travels the trail itself, never as the crow flies
@@ -1063,8 +1083,11 @@
       } else {
         if (this.camFree <= 0) this.railS = null;
         const target = this.targetCam(W, H);
-        // the rail follows the finger promptly; the journey ease is calm
-        const k = Math.min(1, dt * (this.camFree > 0 ? 6 : 1.8));
+        // the rail follows the finger promptly; every other move — walking,
+        // resting, easing back off the rail — keeps the calm journey ease.
+        // (The prompt rate used to be tied to the drag's 2.5s tail, so a step
+        // taken just after a scroll whipped the camera across the map.)
+        const k = Math.min(1, dt * (target.rail ? 6 : 1.8));
         this.cam.x += (target.x - this.cam.x) * k;
         this.cam.y += (target.y - this.cam.y) * k;
       }
@@ -1396,7 +1419,7 @@
         return;
       }
       const scale = this.mapScale(H);
-      if (this.cam == null) this.cam = this.targetCam(W, H);
+      if (this.cam == null) this.cam = this.startCam(W, H);
       const dx = -this.cam.x * scale;
       const dy = -this.cam.y * scale;
       const dw = this.map.w * scale;
