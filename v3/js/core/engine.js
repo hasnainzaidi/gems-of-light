@@ -61,13 +61,17 @@
         return { x: e.clientX - r.left, y: e.clientY - r.top };
       };
       canvas.addEventListener('pointerdown', (e) => {
-        canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
         const p = pos(e);
         p.sx = p.x; p.sy = p.y; // remember where this touch began (for the thumbstick)
+        p.type = e.pointerType;
+        p.order = ++this._order;  // newest finger on the pad wins the stick
         this.touchMode = e.pointerType !== 'mouse';
         this.pointers.set(e.pointerId, p);
         if (!this.drag) this.drag = { id: e.pointerId, x: p.x, y: p.y, startX: p.x, startY: p.y };
         this.taps.push({ x: p.x, y: p.y, id: e.pointerId });
+        // Capture last, and never let a throw here skip the bookkeeping above:
+        // an untracked-but-pressed finger is as bad as an unreleased one.
+        try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch (_) { /* play on */ }
         e.preventDefault();
       });
       canvas.addEventListener('pointermove', (e) => {
@@ -75,16 +79,11 @@
         const p = pos(e);
         const prev = this.pointers.get(e.pointerId);
         p.sx = prev.sx; p.sy = prev.sy; // carry the touch's origin forward
+        p.type = prev.type; p.order = prev.order;
         this.pointers.set(e.pointerId, p);
         if (this.drag && this.drag.id === e.pointerId) { this.drag.x = p.x; this.drag.y = p.y; }
       });
-      const up = (e) => {
-        this.pointers.delete(e.pointerId);
-        if (this.drag && this.drag.id === e.pointerId) {
-          this.releases.push({ x: this.drag.x, y: this.drag.y });
-          this.drag = null;
-        }
-      };
+      const up = (e) => this.release(e.pointerId);
       canvas.addEventListener('pointerup', up);
       canvas.addEventListener('pointercancel', up);
       // iOS can drop a pointerup entirely (edge swipes, notification banners,
@@ -93,19 +92,67 @@
       // everything whenever the page loses the user's attention.
       window.addEventListener('pointerup', up);
       window.addEventListener('pointercancel', up);
-      const clearAll = () => {
-        this.pointers.clear();
-        this.drag = null;
-        this._jumpQueued = false;
-        this._keys = {};
-        this._syncKeys();
+      // Belt and braces for the same failure. On iOS the pointer events are
+      // synthesised from touches, and during multi-touch (stick thumb down,
+      // jump thumb tapping) a pointerup can go missing while the touch events
+      // still arrive intact. So take the touch list as the truth about which
+      // fingers are really on the glass: any tracked pointer with no finger
+      // left on it is gone — and when the last finger lifts, everything is.
+      const reconcile = (e) => {
+        if (!e.touches || !this.pointers.size) return;
+        const r = canvas.getBoundingClientRect();
+        const live = [];
+        for (let i = 0; i < e.touches.length; i++) {
+          live.push({ x: e.touches[i].clientX - r.left, y: e.touches[i].clientY - r.top });
+        }
+        const held = [];
+        for (const [id, p] of this.pointers) {
+          if (p.type === 'mouse') continue; // a touch list says nothing about a mouse
+          let near = Infinity;
+          for (const l of live) near = Math.min(near, dist(p.x, p.y, l.x, l.y));
+          held.push({ id, near });
+        }
+        // keep only as many pointers as there are fingers — the closest ones
+        held.sort((a, b) => a.near - b.near);
+        for (let i = live.length; i < held.length; i++) this.release(held[i].id);
       };
+      window.addEventListener('touchend', reconcile);
+      window.addEventListener('touchcancel', reconcile);
+      const clearAll = () => this.clearAll();
       window.addEventListener('blur', clearAll);
       window.addEventListener('pagehide', clearAll);
-      document.addEventListener('visibilitychange', () => { if (document.hidden) clearAll(); });
+      // Hiding drops the fingers; coming back drops anything that went stale
+      // while we were away (an installed PWA resumes a suspended page rather
+      // than booting a fresh one, so nothing else would clear it).
+      window.addEventListener('pageshow', clearAll);
+      document.addEventListener('visibilitychange', clearAll);
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     },
     releases: [],
+    _order: 0,
+    // One place where a finger stops counting, so every release path — real
+    // pointerup, cancelled gesture, or a touch we discovered had ended —
+    // leaves the same clean state behind.
+    release(id) {
+      this.pointers.delete(id);
+      if (this.drag && this.drag.id === id) {
+        this.releases.push({ x: this.drag.x, y: this.drag.y });
+        this.drag = null;
+      }
+    },
+    // Everything the child could be holding, let go of at once. Also zeroes
+    // the movement the stick had resolved to: scenes only poll() while they
+    // are walking, so a latched left/right must not survive a pause, a fade,
+    // or a trip to the home screen.
+    clearAll() {
+      this.pointers.clear();
+      this.drag = null;
+      this._jumpQueued = false;
+      this._keys = {};
+      this._syncKeys();
+      this.left = false; this.right = false; this.jumpHeld = false;
+      this.stickDX = 0;
+    },
     _syncKeys() {
       const k = this._keys;
       this._kbLeft = !!(k['ArrowLeft'] || k['a'] || k['A']);
@@ -118,19 +165,27 @@
     // zones = { stick:{x,y,r}, jump:{x,y,r} }. The thumbstick reads horizontal
     // lean; a touch that began on the pad keeps steering even if it slides off.
     poll(W, H) {
+      this._polled = true;
       let left = this._kbLeft || false, right = this._kbRight || false, jumpHeld = this._kbJump || false;
       this.stickDX = 0;
       const z = this.zones;
       if (z && z.stick) {
+        // Exactly one finger steers: the last one to land on the pad. Reading
+        // every pad pointer at once meant a single stale one could hold the
+        // child walking even while a live thumb sat at the centre.
+        let steer = null;
         for (const [, p] of this.pointers) {
           if (dist(p.sx != null ? p.sx : p.x, p.sy != null ? p.sy : p.y, z.stick.x, z.stick.y) < z.stick.r * 1.5) {
-            const dx = Math.max(-1, Math.min(1, (p.x - z.stick.x) / (z.stick.r - 12)));
-            this.stickDX = dx;
-            if (dx < -0.24) left = true;
-            else if (dx > 0.24) right = true;
+            if (!steer || (p.order || 0) >= (steer.order || 0)) steer = p;
           } else if (z.jump && dist(p.x, p.y, z.jump.x, z.jump.y) < z.jump.r) {
             jumpHeld = true; // holding the jump button sustains the rise
           }
+        }
+        if (steer) {
+          const dx = Math.max(-1, Math.min(1, (steer.x - z.stick.x) / (z.stick.r - 12)));
+          this.stickDX = dx;
+          if (dx < -0.24) left = true;
+          else if (dx > 0.24) right = true;
         }
       }
       this.left = left; this.right = right; this.jumpHeld = jumpHeld;
@@ -143,7 +198,16 @@
         if (!t.ui && dist(t.x, t.y, z.jump.x, z.jump.y) < z.jump.r) { t.ui = true; this.queueJump(); }
       }
     },
-    endFrame() { this.taps.length = 0; this.releases.length = 0; }
+    // A frame that never asked for movement must not keep the last answer.
+    // Scenes stop polling mid-level (the beat after a gem, the campfire, a
+    // fade to the shrine), and a remembered lean would leave the nub parked
+    // off-centre — looking, and on the next resumed frame acting, stuck.
+    endFrame() {
+      if (!this._polled) { this.left = false; this.right = false; this.jumpHeld = false; this.stickDX = 0; }
+      this._polled = false;
+      this.taps.length = 0;
+      this.releases.length = 0;
+    }
   };
   function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
   GOL.Input = Input;
