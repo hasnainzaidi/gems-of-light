@@ -1057,3 +1057,30 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     at once; (2) the door opens the MOMENT the clip finishes (each name
     clip already carries its baked 0.45s tail), dropping the extra
     one-second wait. A silent dwell keeps the old one-second beat.
+- **iOS APP STORE: SHIP EARLY, WRAP DON'T REWRITE (2026-08-15).** Verdict
+  on "perfect the PWA first vs. publish and improve in parallel":
+  publish early. The slow step is administrative (Apple Developer
+  enrollment + first review), not creative — 21 worlds is already past
+  launch-worthy, and everything on the backlog ships as ordinary
+  updates afterward. The app is a Capacitor shell around the UNCHANGED
+  `v3/js` game (one codebase, two channels); a native rewrite would
+  fork the game and kill parallel improvement. Launch blockers are
+  exactly five — durable saves (Preferences mirror; localStorage is
+  evictable in WKWebView), airplane-mode-complete bundle (Guideline
+  4.2), Mishary-only audio, Kids Category (privacy policy + "no data"
+  declaration), price model — and nothing else is one. Full plan,
+  shell design, and the Mac-mini/TestFlight sequence:
+  `v3/IOS-APP-STORE-PLAN.md`. Shell lives in `ios-shell/`, self-
+  contained, zero game-file risk.
+- **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
+  Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
+  removal, game-wide (not just the iOS bundle): the `basit` registry
+  entry, `audio/basit/` (26 MB), the Basit word-follow tables in
+  `follow-estimated.js`, and `w1-falaq-follow.js` (the hand-aligned
+  Basit Falaq prototype — recoverable from git history if a second
+  reciter ever returns; the registry MECHANISM stays). Safe because
+  Alafasy word-follow tables cover the identical surah set
+  (1, 92–93, 97, 100–106, 108–114, 255), boot's saved-config guard
+  already falls back to the default for an unknown saved reciter, and
+  the tuning-panel picker builds itself from the registry. v1/v2 never
+  referenced Basit.
