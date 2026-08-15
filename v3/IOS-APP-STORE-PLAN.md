@@ -56,7 +56,11 @@ buys real gameplay wins the PWA can't reach:
    the hold-the-star gate is already the right parental-gate instinct).
    Needs: a privacy policy URL on playgemsoflight.com and a "no data
    collected" App Privacy declaration. Opt in at launch — opting out
-   later looks bad.
+   later looks bad. DONE 2026-08-15: `privacy.html` at the repo root
+   (self-contained, zero third-party requests), linked from the
+   grown-ups page's top-right corner; the App Privacy URL is
+   https://www.playgemsoflight.com/privacy.html — live once staging
+   promotes to main.
 5. **Price model.** Decide before launch (free is the working
    assumption); easy to set, awkward to reverse once families have it.
 
