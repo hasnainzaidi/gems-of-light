@@ -27,22 +27,27 @@
 
     /* ------------------------------------------------------------ toolbar */
     #bar {
-      display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center;
-      padding: 8px 12px; background: var(--panel);
+      display: flex; flex-wrap: wrap; gap: 7px 10px; align-items: center;
+      padding: 7px 10px; background: var(--panel);
       border-bottom: 1px solid var(--edge); flex: none;
     }
-    #bar .grp { display: flex; gap: 6px; align-items: center; }
+    #bar .grp { display: flex; gap: 5px; align-items: center; }
     #bar .sep { width: 1px; height: 22px; background: var(--edge); }
     label.chk { display: flex; gap: 5px; align-items: center; cursor: pointer; color: var(--dim); white-space: nowrap; }
     label.chk input { accent-color: var(--gold); margin: 0; }
     select, button {
-      font: inherit; color: var(--ink); background: #324236;
+      font: inherit; white-space: nowrap; color: var(--ink); background: #324236;
       border: 1px solid var(--edge); border-radius: 7px; padding: 4px 9px; cursor: pointer;
     }
     button:hover, select:hover { background: #3D5041; }
     button:active { transform: translateY(1px); }
     button.icon { width: 30px; padding: 4px 0; text-align: center; }
-    #restore { width: 118px; accent-color: var(--gold); }
+    a.back {
+      color: var(--dim); text-decoration: none; border: 1px solid var(--edge);
+      border-radius: 7px; padding: 3px 9px; line-height: 1.4;
+    }
+    a.back:hover { background: #3D5041; color: var(--ink); }
+    #restore { width: 96px; accent-color: var(--gold); }
     .tag { color: var(--dim); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; }
 
     /* --------------------------------------------------------------- body */
@@ -125,7 +130,7 @@
 <div id="app">
   <div id="bar">
     <div class="grp">
-      <span class="tag">World</span>
+      <a class="back" href="levels.html" title="All levels">← Levels</a>
       <select id="world"></select>
     </div>
     <div class="sep"></div>
@@ -160,7 +165,7 @@
     <div class="sep"></div>
     <div class="grp">
       <button id="png" title="Save the flattened level as a PNG">Save PNG</button>
-      <button id="togglePanel" title="Show / hide the side panel">Panel</button>
+      <button class="icon" id="togglePanel" title="Show / hide the side panel">☰</button>
     </div>
   </div>
 
