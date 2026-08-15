@@ -93,6 +93,25 @@ current state.
   via `GOL.store.reset()` before real playtests if tests dirtied it.
 - Embedded browser pane only pumps rAF during interactions — drive scenes
   manually (`enter/update/draw` loops in JS) to verify; not a game bug.
+- **Level map viewer** (`/v3/level-map.html?w=4`, `v3/js/level-map.js`):
+  any world flattened into ONE pannable/zoomable image — the real recipe
+  poured through the real DSL and painted with the game's own art code, so
+  construction, placement and art can be read without walking it. Toggles:
+  beats (gems in ayah order, campfire, door, secrets, movers), collection
+  route, tile grid + ruler, tile-type wash, art on/off; a Gems slider drives
+  the palette drift; Save PNG exports the full-resolution flat image. Two
+  honest departures, both noted in the panel: the screen-anchored sky is
+  painted once across the world's own air (the hills ARE world-anchored at
+  row 13.4, so they land exactly right), and everything is shown awake at
+  once. Review tool only — never linked from the game.
+- **Pinned notes on the map** (same page): ＋ Pin (or N) then click drops a
+  note ON a tile — draggable, tickable as fixed, kept in localStorage.
+  **Copy** puts the level's notes on the clipboard as markdown (with a json
+  block) to paste straight into a session; ⤓/⤒ export and import the same
+  as a file. Committed reviews live in `v3/reviews/level-notes/wN-<key>.json`
+  (see that folder's README) and load as the shared baseline for the world —
+  local edits win, deletions stick. This is the loop for Hasnain and an agent
+  to point at the same spot; fix the recipe, tick the note, re-commit.
 
 ## Session log (condensed)
 
