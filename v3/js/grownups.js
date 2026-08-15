@@ -73,6 +73,10 @@
         : null;
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;
+      // a quiet "privacy" word in the top-right corner — this page is where a
+      // grown-up's eyes already are, and the App Store wants the policy one
+      // tap from the app. Opens /privacy.html (a plain page, no scripts).
+      const privacyLink = { cx: R - 42, cy: titleY, x: R - 76, y: titleY - 12, w: 72, h: 24 };
 
       const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
         .filter((w) => w.build && w.surahId != null); // only surahs a child can play
@@ -90,7 +94,7 @@
         const hit = { x: tx - 92, y: y + 4, w: toggleW + 92, h: rH - 8 };
         return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit };
       });
-      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll, installLink };
+      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll, installLink, privacyLink };
     },
 
     update(dt, W, H) {
@@ -124,6 +128,17 @@
       if (GOL.dist(clickAt.x, clickAt.y, home.x, home.y) < home.r) {
         GOL.audio.sfx('tap');
         home.fn();
+        return;
+      }
+      // the privacy page — a real page, so it opens beside the game rather
+      // than navigating away from a running session
+      const pl = lay.privacyLink;
+      if (pl && clickAt.x >= pl.x && clickAt.x <= pl.x + pl.w &&
+          clickAt.y >= pl.y && clickAt.y <= pl.y + pl.h) {
+        GOL.audio.sfx('tap');
+        // '../' clamps to the repo root from both entries (/ and /v3/),
+        // the same trick every asset path in here uses
+        window.open('../privacy.html', '_blank');
         return;
       }
       // the "add to home screen" line — always available here, opens the steps
@@ -170,6 +185,18 @@
       GOL.text(ctx, "Your child's journey", cx, lay.titleY, { size: 19, weight: '800', color: CREAM });
       GOL.text(ctx, 'each surah they have learned — and any you want to open on the map',
         cx, lay.titleY + 20, { size: 11.5, weight: '600', color: alpha(CREAM, 0.6), shadow: false });
+
+      // the quiet privacy link, top-right, underlined so it reads as a link
+      const pl = lay.privacyLink;
+      if (pl) {
+        GOL.text(ctx, 'privacy', pl.cx, pl.cy, { size: 11.5, weight: '700', color: alpha(CREAM, 0.55), shadow: false });
+        ctx.strokeStyle = alpha(CREAM, 0.3);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pl.cx - 20, pl.cy + 8);
+        ctx.lineTo(pl.cx + 20, pl.cy + 8);
+        ctx.stroke();
+      }
 
       // the list panel
       GOL.drawPanel(ctx, lay.px, lay.panelTop, lay.pw, lay.panelH, { radius: 18 });

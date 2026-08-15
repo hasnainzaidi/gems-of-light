@@ -19,10 +19,6 @@ verdict is logged.
       iPhones; must pass the evicted-storage save test before any
       submission — `v3/IOS-APP-STORE-PLAN.md`
 
-- [ ] Publish a privacy policy page on playgemsoflight.com ("no data
-      collected") — required for the Kids Category App Privacy
-      declaration — `v3/IOS-APP-STORE-PLAN.md`
-
 - [ ] Playtest Mishary-only on staging: recitation + read-along
       (kursi, falaq) still right with Basit gone; a save that had
       Basit selected falls back silently — verdict → PLAN §10 entry
