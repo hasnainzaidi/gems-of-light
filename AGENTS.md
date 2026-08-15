@@ -93,6 +93,17 @@ current state.
   via `GOL.store.reset()` before real playtests if tests dirtied it.
 - Embedded browser pane only pumps rAF during interactions — drive scenes
   manually (`enter/update/draw` loops in JS) to verify; not a game bug.
+- **Level map viewer** (`/v3/level-map.html?w=4`, `v3/js/level-map.js`):
+  any world flattened into ONE pannable/zoomable image — the real recipe
+  poured through the real DSL and painted with the game's own art code, so
+  construction, placement and art can be read without walking it. Toggles:
+  beats (gems in ayah order, campfire, door, secrets, movers), collection
+  route, tile grid + ruler, tile-type wash, art on/off; a Gems slider drives
+  the palette drift; Save PNG exports the full-resolution flat image. Two
+  honest departures, both noted in the panel: the screen-anchored sky is
+  painted once across the world's own air (the hills ARE world-anchored at
+  row 13.4, so they land exactly right), and everything is shown awake at
+  once. Review tool only — never linked from the game.
 
 ## Session log (condensed)
 
