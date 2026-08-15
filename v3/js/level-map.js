@@ -899,6 +899,11 @@
     o.textContent = w.n + ' · ' + (surah ? surah.englishName : w.key) + ' — ' + (w.name || '');
     bar.world.appendChild(o);
   });
+  // …and the same on the way back: extension-less on Pages (whose .html
+  // redirect is fatal inside the root service worker), .html on a file server.
+  const backLink = document.querySelector('a.back');
+  if (backLink) backLink.href = 'levels' + (/\.html$/.test(location.pathname) ? '.html' : '');
+
   const q = new URLSearchParams(location.search);
   worldN = parseInt(q.get('w') || '4', 10);
   if (!GOL.WORLDS3[worldN - 1] || !GOL.WORLDS3[worldN - 1].build) worldN = 4;

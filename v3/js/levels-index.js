@@ -6,6 +6,15 @@
 (function () {
   const GOL = window.GOL;
   const el = (id) => document.getElementById(id);
+
+  // Cloudflare Pages redirects /page.html → /page. A navigation that redirects
+  // is fatal inside the root service worker (it hands the redirected response
+  // to respondWith, which browsers reject with ERR_FAILED), so on Pages every
+  // link here must already be extension-less. A plain file server has no such
+  // rewrite and needs the .html. This page's own address says which we are on:
+  // reached as /v3/levels.html we are on a file server, as /v3/levels we are
+  // on Pages — because Pages redirected us here itself.
+  const EXT = /\.html$/.test(location.pathname) ? '.html' : '';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -58,7 +67,7 @@
       : '';
     const search = [w.key, w.name, s && s.englishName, s && s.meaningName].join(' ').toLowerCase();
     return '<a class="row' + (w.build ? '' : ' dim') + '"' +
-      (w.build ? ' href="level-map.html?w=' + w.n + '"' : '') +
+      (w.build ? ' href="level-map' + EXT + '?w=' + w.n + '"' : '') +
       ' data-search="' + esc(search) + '">' +
       '<span class="n">' + w.n + '</span>' +
       '<span class="name">' + esc(s ? s.englishName : w.key) + '</span>' +
