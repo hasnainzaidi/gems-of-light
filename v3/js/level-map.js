@@ -521,6 +521,9 @@
       }
     }
 
+    // ---- the notes we have pinned on this level
+    if (el('tNotes').checked) drawNotes(ctx);
+
     // ---- rulers, pinned to the viewport edges
     ctx.fillStyle = 'rgba(20,27,22,.72)';
     ctx.fillRect(0, 0, vw, 17);
@@ -561,12 +564,216 @@
     vctx.lineWidth = 1;
     vctx.strokeRect(sx(0) * dpr, sy(0) * dpr, s(art.canvas.width) * dpr, s(art.canvas.height) * dpr);
     drawOverlay(vctx);
+    placeEditor();
     el('stZoom').textContent = Math.round(cam.z * 100) + '%';
+  }
+
+  // --------------------------------------------------------------- notes ---
+  // Pinned annotations: the whole point of the map is that Hasnain and an
+  // agent can point at the SAME spot. A note is a tile coordinate plus a
+  // sentence, kept in this browser and shared two ways:
+  //   · Copy   → markdown (+ a json block) to paste straight into chat
+  //   · ⤓ / ⤒ → a json file that can be committed to
+  //             v3/reviews/level-notes/wN-<key>.json, which this page then
+  //             loads as the shared baseline for everyone who opens it.
+  const NOTE_KEY = 'gemsOfLight.v3.levelNotes';
+  const store = { author: '', notes: {}, deleted: {} };
+  let repoNotes = [];   // the committed baseline for the world on screen
+  let selected = null;  // id of the note the editor is showing
+  let addMode = false;
+
+  function loadStore() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(NOTE_KEY) || '{}');
+      Object.assign(store, { author: raw.author || '', notes: raw.notes || {}, deleted: raw.deleted || {} });
+    } catch (e) { /* a corrupt draft is not worth blocking the viewer over */ }
+  }
+  function saveStore() {
+    try { localStorage.setItem(NOTE_KEY, JSON.stringify(store)); } catch (e) { /* private mode */ }
+  }
+  // the committed notes for this world, if the file exists (404 is normal —
+  // most worlds have never been reviewed). Fetched once per world per visit.
+  const repoCache = {};
+  function loadRepoNotes(n) {
+    repoNotes = repoCache[n] || [];
+    const w = GOL.WORLDS3[n - 1];
+    if (!w || repoCache[n]) return Promise.resolve();
+    return fetch('reviews/level-notes/w' + n + '-' + w.key + '.json', { cache: 'no-store' })
+      .then((r) => (r.ok && /json/.test(r.headers.get('content-type') || '') ? r.json() : null))
+      .then((j) => { repoNotes = repoCache[n] = Array.isArray(j) ? j : []; })
+      .catch(() => { repoNotes = repoCache[n] = []; });
+  }
+  // repo baseline first, this browser's edits on top, tombstones removed
+  function notesFor(n) {
+    const m = new Map();
+    for (const nt of repoNotes) if (nt && nt.id && nt.world === n) m.set(nt.id, Object.assign({ source: 'repo' }, nt));
+    for (const id of Object.keys(store.notes)) {
+      const nt = store.notes[id];
+      if (nt && nt.world === n) m.set(id, nt);
+    }
+    for (const id of Object.keys(store.deleted)) m.delete(id);
+    return [...m.values()].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+  }
+  function noteById(id) {
+    return notesFor(worldN).find((nt) => nt.id === id) || null;
+  }
+
+  function drawNotes(ctx) {
+    const list = notesFor(worldN);
+    list.forEach((nt, i) => {
+      const x = sx(nt.tx * TILE), y = sy(nt.ty * TILE);
+      if (x < -60 || y < -60 || x > vwCss + 60 || y > vhCss + 60) return;
+      const col = nt.done ? '#9BD98C' : '#FFC46B';
+      const on = nt.id === selected;
+      ctx.beginPath();
+      ctx.moveTo(x, y);                 // the pin's point sits ON the spot
+      ctx.lineTo(x - 6, y - 11);
+      ctx.lineTo(x + 6, y - 11);
+      ctx.closePath();
+      ctx.fillStyle = col;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(x - 11, y - 33, 22, 22, 7);
+      ctx.fillStyle = on ? col : 'rgba(20,27,22,.86)';
+      ctx.fill();
+      ctx.strokeStyle = col;
+      ctx.lineWidth = on ? 2.5 : 1.8;
+      ctx.stroke();
+      ctx.fillStyle = on ? '#1D271F' : col;
+      ctx.font = '800 12px Nunito, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), x, y - 21);
+    });
+  }
+
+  function hitNote(px, py) {
+    const list = notesFor(worldN);
+    for (let i = list.length - 1; i >= 0; i--) {
+      const nt = list[i];
+      const x = sx(nt.tx * TILE), y = sy(nt.ty * TILE);
+      if (Math.abs(px - x) < 13 && py > y - 35 && py < y + 4) return nt;
+    }
+    return null;
+  }
+
+  function openEditor(nt) {
+    selected = nt.id;
+    const ed = el('editor');
+    ed.hidden = false;
+    el('noteText').value = nt.text || '';
+    el('noteAuthor').value = nt.author || store.author || '';
+    el('noteDone').checked = !!nt.done;
+    el('noteWhere').textContent = 'tile ' + Math.floor(nt.tx) + ', ' + Math.floor(nt.ty) +
+      (nt.source === 'repo' ? ' · from the repo' : '');
+    placeEditor();
+    el('noteText').focus();
+    renderNotes();
+    draw();
+  }
+  function placeEditor() {
+    const ed = el('editor');
+    if (ed.hidden || !selected) return;
+    const nt = noteById(selected);
+    if (!nt) return;
+    const r = el('stage').getBoundingClientRect();
+    const x = Math.max(8, Math.min(r.width - 276, sx(nt.tx * TILE) - 134));
+    const y = Math.max(24, Math.min(r.height - 190, sy(nt.ty * TILE) + 14));
+    ed.style.left = x + 'px';
+    ed.style.top = y + 'px';
+  }
+  function closeEditor() {
+    el('editor').hidden = true;
+    selected = null;
+    renderNotes();
+    draw();
+  }
+  function saveEditor() {
+    if (!selected) return;
+    const nt = Object.assign({}, noteById(selected));
+    nt.text = el('noteText').value.trim();
+    nt.author = el('noteAuthor').value.trim() || 'hasnain';
+    nt.done = el('noteDone').checked;
+    nt.ts = nt.ts || Date.now();
+    delete nt.source;
+    store.author = nt.author;
+    if (!nt.text) { deleteNote(nt.id); return; }
+    store.notes[nt.id] = nt;
+    delete store.deleted[nt.id];
+    saveStore();
+    closeEditor();
+  }
+  function deleteNote(id) {
+    delete store.notes[id];
+    store.deleted[id] = true; // tombstone, so a repo note stays deleted here
+    saveStore();
+    closeEditor();
+  }
+  // a note that came from the repo becomes this browser's copy as soon as it
+  // is touched, so edits and drags never fight the committed file
+  function mutable(nt) {
+    if (!store.notes[nt.id]) {
+      const c = Object.assign({}, nt);
+      delete c.source;
+      store.notes[nt.id] = c;
+    }
+    return store.notes[nt.id];
+  }
+
+  function addNoteAt(wx, wy) {
+    const nt = {
+      id: 'n' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+      world: worldN, key: art.L.key,
+      tx: Math.round((wx / TILE) * 100) / 100, ty: Math.round((wy / TILE) * 100) / 100,
+      text: '', author: store.author || 'hasnain', done: false, ts: Date.now()
+    };
+    store.notes[nt.id] = nt;
+    openEditor(nt);
+  }
+
+  function renderNotes() {
+    const list = notesFor(worldN);
+    const open = list.filter((n) => !n.done).length;
+    el('panelNotes').innerHTML =
+      '<h2>Notes on this level <span class="note">(' + open + ' open / ' + list.length + ')</span></h2>' +
+      (list.length ? list.map((nt, i) =>
+        '<div class="noteRow' + (nt.done ? ' done' : '') + '" data-id="' + nt.id + '">' +
+        '<b>' + (i + 1) + '</b><span><em>(' + Math.floor(nt.tx) + ', ' + Math.floor(nt.ty) + ')</em> ' +
+        esc(nt.text || '…') + '<br><span class="who">' + esc(nt.author || '') +
+        (nt.source === 'repo' ? ' · repo' : '') + '</span></span></div>'
+      ).join('')
+        : '<p class="note">No notes yet. Press <b>＋ Pin</b> (or N), then click the spot you want to talk about.</p>');
+    [...el('panelNotes').querySelectorAll('.noteRow')].forEach((row) => {
+      row.addEventListener('click', () => {
+        const nt = noteById(row.dataset.id);
+        if (!nt) return;
+        // bring the spot into view, then open it
+        const r = view.getBoundingClientRect();
+        cam.x = nt.tx * TILE - r.width / (2 * cam.z);
+        cam.y = nt.ty * TILE - r.height / (2 * cam.z);
+        draw();
+        openEditor(nt);
+      });
+    });
+  }
+
+  function notesMarkdown() {
+    const L = art.L, list = notesFor(worldN);
+    const head = '### ' + ((L.surah && L.surah.englishName) || L.key) + ' — level notes (world ' +
+      worldN + ', v3/js/worlds/' + fileFor(worldN) + ')';
+    const lines = list.map((nt, i) =>
+      '- [' + (nt.done ? 'x' : ' ') + '] **' + (i + 1) + '. tile (' + Math.floor(nt.tx) + ', ' +
+      Math.floor(nt.ty) + ')** — ' + (nt.text || '') + ' _(' + (nt.author || '?') + ')_');
+    const json = JSON.stringify(list.map((nt) => {
+      const c = Object.assign({}, nt); delete c.source; return c;
+    }), null, 1);
+    return head + '\n' + (lines.join('\n') || '_(none)_') +
+      '\n\n<details><summary>notes json — commit to v3/reviews/level-notes/w' + worldN + '-' + L.key +
+      '.json</summary>\n\n```json\n' + json + '\n```\n</details>\n';
   }
 
   // --------------------------------------------------------------- panel ---
   function fillPanel() {
-    const L = art.L, p = el('panel');
+    const L = art.L, p = el('panelBuild');
     const surah = L.surah || {};
     const counts = { ground: 0, slab: 0, water: 0, carved: 0, lid: 0 };
     for (let i = 0; i < L.tiles.length; i++) {
@@ -635,6 +842,8 @@
     def = GOL.WORLDS3[n - 1];
     if (!def || !def.build) return;
     el('busy').classList.add('on');
+    closeEditor();
+    loadRepoNotes(n).then(() => { if (art) renderNotes(); });
     // let the browser paint "painting…" before the (heavy) atlas build
     setTimeout(() => {
       const k = parseFloat(el('restore').value);
@@ -643,6 +852,7 @@
       const total = art.L.gems.length;
       el('restoreLabel').textContent = 'Gems ' + Math.round(k * total) + '/' + total;
       fillPanel();
+      renderNotes();
       el('busy').classList.remove('on');
       if (keepView) draw(); else fit();
     }, 16);
@@ -675,7 +885,63 @@
     el('restoreLabel').textContent = 'Gems ' + Math.round(parseFloat(bar.restore.value) * total) + '/' + total;
   });
   bar.restore.addEventListener('change', () => load(worldN, true));
-  ['tBeats', 'tRoute', 'tGrid', 'tTiles', 'tArt'].forEach((id) => el(id).addEventListener('change', draw));
+  ['tBeats', 'tRoute', 'tGrid', 'tTiles', 'tArt', 'tNotes'].forEach((id) => el(id).addEventListener('change', draw));
+
+  // ---- notes: drop, edit, share
+  function setAddMode(on) {
+    addMode = on;
+    el('addNote').classList.toggle('on', on);
+    view.classList.toggle('pin', on);
+    el('stHint').textContent = on
+      ? 'click the spot you want to note'
+      : 'drag to pan · wheel or pinch to zoom · double-click to zoom in';
+  }
+  el('addNote').addEventListener('click', () => setAddMode(!addMode));
+  el('noteSave').addEventListener('click', saveEditor);
+  el('noteCancel').addEventListener('click', () => {
+    // an untouched, never-saved pin should not linger on the map
+    const nt = selected ? noteById(selected) : null;
+    if (nt && !nt.text) deleteNote(nt.id); else closeEditor();
+  });
+  el('noteDelete').addEventListener('click', () => { if (selected) deleteNote(selected); });
+  el('noteText').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveEditor(); }
+    if (e.key === 'Escape') { e.preventDefault(); el('noteCancel').click(); }
+  });
+  el('copyNotes').addEventListener('click', () => {
+    const md = notesMarkdown();
+    const done = () => { const b = el('copyNotes'); b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(md).then(done, () => window.prompt('Copy the notes:', md));
+    else window.prompt('Copy the notes:', md);
+  });
+  el('exportNotes').addEventListener('click', () => {
+    const list = notesFor(worldN).map((nt) => { const c = Object.assign({}, nt); delete c.source; return c; });
+    const blob = new Blob([JSON.stringify(list, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.download = 'w' + worldN + '-' + art.L.key + '.json';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+  el('importBtn').addEventListener('click', () => el('importNotes').click());
+  el('importNotes').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    f.text().then((txt) => {
+      let list;
+      try { list = JSON.parse(txt); } catch (err) { window.alert('That file is not notes JSON.'); return; }
+      if (!Array.isArray(list)) { window.alert('That file is not notes JSON.'); return; }
+      for (const nt of list) {
+        if (!nt || !nt.id) continue;
+        store.notes[nt.id] = nt;
+        delete store.deleted[nt.id];
+      }
+      saveStore();
+      renderNotes();
+      draw();
+    });
+    e.target.value = '';
+  });
   el('fit').addEventListener('click', fit);
   el('one').addEventListener('click', () => { cam.z = 1; draw(); });
   el('zoomIn').addEventListener('click', () => zoomAt(view.getBoundingClientRect().width / 2, view.getBoundingClientRect().height / 2, 1.3));
@@ -693,9 +959,18 @@
   let drag = null;
   const pointers = new Map();
   let pinch = null;
+  let downAt = null;   // start of a press, so a click can be told from a drag
+  let noteDrag = null; // the pin currently being carried to a better spot
   view.addEventListener('pointerdown', (e) => {
     view.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    downAt = { x: e.clientX, y: e.clientY };
+    // pressing an existing pin picks it up instead of panning the map
+    if (art && pointers.size === 1 && el('tNotes').checked) {
+      const r = view.getBoundingClientRect();
+      const hit = hitNote(e.clientX - r.left, e.clientY - r.top);
+      if (hit) { noteDrag = { id: hit.id }; return; }
+    }
     if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.z };
@@ -716,6 +991,13 @@
       zoomAt(mid.x, mid.y, target / cam.z);
       return;
     }
+    if (noteDrag) {
+      const nt = mutable(noteById(noteDrag.id) || { id: noteDrag.id });
+      nt.tx = Math.round(((cam.x + (e.clientX - r.left) / cam.z) / TILE) * 100) / 100;
+      nt.ty = Math.round(((cam.y + (e.clientY - r.top) / cam.z) / TILE) * 100) / 100;
+      draw();
+      return;
+    }
     if (drag) {
       cam.x = drag.cx - (e.clientX - drag.x) / cam.z;
       cam.y = drag.cy - (e.clientY - drag.y) / cam.z;
@@ -732,6 +1014,29 @@
     pointers.delete(e.pointerId);
     if (pointers.size < 2) pinch = null;
     if (!pointers.size) { drag = null; view.classList.remove('drag'); }
+    // a press that never travelled is a click: open a pin, or drop a new one
+    if (!art || !downAt) { noteDrag = null; return; }
+    const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+    downAt = null;
+    if (noteDrag) {
+      const id = noteDrag.id;
+      noteDrag = null;
+      if (moved > 4) { saveStore(); renderNotes(); draw(); return; } // carried
+      const nt = noteById(id);
+      if (nt) { openEditor(nt); return; }
+    }
+    if (moved > 4) return;
+    const r = view.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const hit = el('tNotes').checked ? hitNote(px, py) : null;
+    if (hit) { openEditor(hit); return; }
+    if (addMode) {
+      el('tNotes').checked = true;
+      addNoteAt(cam.x + px / cam.z, cam.y + py / cam.z);
+      setAddMode(false);
+      return;
+    }
+    if (selected) closeEditor();
   };
   view.addEventListener('pointerup', up);
   view.addEventListener('pointercancel', up);
@@ -745,8 +1050,12 @@
     zoomAt(e.clientX - r.left, e.clientY - r.top, 1.9);
   });
   window.addEventListener('keydown', (e) => {
-    if (e.target && e.target.tagName === 'SELECT') return;
+    const tag = e.target && e.target.tagName;
+    if (tag === 'SELECT') return;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return; // typing a note
+    if (e.key === 'Escape') { setAddMode(false); el('noteCancel').click(); return; }
     const k = e.key.toLowerCase();
+    if (k === 'n') { setAddMode(!addMode); return; }
     if (k === 'f') fit();
     else if (k === '0') { cam.z = 1; draw(); }
     else if (k === '+' || k === '=') zoomAt(view.getBoundingClientRect().width / 2, view.getBoundingClientRect().height / 2, 1.3);
@@ -757,6 +1066,7 @@
   });
   window.addEventListener('resize', resize);
 
+  loadStore();
   resize();
   load(worldN);
 })();

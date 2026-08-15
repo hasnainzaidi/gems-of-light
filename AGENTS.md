@@ -104,6 +104,14 @@ current state.
   painted once across the world's own air (the hills ARE world-anchored at
   row 13.4, so they land exactly right), and everything is shown awake at
   once. Review tool only — never linked from the game.
+- **Pinned notes on the map** (same page): ＋ Pin (or N) then click drops a
+  note ON a tile — draggable, tickable as fixed, kept in localStorage.
+  **Copy** puts the level's notes on the clipboard as markdown (with a json
+  block) to paste straight into a session; ⤓/⤒ export and import the same
+  as a file. Committed reviews live in `v3/reviews/level-notes/wN-<key>.json`
+  (see that folder's README) and load as the shared baseline for the world —
+  local edits win, deletions stick. This is the loop for Hasnain and an agent
+  to point at the same spot; fix the recipe, tick the note, re-commit.
 
 ## Session log (condensed)
 
