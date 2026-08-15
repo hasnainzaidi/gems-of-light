@@ -1,0 +1,16 @@
+{
+  "appId": "com.playgemsoflight.app",
+  "appName": "Gems of Light",
+  "webDir": "www",
+  "backgroundColor": "#2E4032",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false,
+    "backgroundColor": "#2E4032",
+    "preferredContentMode": "mobile"
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}

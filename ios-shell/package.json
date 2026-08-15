@@ -1,0 +1,19 @@
+{
+  "name": "gems-of-light-ios-shell",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor shell that wraps the unchanged Gems of Light web game as a native iOS app. See ios-shell/README.md and v3/IOS-APP-STORE-PLAN.md.",
+  "type": "module",
+  "scripts": {
+    "build-www": "node tools/build-www.mjs",
+    "sync": "npm run build-www && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/preferences": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
