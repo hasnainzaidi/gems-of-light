@@ -10,6 +10,23 @@ verdict is logged.
 
 ## Now
 
+- [ ] HASNAIN: enroll in the Apple Developer Program ($99/yr) at
+      developer.apple.com — identity checks take days–weeks and gate
+      everything App Store; start now — `v3/IOS-APP-STORE-PLAN.md`
+
+- [ ] iOS shell first build on the Mac mini: `ios-shell/README.md`
+      four commands → Xcode → TestFlight internal on the family
+      iPhones; must pass the evicted-storage save test before any
+      submission — `v3/IOS-APP-STORE-PLAN.md`
+
+- [ ] Publish a privacy policy page on playgemsoflight.com ("no data
+      collected") — required for the Kids Category App Privacy
+      declaration — `v3/IOS-APP-STORE-PLAN.md`
+
+- [ ] Playtest Mishary-only on staging: recitation + read-along
+      (kursi, falaq) still right with Basit gone; a save that had
+      Basit selected falls back silently — verdict → PLAN §10 entry
+
 - [ ] Voice-clip babble gate: ElevenLabs hallucinated a trailing
       utterance after the break tag on the kursi title (caught by ear
       2026-08-10, trimmed). Teach generate-narration.mjs to

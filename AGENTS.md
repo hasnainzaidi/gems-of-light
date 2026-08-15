@@ -24,7 +24,8 @@ current state.
   shrine (one-socket recall) → Grand Gem → next world unlocks. Plus: the
   Remembering (dream-shrine review of old surahs, Remembering Moons),
   journey tracker, grown-ups page (hold the star), tuning panel, reciter
-  registry (Abdul Basit default).
+  registry (Mishary Alafasy, the game's one shipped voice since
+  2026-08-15; the registry mechanism stays for a possible return).
 
 ## Read before acting (v3 work)
 
