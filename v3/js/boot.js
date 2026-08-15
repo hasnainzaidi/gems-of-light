@@ -21,11 +21,12 @@
   };
 
   // ------------------------------------------------------------ reciters --
-  // one voice at a time, chosen in the tuning panel; local files first,
-  // everyayah.com streaming as the fallback. Mishary is the default voice
-  // (2026-07-15); Abdul Basit remains one tap away in the tuning panel.
+  // one voice at a time; local files first, everyayah.com streaming as the
+  // fallback. Mishary is the ONLY shipped voice (2026-08-15 — Abdul Basit
+  // and his 26 MB of mp3s were removed to keep the app-store build small).
+  // The registry stays a registry: add a second entry here and the tuning
+  // panel's reciter row reappears on its own.
   GOL.RECITERS = {
-    basit: { name: 'Abdul Basit (Murattal)', local: '../audio/basit/', remote: 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/' },
     alafasy: { name: 'Mishary Alafasy', local: '../audio/alafasy/', remote: 'https://everyayah.com/data/Alafasy_128kbps/' }
   };
 

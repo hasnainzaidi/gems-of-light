@@ -1075,12 +1075,20 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
   removal, game-wide (not just the iOS bundle): the `basit` registry
-  entry, `audio/basit/` (26 MB), the Basit word-follow tables in
-  `follow-estimated.js`, and `w1-falaq-follow.js` (the hand-aligned
-  Basit Falaq prototype — recoverable from git history if a second
-  reciter ever returns; the registry MECHANISM stays). Safe because
-  Alafasy word-follow tables cover the identical surah set
-  (1, 92–93, 97, 100–106, 108–114, 255), boot's saved-config guard
+  entry, `audio/basit/` (26 MB, 194 files) plus its dead fetch
+  script, and every Basit word-follow table (`follow-estimated.js`
+  −918 lines; the hand-aligned `basit[113]` in `w1-falaq-follow.js`).
+  All recoverable from git history if a second reciter returns; the
+  registry MECHANISM stays — a second entry self-restores the tuning
+  panel's reciter row, which now hides when only one voice exists.
+  NOTE the execution catch: `w1-falaq-follow.js` was NOT deleted —
+  despite its Basit-only header it also carried the game's only
+  hand-aligned ALAFASY table for Al-Falaq (113), which
+  `follow-estimated.js` deliberately excludes; the file stays as that
+  table's home. Safe because Alafasy word-follow tables cover the
+  identical surah set (1, 92–93, 97, 100–106, 108–114, 255),
+  `adventure.js`'s reference-table fallback was retargeted
+  basit→alafasy, boot's saved-config guard
   already falls back to the default for an unknown saved reciter, and
   the tuning-panel picker builds itself from the registry. v1/v2 never
   referenced Basit.

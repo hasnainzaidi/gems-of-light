@@ -290,8 +290,14 @@
     // The tuning rows and their segmented option buttons. One source of
     // geometry, used by both hit-testing and drawing.
     settingsSegs(W, H) {
+      // The reciter picker only earns a row when there is a choice to make.
+      // Since 2026-08-15 Mishary is the sole shipped voice, so the row hides
+      // itself; add a second entry to GOL.RECITERS and it comes straight back.
+      const reciterKeys = Object.keys(GOL.RECITERS || {});
       const rows = [
-        { label: 'reciter', opts: Object.keys(GOL.RECITERS || {}), get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } },
+        ...(reciterKeys.length > 1
+          ? [{ label: 'reciter', opts: reciterKeys, get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } }]
+          : []),
         { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
         // 'camera' drives the horizontal FOV cap (columns of world shown), the
