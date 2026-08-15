@@ -41,7 +41,10 @@
     // ---- backdrop: sky over the world's own upper air, hills on the horizon
     const horizon = 13.4 * TILE;
     const sky = GOL.paint.makeCanvas(W, Math.round(horizon));
-    GOL.drawSky(sky.getContext('2d'), W, Math.round(horizon), P, t, 0);
+    // the three cloud bands drift at 4/7/10 px per second, so at a small
+    // frozen `t` they sit almost on top of each other — one column of cloud
+    // over every world. A far-on sky time spreads them the way play does.
+    GOL.drawSky(sky.getContext('2d'), W, Math.round(horizon), P, t + 137, 0);
     ctx.drawImage(sky, 0, 0);
     ctx.fillStyle = P.skyLow;
     ctx.fillRect(0, Math.round(horizon), W, H - Math.round(horizon));
@@ -55,9 +58,8 @@
       if (a <= 0) return;
       ctx.globalAlpha = a;
       GOL.drawStrip(ctx, S.far, 0, 0.06, horizon - 258, W);
-      ctx.globalAlpha = 1;
-      if (a === 1) GOL.drawRays(ctx, W, Math.round(horizon), P, t);
-      ctx.globalAlpha = a;
+      // (the sun's ray fan is skipped: it is a screen effect, and flattened
+      // into world space it reads as a shaft of light built into the level)
       GOL.drawStrip(ctx, S.mid, 0, 0.14, horizon - 208, W);
       GOL.drawStrip(ctx, S.near, 0, 0.26, horizon - 158, W);
       ctx.globalAlpha = 1;
@@ -193,10 +195,14 @@
         squashX: 1, squashY: 1, moving: false
       });
     }
-    // foreground curtains, at the opacity a child meets them with
+    // Foreground curtains. In play these are nearly opaque until the child
+    // steps behind them — painted that way here they would hide a third of a
+    // world like Takathur, which is exactly what the map exists to show. So
+    // they are drawn as the map's one deliberate x-ray: a ghost of the
+    // curtain, with the beats overlay outlining where it really falls.
     for (const o of L.occluders || []) {
       ctx.save();
-      ctx.globalAlpha = 0.96;
+      ctx.globalAlpha = 0.2;
       ctx.fillStyle = o.color;
       GOL.roundRect(ctx, o.x, o.y, o.w, o.h, 26);
       ctx.fill();
@@ -215,6 +221,10 @@
 
     return { canvas: c, L, P };
   }
+
+  // the flattener itself, exposed so a sweep can paint every world at once
+  // (a contact sheet, a regression eye) without driving this page's UI
+  GOL.levelMapPaint = paintWorld;
 
   // contiguous groups of offering stones (tile 5), with their open top edges
   function lids(L) {
@@ -519,6 +529,22 @@
         ctx.fillStyle = alpha('#F0C878', 0.14);
         ctx.fillRect(sx(g.x0), sy(0), s(g.x1 - g.x0), s(L.h * TILE));
       }
+      // foreground curtains: where the near-opaque cloth really falls (the
+      // art layer only ghosts it, so what it hides can still be read)
+      ctx.strokeStyle = alpha('#B9C9AE', 0.8);
+      ctx.lineWidth = 1.5;
+      for (const o of L.occluders || []) {
+        ctx.setLineDash([6, 5]);
+        ctx.strokeRect(sx(o.x), sy(o.y), s(o.w), s(o.h));
+        ctx.setLineDash([]);
+        pill(ctx, sx(o.x + o.w / 2), sy(o.y) - 11, 'curtain', '#B9C9AE');
+      }
+      // offering stones: one label per contiguous group, on its top edge
+      for (const g of lids(L)) {
+        const top = g.tops[0] || g.cells[0];
+        const cx = g.cells.reduce((a, c) => a + c.x, 0) / g.cells.length;
+        marker(ctx, (cx + 0.5) * TILE, top.y * TILE, 'offering stone', '#F7EFDA', -18);
+      }
     }
 
     // ---- the notes we have pinned on this level
@@ -795,10 +821,14 @@
     const creatureTally = tally(L.creatures.map((x) => x.type));
     const notes = [];
     if (L.night) notes.push('This world plays in darkness — the map shows it fully lit so the construction reads.');
+    if (L.occluders && L.occluders.length) {
+      notes.push(L.occluders.length + ' foreground curtain(s), nearly opaque in play, are ghosted here so what they hide can be read — the dashed outline is where the cloth really falls.');
+    }
+    if (L.flock) notes.push('An ambient flock wheels in this sky during play; the map leaves it out.');
     if (L.endPalette) notes.push('Palette drifts <b>' + L.palette + ' → ' + L.endPalette + '</b> as gems are gathered; drag the Gems slider.');
     if (L.weather) notes.push('Weather: ' + L.weather + ' (thins as the world is restored).');
     if (L.campShrines) notes.push('Night camps: ' + L.campShrines.length + ' checkpoint shrine(s) along the way.');
-    notes.push('Sky and clouds are screen-anchored in play; here they are painted once across the world. The parallax hills sit on the world horizon (row 13.4) exactly as a player sees them.');
+    notes.push('Sky and clouds are screen-anchored in play; here they are painted once across the world, and the sun\'s ray fan is left out entirely. The parallax hills sit on the world horizon (row 13.4) exactly as a player sees them.');
 
     p.innerHTML =
       '<h1>' + esc(surah.englishName || L.key) + ' — ' + esc(L.name || '') + '</h1>' +
