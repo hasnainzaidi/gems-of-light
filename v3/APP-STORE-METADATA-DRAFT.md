@@ -99,6 +99,33 @@ confirms that it uses only operating-system-standard/exempt encryption, set
 App Store Connect flow consistently. Do not treat this draft as legal/export
 advice; use Apple's live questionnaire for the uploaded binary.
 
+## Content-rights gate
+
+Do **not** mark the Content Rights answer complete or submit this metadata until
+the release evidence file covers the exact binary. The current repository does
+not contain a license granting Ashna Holdings commercial, worldwide, offline
+redistribution of the bundled Mishary Alafasy recordings. The nine Ayat
+al-Kursi phrase cuts and the trimmed `095008.mp3` additionally need permission
+to edit, excerpt, split, and distribute derivatives.
+
+Before submission:
+
+- obtain a signed grant from the actual recording rights holder covering the
+  App Store bundle, playback, territories, term, attribution, Apple/end-user
+  distribution, and the edits; or replace the recordings with an expressly
+  compatible corpus;
+- establish written commercial/offline permission for the bundled Quran text,
+  or re-source it from an explicitly licensed canonical corpus and verify every
+  code point; remove unneeded transliteration/meaning/story fields from native;
+- retain ElevenLabs generation history, paid-plan invoices and applicable
+  voice/model terms for all title clips, or regenerate them under documented
+  commercial terms; and
+- keep a versioned asset/license manifest with source URLs, notices, original
+  and shipped hashes, and the audio edit/cut record.
+
+This is a release-evidence requirement, not a legal opinion; the rights holders
+or counsel should confirm that the documents cover the shipped use.
+
 ## App Review notes
 
 > Gems of Light is a fully bundled, offline-capable children’s game. It requires no account, demo credentials, subscription, purchase, network service, or special hardware.
@@ -143,5 +170,6 @@ features absent from the binary.
 - Developer display name decision if this is the account's first app.
 - App Review contact name, company email, and international-format phone number.
 - Availability territories and any local content-rights requirements.
+- Final content-rights evidence for recitation, Quran text, and narration.
 - Final price confirmation.
 - Candidate archive/build number and export-compliance result.

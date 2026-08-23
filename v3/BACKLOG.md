@@ -10,6 +10,30 @@ verdict is logged.
 
 ## Now
 
+- [ ] APP STORE BLOCKER: obtain or replace the missing commercial/offline
+      redistribution license for every bundled Mishary recording, including
+      explicit adaptation rights for Kursi cuts and the trimmed `095008`;
+      retain rights-holder correspondence, edit manifest, and hashes —
+      `v3/LAUNCH-READINESS-2026-08-23.md` LR-015
+
+- [ ] APP STORE BLOCKER: close Quran-text and narration provenance: written
+      commercial/offline text permission or an exact audited licensed corpus;
+      prove/regenerate ElevenLabs clips under documented paid terms —
+      `v3/LAUNCH-READINESS-2026-08-23.md` LR-016
+
+- [ ] iOS release-device gate: airplane cold loop, silent switch, call/Siri,
+      Control Center, AirPods route change, force quit, and WKWebView eviction
+      save restoration on the exact candidate —
+      `v3/LAUNCH-READINESS-2026-08-23.md` §5
+
+- [ ] App Store Connect gate: sign in, confirm paid membership/agreements and
+      bundle ID, then create the app record and complete account-only fields —
+      `v3/APP-STORE-METADATA-DRAFT.md`
+
+- [ ] Ear-audit all 194 shipped Mishary files for clipped words, silence,
+      loudness, and wrong mapping; prioritize `255001`–`255009` —
+      `v3/LAUNCH-READINESS-2026-08-23.md` LR-007
+
 - [ ] HASNAIN: enroll in the Apple Developer Program ($99/yr) at
       developer.apple.com — identity checks take days–weeks and gate
       everything App Store; start now — `v3/IOS-APP-STORE-PLAN.md`
@@ -68,6 +92,10 @@ verdict is logged.
       "nothing blocking", shipped as-is); specifics → `PLAN.md` §10
 
 ## Next
+
+- [ ] Design and playtest semantic accessibility for the child/title/map canvas
+      and an explicit parent reset/erase control —
+      `v3/LAUNCH-READINESS-2026-08-23.md` LR-017/LR-018
 
 - [ ] Map polish once the promotion settles: port the disc row's two
       remaining dressings to map spots (memory-bloom arcs from

@@ -229,6 +229,10 @@ and parent-opened practice worlds.
 - [ ] privacy URL live on production and all first-party identity/contact links work
 - [ ] screenshots from the actual candidate build, metadata, review notes, support
       URL, export-compliance answer, content rights, and age rating complete
+- [ ] signed provenance/permission file covers commercial offline redistribution
+      of every Mishary recording and modification of the ten edited recordings
+- [ ] Quran text, transliteration, meaning, narration, font, code, and art sources
+      have a release manifest with the applicable permission and file hashes
 - [ ] processed build assigned to an internal TestFlight group and smoke-tested
 
 ## 6. Active findings and fixes
@@ -242,9 +246,17 @@ and parent-opened practice worlds.
 | LR-005 | S2 | PWA offline | A local/remote ayah unavailable on an incompletely cached PWA advances gently after timeout. | Open manual failure-mode playtest; native bundle is complete. |
 | LR-006 | S2 | Pause semantics | Pause overlay pauses gameplay but intentionally does not stop an already-playing Qur'an track. | Open product verdict/manual child test. |
 | LR-007 | S2 | Audio corpus | File integrity does not prove clean cuts, silence, loudness, or pronunciation for all 194 Mishary clips. | Open ear audit; prioritize Kursi `255001`–`255009` and longest surahs. |
-| LR-008 | S2 | Returning/configured families | Ambient echo lost its playtest but saved `near/world` values can persist and recreate apparently random/restarted audio. | Open launch-hardening decision: migrate/hide outside debug, or explicitly test retained setting. |
+| LR-008 | S2 | Returning/configured families | Ambient echo lost its playtest but saved `near/world` values could persist and recreate apparently random/restarted audio. | Fixed in `ae2e101`: production forces and persists `off`; explicit debug/lab experiments remain available. |
 | LR-009 | S1 manual gate | Native durable save | Automated bridge test passes, but WKWebView eviction → Preferences restore has not yet been reconfirmed on the current physical build. | Open; mandatory before TestFlight family rollout. |
 | LR-010 | S1 external gate | App Store Connect | App record, agreements, team membership, signing, and paid-program state require authenticated account inspection. | Open; Apple sign-in required. |
+| LR-011 | S1 | Native privacy/offline | Generated native HTML retained Google Fonts requests and native audio code retained the EveryAyah web fallback, contradicting the fully offline/“Data Not Collected” release claim. | Fix in progress in native shell: strip remote font loads, disable fallback in native, and fail `check-native` if external runtime URLs return. |
+| LR-012 | S1 | First-time parent, native | Native onboarding offered “Remind me later” even though the app was already installed. | Fixed in `4971795`; focused and full contracts green. |
+| LR-013 | S1 | Parent preview | “Continue exploring” could replay the second ayah indefinitely instead of converging on handoff. | Fixed in `4971795`: at most two distinct passes, then one handoff action. |
+| LR-014 | S2 | Parent/onboarding accessibility | Canvas-only onboarding, preview, and grown-ups controls were absent from the accessibility tree and keyboard/Switch activation. | Fixed in `4971795` with scene-scoped semantic controls and live status; physical VoiceOver/Switch gate remains. |
+| LR-015 | S1 external/store gate | Content rights | The repo has no commercial offline-redistribution grant for bundled Alafasy recordings; the nine Kursi cuts and trimmed `095008` also require explicit adaptation rights. Public download availability is not a license. | **Open; blocks App Store submission.** Obtain rights-holder documentation or replace the corpus; preserve correspondence, source files, edit manifest, and hashes. |
+| LR-016 | S1 external/store gate | Text/narration provenance | Permanently bundled QDC Arabic/transliteration, unused Clear Quran-derived fields, and ElevenLabs title clips lack a complete commercial/offline evidence file. | Open. Prune unused native fields now; secure written QF rights or re-source and byte-audit an expressly licensed Arabic corpus; prove or regenerate narration under documented paid terms. |
+| LR-017 | S2 | Child/title/map accessibility | Parent surfaces now have semantic controls, but the wider child-facing canvas/title/map still lacks a complete VoiceOver/Switch model. | Open accessibility design/playtest; do not imply the whole game is screen-reader complete. |
+| LR-018 | S2 | Parent data control | Parent mode explains local-only storage but has no explicit in-app erase/reset journey control. | Open product/safety design; platform app/site-data deletion remains available. |
 
 ## 7. Current evidence
 
@@ -257,6 +269,11 @@ As of the program start:
 - Native preflight rebuilds a 20.5 MB, 284-file bundle with the production
   journey map, 194 Mishary recitations, 25 approved voice clips, native save
   bridge, opaque icon, and silent-switch audio-session configuration.
+- Launch regressions now cover shrine touch/drag audio, suspend/resume audio,
+  production echo migration, native onboarding action choice, bounded preview,
+  and semantic parent controls.
+- The public privacy policy now describes the PWA and iOS storage/offline paths
+  separately. Its native no-request claim remains gated by LR-011's binary check.
 - Xcode 26.6 and an iPhone 17 Pro / iOS 26.5 Simulator are available. Full
   simulator/device verdicts and signed archive evidence are tracked above.
 
