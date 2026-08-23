@@ -29,6 +29,8 @@ need(!/rel=["']manifest["']/i.test(html), 'the PWA manifest leaked into the nati
 need(!/serviceWorker\s*\.\s*register/.test(html), 'service-worker registration leaked into the native bundle.');
 need(!fs.existsSync(path.join(WWW, 'sw.js')), 'sw.js leaked into the native bundle.');
 need(!fs.existsSync(path.join(WWW, 'audio', 'basit')), 'the removed Basit reciter leaked into the native bundle.');
+need(fs.existsSync(path.join(WWW, 'v3', 'map-artist-pack', 'journey-map.svg')), 'the production journey map is missing from the native bundle.');
+need(!fs.existsSync(path.join(WWW, 'v3', 'map-artist-pack', 'drafts')), 'journey-map working drafts leaked into the native bundle.');
 
 const sourceAudio = fs.readdirSync(path.join(ROOT, 'audio', 'alafasy')).filter((name) => name.endsWith('.mp3')).sort();
 const bundledAudio = fs.readdirSync(path.join(WWW, 'audio', 'alafasy')).filter((name) => name.endsWith('.mp3')).sort();
@@ -93,7 +95,7 @@ localStorage.setItem('gemsOfLight.v3', '{"journey":"new"}');
 await new Promise((resolve) => setTimeout(resolve, 0));
 need(native.get('gemsOfLight.v3') === '{"journey":"new"}', 'a game save did not mirror into native Preferences.');
 
-console.log('✓ offline bundle: ' + bundledAudio.length + ' Mishary files, no web-only cache or Basit assets');
+console.log('✓ offline bundle: journey map + ' + bundledAudio.length + ' Mishary files, no web-only cache, drafts, or Basit assets');
 console.log('✓ native identity, opaque App Store icon, and silent-switch audio configuration');
 console.log('✓ native launch restores durable saves before boot and mirrors later writes');
 console.log('\nNative preflight passed. Real-device tests still required before TestFlight.\n');
