@@ -32,6 +32,9 @@ const COPY = [
   'v3/art',            // splash postcards
   'icons',
   'assets',
+  'company',           // public publisher identity, linked from grown-ups
+  'privacy',           // canonical privacy policy, linked from grown-ups
+  'legal.css',         // shared company/privacy page styling
   'audio/alafasy',     // Mishary — the one reciter that ships (plan blocker 3)
   'audio/voice'        // narration clips
 ];

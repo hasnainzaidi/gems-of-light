@@ -1,72 +1,89 @@
 # Gems of Light — App Publishing Plan
 
-Decision owner: Syed Mohammad Hasnain Zaidi  
-Decision date: 2026-08-16
+Decision owner: Syed Mohammad Hasnain Zaidi
+Current decision date: 2026-08-23
 
 ## Current decision
 
-Publish the first iOS/App Store version through **Syed Mohammad Hasnain
-Zaidi's individual Apple Developer Program membership**.
+Enroll **Ashna Holdings, LLC** in the Apple Developer Program as an
+organization and publish the first iOS/App Store version through that
+organization account.
 
-- Pay only Apple's standard individual developer membership fee.
-- Do not form another company merely to test whether the app can attract and
-  retain paying users.
-- The App Store seller name will be Syed Mohammad Hasnain Zaidi.
-- Ashna Holdings LLC's D-U-N-S registration may proceed for future use, but it
-  is not required for the initial individual publisher account.
-- Do not assign the app, source code, trademarks, or other project IP to Ashna
-  Holdings LLC merely as part of publishing the initial experiment.
+- Use the exact legal entity name and the company's existing D-U-N-S record.
+- Use `developer@playgemsoflight.com` as the company-domain contact address.
+- Use `https://playgemsoflight.com` as the functional organization website;
+  `/company/` identifies the operator and `/privacy/` states the app's current
+  data practices.
+- The intended public App Store seller name is Ashna Holdings, LLC, subject to
+  Apple's enrollment verification and naming rules.
+- Keep the Account Holder role, recovery methods, tax profile, banking access,
+  certificates, and signing access under deliberate company control.
 
-## Why this is the default
+This supersedes the 2026-08-16 decision to publish first through an individual
+membership. The change reflects the decision that displaying a company seller
+name — rather than a person's legal name — is materially important, and that
+Ashna already has the entity, D-U-N-S record, domain, and working domain email
+needed for organization review.
 
-The app is still validating demand. A new entity would add formation and
-annual costs before the product has demonstrated revenue, while the existing
-Ashna Holdings LLC has members whose ownership does not reflect participation
-in this app venture. Individual publication keeps the experiment simple and
-does not prematurely settle the app's long-term ownership structure.
+## Organization enrollment path
 
-## Initial App Store path
+1. Confirm that Ashna's D-U-N-S record exactly matches the legal name, entity
+   address, and phone information used in Apple's enrollment form.
+2. Sign in with the Apple Account that will serve as the organization's Account
+   Holder, with two-factor authentication enabled.
+3. Enroll as an organization using `developer@playgemsoflight.com` and
+   `https://playgemsoflight.com`.
+4. Complete Apple's authority and entity verification. Respond to any Apple or
+   Dun & Bradstreet request using consistent company details.
+5. Review the Apple Developer Program agreement and membership fee before the
+   Account Holder accepts or pays.
+6. After approval, set up App Store Connect tax, banking, agreements, users,
+   bundle identifiers, certificates, and recovery records under the company
+   account.
 
-1. Enroll Syed Mohammad Hasnain Zaidi in the individual Apple Developer
-   Program using the same full legal name as the identity document and Apple
-   payment profile.
-2. Keep the developer account, tax profile, payout details, certificates, and
-   recovery methods under Hasnain's direct control.
-3. Publish the smallest viable native/App Store release and measure retention,
-   parent demand, and revenue before adding entity overhead.
-4. Continue operating the web/PWA release independently of App Store
-   enrollment.
+## Ownership and governance boundary
 
-## Reconsider an organization account when
+Apple organization enrollment establishes who administers and publishes the
+app on Apple's platform. It does **not**, by itself, transfer the Gems of Light
+source code, copyrights, trademarks, revenue rights, or other project IP to
+Ashna Holdings, LLC.
 
-Review the structure before assigning the app to a company if any of these
-becomes true:
+Before monetization or material outside collaboration, separately document:
 
-- the app produces sustained revenue;
-- a school, publisher, investor, or platform partner needs to contract with a
-  company;
-- paid contractors or collaborators need formal IP assignments;
-- liability, payroll, tax planning, or investment makes entity separation
-  materially useful; or
-- displaying a company rather than Hasnain's legal name as the App Store
-  seller becomes commercially important.
+- whether Ashna owns the project IP or receives a publishing licence;
+- who may approve expenses, contracts, pricing, distributions, or an app sale;
+- assignments from any contributor whose work is included; and
+- how revenue, costs, and liabilities are treated under Ashna's existing
+  operating agreement and 34% / 33% / 33% ownership.
 
-At that point, choose deliberately between restructuring Ashna Holdings LLC
-and forming a new single-owner entity. Do not assume Ashna owns the app solely
-because it has a D-U-N-S number.
+Obtain legal and tax advice for those ownership and governance choices. This
+publishing plan does not amend the operating agreement or complete an IP
+assignment.
 
-## Later migration
+## Public website association
 
-If an organization account becomes worthwhile, establish the final ownership
-and IP chain first, enroll that legal entity in Apple's organization program,
-and then evaluate an App Store app transfer against Apple's current transfer
-criteria. Preserve bundle identifiers, tax records, payout reports, and
-account-recovery access so a later migration is manageable.
+The public site should consistently present:
 
-## Out of scope for this decision
+- “Gems of Light is published and operated by Ashna Holdings, LLC.”
+- a company page at `/company/`;
+- a privacy policy at `/privacy/`; and
+- `developer@playgemsoflight.com` as the public contact address.
+
+No personal home address, personal email address, EIN, D-U-N-S number, member
+names, or ownership percentages belong on those public pages.
+
+## Superseded decision — 2026-08-16
+
+The earlier plan favored an individual Apple Developer Program membership to
+minimize validation overhead and avoid prematurely assigning project IP to a
+multi-member entity. That cost and ownership reasoning remains relevant, but
+the public seller-name preference now outweighs the convenience of individual
+enrollment. The ownership caution remains active and is handled separately
+from Apple's organization account.
+
+## Out of scope
 
 - Google Play account type and Android release timing remain separate choices.
-- This plan does not change Ashna Holdings LLC's operating agreement or current
-  34% / 33% / 33% ownership.
-- Completing Ashna Holdings LLC's D-U-N-S record does not assign Gems of Light
-  or its revenue to that company.
+- This plan does not change Ashna Holdings, LLC's operating agreement.
+- A D-U-N-S record, organization enrollment, website statement, or App Store
+  listing does not alone settle ownership of Gems of Light or its revenue.

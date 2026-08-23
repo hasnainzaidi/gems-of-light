@@ -56,10 +56,11 @@ buys real gameplay wins the PWA can't reach:
    the hold-the-star gate is already the right parental-gate instinct).
    Needs: a privacy policy URL on playgemsoflight.com and a "no data
    collected" App Privacy declaration. Opt in at launch — opting out
-   later looks bad. DONE 2026-08-15: `privacy.html` at the repo root
-   (self-contained, zero third-party requests), linked from the
-   grown-ups page's top-right corner; the App Privacy URL is
-   https://www.playgemsoflight.com/privacy.html — live once staging
+   later looks bad. UPDATED 2026-08-23: `/privacy/` is the canonical policy,
+   identifies Ashna Holdings, LLC as the operator, uses the company-domain
+   contact address, and is linked alongside Company and Contact in the
+   grown-ups footer. `/privacy.html` remains as a compatibility redirect. The
+   App Privacy URL is https://playgemsoflight.com/privacy/ once staging
    promotes to main.
 5. **Price model.** Decide before launch (free is the working
    assumption); easy to set, awkward to reverse once families have it.
@@ -71,7 +72,8 @@ Self-contained Capacitor project — its own `package.json` and
 
 - `ios-shell/tools/build-www.mjs` assembles `ios-shell/www/` from the
   repo: root `index.html` (transformed), `js/data.js`, `v3/js`,
-  `v3/art`, `icons`, `assets`, `audio/alafasy`, `audio/voice`. It
+  `v3/art`, `icons`, `assets`, the company/privacy pages and their shared
+  stylesheet, `audio/alafasy`, `audio/voice`. It
   EXCLUDES v1, v2, concept-art, the map-artist pack, and sw.js (the
   service worker is the web's concern; Capacitor serves from disk).
 - The transform rewrites the game's `<script src>` tags into an

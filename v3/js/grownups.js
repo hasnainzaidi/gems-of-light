@@ -1,9 +1,10 @@
 // Gems of Light v3 — grownups.js
 // A quiet page for grown-ups, reached from the title by a patient press-and-hold
-// on the little star (children drift past it). It does two things, plainly:
+// on the little star (children drift past it). It does three things, plainly:
 //   1. shows how far the child has come in each surah (completed / in progress),
 //   2. lets a grown-up open any surah on the map — a permanent toggle, so the
 //      child can reach it without collecting every level in between first.
+//   3. links to the publisher, privacy policy, and company contact address.
 // One scrolling row per surah, so the whole journey fits however long it grows.
 // Everything is read from (and written to) the local save; nothing leaves the
 // device. Text is welcome here — this page is for adults.
@@ -63,21 +64,23 @@
       const px = L + 16, pw = (R - L) - 32;
       const panelTop = titleY + 40;
       const footerY = H - 16 - sa.b * 0.5;
+      const legalY = footerY;
+      const reassuranceY = legalY - 18;
       // a grown-up on a phone browser gets a quiet "add to home screen" line
       // just above the footer; installed players (standalone) don't need it
       const showInstall = !GOL.isStandalone();
-      const installH = showInstall ? 26 : 0;
-      const panelH = Math.max(80, (footerY - 14 - installH) - panelTop);
       const installLink = showInstall
-        ? { cx: (L + R) / 2, cy: footerY - installH + 6, x: (L + R) / 2 - 150, y: footerY - installH - 6, w: 300, h: 24 }
+        ? { cx: (L + R) / 2, cy: reassuranceY - 25, x: (L + R) / 2 - 150, y: reassuranceY - 37, w: 300, h: 24 }
         : null;
+      const panelBottom = installLink ? installLink.y - 8 : reassuranceY - 12;
+      const panelH = Math.max(80, panelBottom - panelTop);
+      const legalLinks = [
+        { label: 'Company', href: '/company/', x: (L + R) / 2 + 2, y: legalY - 9, w: 54, h: 18 },
+        { label: 'Privacy', href: '/privacy/', x: (L + R) / 2 + 64, y: legalY - 9, w: 48, h: 18 },
+        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: (L + R) / 2 + 120, y: legalY - 9, w: 50, h: 18 }
+      ];
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;
-      // a quiet "privacy" word in the top-right corner — this page is where a
-      // grown-up's eyes already are, and the App Store wants the policy one
-      // tap from the app. Opens /privacy.html (a plain page, no scripts).
-      const privacyLink = { cx: R - 42, cy: titleY, x: R - 76, y: titleY - 12, w: 72, h: 24 };
-
       const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
         .filter((w) => w.build && w.surahId != null); // only surahs a child can play
       const rH = 50;
@@ -94,7 +97,7 @@
         const hit = { x: tx - 92, y: y + 4, w: toggleW + 92, h: rH - 8 };
         return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit };
       });
-      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, rH, rows, maxScroll, scroll, installLink, privacyLink };
+      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, reassuranceY, legalY, legalLinks, rH, rows, maxScroll, scroll, installLink };
     },
 
     update(dt, W, H) {
@@ -130,17 +133,6 @@
         home.fn();
         return;
       }
-      // the privacy page — a real page, so it opens beside the game rather
-      // than navigating away from a running session
-      const pl = lay.privacyLink;
-      if (pl && clickAt.x >= pl.x && clickAt.x <= pl.x + pl.w &&
-          clickAt.y >= pl.y && clickAt.y <= pl.y + pl.h) {
-        GOL.audio.sfx('tap');
-        // '../' clamps to the repo root from both entries (/ and /v3/),
-        // the same trick every asset path in here uses
-        window.open('../privacy.html', '_blank');
-        return;
-      }
       // the "add to home screen" line — always available here, opens the steps
       const il = lay.installLink;
       if (il && clickAt.x >= il.x && clickAt.x <= il.x + il.w &&
@@ -148,6 +140,16 @@
         GOL.audio.sfx('tap');
         GOL.go('install', { from: 'grownups' });
         return;
+      }
+      // company identity, privacy policy, and contact are intentionally public
+      // web pages so a grown-up — and an app-store reviewer — can verify them
+      for (const link of lay.legalLinks) {
+        if (clickAt.x >= link.x && clickAt.x <= link.x + link.w &&
+            clickAt.y >= link.y && clickAt.y <= link.y + link.h) {
+          GOL.audio.sfx('tap');
+          window.location.href = link.href;
+          return;
+        }
       }
       // a surah's "on the map" toggle — only worlds not already reachable can
       // be opened or closed; reached worlds are on the map for good
@@ -185,18 +187,6 @@
       GOL.text(ctx, "Your child's journey", cx, lay.titleY, { size: 19, weight: '800', color: CREAM });
       GOL.text(ctx, 'each surah they have learned — and any you want to open on the map',
         cx, lay.titleY + 20, { size: 11.5, weight: '600', color: alpha(CREAM, 0.6), shadow: false });
-
-      // the quiet privacy link, top-right, underlined so it reads as a link
-      const pl = lay.privacyLink;
-      if (pl) {
-        GOL.text(ctx, 'privacy', pl.cx, pl.cy, { size: 11.5, weight: '700', color: alpha(CREAM, 0.55), shadow: false });
-        ctx.strokeStyle = alpha(CREAM, 0.3);
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(pl.cx - 20, pl.cy + 8);
-        ctx.lineTo(pl.cx + 20, pl.cy + 8);
-        ctx.stroke();
-      }
 
       // the list panel
       GOL.drawPanel(ctx, lay.px, lay.panelTop, lay.pw, lay.panelH, { radius: 18 });
@@ -294,9 +284,15 @@
           { size: 12.5, weight: '800', color: '#EBCB86', shadow: false });
       }
 
-      // footer reassurance
+      // footer reassurance and public publisher identity
       GOL.text(ctx, 'Turn a switch on to let your child reach that surah on the map. Everything stays on this device.',
-        cx, lay.footerY, { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
+        cx, lay.reassuranceY, { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
+      GOL.text(ctx, '© 2026 Ashna Holdings, LLC  ·', cx - 8, lay.legalY,
+        { size: 10, weight: '600', color: alpha(CREAM, 0.58), align: 'right', shadow: false });
+      for (const link of lay.legalLinks) {
+        GOL.text(ctx, link.label, link.x + link.w / 2, lay.legalY,
+          { size: 10, weight: '800', color: '#EBCB86', shadow: false });
+      }
 
       // home button
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.iconName);
