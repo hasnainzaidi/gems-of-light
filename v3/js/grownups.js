@@ -42,8 +42,27 @@
     ctx.restore();
   }
 
+  function ensureAccessStyle() {
+    if (document.getElementById('gol-parent-access-style')) return;
+    const style = document.createElement('style');
+    style.id = 'gol-parent-access-style';
+    style.textContent = '.gol-parent-access{position:fixed;z-index:30;left:12px;top:12px;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}' +
+      '.gol-parent-access:focus-within{width:min(460px,calc(100vw - 24px));max-height:calc(100vh - 24px);height:auto;overflow:auto;clip-path:none;white-space:normal;padding:16px;border:2px solid #ebcb86;border-radius:14px;background:#fffaf0;color:#3e5340;font:700 16px/1.4 Nunito,system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3)}' +
+      '.gol-parent-access h1{margin:0 0 8px;font-size:22px}.gol-parent-access p{margin:6px 0 12px}.gol-parent-access button,.gol-parent-access a{display:block;width:100%;margin:8px 0;padding:12px;border:2px solid #b98a3e;border-radius:999px;background:#fff;color:#3e5340;font:800 16px Nunito,system-ui,sans-serif;text-align:center}.gol-parent-access button[aria-pressed=true]{background:#dcebcB}.gol-parent-access button:focus,.gol-parent-access a:focus{outline:3px solid #3e8e4a;outline-offset:2px}';
+    document.head.appendChild(style);
+  }
+
+  function accessButton(parent, label, action, pressed) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    if (pressed != null) button.setAttribute('aria-pressed', String(pressed));
+    button.addEventListener('click', action);
+    parent.appendChild(button);
+  }
+
   const grownups = {
-    t: 0, scroll: 0, buttons: [],
+    t: 0, scroll: 0, buttons: [], access: null,
     dragPrev: null, dragMoved: false,
 
     enter() {
@@ -51,7 +70,77 @@
       this.scroll = 0;
       this.dragPrev = null;
       this.dragMoved = false;
+      ensureAccessStyle();
+      this.access = document.createElement('section');
+      this.access.className = 'gol-parent-access';
+      this.access.setAttribute('aria-label', "Your child's journey");
+      document.body.appendChild(this.access);
+      this.syncAccess();
       if (GOL.audio && GOL.audio.stopAmbience) GOL.audio.stopAmbience();
+    },
+
+    exit() {
+      if (this.access) this.access.remove();
+      this.access = null;
+    },
+
+    toggleWorld(world) {
+      if (GOL.worldProgressOpen(world.n)) return;
+      const d = GOL.store.data;
+      d.opened = d.opened || [];
+      const idx = d.opened.indexOf(world.surahId);
+      if (idx >= 0) {
+        d.opened.splice(idx, 1);
+        GOL.audio.sfx('tap');
+      } else {
+        d.opened.push(world.surahId);
+        GOL.audio.unlock();
+        GOL.audio.sfx('hint');
+      }
+      GOL.store.save();
+      this.syncAccess();
+    },
+
+    syncAccess() {
+      if (!this.access) return;
+      this.access.replaceChildren();
+      const title = document.createElement('h1');
+      title.textContent = "Your child's journey";
+      this.access.appendChild(title);
+      const intro = document.createElement('p');
+      intro.textContent = 'Review progress or open a surah on the map. Everything stays on this device.';
+      this.access.appendChild(intro);
+      accessButton(this.access, 'Back', () => GOL.homeButton().fn());
+      const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
+        .filter((w) => w.build && w.surahId != null);
+      for (const world of worlds) {
+        const surah = window.GOL_DATA && window.GOL_DATA.surahs.find((s) => s.id === world.surahId);
+        const st = GOL.store.data.levels && GOL.store.data.levels[world.surahId];
+        const done = GOL.worldDone(world.n);
+        const reached = GOL.worldProgressOpen(world.n);
+        const opened = reached || !!(GOL.store.data.opened && GOL.store.data.opened.includes(world.surahId));
+        const visited = !!(st && ((st.lastPlayed || 0) > 0 || (st.heardFull || 0) > 0 || (st.seeds || 0) > 0 || (st.replays || 0) > 0));
+        const status = done ? 'completed' : (visited ? 'in progress' : 'not started yet');
+        const name = surah ? surah.englishName : ('World ' + world.n);
+        if (reached) {
+          const p = document.createElement('p');
+          p.textContent = name + ': ' + status + '. On the map.';
+          this.access.appendChild(p);
+        } else {
+          accessButton(this.access, name + ': ' + status + '. On the map', () => this.toggleWorld(world), opened);
+        }
+      }
+      const links = [
+        ['Company information', '/company/'],
+        ['Privacy policy', '/privacy/'],
+        ['Contact support', 'mailto:developer@playgemsoflight.com']
+      ];
+      for (const [label, href] of links) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.textContent = label;
+        this.access.appendChild(link);
+      }
     },
 
     // One shared layout for update (hit-testing) and draw, so the two never
@@ -157,15 +246,10 @@
         if (r.reached) continue;
         const h = r.hit;
         if (clickAt.x >= h.x && clickAt.x <= h.x + h.w && clickAt.y >= h.y && clickAt.y <= h.y + h.h) {
-          const d = GOL.store.data;
-          d.opened = d.opened || [];
-          const idx = d.opened.indexOf(r.w.surahId);
-          if (idx >= 0) { d.opened.splice(idx, 1); GOL.audio.sfx('tap'); }
           // a single soft bell for opening a surah — the two-note 'unlockLevel'
           // chime rang out as a slight echo here (its bells overlap as they
           // decay); one clear 'hint' bell reads cleaner on this quiet page
-          else { d.opened.push(r.w.surahId); GOL.audio.unlock(); GOL.audio.sfx('hint'); }
-          GOL.store.save();
+          this.toggleWorld(r.w);
           return;
         }
       }

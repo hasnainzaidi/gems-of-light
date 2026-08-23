@@ -33,6 +33,38 @@
     return b && t.x >= b.x && t.x <= b.x + b.w && t.y >= b.y && t.y <= b.y + b.h;
   }
 
+  // The game is painted on one canvas, which otherwise presents the entire
+  // grown-up porch as a single opaque element to VoiceOver and switch control.
+  // Keep a semantic twin of the current card in the document. It stays
+  // visually tucked away until keyboard focus enters it, while assistive
+  // technology can read and activate every adult decision at any time.
+  function mountAccessRegion(title) {
+    if (!document.getElementById('gol-parent-access-style')) {
+      const style = document.createElement('style');
+      style.id = 'gol-parent-access-style';
+      style.textContent = '.gol-parent-access{position:fixed;z-index:30;left:12px;top:12px;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}' +
+        '.gol-parent-access:focus-within{width:min(420px,calc(100vw - 24px));height:auto;overflow:auto;clip-path:none;white-space:normal;padding:16px;border:2px solid #ebcb86;border-radius:14px;background:#fffaf0;color:#3e5340;font:700 16px/1.4 Nunito,system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3)}' +
+        '.gol-parent-access h1{margin:0 0 8px;font-size:22px}.gol-parent-access p{margin:6px 0 12px}.gol-parent-access button{display:block;width:100%;margin:8px 0;padding:12px;border:2px solid #b98a3e;border-radius:999px;background:#fff;color:#3e5340;font:800 16px Nunito,system-ui,sans-serif}.gol-parent-access button[aria-pressed=true]{background:#dcebcB}.gol-parent-access button:focus{outline:3px solid #3e8e4a;outline-offset:2px}';
+      document.head.appendChild(style);
+    }
+    const root = document.createElement('section');
+    root.className = 'gol-parent-access';
+    root.setAttribute('aria-label', title);
+    root.innerHTML = '<h1></h1><p aria-live="polite"></p><div></div>';
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function accessButton(parent, label, action, attrs) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    if (attrs) for (const [key, value] of Object.entries(attrs)) button.setAttribute(key, value);
+    button.addEventListener('click', action);
+    parent.appendChild(button);
+    return button;
+  }
+
   function wrapped(ctx, str, x, y, maxW, size, color, weight, maxLines, lineH) {
     const words = str.split(/\s+/), lines = [];
     let line = '';
@@ -106,7 +138,7 @@
   const scene = {
     ownsPortrait: true,
     stage: 'welcome', t: 0, stageT: 0, os: 'desktop', buttons: {}, installPending: false, bd: null,
-    journeyStage: null,
+    journeyStage: null, access: null,
     enter(params) {
       this.t = 0; this.stageT = 0; this.installPending = false; this.os = platform();
       this.bd = GOL.buildBackdrop ? GOL.buildBackdrop('falaq', 814) : null;
@@ -115,12 +147,64 @@
       this.journeyStage = Number.isInteger(draft) ? draft : null;
       const requested = params && params.stage;
       this.stage = DRAWABLE.has(requested) ? requested : (qaStage() || 'welcome');
+      this.access = mountAccessRegion('Gems of Light grown-up setup');
+      this.syncAccess();
     },
-    exit() { if (GOL.audio && GOL.audio.stopRecitation) GOL.audio.stopRecitation(); },
+    exit() {
+      if (this.access) this.access.remove();
+      this.access = null;
+      if (GOL.audio && GOL.audio.stopRecitation) GOL.audio.stopRecitation();
+    },
     setStage(stage) {
       if (!DRAWABLE.has(stage)) return;
       this.stage = stage; this.stageT = 0; this.buttons = {};
+      this.syncAccess();
       if (GOL.audio) GOL.audio.sfx('tap');
+    },
+    syncAccess() {
+      if (!this.access) return;
+      const title = this.access.querySelector('h1');
+      const note = this.access.querySelector('p');
+      const actions = this.access.querySelector('div');
+      actions.replaceChildren();
+      if (this.stage === 'welcome') {
+        title.textContent = 'Gems of Light';
+        note.textContent = GOL.EXPERIENCE.showcase
+          ? 'A gentle platform adventure through living gardens.'
+          : 'A gentle Quran memorisation adventure for young children.';
+        accessButton(actions, 'See how it works', () => GOL.go('parentPreview'));
+      } else if (this.stage === 'knowledge') {
+        title.textContent = 'Make it their garden';
+        note.textContent = 'Choose the closest fit. The named surahs are examples, not a test.';
+        for (const choice of (GOL.JOURNEY_STAGE_CHOICES || [])) {
+          accessButton(actions, choice.label + '. Around: ' + choice.examples, () => {
+            this.journeyStage = choice.index;
+            this.saveJourneyStage();
+            this.syncAccess();
+            if (GOL.audio) GOL.audio.sfx('tap');
+          }, { 'aria-pressed': String(this.journeyStage === choice.index) });
+        }
+        const next = accessButton(actions, 'Continue', () => {
+          if (this.journeyStage == null) return;
+          this.saveJourneyStage();
+          this.setStage('setup');
+        });
+        if (this.journeyStage == null) next.disabled = true;
+      } else if (this.stage === 'setup') {
+        const copy = setupCopy(this.os);
+        title.textContent = 'Best in full screen. ' + copy.title;
+        note.textContent = copy.steps.join('. ') + '. ' + copy.note;
+        if (!(GOL.isStandalone && GOL.isStandalone())) {
+          accessButton(actions, 'Remind me later', () => this.remindLater());
+        }
+        accessButton(actions, copy.primary, () => this.finishSetup());
+      } else {
+        title.textContent = GOL.EXPERIENCE.showcase ? 'Your garden is ready' : 'Their garden is ready';
+        note.textContent = GOL.EXPERIENCE.showcase
+          ? 'Turn the phone sideways, then begin the adventure.'
+          : 'Turn the phone sideways, then hand the adventure to your child.';
+        accessButton(actions, GOL.EXPERIENCE.showcase ? 'Begin adventure' : 'Hand it over', () => this.finish());
+      }
     },
     layout(W, H) {
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
@@ -139,6 +223,9 @@
     actions(L) {
       const max = Math.min(270, L.pw - 56), gap = 10;
       if (this.stage === 'setup') {
+        if (GOL.isStandalone && GOL.isStandalone()) {
+          return { primary: { x: L.cx - max / 2, y: L.by, w: max, h: L.bh }, secondary: null };
+        }
         const w = Math.min(210, (L.pw - 64 - gap) / 2);
         return { secondary: { x: L.cx - w - gap / 2, y: L.by, w, h: L.bh }, primary: { x: L.cx + gap / 2, y: L.by, w, h: L.bh } };
       }
@@ -302,7 +389,8 @@
           GOL.text(ctx, s, L.px + 70, y, { size: 12.5, weight: '700', color: INK, align: 'left', shadow: false });
         });
         GOL.text(ctx, c.note, L.cx, L.by - 17, { size: 10.5, weight: '600', color: SOFT, shadow: false });
-        drawButton(ctx, a.secondary, 'Remind me later', false); drawButton(ctx, a.primary, c.primary, true);
+        if (a.secondary) drawButton(ctx, a.secondary, 'Remind me later', false);
+        drawButton(ctx, a.primary, c.primary, true);
       } else {
         GOL.text(ctx, GOL.EXPERIENCE.showcase ? 'Your garden is ready' : 'Their garden is ready',
           L.cx, titleY, { size: titleSize + 2, weight: '800', color: INK, shadow: false });
