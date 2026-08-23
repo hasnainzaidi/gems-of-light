@@ -1124,7 +1124,7 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     also need a release evidence manifest. This blocks App Store submission,
     not local development or an internal build: obtain the rights or replace
     the affected corpus before answering App Store Content Rights. Unused
-    transliteration/meaning/story data must be excluded from native rather than
+    transliteration/meaning/story data is excluded from native rather than
     carried merely because it exists in the shared web dataset.
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to

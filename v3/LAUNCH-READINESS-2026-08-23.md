@@ -249,7 +249,7 @@ and parent-opened practice worlds.
 | LR-008 | S2 | Returning/configured families | Ambient echo lost its playtest but saved `near/world` values could persist and recreate apparently random/restarted audio. | Fixed in `ae2e101`: production forces and persists `off`; explicit debug/lab experiments remain available. |
 | LR-009 | S1 manual gate | Native durable save | Automated bridge test passes, but WKWebView eviction → Preferences restore has not yet been reconfirmed on the current physical build. | Open; mandatory before TestFlight family rollout. |
 | LR-010 | S1 external gate | App Store Connect | App record, agreements, team membership, signing, and paid-program state require authenticated account inspection. | Open; Apple sign-in required. |
-| LR-011 | S1 | Native privacy/offline | Generated native HTML retained Google Fonts requests and native audio code retained the EveryAyah web fallback, contradicting the fully offline/“Data Not Collected” release claim. | Fix in progress in native shell: strip remote font loads, disable fallback in native, and fail `check-native` if external runtime URLs return. |
+| LR-011 | S1 | Native privacy/offline | Generated native HTML retained Google Fonts requests and native audio code retained the EveryAyah web fallback, contradicting the fully offline/“Data Not Collected” release claim. | Fixed in `97e53d1`: native generation strips remote resources/fallbacks and unused social assets, prunes dormant text fields, and fails preflight if they return. |
 | LR-012 | S1 | First-time parent, native | Native onboarding offered “Remind me later” even though the app was already installed. | Fixed in `4971795`; focused and full contracts green. |
 | LR-013 | S1 | Parent preview | “Continue exploring” could replay the second ayah indefinitely instead of converging on handoff. | Fixed in `4971795`: at most two distinct passes, then one handoff action. |
 | LR-014 | S2 | Parent/onboarding accessibility | Canvas-only onboarding, preview, and grown-ups controls were absent from the accessibility tree and keyboard/Switch activation. | Fixed in `4971795` with scene-scoped semantic controls and live status; physical VoiceOver/Switch gate remains. |
@@ -266,16 +266,18 @@ As of the program start:
 - Root and `/v3/` have identical 48-script entry order.
 - Existing onboarding isolation, parent-opened progression, render-loop,
   viewport, recitation blessing, shrine lock, and Showcase contracts pass.
-- Native preflight rebuilds a 20.5 MB, 284-file bundle with the production
-  journey map, 194 Mishary recitations, 25 approved voice clips, native save
+- Native preflight rebuilds a 20.1 MB, 281-file bundle with the production
+  journey map, 194 Mishary recitations, 25 title voice clips, native save
   bridge, opaque icon, and silent-switch audio-session configuration.
 - Launch regressions now cover shrine touch/drag audio, suspend/resume audio,
   production echo migration, native onboarding action choice, bounded preview,
   and semantic parent controls.
 - The public privacy policy now describes the PWA and iOS storage/offline paths
   separately. Its native no-request claim remains gated by LR-011's binary check.
-- Xcode 26.6 and an iPhone 17 Pro / iOS 26.5 Simulator are available. Full
-  simulator/device verdicts and signed archive evidence are tracked above.
+- Xcode 26.6 built the synchronized iPhone-only target successfully without
+  signing. The build installed and launched as `com.playgemsoflight.app` on an
+  iPhone 17 Pro / iOS 26.5 Simulator and visibly reached the first-run garden.
+  Full interaction/device verdicts and signed archive evidence remain above.
 
 ## 8. Integration and staging sequence
 
