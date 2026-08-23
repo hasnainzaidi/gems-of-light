@@ -7,13 +7,15 @@
   GOL.VERSION = 'v3.0';
   GOL.AUDIO_BASE = '../audio/'; // narration/voice files live at the repo root
 
-  // Is the game running as an installed PWA (home-screen launch) rather than a
-  // browser tab? Drives the install nudge — installed players never see it.
+  // Is the game running as an installed PWA (home-screen launch) or inside the
+  // native iOS shell rather than a browser tab? Drives the install nudge —
+  // installed/native players never see it. native-bridge.js sets GOL_NATIVE
+  // before it loads any game script, so this is available at boot.
   // Defined here (boot runs before any frame) so scenes can call it at runtime.
   // Guarded for private mode; errs toward "browser tab" only when we can tell.
   GOL.isStandalone = function () {
     try {
-      return (window.matchMedia &&
+      return window.GOL_NATIVE === true || (window.matchMedia &&
         (matchMedia('(display-mode: standalone)').matches ||
          matchMedia('(display-mode: fullscreen)').matches)) ||
         navigator.standalone === true;
