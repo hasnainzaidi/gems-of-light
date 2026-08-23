@@ -1081,6 +1081,19 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   shell design, and the Mac-mini/TestFlight sequence:
   `v3/IOS-APP-STORE-PLAN.md`. Shell lives in `ios-shell/`, self-
   contained, zero game-file risk.
+  - **FIRST NATIVE PROJECT GENERATED (2026-08-23):** Xcode 26.6,
+    CocoaPods, and TestFlight are installed on the Mac mini; the committed
+    `ios-shell/ios/` project has bundle id `com.playgemsoflight.app`, the
+    real opaque 1024px icon + painted launch art, `.playback` audio session,
+    and native-mode PWA-prompt suppression. `npm run check` rebuilds the
+    20.4 MB offline bundle and machine-tests that Preferences restores both
+    save keys before the first game script and mirrors later writes; the full
+    v3 checker is green. After repairing Xcode's first corrupt/duplicate iOS
+    platform copy, the full CocoaPods sync and unsigned iPhone Simulator build
+    passed and the native app visibly booted into the grown-up porch. Still
+    gated on Xcode Apple-account/team sign-in, paid-program confirmation, a
+    physical-iPhone run, airplane/silent-switch/eviction tests, then archive +
+    TestFlight.
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
   removal, game-wide (not just the iOS bundle): the `basit` registry

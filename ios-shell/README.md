@@ -19,9 +19,8 @@ needs — is `v3/IOS-APP-STORE-PLAN.md`. This file is just the doing.
 
 Three things, once:
 
-1. **Xcode** — free, from the Mac App Store. It's big (several GB); start
-   the download before you make tea. Open it once after installing so it
-   can finish setting itself up, and accept the licence it asks about.
+1. **Xcode** — installed on this Mac mini on 2026-08-23. It lives in the
+   standard `/Applications/Xcode.app` location used by the sync command.
 2. **Node** — you already have it (it's what runs the checker). Type
    `node -v` in Terminal; anything 18 or higher is fine.
 3. **An Apple Developer account** ($99/yr, developer.apple.com). You can do
@@ -33,16 +32,14 @@ sessions — Xcode is Mac-only.
 
 ---
 
-## 1. Build it (five commands)
+## 1. Build it (the native project is already generated)
 
 Open Terminal and paste these one at a time, waiting for each to finish:
 
 ```bash
 cd ~/gems-of-light/ios-shell     # wherever your copy of the repo lives
-npm install                      # fetches Capacitor — once, then rarely again
-npm run build-www                # copies the game into www/
-npx cap add ios                  # creates the ios/ Xcode project — ONCE, ever
-npx cap sync ios                 # puts www/ inside that project
+npm install                      # fetches the locked Capacitor versions
+npm run sync                     # rebuilds www/ and copies it into ios/
 npx cap open ios                 # opens Xcode
 ```
 
@@ -54,45 +51,21 @@ What just happened, in plain terms:
   and left out everything the app doesn't need (v1, v2, concept art, the
   service worker, all the notes). It prints what it did and how big the
   result is — around 20 MB.
-- `npx cap add ios` made a real Xcode project in `ios/`. **You only ever run
-  that command once.** From then on it's `npm run sync` (see step 7).
+- The real Xcode project is already committed in `ios/`. It was generated on
+  2026-08-23; **do not run `npx cap add ios` again.** From now on it is always
+  `npm run sync` (see step 7).
 
 If a command complains, read the message — the builder is written to say
 plainly what it couldn't find rather than quietly make a broken app.
 
 ---
 
-## 2. One paste into the app's Swift file (the silent switch)
+## 2. Silent-switch audio (already configured)
 
-This is the single native edit, and it's the reason recitation will play
-even when the iPhone's ringer switch is flipped to silent — today's biggest
-annoyance on the web version.
-
-In Xcode's left sidebar open **App → App → AppDelegate.swift**. Near the
-top, with the other `import` lines, add:
-
-```swift
-import AVFAudio
-```
-
-Then find the function that begins `func application(_ application:
-UIApplication, didFinishLaunchingWithOptions ...)` and paste this just
-before its `return true`:
-
-```swift
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("audio session could not be set: \(error)")
-        }
-```
-
-Save with ⌘S. That's it — `.playback` tells iOS "this app's sound is the
-point of the app," which is exactly true of a Quran game.
-
-(This edit lives in `ios/`, which is committed to git, so you only do it
-once — it survives every future rebuild.)
+`AppDelegate.swift` already configures `AVAudioSession` with the `.playback`
+category. That tells iOS that recitation is core app content and should remain
+audible when the iPhone's Ring/Silent switch is set to silent. There is nothing
+to paste; verify the behavior in the real-device checklist below.
 
 ---
 
@@ -223,23 +196,14 @@ You never re-run `npx cap add ios`, and you never edit anything inside
 | `tools/build-www.mjs` | assembles `www/` from the repo. Reads the real `index.html`, so new script tags flow through automatically. |
 | `www-src/native-bridge.js` | the durable-save bridge + the script loader. **The launch blocker lives here** — change it carefully, then redo step 5. |
 | `capacitor.config.json` | app id, name, background colour. |
-| `package.json` | the Capacitor dependencies and the two commands. |
+| `package.json` | the Capacitor dependencies and build/check/sync commands. |
 | `www/` | **generated.** Not in git — rebuilt by every `npm run build-www`. |
 | `node_modules/` | **not in git.** `npm install` brings it back. |
-| `ios/` | **committed to git** — once your Mac has created it. |
+| `ios/` | **committed to git** — the generated Xcode project and native configuration. |
 
-That last row matters. `npx cap add ios` generates the Xcode project on
-your Mac; the cloud sessions can't. So after step 1 and the AppDelegate
-paste in step 2, commit it:
-
-```bash
-cd ~/gems-of-light
-git add ios-shell/ios
-git commit -m "ios-shell: the generated Xcode project, with the audio session"
-```
-
-From then on the project — signing, icons, your audio-session edit — is
-part of the repo like everything else, and can be restored on any machine.
+That last row matters. The project — icons, launch art, and the audio-session
+edit — is part of the repo like everything else and can be restored on any
+Mac. Signing remains local to Xcode and your Apple account.
 
 ---
 
@@ -251,10 +215,9 @@ part of the repo like everything else, and can be restored on any machine.
   copies of files already inside `audio/alafasy/`, kept for the archived v1
   game. The builder re-checks that on every run and warns if it ever stops
   being true.
-- **The install nudge** ("add me to your home screen") is meaningless inside
-  a real app. It hasn't been suppressed yet; the shell sets
-  `window.GOL_NATIVE = true` before the game loads, which is the hook to do
-  it with when we get there.
+- **The install nudge** ("add me to your home screen") is suppressed inside
+  the app. The shell sets `window.GOL_NATIVE = true` before the game loads,
+  and native mode is treated as already installed.
 - **Fonts.** `index.html` still links Google Fonts. With no network they
   simply fail and the system font stands in — the game plays fine. Bundling
   the two fonts locally is a nice later polish, not a blocker.
