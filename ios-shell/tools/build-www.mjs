@@ -20,6 +20,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SHELL = path.resolve(HERE, '..');
 const ROOT = path.resolve(SHELL, '..');
 const WWW = path.join(SHELL, 'www');
+const PRODUCTION_MAP = 'v3/map-artist-pack/journey-map.svg';
 
 // ------------------------------------------------------------------ what --
 
@@ -30,6 +31,7 @@ const COPY = [
   'js/data.js',        // the surah text — shared v1<->v3, lives at the root
   'v3/js',             // the whole game
   'v3/art',            // splash postcards
+  PRODUCTION_MAP,       // the live journey map (drafts stay out)
   'icons',
   'assets',
   'company',           // public publisher identity, linked from grown-ups
@@ -39,7 +41,7 @@ const COPY = [
   'audio/voice'        // narration clips
 ];
 
-// NOT copied, deliberately: v1/, v2/, concept-art/, v3/map-artist-pack/,
+// NOT copied, deliberately: v1/, v2/, concept-art/, map-artist drafts,
 // sw.js (the service worker is the web's concern — Capacitor serves from
 // disk), every *.md, every manifest*.webmanifest, and audio/basit/ (Abdul
 // Basit is removed from the game entirely; the builder must never expect it).
@@ -78,6 +80,7 @@ function die(msg) {
   process.exit(1);
 }
 function excluded(rel, name) {
+  if (rel === PRODUCTION_MAP) return false;
   if (EXCLUDE_NAMES.has(name)) return true;
   return EXCLUDE_RE.some((re) => re.test(rel) || re.test(name));
 }

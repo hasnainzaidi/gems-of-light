@@ -73,8 +73,9 @@ Self-contained Capacitor project — its own `package.json` and
 - `ios-shell/tools/build-www.mjs` assembles `ios-shell/www/` from the
   repo: root `index.html` (transformed), `js/data.js`, `v3/js`,
   `v3/art`, `icons`, `assets`, the company/privacy pages and their shared
-  stylesheet, `audio/alafasy`, `audio/voice`. It
-  EXCLUDES v1, v2, concept-art, the map-artist pack, and sw.js (the
+  stylesheet, `audio/alafasy`, `audio/voice`, and the single production
+  `v3/map-artist-pack/journey-map.svg`. It EXCLUDES v1, v2, concept-art,
+  the map artist's working drafts, and sw.js (the
   service worker is the web's concern; Capacitor serves from disk).
 - The transform rewrites the game's `<script src>` tags into an
   ordered manifest loaded by `native-bridge.js`: restore saves from

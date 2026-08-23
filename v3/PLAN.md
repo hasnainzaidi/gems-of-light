@@ -1094,6 +1094,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     gated on Xcode Apple-account/team sign-in, paid-program confirmation, a
     physical-iPhone run, airplane/silent-switch/eviction tests, then archive +
     TestFlight.
+  - **FIRST PHYSICAL IPHONE RUN — JOURNEY MAP PACKAGING FIX
+    (2026-08-23, Hasnain):** the Personal Team build installed and launched on
+    an iPhone 16 Pro, but stopped at the journey map's pulsing-star loader.
+    Device logs showed the shell and Preferences bridge were healthy; the
+    native bundle had omitted the live `journey-map.svg` because its whole
+    artist directory was excluded with the drafts. The builder now ships only
+    `v3/map-artist-pack/journey-map.svg`, keeps every draft out, and the native
+    checker fails if either rule regresses. Reinstall + airplane, silent-switch,
+    and durable-save verdicts still gate TestFlight.
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
   removal, game-wide (not just the iOS bundle): the `basit` registry
