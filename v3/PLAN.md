@@ -279,6 +279,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 
 ## 10. Decisions taken (flag if you disagree)
 
+- **ORGANIZATION APP STORE PUBLISHING — ASHNA HOLDINGS, LLC (accepted
+  2026-08-23, Hasnain; supersedes the 2026-08-16 individual-account
+  decision):** enroll Ashna using its existing D-U-N-S record, the functional
+  company-domain address `developer@playgemsoflight.com`, and the Gems of Light
+  company/privacy pages. The intended public seller is Ashna Holdings, LLC.
+  Apple enrollment and website association do not themselves assign the app or
+  its IP to Ashna; document ownership, licensing, and multi-member governance
+  separately before monetization. Owning plan: `../APP-PUBLISHING-PLAN.md`.
+
 - **Same surah (Al-Falaq) across all ten** — isolates the level-design
   variable, which is the brief's actual question.
 - **Ambient echo defaults off** (playtested 2026-07-12) — recitation is
