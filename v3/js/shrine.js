@@ -498,6 +498,13 @@
           if (GOL.dist(tap.x, tap.y, g.x, g.y) < 42) {
             tap.ui = true;
             g.pulse = 1;
+            // Pointerdown is recorded as a tap before iOS knows whether the
+            // finger will move. If this same touch has already crossed the
+            // drag threshold, pickup above owns its one listening request.
+            // Conversely, marking a plain tap here prevents its later move
+            // from restarting the ayah on the next frame.
+            if (this.heldGem === g && g.listenedThisHold) break;
+            g.listenedThisHold = true;
             this.listens++;
             GOL.audio.playVerse(this.surahId, g.ayah, null);
             this.fx.spawn('ring', g.x, g.y, { color: GOL.GEMS[(g.ayah - 1) % 7].glow, size: 22 });
