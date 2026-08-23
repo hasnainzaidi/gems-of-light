@@ -29,6 +29,7 @@ need(!/rel=["']manifest["']/i.test(html), 'the PWA manifest leaked into the nati
 need(!/serviceWorker\s*\.\s*register/.test(html), 'service-worker registration leaked into the native bundle.');
 need(!fs.existsSync(path.join(WWW, 'sw.js')), 'sw.js leaked into the native bundle.');
 need(!fs.existsSync(path.join(WWW, 'audio', 'basit')), 'the removed Basit reciter leaked into the native bundle.');
+need(!fs.existsSync(path.join(WWW, 'assets')), 'web-only social preview assets leaked into the native bundle.');
 need(fs.existsSync(path.join(WWW, 'v3', 'map-artist-pack', 'journey-map.svg')), 'the production journey map is missing from the native bundle.');
 need(!fs.existsSync(path.join(WWW, 'v3', 'map-artist-pack', 'drafts')), 'journey-map working drafts leaked into the native bundle.');
 
@@ -38,12 +39,37 @@ need(JSON.stringify(sourceAudio) === JSON.stringify(bundledAudio), 'the Mishary 
 
 const bundledBoot = fs.readFileSync(path.join(WWW, 'v3', 'js', 'boot.js'), 'utf8');
 need(bundledBoot.includes('window.GOL_NATIVE === true'), 'native mode no longer suppresses the PWA installation experience.');
+const bundledAudioJs = fs.readFileSync(path.join(WWW, 'v3', 'js', 'core', 'audio.js'), 'utf8');
+for (const [name, source] of [
+  ['game', html],
+  ['Company', fs.readFileSync(path.join(WWW, 'company', 'index.html'), 'utf8')],
+  ['Privacy', fs.readFileSync(path.join(WWW, 'privacy', 'index.html'), 'utf8')]
+]) {
+  need(!/<link\b[^>]*\bhref\s*=\s*["']https?:\/\//i.test(source), name + ' HTML can request a remote stylesheet/resource.');
+}
+need(!/everyayah\.com|fonts\.googleapis\.com|fonts\.gstatic\.com/i.test(bundledBoot + bundledAudioJs + html),
+  'a browser-only Google Fonts or EveryAyah endpoint leaked into native runtime code.');
+
+const bundledDataSource = fs.readFileSync(path.join(WWW, 'js', 'data.js'), 'utf8');
+const bundledDataMatch = bundledDataSource.match(/window\.GOL_DATA\s*=\s*([\s\S]*);\s*$/);
+need(bundledDataMatch, 'native Quran data is not the expected object assignment.');
+const bundledData = JSON.parse(bundledDataMatch[1]);
+need(bundledData.surahs.every((surah) =>
+  !Object.hasOwn(surah, 'kidIntro') && !Object.hasOwn(surah, 'story') &&
+  surah.verses.every((verse) => !Object.hasOwn(verse, 'tr') && !Object.hasOwn(verse, 'meaning'))
+), 'unused transliteration/meaning/story fields leaked into native Quran data.');
 
 const delegate = fs.readFileSync(path.join(IOS, 'AppDelegate.swift'), 'utf8');
 need(delegate.includes('import AVFAudio') && /setCategory\(\.playback/.test(delegate), 'AppDelegate no longer configures playback through the silent switch.');
 
 const project = fs.readFileSync(path.join(SHELL, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj'), 'utf8');
 need(project.includes('PRODUCT_BUNDLE_IDENTIFIER = com.playgemsoflight.app;'), 'the permanent bundle identifier changed.');
+need(!project.includes('TARGETED_DEVICE_FAMILY = "1,2";') && project.includes('TARGETED_DEVICE_FAMILY = 1;'),
+  'the launch target must remain iPhone-only until iPad is deliberately designed and tested.');
+const info = fs.readFileSync(path.join(IOS, 'Info.plist'), 'utf8');
+need(/<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/.test(info),
+  'Info.plist must declare that the app does not use non-exempt encryption.');
+need(!info.includes('UISupportedInterfaceOrientations~ipad'), 'iPad-only orientation metadata remains in the iPhone-only app.');
 
 const icon = fs.readFileSync(path.join(IOS, 'Assets.xcassets', 'AppIcon.appiconset', 'AppIcon-512@2x.png'));
 need(icon.subarray(1, 4).toString() === 'PNG', 'the App Store icon is not a PNG.');
@@ -96,6 +122,7 @@ await new Promise((resolve) => setTimeout(resolve, 0));
 need(native.get('gemsOfLight.v3') === '{"journey":"new"}', 'a game save did not mirror into native Preferences.');
 
 console.log('✓ offline bundle: journey map + ' + bundledAudio.length + ' Mishary files, no web-only cache, drafts, or Basit assets');
+console.log('✓ zero-network native runtime and pruned native-only Quran data');
 console.log('✓ native identity, opaque App Store icon, and silent-switch audio configuration');
 console.log('✓ native launch restores durable saves before boot and mirrors later writes');
 console.log('\nNative preflight passed. Real-device tests still required before TestFlight.\n');
