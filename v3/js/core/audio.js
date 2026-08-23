@@ -14,6 +14,54 @@
     _verseEl: null, _current: null, _birdTimer: 0, _birdsOn: false,
     _seq: null, _versePrimed: false,
 
+    // iOS suspends a WKWebView/PWA without ending its media element. Its
+    // wall-clock timers may then all arrive together on foreground, causing a
+    // held gem or campfire ayah to be silently skipped. Pause the exact active
+    // element and disarm its guards while the page is away; resume the same
+    // ayah (or the pending between-ayah step) when the page returns.
+    _lifecyclePause(hidden) {
+      const h = this._current;
+      if (hidden) {
+        if (h && !h.done) {
+          h.lifecyclePaused = true;
+          clearTimeout(h.timer);
+          clearTimeout(h.guard);
+          h.timer = null;
+          h.guard = null;
+          try { if (!h.el.paused) h.el.pause(); } catch (e) {}
+        }
+        if (this._seq && this._seq.timer) {
+          clearTimeout(this._seq.timer);
+          this._seq.timer = null;
+          this._seq.resumeStep = true;
+        }
+        return;
+      }
+      if (h && !h.done && h.lifecyclePaused) {
+        h.lifecyclePaused = false;
+        if (h.arm) h.arm();
+        if (h.el.paused) {
+          let p;
+          try { p = h.el.play(); } catch (e) { this._versePrimed = false; }
+          if (p && p.catch) p.catch(() => { this._versePrimed = false; });
+        }
+      } else if (this._seq && this._seq.resumeStep && this._seq.schedule) {
+        this._seq.resumeStep = false;
+        this._seq.schedule(0);
+      }
+    },
+    _installLifecycle() {
+      if (this._lifecycleInstalled) return;
+      this._lifecycleInstalled = true;
+      if (typeof document !== 'undefined' && document.addEventListener) {
+        document.addEventListener('visibilitychange', () => this._lifecyclePause(!!document.hidden));
+      }
+      if (typeof window !== 'undefined' && window.addEventListener) {
+        window.addEventListener('pagehide', () => this._lifecyclePause(true));
+        window.addEventListener('pageshow', () => this._lifecyclePause(false));
+      }
+    },
+
     // -------------------------------------------------------------- boot --
     unlock() {
       if (!this.ctx) {
@@ -203,7 +251,7 @@
       const el = this._verseAudio();
       // detach any listeners still bound from the previous ayah on this element
       if (el._detach) el._detach();
-      const h = { el, done: false, timer: null, guard: null };
+      const h = { el, done: false, timer: null, guard: null, lifecyclePaused: false };
       const finish = () => {
         if (h.done) return;
         h.done = true;
@@ -215,6 +263,15 @@
         if (onend) onend();
       };
       h.finish = finish;
+      h.arm = () => {
+        clearTimeout(h.timer);
+        clearTimeout(h.guard);
+        if (h.done || h.lifecyclePaused) return;
+        // If audio cannot load at all (fully offline + streamed surah), move
+        // on; and nothing may stall the garden forever while it is ACTIVE.
+        h.timer = setTimeout(() => { if (el.paused || el.readyState < 2) finish(); }, 7000);
+        h.guard = setTimeout(finish, 30000);
+      };
       let triedRemote = false;
       const onEnded = () => finish();
       const onError = () => {
@@ -243,10 +300,7 @@
       el.src = rec.local + key + '.mp3';
       el.load();
       try { el.currentTime = 0; } catch (e) { /* fresh src starts at 0 anyway */ }
-      // if audio can't load at all (fully offline + streamed surah), move on
-      h.timer = setTimeout(() => { if (el.paused || el.readyState < 2) finish(); }, 7000);
-      // and nothing may stall the garden forever, no matter what
-      h.guard = setTimeout(finish, 30000);
+      h.arm();
       this.duck(true);
       const p = el.play();
       // A REFUSED play() fires no 'error' event, so it can never reach the
@@ -277,8 +331,17 @@
       this.stopRecitation();
       const breathMs = (cb && cb.breath != null ? cb.breath : 0.42) * 1000;
       const echoVol = cb && cb.echoVol != null ? cb.echoVol : null;
-      const seq = { i: 0, stopped: false, el: null };
+      const seq = { i: 0, stopped: false, el: null, timer: null, resumeStep: false };
       this._seq = seq;
+      const schedule = (ms) => {
+        if (seq.stopped) return;
+        clearTimeout(seq.timer);
+        seq.timer = setTimeout(() => {
+          seq.timer = null;
+          step();
+        }, ms);
+      };
+      seq.schedule = schedule;
       // the same ayah returning soft, then the normal gap into the next
       const echoStep = (heard) => {
         if (seq.stopped) return;
@@ -287,7 +350,7 @@
         const h = this._verse(surah.id, v.n, () => {
           seq.i++;
           const last = seq.i >= surah.verses.length;
-          setTimeout(step, last ? 420 : breathMs);
+          schedule(last ? 420 : breathMs);
         }, true);
         // _verse resets el.volume = 1 at start; drop it to the echo now that
         // playback has begun (same trick echoVerse uses)
@@ -316,7 +379,7 @@
           const gap = last ? 420
             : (cb && cb.breathFor ? Math.max(0.05, cb.breathFor(heard)) * 1000 : breathMs);
           if (!last && cb && cb.onBreath) cb.onBreath(heard);
-          setTimeout(step, gap);
+          schedule(gap);
         }, true);
         seq.el = h.el;
       };
@@ -324,7 +387,11 @@
       return seq;
     },
     stopRecitation() {
-      if (this._seq) { this._seq.stopped = true; this._seq = null; }
+      if (this._seq) {
+        this._seq.stopped = true;
+        clearTimeout(this._seq.timer);
+        this._seq = null;
+      }
       if (this._current) {
         const h = this._current;
         h.el.pause();
@@ -647,5 +714,6 @@
       }
     }
   };
+  A._installLifecycle();
   GOL.audio = A;
 })();
