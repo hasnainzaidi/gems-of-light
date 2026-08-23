@@ -124,13 +124,15 @@
       this.welcomeName = entranceSurah && GOL.EXPERIENCE.recitation ? entranceSurah.englishName : '';
       const exactFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW[GOL.V3.reciter]
         ? GOL.WORD_FOLLOW[GOL.V3.reciter][def.surahId] : null;
-      const prototypeFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW.basit
-        ? GOL.WORD_FOLLOW.basit[def.surahId] : null;
+      const referenceFollow = GOL.WORD_FOLLOW && GOL.WORD_FOLLOW.alafasy
+        ? GOL.WORD_FOLLOW.alafasy[def.surahId] : null;
       // Never make the experiment silently disappear because a grown-up had
-      // another reciter saved. Exact tables win; otherwise the prototype's
-      // Basit word map is proportionally fitted to the selected recording.
-      this.ayahFollow = exactFollow || prototypeFollow;
-      this.ayahFollowScaled = !exactFollow && !!prototypeFollow;
+      // another reciter saved. Exact tables win; otherwise the reference
+      // (Alafasy) word map is proportionally fitted to the selected recording.
+      // With one shipped reciter these are the same table, so nothing scales —
+      // the fallback is here for the day a second voice arrives without tables.
+      this.ayahFollow = exactFollow || referenceFollow;
+      this.ayahFollowScaled = !exactFollow && !!referenceFollow;
       // waking from the dream (shrine.js's memory shrine) drops the child back
       // at their own campfire, ember-lit, everything as they left it
       const resume = params.resume === 'ember';

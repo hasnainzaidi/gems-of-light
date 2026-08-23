@@ -279,6 +279,15 @@ in six playtest-gated waves; Wave 0 = content pipeline).
 
 ## 10. Decisions taken (flag if you disagree)
 
+- **ORGANIZATION APP STORE PUBLISHING — ASHNA HOLDINGS, LLC (accepted
+  2026-08-23, Hasnain; supersedes the 2026-08-16 individual-account
+  decision):** enroll Ashna using its existing D-U-N-S record, the functional
+  company-domain address `developer@playgemsoflight.com`, and the Gems of Light
+  company/privacy pages. The intended public seller is Ashna Holdings, LLC.
+  Apple enrollment and website association do not themselves assign the app or
+  its IP to Ashna; document ownership, licensing, and multi-member governance
+  separately before monetization. Owning plan: `../APP-PUBLISHING-PLAN.md`.
+
 - **Same surah (Al-Falaq) across all ten** — isolates the level-design
   variable, which is the brief's actual question.
 - **Ambient echo defaults off** (playtested 2026-07-12) — recitation is
@@ -1057,3 +1066,38 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     at once; (2) the door opens the MOMENT the clip finishes (each name
     clip already carries its baked 0.45s tail), dropping the extra
     one-second wait. A silent dwell keeps the old one-second beat.
+- **iOS APP STORE: SHIP EARLY, WRAP DON'T REWRITE (2026-08-15).** Verdict
+  on "perfect the PWA first vs. publish and improve in parallel":
+  publish early. The slow step is administrative (Apple Developer
+  enrollment + first review), not creative — 21 worlds is already past
+  launch-worthy, and everything on the backlog ships as ordinary
+  updates afterward. The app is a Capacitor shell around the UNCHANGED
+  `v3/js` game (one codebase, two channels); a native rewrite would
+  fork the game and kill parallel improvement. Launch blockers are
+  exactly five — durable saves (Preferences mirror; localStorage is
+  evictable in WKWebView), airplane-mode-complete bundle (Guideline
+  4.2), Mishary-only audio, Kids Category (privacy policy + "no data"
+  declaration), price model — and nothing else is one. Full plan,
+  shell design, and the Mac-mini/TestFlight sequence:
+  `v3/IOS-APP-STORE-PLAN.md`. Shell lives in `ios-shell/`, self-
+  contained, zero game-file risk.
+- **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
+  Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
+  removal, game-wide (not just the iOS bundle): the `basit` registry
+  entry, `audio/basit/` (26 MB, 194 files) plus its dead fetch
+  script, and every Basit word-follow table (`follow-estimated.js`
+  −918 lines; the hand-aligned `basit[113]` in `w1-falaq-follow.js`).
+  All recoverable from git history if a second reciter returns; the
+  registry MECHANISM stays — a second entry self-restores the tuning
+  panel's reciter row, which now hides when only one voice exists.
+  NOTE the execution catch: `w1-falaq-follow.js` was NOT deleted —
+  despite its Basit-only header it also carried the game's only
+  hand-aligned ALAFASY table for Al-Falaq (113), which
+  `follow-estimated.js` deliberately excludes; the file stays as that
+  table's home. Safe because Alafasy word-follow tables cover the
+  identical surah set (1, 92–93, 97, 100–106, 108–114, 255),
+  `adventure.js`'s reference-table fallback was retargeted
+  basit→alafasy, boot's saved-config guard
+  already falls back to the default for an unknown saved reciter, and
+  the tuning-panel picker builds itself from the registry. v1/v2 never
+  referenced Basit.
