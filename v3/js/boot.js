@@ -42,21 +42,29 @@
   // mid-session — not just the boot-time ?debug=1. Derive it through this
   // helper so the two flags never drift apart. `full=1` is a boot-only gate.
   GOL.DEBUG_FULL = q.get('full') === '1';
-  GOL.applyDebug = function () { GOL.DEBUG_ACCEL = GOL.DEBUG && !GOL.DEBUG_FULL; };
-  GOL.applyDebug();
   const directLab = q.get('lab') ? parseInt(q.get('lab'), 10) : null;
   const directProto = q.get('proto') ? parseInt(q.get('proto'), 10) : directLab;
   const directShrine = q.get('shrine') === '1';
   const directFocus = q.get('focus') === '1';
   const directCamp = q.get('camp') ? Math.max(1, parseInt(q.get('camp'), 10)) : null;
   const directGate = q.get('gate') ? Math.max(1, parseInt(q.get('gate'), 10)) : null;
+  GOL.applyDebug = function (preserveExplicitLabEcho) {
+    GOL.DEBUG_ACCEL = GOL.DEBUG && !GOL.DEBUG_FULL;
+    // Ambient echo failed its child playtest: in ordinary play, hearing an
+    // uncollected ayah on a timer read as random/repeated audio. Keep it only
+    // behind an explicit debug/lab URL, and make leaving debug a hard return
+    // to the shipped collect-triggered-only behavior.
+    if (!GOL.DEBUG && !preserveExplicitLabEcho && GOL.V3) GOL.V3.echo = 'off';
+  };
+  GOL.applyDebug();
   GOL.FPS = q.get('fps') === '1'; // on-device frame-time readout (judder hunts)
   // The ayah recites when its gem is collected (see adventure.collect). The
   // *ambient* echo — an uncollected ayah softly calling from its direction —
-  // playtested as confusing/random, so it's off by default; the tuning panel
-  // still exposes near/world for further experiments.
+  // playtested as confusing/random, so production never restores it. An
+  // explicit debug/lab URL remains available for controlled experiments.
+  const requestedEcho = ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off';
   GOL.V3 = {
-    echo: ['off', 'near', 'world'].includes(q.get('echo')) ? q.get('echo') : 'off',
+    echo: (GOL.DEBUG || directLab) ? requestedEcho : 'off',
     echoEvery: parseFloat(q.get('echoEvery') || '14'),
     rows: parseFloat(q.get('rows') || '11.5'), // tile rows visible on screen
     maxCols: parseFloat(q.get('cols') || '16'), // horizontal FOV cap — stops wide phones zooming out (iPad's ~15 cols never hit it, so iPad is unchanged); 'near' (14) is one tap away and persists per device
@@ -74,14 +82,16 @@
     GOL.V3.echo = 'off';
     GOL.V3.arabic = false;
   }
-  // the in-app tuning panel persists its choices; a URL param still wins as
-  // an explicit override for that key. CFG_V lets a default change (like the
-  // echo one above, or the 2026-07-15 Mishary default) reset a stale
-  // persisted choice instead of stranding it.
+  // The in-app tuning panel persists production choices; ambient echo is the
+  // exception, retained only for the current explicit debug/lab experiment.
+  // CFG_V lets defaults such as the reciter reset stale persisted choices.
   const CFG_V = 3;
+  let migrateEchoOff = false;
   try {
     const saved = JSON.parse(localStorage.getItem(GOL.EXPERIENCE.configKey) || '{}');
-    if (!q.has('echo') && saved.echo && saved.v === CFG_V) GOL.V3.echo = saved.echo;
+    // near/world used to persist at CFG_V=3. Never let that stale experiment
+    // reactivate itself; rewrite it to off after the rest of the config loads.
+    migrateEchoOff = saved.echo != null && saved.echo !== 'off';
     if (!q.has('ar') && saved.arabic != null) GOL.V3.arabic = saved.arabic;
     if (!q.has('rows') && saved.rows) GOL.V3.rows = saved.rows;
     if (!q.has('cols') && saved.maxCols) GOL.V3.maxCols = saved.maxCols;
@@ -90,12 +100,16 @@
     // debug toggled from the tuning panel persists; ?debug=1 stays the boss
     if (!q.has('debug') && saved.debug != null) GOL.DEBUG = !!saved.debug;
   } catch (e) { /* private mode: play on */ }
-  GOL.applyDebug(); // saved debug may have flipped DEBUG on — resync DEBUG_ACCEL
+  // A lab may request echo explicitly without using debug acceleration. This
+  // boot-only preserve flag does not apply when the in-app debug toggle turns
+  // off later: that action always returns echo to off.
+  GOL.applyDebug(!!directLab && q.has('echo'));
   GOL.saveV3cfg = function () {
     try {
-      localStorage.setItem(GOL.EXPERIENCE.configKey, JSON.stringify({ v: CFG_V, echo: GOL.V3.echo, arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
+      localStorage.setItem(GOL.EXPERIENCE.configKey, JSON.stringify({ v: CFG_V, echo: 'off', arabic: GOL.V3.arabic, rows: GOL.V3.rows, maxCols: GOL.V3.maxCols, groundBias: GOL.V3.groundBias, reciter: GOL.V3.reciter, debug: GOL.DEBUG }));
     } catch (e) { /* ignore */ }
   };
+  if (migrateEchoOff) GOL.saveV3cfg();
 
   // ----------------------------------------------------------- safe area --
   // measure env(safe-area-inset-*) with a probe div; the Dynamic Island sits
