@@ -33,7 +33,6 @@ const COPY = [
   'v3/art',            // splash postcards
   PRODUCTION_MAP,       // the live journey map (drafts stay out)
   'icons',
-  'assets',
   'company',           // public publisher identity, linked from grown-ups
   'privacy',           // canonical privacy policy, linked from grown-ups
   'legal.css',         // shared company/privacy page styling
@@ -119,6 +118,24 @@ function human(bytes) {
   return (bytes / 1024).toFixed(0) + ' KB';
 }
 
+function rewriteBundledText(rel, transform, label) {
+  const file = path.join(WWW, rel);
+  if (!fs.existsSync(file)) die(label + ': missing ' + rel);
+  const before = fs.readFileSync(file, 'utf8');
+  const after = transform(before);
+  if (after === before) die(label + ': expected transform did not change ' + rel);
+  fs.writeFileSync(file, after);
+}
+
+function stripRemoteHtmlResources(source) {
+  // WKWebView needs no web fonts or social-card metadata. Keep ordinary
+  // first-party links (Company, Privacy, Contact), but remove tags that can
+  // make the installed app depend on or advertise a remote resource.
+  return source
+    .replace(/[ \t]*<link\b[^>]*\bhref\s*=\s*["']https?:\/\/[^>]*>[ \t]*\n?/gi, '')
+    .replace(/[ \t]*<meta\b[^>]*(?:\bproperty\s*=\s*["']og:|\bname\s*=\s*["']twitter:)[^>]*>[ \t]*\n?/gi, '');
+}
+
 // ------------------------------------------------------------------ 1. www --
 
 console.log('Gems of Light — building the iOS bundle');
@@ -140,6 +157,44 @@ for (const rel of COPY) {
   else copyFile(rel);
   console.log('  copied ' + rel + '  (' + (fileCount - before) + ' file' +
     (fileCount - before === 1 ? '' : 's') + ')');
+}
+
+// Native is a closed, offline bundle. Remove the browser-only network
+// fallbacks from the COPIES, leaving the PWA source behavior unchanged.
+rewriteBundledText('v3/js/boot.js', (source) => source.replace(
+  "remote: 'https://everyayah.com/data/Alafasy_128kbps/'",
+  'remote: null'
+).replaceAll('everyayah.com', 'browser-only fallback'), 'disable native recitation streaming');
+rewriteBundledText('v3/js/core/audio.js', (source) => source
+  .replace("const REMOTE = 'https://everyayah.com/data/Alafasy_128kbps/';", 'const REMOTE = null;')
+  .replace('if (!triedRemote) {', 'if (!triedRemote && rec.remote) {')
+  .replaceAll('everyayah.com', 'browser-only fallback'),
+'disable native recitation fallback');
+
+// The active native game uses canonical Arabic plus the compact identity
+// fields. Do not ship dormant transliteration, retold meanings, intros, or
+// stories merely because the shared browser dataset also carries them.
+rewriteBundledText('js/data.js', (source) => {
+  const match = source.match(/window\.GOL_DATA\s*=\s*([\s\S]*);\s*$/);
+  if (!match) die('prune native Quran data: js/data.js is not the expected object assignment.');
+  let data;
+  try { data = JSON.parse(match[1]); }
+  catch (error) { die('prune native Quran data: object is not strict JSON (' + error.message + ').'); }
+  for (const surah of data.surahs || []) {
+    delete surah.kidIntro;
+    delete surah.story;
+    for (const verse of surah.verses || []) {
+      delete verse.tr;
+      delete verse.meaning;
+    }
+  }
+  return '// GENERATED native-only subset by ios-shell/tools/build-www.mjs.\n' +
+    '// Shared web data remains unchanged; retain only fields production iOS uses.\n' +
+    'window.GOL_DATA = ' + JSON.stringify(data, null, 2) + ';\n';
+}, 'prune native Quran data');
+
+for (const rel of ['company/index.html', 'privacy/index.html']) {
+  rewriteBundledText(rel, stripRemoteHtmlResources, 'strip native legal-page remote resources');
 }
 
 // The duplicate-mp3 claim above, re-checked. Cheap, and it means a future
@@ -184,6 +239,7 @@ for (const rel of COPY) {
 const indexPath = path.join(ROOT, 'index.html');
 if (!fs.existsSync(indexPath)) die('the repo root index.html is missing — that is the game\'s front door.');
 let html = fs.readFileSync(indexPath, 'utf8');
+html = stripRemoteHtmlResources(html);
 
 // (a) the ordered script list, exactly as the browser would run it
 const SRC_TAG = /([ \t]*)<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>\s*<\/script>[ \t]*\n?/g;

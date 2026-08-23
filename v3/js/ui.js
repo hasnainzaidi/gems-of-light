@@ -298,7 +298,12 @@
         ...(reciterKeys.length > 1
           ? [{ label: 'reciter', opts: reciterKeys, get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } }]
           : []),
-        { label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } },
+        // The timed ambient ayah failed its child playtest (it read as random
+        // or duplicated recitation). Keep the experiment reachable in debug,
+        // never on an ordinary parent/settings surface.
+        ...(GOL.DEBUG
+          ? [{ label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } }]
+          : []),
         { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
         // 'camera' drives the horizontal FOV cap (columns of world shown), the
         // lever that actually matters on a wide phone: near = zoomed in / bigger

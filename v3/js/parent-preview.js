@@ -42,6 +42,24 @@
     return t.x >= b.x && t.x <= b.x + b.w && t.y >= b.y && t.y <= b.y + b.h;
   }
 
+  function mountAccessRegion() {
+    const root = document.createElement('section');
+    root.className = 'gol-parent-access';
+    root.setAttribute('aria-label', 'Try the Gems of Light garden');
+    root.innerHTML = '<h1>Try the garden</h1><p aria-live="polite"></p><div></div>';
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function accessButton(parent, label, action) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.addEventListener('click', action);
+    parent.appendChild(button);
+    return button;
+  }
+
   function drawFlower(ctx, x, y, k, t, phase) {
     if (k <= 0.01) return;
     ctx.save();
@@ -97,6 +115,7 @@
     cardOpen: false,
     cardRound: 0,
     layout: null,
+    access: null,
 
     enter() {
       this.t = 0;
@@ -114,12 +133,48 @@
       this.cardOpen = false;
       this.cardRound = 0;
       this.layout = null;
+      this.access = mountAccessRegion();
+      this.syncAccess();
       GOL.Input.zones = null;
     },
 
     exit() {
+      if (this.access) this.access.remove();
+      this.access = null;
       GOL.Input.zones = null;
       if (GOL.audio && GOL.audio.stopRecitation) GOL.audio.stopRecitation();
+    },
+
+    syncAccess() {
+      if (!this.access) return;
+      const note = this.access.querySelector('p');
+      const actions = this.access.querySelector('div');
+      actions.replaceChildren();
+      accessButton(actions, 'Back to grown-up setup', () => this.leave());
+      if (this.cardOpen) {
+        note.textContent = this.cardRound
+          ? 'The garden grew again. The real journey will begin fresh for your child.'
+          : 'You explored, listened, and helped the garden grow. The real journey will begin fresh for your child.';
+        if (this.cardRound === 0) {
+          accessButton(actions, 'Continue exploring', () => {
+            this.cardOpen = false;
+            this.cardRound = 1;
+            if (this.layout) this.targetX = Math.min(this.layout.gemX - 52, this.layout.right - 52);
+            this.syncAccess();
+          });
+        }
+        accessButton(actions, GOL.EXPERIENCE.showcase ? 'Make it yours' : 'Make it theirs', () => this.finish());
+      } else if (this.collectT >= 0) {
+        note.textContent = GOL.EXPERIENCE.recitation
+          ? 'The gem is found. Listen while its ayah plays.'
+          : 'The gem is found and the garden is growing.';
+      } else {
+        note.textContent = 'Move through this disposable preview garden toward the glowing gem.';
+        accessButton(actions, 'Explore toward the gem', () => {
+          if (!this.layout) return;
+          this.targetX = Math.min(this.layout.gemX - 18, this.layout.right - 18);
+        });
+      }
     },
 
     geometry(W, H) {
@@ -138,17 +193,19 @@
       const cardY = clamp(portrait ? H * 0.42 : H * 0.5 - cardH / 2,
         18 + sa.t, H - cardH - 18 - sa.b);
       const gap = 12, pad = 22;
-      const stacked = cardW < 440;
+      const canContinue = this.cardRound === 0;
+      const stacked = cardW < 440 && canContinue;
       const buttonH = 48;
-      const buttonW = stacked ? cardW - pad * 2 : (cardW - pad * 2 - gap) / 2;
+      const buttonW = !canContinue ? Math.min(260, cardW - pad * 2)
+        : (stacked ? cardW - pad * 2 : (cardW - pad * 2 - gap) / 2);
       const buttonY = cardY + cardH - pad - buttonH;
       const continueBtn = { x: cardX + pad, y: stacked ? buttonY - buttonH - gap : buttonY, w: buttonW, h: buttonH };
-      const setupBtn = { x: stacked ? cardX + pad : cardX + pad + buttonW + gap, y: buttonY, w: buttonW, h: buttonH };
+      const setupBtn = { x: !canContinue ? cardX + (cardW - buttonW) / 2 : (stacked ? cardX + pad : cardX + pad + buttonW + gap), y: buttonY, w: buttonW, h: buttonH };
       return {
         sa, portrait, groundY, left, right, gemX,
         back: { x: 38 + sa.l, y: 38 + sa.t, r: 28 },
         card: { x: cardX, y: cardY, w: cardW, h: cardH },
-        continueBtn, setupBtn, stacked
+        continueBtn, setupBtn, stacked, canContinue
       };
     },
 
@@ -181,11 +238,12 @@
         }
         if (this.cardOpen) {
           tap.ui = true;
-          if (hit(tap, L.continueBtn)) {
+          if (L.canContinue && hit(tap, L.continueBtn)) {
             if (GOL.audio) GOL.audio.sfx('tap');
             this.cardOpen = false;
             this.cardRound++;
             this.targetX = Math.min(L.gemX - 52, L.right - 52);
+            this.syncAccess();
           } else if (hit(tap, L.setupBtn)) {
             if (GOL.audio) GOL.audio.sfx('tap');
             this.finish();
@@ -236,6 +294,7 @@
             });
           } else this.recitationDone = true;
         } else this.recitationDone = true;
+        this.syncAccess();
       }
 
       if (this.collectT >= 0) {
@@ -249,6 +308,7 @@
           this.targetX = null;
           this.cardOpen = true;
           p.eyesClosed = false;
+          this.syncAccess();
           if (GOL.audio) GOL.audio.sfx('unlockLevel');
         }
       }
@@ -319,7 +379,7 @@
             size: 13.5, weight: '700', color: '#7A806F', shadow: false
           });
         }
-        pill(ctx, L.continueBtn, 'Continue exploring', false);
+        if (L.canContinue) pill(ctx, L.continueBtn, 'Continue exploring', false);
         pill(ctx, L.setupBtn, GOL.EXPERIENCE.showcase ? 'Make it yours' : 'Make it theirs', true);
       }
     }

@@ -1103,6 +1103,29 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     `v3/map-artist-pack/journey-map.svg`, keeps every draft out, and the native
     checker fails if either rule regresses. Reinstall + airplane, silent-switch,
     and durable-save verdicts still gate TestFlight.
+- **iOS-FIRST LAUNCH READINESS AUDIT (2026-08-23):** the launch workflow is
+  now specified by audience in `LAUNCH-READINESS-2026-08-23.md`, with iOS
+  correctness ahead of PWA polish but shared-code regressions forbidden. Three
+  reproduced defects were accepted and fixed: a shrine tap becoming a drag
+  could recite twice; wall-clock audio timers could skip while iOS was
+  suspended; and an old saved ambient-echo setting could resurrect the
+  intentionally killed wandering recitation. Production now migrates echo to
+  `off`, while explicit debug/lab tuning remains available. Native onboarding
+  no longer offers to install an installed app, the parent preview converges on
+  handoff instead of repeating ayah two forever, and onboarding/preview/parent
+  controls have semantic keyboard, VoiceOver, and Switch actions. The public
+  privacy policy distinguishes PWA browser/cache storage from native private
+  save mirroring and bundled offline assets.
+  - **New submission gate — content-rights evidence:** the earlier five-blocker
+    list was technically correct but incomplete for store submission. The repo
+    contains no grant proving commercial offline redistribution rights for the
+    shipped Alafasy recordings, and its edited Kursi/`095008` files need
+    explicit derivative-edit permission. Quran text and ElevenLabs narration
+    also need a release evidence manifest. This blocks App Store submission,
+    not local development or an internal build: obtain the rights or replace
+    the affected corpus before answering App Store Content Rights. Unused
+    transliteration/meaning/story data is excluded from native rather than
+    carried merely because it exists in the shared web dataset.
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
   removal, game-wide (not just the iOS bundle): the `basit` registry
