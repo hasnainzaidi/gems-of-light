@@ -39,8 +39,27 @@
       ctx.fillStyle = g;
       ctx.fillRect(cx - 180, haloY - 140, 360, 280);
 
-      // the slender pedestal rising from the skyline
+      // A distant hill shoulder carries the pedestal down into the skyline.
+      // The broad, hazed footprint prevents the landmark reading as a
+      // floating mushroom while keeping the entire construction background.
       const baseY = 6.5 * TILE;
+      const shoulderY = 9.15 * TILE;
+      ctx.fillStyle = alpha(far, 0.60);
+      ctx.beginPath();
+      ctx.moveTo(cx - 2.45 * TILE, shoulderY);
+      ctx.quadraticCurveTo(cx - 1.45 * TILE, 7.55 * TILE, cx - 12, baseY);
+      ctx.lineTo(cx + 12, baseY);
+      ctx.quadraticCurveTo(cx + 1.5 * TILE, 7.65 * TILE, cx + 2.55 * TILE, shoulderY);
+      ctx.closePath();
+      ctx.fill();
+
+      const shoulderMist = ctx.createLinearGradient(0, baseY, 0, shoulderY);
+      shoulderMist.addColorStop(0, alpha(P.mist, 0));
+      shoulderMist.addColorStop(1, alpha(P.mist, 0.24));
+      ctx.fillStyle = shoulderMist;
+      ctx.fillRect(cx - 2.55 * TILE, baseY, 5.1 * TILE, shoulderY - baseY);
+
+      // the slender pedestal rising from the skyline
       const neckY = 4.85 * TILE;
       ctx.fillStyle = far;
       ctx.beginPath();

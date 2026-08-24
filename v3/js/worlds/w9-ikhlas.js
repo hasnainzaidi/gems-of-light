@@ -47,7 +47,9 @@
 
       // ── the pillar of light: three nested soft veils, transparent at the
       //    sky, glowing where they meet the earth, breathing gently with t.
-      const veils = [{ w: 150, a: 0.06 }, { w: 92, a: 0.10 }, { w: 50, a: 0.16 }];
+      //    The inner two hold enough contrast to keep the One Light legible
+      //    after the palette has fully brightened, without becoming a wall.
+      const veils = [{ w: 150, a: 0.08 }, { w: 92, a: 0.15 }, { w: 50, a: 0.25 }];
       for (const v of veils) {
         const halfW = v.w / 2 + 6 * Math.sin(t * 0.4);
         const g = ctx.createLinearGradient(0, 0, 0, groundY);
@@ -58,10 +60,23 @@
         ctx.fillRect(cx - halfW, 0, halfW * 2, groundY);
       }
 
+      // A narrow luminous spine gives the soft veils one persistent identity
+      // from either side of the road. It fades completely into the upper sky
+      // and remains translucent throughout: light to look through, never a
+      // solid monument or implied surface.
+      const coreW = 13 + 2 * Math.sin(t * 0.4);
+      const core = ctx.createLinearGradient(0, 0, 0, groundY);
+      core.addColorStop(0, col.alpha(P.ray, 0));
+      core.addColorStop(0.26, col.alpha(P.ray, 0.08));
+      core.addColorStop(0.68, col.alpha(P.ray, 0.24 * (0.75 + 0.25 * breathe)));
+      core.addColorStop(1, col.alpha(P.sunGlow, 0.46 * (0.75 + 0.25 * breathe)));
+      ctx.fillStyle = core;
+      ctx.fillRect(cx - coreW, 0, coreW * 2, groundY);
+
       // ── the bright hearth where the light rises from the ground
       const base = ctx.createRadialGradient(cx, groundY, 0, cx, groundY, 190);
-      base.addColorStop(0, col.alpha(P.ray, 0.28 * (0.7 + 0.3 * breathe)));
-      base.addColorStop(0.5, col.alpha(P.sunGlow, 0.12));
+      base.addColorStop(0, col.alpha(P.ray, 0.42 * (0.7 + 0.3 * breathe)));
+      base.addColorStop(0.5, col.alpha(P.sunGlow, 0.17));
       base.addColorStop(1, col.alpha(P.sunGlow, 0));
       ctx.fillStyle = base;
       ctx.beginPath();

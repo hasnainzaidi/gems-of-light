@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <image href="../originals/W18-M02-art-only-flat-map.jpg" width="1280" height="720"/>
+  <rect x="51" y="390" width="865" height="42" rx="12" fill="#ff4d3d" fill-opacity="0.12" stroke="#ff4d3d" stroke-width="5"/>
+  <path d="M120 420 H850" fill="none" stroke="#ffd24a" stroke-width="4" stroke-dasharray="12 9"/>
+  <g font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <circle cx="78" cy="376" r="18" fill="#ff4d3d"/><text x="78" y="383" fill="white">1</text>
+    <circle cx="875" cy="420" r="18" fill="#ffd24a"/><text x="875" y="427" fill="#312600">2</text>
+  </g>
+</svg>

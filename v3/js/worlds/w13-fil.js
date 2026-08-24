@@ -25,11 +25,10 @@
     // ── The elephant rock ──────────────────────────────────────────────────
     // A SMALL distant shape in the sky band: a far hill that happens to hold
     // an elephant's gentle silhouette — one domed back, a small head bump, a
-    // soft dropped trunk on the left. ~2.8 tiles wide, ~1.7 tall, floating in
-    // world rows ~5.8–7.5: well left-and-below the sun glow at the upper
-    // right, and with ~5.5 tiles of open air between it and the walkable
-    // ground (row 13), so no child could read it as a platform. Hazed into
-    // the distance like the far hills. Still and constant — it takes no prog.
+    // soft dropped trunk on the left. ~2.8 tiles wide, ~1.7 tall, seated into
+    // a pale far-hill shoulder at rows ~7.5–9.3: well left-and-below the sun
+    // glow at the upper right and clearly behind the walkable ground. Hazed
+    // into the distance like the far hills. Still and constant — no prog.
     drawLandmark(ctx, t, P, L) {
       const C = GOL.color;
       const cx = 70 * TILE;          // over the far third, beneath the flock anchor
@@ -39,6 +38,22 @@
       const grey = C.mix(P.hillFar, '#8C8C86', 0.62);
 
       ctx.save();
+
+      // A broad, low-contrast shoulder joins the silhouette to the horizon.
+      // Its wide base and palette-matched haze keep it distant scenery rather
+      // than suggesting a narrow pillar or a reachable platform.
+      const shoulderY = 9.3 * TILE;
+      const shoulder = C.mix(grey, P.hillFar, 0.36);
+      ctx.fillStyle = C.alpha(shoulder, 0.52);
+      ctx.beginPath();
+      ctx.moveTo(cx - 2.35 * TILE, shoulderY);
+      ctx.quadraticCurveTo(cx - 1.55 * TILE, 8.25 * TILE,
+                           cx - hw * 0.78, baseY - 2);
+      ctx.lineTo(cx + hw * 0.82, baseY - 2);
+      ctx.quadraticCurveTo(cx + 1.55 * TILE, 8.2 * TILE,
+                           cx + 2.45 * TILE, shoulderY);
+      ctx.closePath();
+      ctx.fill();
 
       // three quadratic curves, right to left: back dome → head bump → trunk
       ctx.beginPath();

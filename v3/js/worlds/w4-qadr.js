@@ -16,6 +16,7 @@
 // (gem 3), the high slab buttress (gem 4), the peak in sight (gem 5).
 (function () {
   const GOL = window.GOL;
+  const TILE = GOL.TILE;
 
   GOL.registerWorld(4, {
     id: 14, key: 'qadr', name: 'the blessed night',
@@ -23,6 +24,83 @@
     palette: 'qadr', endPalette: 'qadrEnd', // dusk deepens to starred night as gems are gathered
     gemFx: { 4: 'descentLights' },
     w: 44, h: 44,
+
+    // Three matching moon-springs make the falls an explicitly magical water
+    // system rather than ribbons beginning in empty sky. The two falls that
+    // meet the dry mountain floor gather in shallow, walk-through catch pools;
+    // the far fall already meets the tiled pool at x38–41. This is landmark
+    // paint only, so the climb's collision and route remain unchanged.
+    drawLandmark(ctx, t, P) {
+      const C = GOL.color;
+      const sources = [[7, 24], [29, 10], [39, 8]];
+      const receivers = [[7, 41], [29, 41]];
+
+      ctx.save();
+
+      // Repeated carved crescents cradle a visible spring at each upper edge.
+      // A small rising glow makes their supernatural source deliberate.
+      for (const [x, row] of sources) {
+        const cx = (x + 0.5) * TILE;
+        const y = row * TILE;
+        const pulse = 0.82 + Math.sin(t * 1.7 + x) * 0.08;
+
+        ctx.fillStyle = C.alpha(P.mist, 0.24 * pulse);
+        ctx.beginPath();
+        ctx.arc(cx, y - 0.46 * TILE, 0.92 * TILE, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = C.alpha(P.stone, 0.98);
+        ctx.lineWidth = 0.16 * TILE;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(cx, y - 0.06 * TILE, 0.68 * TILE, 0.10 * Math.PI, 0.90 * Math.PI);
+        ctx.stroke();
+
+        ctx.strokeStyle = C.alpha(P.waterHi, 0.88);
+        ctx.lineWidth = 0.07 * TILE;
+        ctx.beginPath();
+        ctx.moveTo(cx, y - 0.55 * TILE);
+        ctx.lineTo(cx, y - 0.11 * TILE);
+        ctx.stroke();
+
+        ctx.fillStyle = C.alpha(P.waterHi, 0.86);
+        ctx.beginPath();
+        ctx.ellipse(cx, y - 0.01 * TILE, 0.58 * TILE, 0.13 * TILE, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = C.alpha('#FFF7D5', 0.90 * pulse);
+        ctx.beginPath();
+        ctx.arc(cx, y - 0.70 * TILE, 0.17 * TILE, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Shallow receivers sit on—not inside—the walkable floor. Their broad
+      // water surfaces and stone rims give the left and centre foam somewhere
+      // visible to settle without adding water tiles or changing traversal.
+      for (const [x, row] of receivers) {
+        const cx = (x + 0.5) * TILE;
+        const y = row * TILE + 0.05 * TILE;
+
+        ctx.fillStyle = C.alpha(P.stoneShade, 0.78);
+        ctx.beginPath();
+        ctx.ellipse(cx, y + 0.08 * TILE, 1.18 * TILE, 0.28 * TILE, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = C.alpha(P.water, 0.90);
+        ctx.beginPath();
+        ctx.ellipse(cx, y, 1.02 * TILE, 0.20 * TILE, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = C.alpha(P.waterHi, 0.90);
+        ctx.lineWidth = 0.06 * TILE;
+        ctx.beginPath();
+        ctx.ellipse(cx, y - 0.02 * TILE, 0.77 * TILE, 0.10 * TILE, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    },
+
     build(b) {
       // the whole world stands on one base floor; the mountain grows UP from it
       b.ground(0, 43, 41);
@@ -81,10 +159,12 @@
       b.seed(12, 6);  // the last rung
       b.seed(16, 4);  // cresting the summit under stars
 
-      // waterfalls give the climb life, pouring past the ledges into the pool
-      b.waterfall(7, 24);  // the left face, past the high buttress
-      b.waterfall(29, 10); // spilling off the shoulder cliff
-      b.waterfall(39, 8);  // the tall fall into the still pool
+      // Three moon-springs give the climb life: matching carved emitters feed
+      // every fall; shallow catch pools receive the left and centre shafts,
+      // while the tall far fall pours into the existing tiled still pool.
+      b.waterfall(7, 24);  // left spring → shallow floor basin
+      b.waterfall(29, 10); // centre spring → shallow floor basin
+      b.waterfall(39, 8);  // high spring → tiled still pool
 
       // set dressing: lantern and cypress crown the starlit summit, an olive
       // clings to a high ledge, a fallen column and flowers rest at the base

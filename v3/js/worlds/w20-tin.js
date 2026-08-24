@@ -23,18 +23,34 @@
     // ── The safe city (ayah 3) ─────────────────────────────────────────────
     // A SMALL walled skyline high in the sky band over the third beat: two
     // domed houses, a slender minaret, a low wall — hazed far-grey like the
-    // distant hills, floating ~5 tiles above the walkable ground so no child
-    // could read it as a platform (w13's elephant-rock precedent). Its tiny
-    // golden windows kindle with `prog`: the city rests safe and lit as the
-    // ayat are gathered.
+    // distant hills and seated into their own small horizon shoulder, safely
+    // behind the walkable ground. Its tiny golden windows kindle with `prog`:
+    // the city rests safe and lit as the ayat are gathered.
     drawLandmark(ctx, t, P, L, prog) {
       const C = GOL.color;
       const cx = 31.5 * TILE;        // over the city beat, mid-sky
-      const baseY = 7.9 * TILE;      // underside of the skyline (~5 tiles of
-      const haze = C.mix(P.hillFar, P.mist, 0.6); // air below — never a platform)
+      const baseY = 7.9 * TILE;      // foot of the distant skyline
+      const haze = C.shade(P.hillFar, 0.12);
+      const edge = C.shade(haze, 0.12);
       ctx.save();
+
+      // A distinct far-hill shoulder keeps the city attached to its horizon.
+      // It is wider than the wall and fades at its lower edge, so it reads as
+      // atmospheric distance rather than another traversable terrace.
+      const shoulderY = 9.35 * TILE;
+      ctx.fillStyle = C.alpha(C.shade(P.hillFar, 0.05), 0.52);
+      ctx.beginPath();
+      ctx.moveTo(cx - 2.35 * TILE, shoulderY);
+      ctx.quadraticCurveTo(cx - 1.75 * TILE, 8.42 * TILE, cx - 1.45 * TILE, baseY);
+      ctx.lineTo(cx + 1.45 * TILE, baseY);
+      ctx.quadraticCurveTo(cx + 1.8 * TILE, 8.4 * TILE, cx + 2.4 * TILE, shoulderY);
+      ctx.closePath();
+      ctx.fill();
+
       // the low wall, one soft run with a gate dip at its center
-      ctx.fillStyle = C.alpha(haze, 0.34);
+      ctx.fillStyle = C.alpha(haze, 0.78);
+      ctx.strokeStyle = C.alpha(edge, 0.46);
+      ctx.lineWidth = 1.25;
       ctx.beginPath();
       ctx.moveTo(cx - 1.5 * TILE, baseY);
       ctx.lineTo(cx - 1.5 * TILE, baseY - 0.32 * TILE);
@@ -42,7 +58,7 @@
       ctx.quadraticCurveTo(cx, baseY - 0.56 * TILE, cx + 0.34 * TILE, baseY - 0.32 * TILE);
       ctx.lineTo(cx + 1.5 * TILE, baseY - 0.32 * TILE);
       ctx.lineTo(cx + 1.5 * TILE, baseY);
-      ctx.closePath(); ctx.fill();
+      ctx.closePath(); ctx.fill(); ctx.stroke();
       // two domed houses rising behind the wall
       const dome = (dx, r) => {
         ctx.beginPath();
@@ -50,11 +66,11 @@
         ctx.arc(cx + dx, baseY - 0.26 * TILE, r, Math.PI, 0);
         ctx.closePath(); ctx.fill();
       };
-      ctx.fillStyle = C.alpha(haze, 0.38);
+      ctx.fillStyle = C.alpha(haze, 0.82);
       dome(-0.85 * TILE, 0.4 * TILE);
       dome(0.6 * TILE, 0.5 * TILE);
       // a slender minaret with its own small cap
-      ctx.fillStyle = C.alpha(haze, 0.42);
+      ctx.fillStyle = C.alpha(haze, 0.88);
       ctx.fillRect(cx - 0.09 * TILE, baseY - 0.95 * TILE, 0.18 * TILE, 0.7 * TILE);
       ctx.beginPath();
       ctx.moveTo(cx - 0.15 * TILE, baseY - 0.95 * TILE);
@@ -62,16 +78,19 @@
       ctx.closePath(); ctx.fill();
       // the windows kindle as the ayat are gathered — the city safe and lit
       if (prog > 0.02) {
-        ctx.fillStyle = C.alpha('#FFE9A8', 0.7 * prog);
+        ctx.fillStyle = C.alpha('#FFE9A8', 0.34 + 0.56 * prog);
         for (const [wx, wy] of [[-0.95, 0.4], [-0.72, 0.4], [0.48, 0.48], [0.74, 0.48], [0, 0.72]]) {
           ctx.beginPath();
-          ctx.arc(cx + wx * TILE, baseY - wy * TILE, 1.3, 0, Math.PI * 2);
+          ctx.arc(cx + wx * TILE, baseY - wy * TILE, 1.8, 0, Math.PI * 2);
           ctx.fill();
         }
       }
-      // a faint mist wash over the base, seating it behind the air
-      ctx.fillStyle = C.alpha(P.mist, 0.3);
-      ctx.fillRect(cx - 1.6 * TILE, baseY - 0.34 * TILE, 3.2 * TILE, 0.34 * TILE + 2);
+      // A faint lower-edge wash seats the shoulder without veiling the city.
+      const mist = ctx.createLinearGradient(0, baseY, 0, shoulderY);
+      mist.addColorStop(0, C.alpha(P.mist, 0));
+      mist.addColorStop(1, C.alpha(P.mist, 0.28));
+      ctx.fillStyle = mist;
+      ctx.fillRect(cx - 2.4 * TILE, baseY, 4.8 * TILE, shoulderY - baseY);
       ctx.restore();
     },
 
