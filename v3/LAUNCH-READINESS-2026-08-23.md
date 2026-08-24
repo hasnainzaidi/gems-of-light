@@ -245,7 +245,7 @@ and parent-opened practice worlds.
 | LR-004 | S2 | Returning child | Force quit during a short-world walk restarts that walk's unbanked gems. Data remains consistent, but longer walks may feel frustrating. | Open product/UX playtest; long-world checkpoints remain durable by design. |
 | LR-005 | S2 | PWA offline | A local/remote ayah unavailable on an incompletely cached PWA advances gently after timeout. | Open manual failure-mode playtest; native bundle is complete. |
 | LR-006 | S2 | Pause semantics | Pause overlay pauses gameplay but intentionally does not stop an already-playing Qur'an track. | Open product verdict/manual child test. |
-| LR-007 | S2 | Audio corpus | File integrity does not prove clean cuts, silence, loudness, or pronunciation for all 194 Mishary clips. | Open ear audit; prioritize Kursi `255001`–`255009` and longest surahs. |
+| LR-007 | S1 review / S2 polish | Audio corpus | Automated decode, waveform, loudness, and local Quran-ASR found no clipping, corruption, extra post-title speech, or clear wrong-file mapping. It did flag abrupt Kursi boundaries (`255001` tail and `255006` start), eight adjacent-ayah jumps of 3.2–5.8 LU, and eight title pronunciations for priority review. | Open fluent-reciter ear gate; do not loudness-normalize or recut sacred audio without a qualified listener and the adaptation rights required by LR-015. |
 | LR-008 | S2 | Returning/configured families | Ambient echo lost its playtest but saved `near/world` values could persist and recreate apparently random/restarted audio. | Fixed in `ae2e101`: production forces and persists `off`; explicit debug/lab experiments remain available. |
 | LR-009 | S1 manual gate | Native durable save | Automated bridge test passes, but WKWebView eviction → Preferences restore has not yet been reconfirmed on the current physical build. | Open; mandatory before TestFlight family rollout. |
 | LR-010 | S1 external gate | App Store Connect | App record, agreements, team membership, signing, and paid-program state require authenticated account inspection. | Open; Apple sign-in required. |
@@ -257,6 +257,10 @@ and parent-opened practice worlds.
 | LR-016 | S1 external/store gate | Text/narration provenance | Permanently bundled QDC Arabic/transliteration, unused Clear Quran-derived fields, and ElevenLabs title clips lack a complete commercial/offline evidence file. | Open. Prune unused native fields now; secure written QF rights or re-source and byte-audit an expressly licensed Arabic corpus; prove or regenerate narration under documented paid terms. |
 | LR-017 | S2 | Child/title/map accessibility | Parent surfaces now have semantic controls, but the wider child-facing canvas/title/map still lacks a complete VoiceOver/Switch model. | Open accessibility design/playtest; do not imply the whole game is screen-reader complete. |
 | LR-018 | S2 | Parent data control | Parent mode explains local-only storage but has no explicit in-app erase/reset journey control. | Open product/safety design; platform app/site-data deletion remains available. |
+| LR-019 | S1 | Map → world, title audio | The map waits for a title MP3's `ended` event. Nineteen of 25 generated clips carried more than 0.75s trailing silence; Kawthar carried 2.779s, making the door appear stuck for about 2.33s beyond the intended pause. | Fixed 2026-08-23: stream-copied trims preserve speech and leave ~0.45s quiet tail; generator now normalizes future titles; `test-launch-audio-content.mjs` gates all 25. |
+| LR-020 | S2 | Seven-gem shrine, small iPhone | Overlapping 46px pickup zones chose the first gem in array order, not the gem closest to the child's finger; reproduced at 667×375 with the wrong neighbor visibly jumping. | Fixed 2026-08-23 for both drag and tap by minimum-distance selection; generous radius retained and regression added at iPhone SE dimensions. |
+| LR-021 | S2 | First-time onboarding, landscape | Primary canvas actions rendered only 40–41px high with exact hit rectangles; an edge tap just outside missed. | Fixed 2026-08-23: 48px minimum. Rendered locally and the newly added top band was successfully activated. |
+| LR-022 | S2 | Grown-ups footer | Visible Company/Privacy/Contact targets were only 18px high and install was 24px; semantic twins helped assistive technology but not ordinary touch. | Fixed 2026-08-23: visually quiet labels now have non-overlapping 44px hit rows; adult scroll/tap jitter threshold aligned to 12px. |
 
 ## 7. Current evidence
 
@@ -272,6 +276,18 @@ As of the program start:
 - Launch regressions now cover shrine touch/drag audio, suspend/resume audio,
   production echo migration, native onboarding action choice, bounded preview,
   and semantic parent controls.
+- Experiential small-finger playtesting covered 844×390, 390×844, and the
+  supported 667×375 iPhone SE size. Adventure movement/jump, pause/mute,
+  parent-preview steering, shrine release, map back/doors, and safe-area
+  placement were forgiving. The pass reproduced and fixed crowded-shrine
+  nearest-gem selection, 40px onboarding actions, and tiny parent footer links.
+  A title-star hold that decays when a thumb drifts outside 29px remains S3
+  polish; physical-device touch feel still gates release.
+- A perceptual media pass decoded every shipped file, silence-scanned all 25
+  generated titles, Quran-ASR checked the corpus/risk samples, and measured
+  peaks and adjacent loudness. No title contained extra AI babble; the actual
+  defect was digital dead air that blocked the map transition. The qualified
+  Arabic/tajwid human-listener gate remains open for pronunciation and cuts.
 - The public privacy policy now describes the PWA and iOS storage/offline paths
   separately. Its native no-request claim remains gated by LR-011's binary check.
 - Xcode 26.6 built the synchronized iPhone-only target successfully without

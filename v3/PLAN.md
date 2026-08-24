@@ -1126,6 +1126,21 @@ in six playtest-gated waves; Wave 0 = content pipeline).
     the affected corpus before answering App Store Content Rights. Unused
     transliteration/meaning/story data is excluded from native rather than
     carried merely because it exists in the shared web dataset.
+  - **EXPERIENTIAL LAUNCH PLAYTEST (2026-08-23):** testing moved beyond code
+    contracts into rendered phone workflows and decoded media. At modern,
+    portrait, and 667×375 iPhone SE sizes, the large movement/jump/pause,
+    preview, map, and shrine-release targets were forgiving. Three concrete
+    finger/audio failures were reproduced and fixed: crowded seven-gem shrines
+    now choose the gem nearest the touch instead of array order; first-run
+    actions are at least 48px high and parent legal/install links have 44px hit
+    rows; and nineteen generated surah-title clips were trimmed to the intended
+    0.45s quiet tail because the map's door waits for their `ended` event
+    (Kawthar had added 2.779s of apparent unresponsiveness). Future title
+    generation and the full checker now enforce the tail cap. Signal + local
+    Quran-ASR found no clipping, corruption, extra title babble, or clear wrong
+    mapping, but abrupt Kursi handles and eight 3.2–5.8 LU transitions remain a
+    fluent-reciter/device ear gate—not an invitation to alter sacred audio by
+    metric alone.
 - **ABDUL BASIT REMOVED — MISHARY IS THE GAME'S ONE VOICE (2026-08-15,
   Hasnain).** Extends the 2026-07-15 "Mishary default" verdict to
   removal, game-wide (not just the iOS bundle): the `basit` registry
