@@ -1,0 +1,464 @@
+[
+  {
+    "id": "W04-F01",
+    "world_number": 4,
+    "world_key": "qadr",
+    "world_name": "Al-Qadr — the blessed night",
+    "scene": "Full vertical ascent, especially the three waterfall shafts",
+    "severity": "S2",
+    "title": "Connect every waterfall to a visible source and receiver",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Waterfalls at approximately (7,24), (29,10), and (39,8); only the far-right shaft aligns with the pool at x38–41",
+      "x": null,
+      "y": null,
+      "tile_x": 7,
+      "tile_y": 24
+    },
+    "steps": [
+      "Open level-map.html?w=4.",
+      "Set Gems to 5/5.",
+      "Turn off Beats and Route and choose Fit.",
+      "Trace each waterfall from its upper edge to its lower edge."
+    ],
+    "trigger": "Inspect the complete waterfall network in the flattened rendered world.",
+    "evidence": {
+      "originals": [
+        "evidence/w04-qadr/originals/W04-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w04-qadr/annotated/W04-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "All three pale shafts begin in open air without a visible lip, channel, cloud, or spring. The left and centre shafts meet dry base terrain, while the only pool is beneath the far-right shaft.",
+    "player_interpretation": "The water reads as three mechanically inserted vertical ribbons rather than one mountain water system.",
+    "intended_logic": "Recipe comments describe waterfalls giving life to the climb and pouring past ledges into the pool.",
+    "inferred_cause": "The recipe supplies waterfall top rows independently of visible source and receiver geometry. This is an authoring inference, not a confirmed renderer defect.",
+    "recommendation_category": "Water logic",
+    "recommendation": "Compose each retained fall with an explicit source lip or upper basin and a visible receiver such as the existing pool, a new contained basin, mist, or a channel. Remove any shaft that cannot be made part of the same readable system.",
+    "acceptance_criteria": [
+      "At both target phone viewports, every visible waterfall can be traced to an implied source before its upper edge leaves frame.",
+      "Every shaft visibly terminates in water, mist, or a contained channel rather than dry ground.",
+      "The three elements read as one intentional mountain water system during the climb."
+    ],
+    "likely_files": [
+      "js/worlds/w4-qadr.js",
+      "js/dsl.js",
+      "js/core/art.js"
+    ],
+    "recurring_cause": "Repeated waterfall authoring pattern shared with W07-F01; likely recipe placement, with a possible shared validation gap.",
+    "confidence": "high",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w04-qadr/resolved/W04-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W04-F01.",
+        "node tools/check.mjs w4 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W07-F01",
+    "world_number": 7,
+    "world_key": "lail",
+    "world_name": "Al-Lail — the night and the two ways",
+    "scene": "Long night ascent from the valley floor through the forked middle face",
+    "severity": "S2",
+    "title": "Make the night-climb waterfalls belong to one water system",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Waterfalls at approximately (9,40), (33,58), and (44,26); the only pool sits at x43–47 on the valley floor",
+      "x": null,
+      "y": null,
+      "tile_x": 9,
+      "tile_y": 40
+    },
+    "steps": [
+      "Open level-map.html?w=7.",
+      "Set Gems to 21/21.",
+      "Turn off Beats and Route and choose Fit.",
+      "Trace all three waterfall shafts through the full-height climb."
+    ],
+    "trigger": "Inspect the complete waterfall network in the flattened rendered world.",
+    "evidence": {
+      "originals": [
+        "evidence/w07-lail/originals/W07-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w07-lail/annotated/W07-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "The three shafts start below unrelated open air. The left and centre falls terminate on dry valley terrain; only the far-right fall reaches the small pool.",
+    "player_interpretation": "The repeated vertical strips feel decorative and arbitrary, weakening the otherwise coherent bottom-to-summit night story.",
+    "intended_logic": "Recipe comments say the falls pour past the mountain faces into the pool.",
+    "inferred_cause": "Waterfalls are authored as independent vertical spans without paired source and receiver set pieces. This is inferred from the recipe and rendered map.",
+    "recommendation_category": "Water logic",
+    "recommendation": "Route the visible falls through ledge-edge sources toward the valley pool, or convert the two dry-ending shafts into mist-fed magical falls with explicit visual emitters and dissipating ends.",
+    "acceptance_criteria": [
+      "Each waterfall has a visible or strongly implied emitter at its top.",
+      "The left and centre shafts no longer stop on dry ground without mist, basin, or channel treatment.",
+      "The pool and falls read as a connected system from both the lower valley and the upper switchbacks."
+    ],
+    "likely_files": [
+      "js/worlds/w7-lail.js",
+      "js/dsl.js",
+      "js/core/art.js"
+    ],
+    "recurring_cause": "Same recipe-authoring pattern as W04-F01; consider a shared authoring check after the two world fixes are composed.",
+    "confidence": "high",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w07-lail/resolved/W07-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W07-F01.",
+        "node tools/check.mjs w7 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W09-F01",
+    "world_number": 9,
+    "world_key": "ikhlas",
+    "world_name": "Al-Ikhlas — the one light",
+    "scene": "Central Wise Tree and pillar-of-light landmark at x≈42.5",
+    "severity": "S3",
+    "title": "Give the One Light a legible silhouette at full restoration",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "World centre, pillar of light behind the Wise Tree",
+      "x": null,
+      "y": null,
+      "tile_x": 42,
+      "tile_y": 13
+    },
+    "steps": [
+      "Open level-map.html?w=9.",
+      "Set Gems to 4/4.",
+      "Turn off Beats and Route and choose Fit.",
+      "Compare the central light column with the surrounding sky and hills."
+    ],
+    "trigger": "View the intended landmark at maximum restoration.",
+    "evidence": {
+      "originals": [
+        "evidence/w09-ikhlas/originals/W09-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w09-ikhlas/annotated/W09-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "Even at 4/4 gems, the vertical light veil is only slightly warmer than the sky and hill layers. The Wise Tree is more legible than the world-defining light behind it.",
+    "player_interpretation": "The centre reads as another quiet tree cluster rather than the singular monument promised by the world's composition.",
+    "intended_logic": "The recipe describes a radiant monument visible from everywhere and widening rings that enclose the world.",
+    "inferred_cause": "Landmark alpha and hue are too close to the restored palette at the flattened-map scale; gameplay visibility remains to be spot-checked.",
+    "recommendation_category": "Landmark",
+    "recommendation": "Strengthen the landmark's edge, ground contact, or localized contrast while preserving its soft, non-figurative character. Prefer a recognizable base and vertical core over simply increasing overall brightness.",
+    "acceptance_criteria": [
+      "At 0/4 and 4/4 gems, the child can identify the same central landmark before reaching it.",
+      "At both phone viewports, the pillar remains distinguishable from sky and hills without obscuring the Wise Tree or gems.",
+      "The monument still reads as light rather than a solid platform or wall."
+    ],
+    "likely_files": [
+      "js/worlds/w9-ikhlas.js",
+      "js/adventure.js",
+      "js/level-map.js"
+    ],
+    "recurring_cause": "World-specific contrast issue within a broader set of faint custom landmarks.",
+    "confidence": "medium",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w09-ikhlas/resolved/W09-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W09-F01.",
+        "node tools/check.mjs w9 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W13-F01",
+    "world_number": 13,
+    "world_key": "fil",
+    "world_name": "Al-Fil — the birds",
+    "scene": "Elephant-rock landmark over the far third of the route",
+    "severity": "S3",
+    "title": "Anchor the elephant rock to the distant horizon",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Background landmark centred near tile x70, rows 5.75–7.5",
+      "x": null,
+      "y": null,
+      "tile_x": 70,
+      "tile_y": 7
+    },
+    "steps": [
+      "Open level-map.html?w=13.",
+      "Set Gems to 5/5.",
+      "Turn off Beats and Route and choose Fit.",
+      "Inspect the grey elephant-shaped form above the far hills."
+    ],
+    "trigger": "View the landmark in the complete flattened world.",
+    "evidence": {
+      "originals": [
+        "evidence/w13-fil/originals/W13-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w13-fil/annotated/W13-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "The compact grey silhouette sits in open sky with no visible foothill, haze bridge, or base connection. Its underside is clean enough to resemble a floating stone capsule.",
+    "player_interpretation": "The form may read as an unexplained floating object before it reads as a distant elephant-shaped rock.",
+    "intended_logic": "The recipe intends a small, hazed, distant rock that belongs to the far hill layer and cannot be mistaken for a platform.",
+    "inferred_cause": "The landmark base is placed above the visible hill silhouette and the mist wash is too subtle to connect the layers.",
+    "recommendation_category": "Art layer",
+    "recommendation": "Seat the lower contour into a far-hill shoulder or extend a stronger mist/terrain bridge beneath it. Preserve the small scale, gentle elephant suggestion, and background-only status.",
+    "acceptance_criteria": [
+      "The silhouette visibly belongs to the far horizon at both phone viewports.",
+      "Its base no longer presents a clean floating underside.",
+      "It remains clearly non-collidable and subordinate to the route and ordered gems."
+    ],
+    "likely_files": [
+      "js/worlds/w13-fil.js",
+      "js/adventure.js",
+      "js/level-map.js"
+    ],
+    "recurring_cause": "Related to W17-F01 and W20-F01: custom background landmarks lack sufficient horizon integration.",
+    "confidence": "high",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w13-fil/resolved/W13-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W13-F01.",
+        "node tools/check.mjs w13 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W17-F01",
+    "world_number": 17,
+    "world_key": "qariah",
+    "world_name": "Al-Qari'ah — the weighing light",
+    "scene": "Balanced-stone landmark over the far summit approach",
+    "severity": "S3",
+    "title": "Ground the weighing stone in the skyline",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Background landmark centred near tile x100.5, rows 4.3–6.5",
+      "x": null,
+      "y": null,
+      "tile_x": 100,
+      "tile_y": 6
+    },
+    "steps": [
+      "Open level-map.html?w=17.",
+      "Set Gems to 11/11.",
+      "Turn off Beats and Route and choose Fit.",
+      "Inspect the balanced stone and pedestal against the far hills."
+    ],
+    "trigger": "View the landmark in the complete flattened world.",
+    "evidence": {
+      "originals": [
+        "evidence/w17-qariah/originals/W17-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w17-qariah/annotated/W17-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "The broad stone and short pedestal stop above the visible hill line, leaving a gap that makes the landmark resemble a floating mushroom or umbrella.",
+    "player_interpretation": "The intended image of weight held in balance is weakened because the support itself appears unsupported.",
+    "intended_logic": "The recipe describes a great balanced stone resting on a slender pedestal rising from the skyline, visual only and never walkable.",
+    "inferred_cause": "The landmark baseY is higher than the rendered far-hill silhouette at this world position.",
+    "recommendation_category": "Art layer",
+    "recommendation": "Extend or reposition the pedestal so it disappears into a visible far-hill shoulder, or add a distant base silhouette that clearly carries the weight without making it route-critical.",
+    "acceptance_criteria": [
+      "The pedestal visibly meets a distant landform at both phone viewports.",
+      "The balanced stone remains a background landmark and does not resemble a reachable platform.",
+      "The final rise gains a recognizable, stable skyline destination."
+    ],
+    "likely_files": [
+      "js/worlds/w17-qariah.js",
+      "js/adventure.js",
+      "js/level-map.js"
+    ],
+    "recurring_cause": "Related to W13-F01 and W20-F01: insufficient integration between custom landmark paint and the shared horizon.",
+    "confidence": "high",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w17-qariah/resolved/W17-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W17-F01.",
+        "node tools/check.mjs w17 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W18-F01",
+    "world_number": 18,
+    "world_key": "kafirun",
+    "world_name": "Al-Kafirun — your own path",
+    "scene": "Painted reflected road spanning tiles x5–83 behind the playable route",
+    "severity": "S3",
+    "title": "Separate the reflected road from solid bridge language",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Background band across world rows approximately 8.5–10.5",
+      "x": null,
+      "y": null,
+      "tile_x": 5,
+      "tile_y": 9
+    },
+    "steps": [
+      "Open level-map.html?w=18.",
+      "Set Gems to 6/6.",
+      "Turn off Beats and Route and choose Fit.",
+      "Compare the long reflected band with the playable terrace silhouettes below it."
+    ],
+    "trigger": "View the full reflected-road set piece without map overlays.",
+    "evidence": {
+      "originals": [
+        "evidence/w18-kafirun/originals/W18-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w18-kafirun/annotated/W18-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "The reflection is bounded by long, straight, parallel edges and contains a continuous horizontal line. At world scale it resembles a suspended glass bridge or elevated route more than water.",
+    "player_interpretation": "A child may treat the upper band as a second traversable path or destination instead of an unreachable reflection.",
+    "intended_logic": "The recipe intends a rippling, upside-down, non-collidable reflection across still water behind the one true road.",
+    "inferred_cause": "The band geometry is too rectilinear and uniform relative to the organic hills and terrace language; live confusion has not been observed directly.",
+    "recommendation_category": "Visual hierarchy",
+    "recommendation": "Break the bridge-like silhouette with stronger water cues: irregular shore edges, more visible ripples, softer end fades, and clearer inverted reflections. Preserve the single-path metaphor and non-collidable implementation.",
+    "acceptance_criteria": [
+      "At both phone viewports, the upper band is immediately readable as water/reflection rather than a platform.",
+      "The playable road remains the only high-contrast continuous route line.",
+      "The reflected elements remain visibly inverted and do not compete with ordered gems."
+    ],
+    "likely_files": [
+      "js/worlds/w18-kafirun.js",
+      "js/adventure.js",
+      "js/level-map.js"
+    ],
+    "recurring_cause": "World-specific composition problem; do not group with horizon-grounding fixes despite also being background paint.",
+    "confidence": "medium",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w18-kafirun/resolved/W18-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W18-F01.",
+        "node tools/check.mjs w18 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  },
+  {
+    "id": "W20-F01",
+    "world_number": 20,
+    "world_key": "tin",
+    "world_name": "At-Tin — the fig and the olive",
+    "scene": "Safe-city landmark above the early-middle route",
+    "severity": "S3",
+    "title": "Make the safe city perceptible without making it solid",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "position": {
+      "description": "Background landmark centred near tile x31.5, around row 7.9",
+      "x": null,
+      "y": null,
+      "tile_x": 31,
+      "tile_y": 7
+    },
+    "steps": [
+      "Open level-map.html?w=20.",
+      "Set Gems to 8/8.",
+      "Turn off Beats and Route and choose Fit.",
+      "Inspect the expected city region over the third beat."
+    ],
+    "trigger": "View the landmark at maximum restoration, when its windows should be fully kindled.",
+    "evidence": {
+      "originals": [
+        "evidence/w20-tin/originals/W20-M02-art-only-flat-map.jpg"
+      ],
+      "annotated": [
+        "evidence/w20-tin/annotated/W20-F01-1280x720-flat-map-annotated.jpg"
+      ]
+    },
+    "evidence_context": "flattened_map",
+    "observation": "The city silhouette and kindled windows are effectively lost against the restored sky and overlapping hill tones; the expected area reads as ordinary horizon.",
+    "player_interpretation": "The safe-city beat has no memorable skyline marker, so the route's promised orchard-to-city-to-mount progression is visually compressed.",
+    "intended_logic": "The recipe describes a small, distant walled city whose windows kindle with collection and whose position marks ayah 3.",
+    "inferred_cause": "The landmark's haze alpha and palette mixing leave too little contrast at full restoration; live close-range visibility is unverified.",
+    "recommendation_category": "Landmark",
+    "recommendation": "Increase silhouette separation or window clustering and seat the city into a distinct far-hill shoulder. Keep it small, hazed, background-only, and clearly non-collidable.",
+    "acceptance_criteria": [
+      "At 0/8 and 8/8 gems, the same city silhouette is perceptible from the ayah-3 approach at both phone viewports.",
+      "The city remains subordinate to ordered gems and cannot be mistaken for playable terrain.",
+      "The orchard, city, hollow, and summit read as four distinct route chapters."
+    ],
+    "likely_files": [
+      "js/worlds/w20-tin.js",
+      "js/adventure.js",
+      "js/level-map.js"
+    ],
+    "recurring_cause": "Related to W13-F01 and W17-F01: custom background landmarks do not integrate strongly enough with the shared horizon.",
+    "confidence": "medium",
+    "resolution": {
+      "status": "implemented",
+      "date": "2026-08-23",
+      "evidence": "evidence/w20-tin/resolved/W20-F01-resolved-1280x720-flat-map.jpg",
+      "validation": [
+        "Fresh-origin flattened-map comparison passed for W20-F01.",
+        "node tools/check.mjs w20 passed."
+      ],
+      "limitations": [
+        "Native phone traversal and camera framing were not retested; those remain a separate deferred audit."
+      ]
+    }
+  }
+]

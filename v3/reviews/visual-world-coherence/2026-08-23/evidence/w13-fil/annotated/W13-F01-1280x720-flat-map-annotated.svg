@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <image href="../originals/W13-M02-art-only-flat-map.jpg" width="1280" height="720"/>
+  <ellipse cx="789" cy="374" rx="38" ry="24" fill="#ff4d3d" fill-opacity="0.15" stroke="#ff4d3d" stroke-width="5"/>
+  <path d="M789 401 L789 424" fill="none" stroke="#ffd24a" stroke-width="4" stroke-dasharray="10 8"/>
+  <ellipse cx="789" cy="427" rx="55" ry="14" fill="none" stroke="#ffd24a" stroke-width="4" stroke-dasharray="10 8"/>
+  <g font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <circle cx="742" cy="350" r="18" fill="#ff4d3d"/><text x="742" y="357" fill="white">1</text>
+    <circle cx="846" cy="420" r="18" fill="#ffd24a"/><text x="846" y="427" fill="#312600">2</text>
+  </g>
+</svg>

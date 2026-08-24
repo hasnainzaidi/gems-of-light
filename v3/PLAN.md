@@ -288,6 +288,18 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   its IP to Ashna; document ownership, licensing, and multi-member governance
   separately before monetization. Owning plan: `../APP-PUBLISHING-PLAN.md`.
 
+- **VISUAL WORLD COHERENCE FOLLOW-UP (2026-08-23):** the map-led audit of all
+  twenty playable worlds found seven composition issues and then fixed all
+  seven in their owning recipes: Qadr and Lail now give every waterfall a
+  legible magical or terrain source and an intentional receiver; Ikhlas's One
+  Light remains translucent but readable; Fil's elephant rock, Qariah's
+  weighing stone, and Tin's safe city now meet the distant horizon; and
+  Kafirun's reflected way now reads as irregular rippling water rather than a
+  second bridge. Targeted integrity checks and clean-origin flattened renders
+  pass. This does **not** close camera, touch, falling-recovery, or live native
+  traversal coverage; those remain a separate Simulator playtest. Evidence and
+  before/after status: `reviews/visual-world-coherence/2026-08-23/`.
+
 - **Same surah (Al-Falaq) across all ten** — isolates the level-design
   variable, which is the brief's actual question.
 - **Ambient echo defaults off** (playtested 2026-07-12) — recitation is

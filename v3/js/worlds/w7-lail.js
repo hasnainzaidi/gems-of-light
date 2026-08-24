@@ -162,10 +162,13 @@
       // a first spark by the trailhead and one by the secret flank
       b.seed(7, 68).seed(3, 67).seed(21, 3).seed(30, 3);
 
-      // waterfalls give the climb life, pouring past the faces into the pool
-      b.waterfall(44, 26); // the tall fall into the still pool
-      b.waterfall(9, 40);  // the left face
-      b.waterfall(33, 58); // spilling off the trailhead shoulder
+      // One mountain spring system uses the existing rest shelves as a
+      // staggered cascade. Each ribbon begins at a visible ledge lip and has
+      // a clear receiver: camp 2, the broad rejoin shelf, then the valley pool.
+      // The water adds no tiles, so every jump and landing stays unchanged.
+      b.waterfall(38, 17); // camp 3 lip -> rest ledge 2
+      b.waterfall(28, 35); // rest ledge 2 lip -> the broad rejoin shelf
+      b.waterfall(46, 47); // final shelf lip -> the still valley pool
 
       // set dressing: lanterns crown the three shared night camps (never an
       // arm); explicit rows keep stacked climb surfaces from pulling them up

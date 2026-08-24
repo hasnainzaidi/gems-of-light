@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <image href="../originals/W04-M02-art-only-flat-map.jpg" width="1280" height="720"/>
+  <g fill="none" stroke="#ff4d3d" stroke-width="5">
+    <rect x="265" y="405" width="30" height="250" rx="14"/>
+    <rect x="575" y="210" width="30" height="445" rx="14"/>
+    <rect x="710" y="182" width="30" height="474" rx="14"/>
+  </g>
+  <g fill="none" stroke="#ffd24a" stroke-width="4" stroke-dasharray="12 9">
+    <ellipse cx="280" cy="402" rx="42" ry="22"/>
+    <ellipse cx="590" cy="207" rx="42" ry="22"/>
+    <ellipse cx="725" cy="179" rx="42" ry="22"/>
+    <rect x="250" y="642" width="370" height="28" rx="10"/>
+  </g>
+  <g font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <g><circle cx="244" cy="430" r="18" fill="#ff4d3d"/><text x="244" y="437" fill="white">1</text></g>
+    <g><circle cx="548" cy="235" r="18" fill="#ff4d3d"/><text x="548" y="242" fill="white">2</text></g>
+    <g><circle cx="681" cy="205" r="18" fill="#ff4d3d"/><text x="681" y="212" fill="white">3</text></g>
+    <g><circle cx="632" cy="660" r="18" fill="#ffd24a"/><text x="632" y="667" fill="#312600">4</text></g>
+  </g>
+</svg>

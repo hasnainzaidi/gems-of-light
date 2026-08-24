@@ -29,25 +29,53 @@
     // road's own features: upside-down lantern posts (their glow at the bottom
     // end), two mirrored cypress silhouettes (apex pointing down), and a faint
     // reflected path line, all cool-shifted, alpha ≈ 0.35, breathing on a slow
-    // sine ripple so the eye reads water, not ground. A brighter near-bank line
-    // caps the band and separates it from the playfield.
+    // sine ripple so the eye reads water, not ground. Both shores meander and
+    // taper into the landscape; broken near-bank glints separate the water
+    // from the playfield without forming another platform lip.
     //
     // Why no child can read it as a path: it floats 2.5+ tiles of open air
     // ABOVE the walkable ground, backs onto NO tiles at all (it is paint, not
     // terrain), is translucent and rippling (never solid), its imagery is
-    // upside-down (unmistakably a reflection), and the bright shore line seals
-    // it off. Nothing it draws ever touches the playfield rows.
+    // upside-down (unmistakably a reflection), and irregular broken shores
+    // keep it distinct from platform geometry. Nothing it draws ever touches
+    // the playfield rows.
     drawLandmark(ctx, t, P) {
       const C = GOL.color;
       const x0 = 5 * T, x1 = 83 * T;      // the river runs behind most of the road
       const top = 8.5 * T;                // the far waterline (far shore)
       const bot = 10.5 * T;               // the near shore / bank line
-      const bandH = bot - top;
+      const mid = (top + bot) * 0.5;
+
+      // Both shores meander, and the river tapers softly into the landscape at
+      // either end. The old full-width rectangle shared too much silhouette
+      // language with the raised road below it.
+      const edgeEase = (x) => Math.max(0, Math.min(1,
+        (x - x0) / (3.2 * T), (x1 - x) / (3.2 * T)));
+      const farY = (x) => {
+        const natural = top
+          + Math.sin(x * 0.017 + 0.8) * T * 0.18
+          + Math.sin(x * 0.041 + 2.1) * T * 0.07;
+        return mid + (natural - mid) * edgeEase(x);
+      };
+      const nearY = (x) => {
+        const natural = bot
+          + Math.sin(x * 0.014 + 2.4) * T * 0.22
+          + Math.sin(x * 0.038 + 0.3) * T * 0.06;
+        return mid + (natural - mid) * edgeEase(x);
+      };
+      const riverPath = () => {
+        ctx.beginPath();
+        ctx.moveTo(x0, mid);
+        for (let x = x0; x <= x1; x += T * 0.65) ctx.lineTo(x, farY(x));
+        ctx.lineTo(x1, mid);
+        for (let x = x1; x >= x0; x -= T * 0.65) ctx.lineTo(x, nearY(x));
+        ctx.closePath();
+      };
 
       // cool-shifted water tones, drawn FROM the palette (never hardcoded dark)
-      const waterCool = C.mix(P.water, '#6E86B6', 0.45);
-      const waterHiCool = C.mix(P.waterHi, '#9FB6DC', 0.42);
-      const waterDeepCool = C.mix(P.waterDeep, '#3E567E', 0.50);
+      const waterCool = C.mix(P.water, '#5C78B8', 0.62);
+      const waterHiCool = C.mix(P.waterHi, '#A8C8F0', 0.55);
+      const waterDeepCool = C.mix(P.waterDeep, '#324D85', 0.60);
       const soilCool = C.mix(P.soil, '#8090B4', 0.45);
       const trunkCool = C.mix(P.trunk, '#6C86B6', 0.50);
       const leafCool = C.mix(P.leafDark, '#5A6EA0', 0.48);
@@ -57,26 +85,32 @@
 
       // 1) the still water band — a soft vertical wash, far-light to near-deep.
       const g = ctx.createLinearGradient(0, top, 0, bot);
-      g.addColorStop(0, C.alpha(waterHiCool, 0.30));
-      g.addColorStop(0.5, C.alpha(waterCool, 0.35));
-      g.addColorStop(1, C.alpha(waterDeepCool, 0.33));
+      g.addColorStop(0, C.alpha(waterHiCool, 0.36));
+      g.addColorStop(0.5, C.alpha(waterCool, 0.44));
+      g.addColorStop(1, C.alpha(waterDeepCool, 0.46));
       ctx.fillStyle = g;
-      ctx.fillRect(x0, top, x1 - x0, bandH);
+      riverPath();
+      ctx.fill();
 
       // clip everything that follows to the band, so no reflection spills out
-      ctx.beginPath();
-      ctx.rect(x0, top, x1 - x0, bandH);
+      riverPath();
       ctx.clip();
 
-      // 2) the reflected road — a faint horizontal path line, gently rippling.
-      ctx.strokeStyle = C.alpha(soilCool, 0.28);
-      ctx.lineWidth = Math.max(2, T * 0.15);
-      ctx.beginPath();
-      for (let x = x0; x <= x1; x += 6) {
-        const y = 9.5 * T + Math.sin(x * 0.03 + t * 0.6) * 1.3;
-        if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      // 2) the reflected road — broken by water and displaced in short pieces,
+      // so it cannot form a second continuous platform silhouette.
+      ctx.strokeStyle = C.alpha(soilCool, 0.24);
+      ctx.lineWidth = Math.max(1.5, T * 0.11);
+      for (let start = x0 + 3.5 * T; start < x1 - 3 * T; start += 8 * T) {
+        const end = Math.min(start + 5.2 * T, x1 - 3 * T);
+        ctx.beginPath();
+        for (let x = start; x <= end; x += 6) {
+          const y = 9.5 * T
+            + Math.sin(x * 0.030 + t * 0.6) * 1.8
+            + Math.sin(x * 0.075 + start * 0.01) * 0.9;
+          if (x === start) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
 
       // 3) an upside-down lantern: post hanging down from the far shore, its
       //    warm glow inverted at the bottom end, all rippling and dim.
@@ -124,30 +158,38 @@
       invLantern(63 * T);
       invCypress(74 * T);
 
-      // 5) ripple shimmer — a few pale streaks drifting slowly, selling water.
-      ctx.strokeStyle = C.alpha(waterHiCool, 0.22);
-      ctx.lineWidth = Math.max(1, T * 0.05);
-      for (let i = 0; i < 4; i++) {
-        const ry = top + (0.4 + i * 0.5) * T + Math.sin(t * 0.5 + i * 1.3) * 1.6;
+      // 5) ripple shimmer — short offset glints rather than more full-width
+      // parallel lines. These sell water without rebuilding a bridge shape.
+      ctx.strokeStyle = C.alpha(waterHiCool, 0.30);
+      ctx.lineWidth = Math.max(1.25, T * 0.07);
+      for (let i = 0; i < 13; i++) {
+        const ry = top + (0.35 + (i % 4) * 0.48) * T
+          + Math.sin(t * 0.5 + i * 1.3) * 1.6;
+        const span = (2.2 + (i % 4) * 0.8) * T;
+        const room = (x1 - x0) - span - 7 * T;
+        const rx = x0 + 3.5 * T + ((i * 9.7 * T + t * 2.2) % room);
         ctx.beginPath();
-        ctx.moveTo(x0, ry);
-        ctx.lineTo(x1, ry);
+        ctx.moveTo(rx, ry);
+        ctx.quadraticCurveTo(rx + span * 0.5, ry + Math.sin(i) * 1.4, rx + span, ry);
         ctx.stroke();
       }
 
       ctx.restore(); // end the band clip
 
-      // 6) the brighter near-bank line — the shore that seals the water off
-      //    from the road, so the eye never confuses the two.
+      // 6) broken near-bank glints follow the irregular water edge. A single
+      // solid cap looked too much like the top lip of a traversable platform.
       ctx.save();
-      ctx.strokeStyle = C.alpha(C.tint(P.stone, 0.2), 0.7);
-      ctx.lineWidth = Math.max(2, T * 0.14);
-      ctx.beginPath();
-      for (let x = x0; x <= x1; x += 6) {
-        const y = bot + Math.sin(x * 0.025 + t * 0.5) * 0.8;
-        if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      ctx.strokeStyle = C.alpha(C.tint(P.waterHi, 0.24), 0.58);
+      ctx.lineWidth = Math.max(1.5, T * 0.10);
+      for (let start = x0 + 4 * T; start < x1 - 3 * T; start += 9 * T) {
+        const end = Math.min(start + 5.5 * T, x1 - 2.5 * T);
+        ctx.beginPath();
+        for (let x = start; x <= end; x += 6) {
+          const y = nearY(x) + Math.sin(x * 0.025 + t * 0.5) * 0.7;
+          if (x === start) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
       ctx.restore();
     },
 
