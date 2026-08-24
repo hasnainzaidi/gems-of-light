@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { spawnSync } from 'child_process';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -115,6 +116,47 @@ const MODEL = NAMES_ONLY
   ? (process.env.ELEVEN_NAME_MODEL_ID || 'eleven_multilingual_v2')
   : (process.env.ELEVEN_MODEL_ID || 'eleven_multilingual_v2');
 
+// ElevenLabs sometimes appends seconds of digital silence after the explicit
+// 0.45s break. The map waits for `ended` before opening the world door, so
+// normalize that tail here instead of making a child wait for inaudible audio.
+// Stream-copying keeps the spoken MP3 frames untouched; the cut lands inside
+// silence and is allowed one MP3-frame of timing tolerance.
+function trimSurahTail(file) {
+  const probe = spawnSync('ffprobe', [
+    '-v', 'error', '-show_entries', 'format=duration',
+    '-of', 'default=nw=1:nk=1', file
+  ], { encoding: 'utf8' });
+  const duration = Number(probe.stdout);
+  if (probe.error || probe.status !== 0 || !Number.isFinite(duration)) {
+    throw new Error('ffprobe could not validate ' + path.basename(file));
+  }
+
+  const scan = spawnSync('ffmpeg', [
+    '-hide_banner', '-nostats', '-i', file,
+    '-af', 'silencedetect=n=-60dB:d=0.12', '-f', 'null', '-'
+  ], { encoding: 'utf8' });
+  if (scan.error || scan.status !== 0) throw new Error('ffmpeg could not scan ' + path.basename(file));
+  const starts = [...String(scan.stderr).matchAll(/silence_start:\s*([0-9.]+)/g)]
+    .map((match) => Number(match[1]));
+  const speechEnd = starts.at(-1);
+  if (!Number.isFinite(speechEnd)) throw new Error('no quiet title tail found in ' + path.basename(file));
+
+  const trailing = duration - speechEnd;
+  if (trailing <= 0.75) return;
+  const target = speechEnd + 0.45;
+  const temp = file + '.trim.mp3';
+  const trim = spawnSync('ffmpeg', [
+    '-hide_banner', '-loglevel', 'error', '-y', '-i', file,
+    '-t', target.toFixed(3), '-c', 'copy', temp
+  ], { encoding: 'utf8' });
+  if (trim.error || trim.status !== 0) {
+    try { fs.unlinkSync(temp); } catch (e) {}
+    throw new Error('ffmpeg could not trim ' + path.basename(file));
+  }
+  fs.renameSync(temp, file);
+  console.log('    trimmed ' + trailing.toFixed(2) + 's tail to the intended 0.45s');
+}
+
 // Names are deliberately a separate batch: the ordinary English narration
 // command must never generate them accidentally with its English storyteller.
 const ids = Object.keys(LINES)
@@ -136,6 +178,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let made = 0, failed = 0;
 for (const id of todo) {
   const text = LINES[id];
+  const outputFile = path.join(OUT, id + '.mp3');
+  const generatedFile = outputFile + '.generated.mp3';
   try {
     const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + VOICE + '?output_format=mp3_44100_128', {
       method: 'POST',
@@ -152,11 +196,14 @@ for (const id of todo) {
     });
     if (!res.ok) throw new Error(res.status + ' ' + (await res.text()).slice(0, 140));
     const buf = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(path.join(OUT, id + '.mp3'), buf);
+    fs.writeFileSync(generatedFile, buf);
+    if (id.startsWith('surah-')) trimSurahTail(generatedFile);
+    fs.renameSync(generatedFile, outputFile);
     made++;
-    console.log('  ✓ ' + id + ' (' + Math.round(buf.length / 1024) + ' kB)');
+    console.log('  ✓ ' + id + ' (' + Math.round(fs.statSync(outputFile).size / 1024) + ' kB)');
     await sleep(350); // be a polite API citizen
   } catch (e) {
+    try { fs.unlinkSync(generatedFile); } catch (cleanupError) {}
     failed++;
     console.error('  ✗ ' + id + ': ' + e.message);
   }

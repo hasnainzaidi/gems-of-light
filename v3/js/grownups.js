@@ -152,21 +152,24 @@
       const titleY = 24 + sa.t * 0.5;
       const px = L + 16, pw = (R - L) - 32;
       const panelTop = titleY + 40;
-      const footerY = H - 16 - sa.b * 0.5;
+      // Reserve a real finger-height footer row instead of placing tiny text
+      // links against the screen edge. The labels stay visually quiet; their
+      // invisible hit rectangles are a full 44px high.
+      const footerY = H - 24 - sa.b * 0.5;
       const legalY = footerY;
-      const reassuranceY = legalY - 18;
+      const reassuranceY = legalY - 34;
       // a grown-up on a phone browser gets a quiet "add to home screen" line
       // just above the footer; installed players (standalone) don't need it
       const showInstall = !GOL.isStandalone();
       const installLink = showInstall
-        ? { cx: (L + R) / 2, cy: reassuranceY - 25, x: (L + R) / 2 - 150, y: reassuranceY - 37, w: 300, h: 24 }
+        ? { cx: (L + R) / 2, cy: reassuranceY - 25, x: (L + R) / 2 - 150, y: reassuranceY - 47, w: 300, h: 44 }
         : null;
       const panelBottom = installLink ? installLink.y - 8 : reassuranceY - 12;
       const panelH = Math.max(80, panelBottom - panelTop);
       const legalLinks = [
-        { label: 'Company', href: '/company/', x: (L + R) / 2 + 2, y: legalY - 9, w: 54, h: 18 },
-        { label: 'Privacy', href: '/privacy/', x: (L + R) / 2 + 64, y: legalY - 9, w: 48, h: 18 },
-        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: (L + R) / 2 + 120, y: legalY - 9, w: 50, h: 18 }
+        { label: 'Company', href: '/company/', x: (L + R) / 2 - 2, y: legalY - 22, w: 62, h: 44 },
+        { label: 'Privacy', href: '/privacy/', x: (L + R) / 2 + 60, y: legalY - 22, w: 56, h: 44 },
+        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: (L + R) / 2 + 116, y: legalY - 22, w: 58, h: 44 }
       ];
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;
@@ -200,7 +203,7 @@
       if (drag) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
           this.scroll += (this.dragPrev.y - drag.y);
-          if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 8) this.dragMoved = true;
+          if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) > 12) this.dragMoved = true;
         }
         this.dragPrev = { id: drag.id, x: drag.x, y: drag.y };
       }

@@ -30,8 +30,11 @@ verdict is logged.
       bundle ID, then create the app record and complete account-only fields —
       `v3/APP-STORE-METADATA-DRAFT.md`
 
-- [ ] Ear-audit all 194 shipped Mishary files for clipped words, silence,
-      loudness, and wrong mapping; prioritize `255001`–`255009` —
+- [ ] Fluent-reciter ear-audit all 194 shipped Mishary files for tajwid,
+      clipped words, and cut quality. The 2026-08-23 signal/ASR pass found no
+      clipping, corruption, extra speech, or clear wrong mapping, but flagged
+      abrupt Kursi boundaries (`255001`/`255006`) and eight adjacent-ayah
+      loudness jumps of 3.2–5.8 LU —
       `v3/LAUNCH-READINESS-2026-08-23.md` LR-007
 
 - [ ] HASNAIN: enroll in the Apple Developer Program ($99/yr) at
@@ -46,13 +49,6 @@ verdict is logged.
 - [ ] Playtest Mishary-only on staging: recitation + read-along
       (kursi, falaq) still right with Basit gone; a save that had
       Basit selected falls back silently — verdict → PLAN §10 entry
-
-- [ ] Voice-clip babble gate: ElevenLabs hallucinated a trailing
-      utterance after the break tag on the kursi title (caught by ear
-      2026-08-10, trimmed). Teach generate-narration.mjs to
-      silence-scan its output and flag/trim any speech after the final
-      break — the whisper check pattern from PLAN §10
-
 
 - [ ] Playtest the 2026-08-10 journey resequence on staging (PLAN §10):
       island order, kursi still island-1 summit, stage cards' new
@@ -96,6 +92,11 @@ verdict is logged.
 - [ ] Design and playtest semantic accessibility for the child/title/map canvas
       and an explicit parent reset/erase control —
       `v3/LAUNCH-READINESS-2026-08-23.md` LR-017/LR-018
+
+- [ ] Parent-entry polish: make the one-second grown-up star hold retain its
+      initiating pointer or tolerate 36–40px drift; current 29px continued-hold
+      radius can decay under ordinary thumb movement — experiential playtest
+      finding in `v3/LAUNCH-READINESS-2026-08-23.md`
 
 - [ ] Map polish once the promotion settles: port the disc row's two
       remaining dressings to map spots (memory-bloom arcs from

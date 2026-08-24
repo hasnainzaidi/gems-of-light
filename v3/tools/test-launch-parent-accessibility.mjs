@@ -18,6 +18,8 @@ assert.match(onboarding, /GOL\.isStandalone[\s\S]{0,180}secondary:\s*null/,
   'native/installed setup must not offer the contradictory defer action');
 assert.match(onboarding, /if \(a\.secondary\) drawButton/,
   'the visual setup card must tolerate the native single-action layout');
+assert.match(onboarding, /const bh = Math\.max\(48,/,
+  'onboarding canvas actions must remain at least 48px tall for imprecise thumbs');
 
 const preview = read('js/parent-preview.js');
 assert.match(preview, /aria-label['"], ['"]Try the Gems of Light garden/,
@@ -37,6 +39,12 @@ for (const label of ['Company information', 'Privacy policy', 'Contact support']
 }
 assert.match(grownups, /aria-pressed/,
   'map-opening switches need their state exposed');
+assert.match(grownups, /w: 300, h: 44/,
+  'the visible install link needs a full finger-height canvas target');
+assert.equal((grownups.match(/y: legalY - 22, w: \d+, h: 44/g) || []).length, 3,
+  'all three visible legal links need full finger-height canvas targets');
+assert.match(grownups, /drag\.startY\) > 12/,
+  'adult list taps should tolerate ordinary finger jitter');
 assert.match(grownups, /exit\(\)[\s\S]{0,100}this\.access\.remove/,
   'scene accessibility controls must be removed on exit');
 
