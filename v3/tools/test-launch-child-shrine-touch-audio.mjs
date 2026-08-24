@@ -66,4 +66,28 @@ scene.updatePlace(0.016, 852, 393);
 assert.equal(scene.heldGem, g);
 assert.equal(heard.length, 1, 'one threshold-crossing touch recited twice in one frame');
 
+// Crowded long-surah shrines overlap their intentionally generous pickup
+// zones. The gem nearest the finger must win, not the first gem in the array.
+const left = { ayah: 1, placed: -1, drift: null, x: 100, y: 100 };
+const right = { ayah: 2, placed: -1, drift: null, x: 130, y: 100 };
+Object.assign(scene, {
+  heldGem: null, gems: [left, right], placementListening: false,
+  listens: 0, sockets: [{ i: 0, x: 400, y: 100 }], placed: 0
+});
+heard.length = 0;
+GOL.Input.drag = { id: 10, startX: 124, startY: 100, x: 145, y: 100 };
+GOL.Input.taps = [];
+scene.updatePlace(0.016, 667, 375);
+assert.equal(scene.heldGem, right, 'overlapping pickup zones must choose the nearest gem');
+assert.deepEqual(heard, [[113, 2]], 'pickup recited the wrong neighboring gem');
+
+scene.heldGem = null;
+left.listenedThisHold = false;
+right.listenedThisHold = false;
+heard.length = 0;
+GOL.Input.drag = null;
+GOL.Input.taps = [{ id: 11, x: 124, y: 100 }];
+scene.updatePlace(0.016, 667, 375);
+assert.deepEqual(heard, [[113, 2]], 'overlapping tap zones must choose the nearest gem');
+
 console.log('✓ shrine tap-to-drag gestures recite each gem exactly once');

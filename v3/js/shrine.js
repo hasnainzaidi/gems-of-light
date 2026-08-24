@@ -473,18 +473,25 @@
       if (Input.drag && !this.heldGem) {
         const d = Input.drag;
         const moved = GOL.dist(d.x, d.y, d.startX, d.startY);
+        let closest = null;
+        let closestDistance = 46;
         for (const g of this.gems) {
           if (g.placed >= 0 || g.drift) continue;
-          if (GOL.dist(d.startX, d.startY, g.x, g.y) < 46) {
-            if (moved > 10) {
-              this.heldGem = g;
-              if (!g.listenedThisHold) {
-                g.listenedThisHold = true;
-                this.listens++;
-                GOL.audio.playVerse(this.surahId, g.ayah, null);
-              }
-            }
-            break;
+          const distance = GOL.dist(d.startX, d.startY, g.x, g.y);
+          if (distance < closestDistance) {
+            closest = g;
+            closestDistance = distance;
+          }
+        }
+        // Seven-gem shrines deliberately have overlapping generous pickup
+        // zones on small phones. Honor the gem nearest the child's finger;
+        // array order otherwise makes a visibly different neighbor jump.
+        if (closest && moved > 10) {
+          this.heldGem = closest;
+          if (!closest.listenedThisHold) {
+            closest.listenedThisHold = true;
+            this.listens++;
+            GOL.audio.playVerse(this.surahId, closest.ayah, null);
           }
         }
       }
@@ -494,23 +501,28 @@
       // taps replay their ayah
       for (const tap of Input.taps) {
         if (tap.ui) continue;
+        let closest = null;
+        let closestDistance = 42;
         for (const g of this.gems) {
-          if (GOL.dist(tap.x, tap.y, g.x, g.y) < 42) {
-            tap.ui = true;
-            g.pulse = 1;
-            // Pointerdown is recorded as a tap before iOS knows whether the
-            // finger will move. If this same touch has already crossed the
-            // drag threshold, pickup above owns its one listening request.
-            // Conversely, marking a plain tap here prevents its later move
-            // from restarting the ayah on the next frame.
-            if (this.heldGem === g && g.listenedThisHold) break;
-            g.listenedThisHold = true;
-            this.listens++;
-            GOL.audio.playVerse(this.surahId, g.ayah, null);
-            this.fx.spawn('ring', g.x, g.y, { color: GOL.GEMS[(g.ayah - 1) % 7].glow, size: 22 });
-            break;
+          const distance = GOL.dist(tap.x, tap.y, g.x, g.y);
+          if (distance < closestDistance) {
+            closest = g;
+            closestDistance = distance;
           }
         }
+        if (!closest) continue;
+        tap.ui = true;
+        closest.pulse = 1;
+        // Pointerdown is recorded as a tap before iOS knows whether the
+        // finger will move. If this same touch has already crossed the
+        // drag threshold, pickup above owns its one listening request.
+        // Conversely, marking a plain tap here prevents its later move
+        // from restarting the ayah on the next frame.
+        if (this.heldGem === closest && closest.listenedThisHold) continue;
+        closest.listenedThisHold = true;
+        this.listens++;
+        GOL.audio.playVerse(this.surahId, closest.ayah, null);
+        this.fx.spawn('ring', closest.x, closest.y, { color: GOL.GEMS[(closest.ayah - 1) % 7].glow, size: 22 });
       }
       // release over the open socket
       for (const rel of Input.releases) {

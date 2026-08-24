@@ -216,7 +216,10 @@
       const bottom = Math.max(sa.b + 16, 18);
       const ph = Math.min(portrait ? (knowledge ? 560 : 490) : (knowledge ? 340 : 270), H - top - bottom);
       const px = (W - pw) / 2, py = top;
-      const bh = Math.max(40, Math.min(50, ph * .15));
+      // The canvas rectangle is the whole hit target, so keep it comfortably
+      // above the 44pt minimum even on a short landscape phone. This is a
+      // grown-up's first interaction and must tolerate an imprecise thumb.
+      const bh = Math.max(48, Math.min(50, ph * .15));
       const by = py + ph - bh - 20;
       return { sa, portrait, px, py, pw, ph, cx: W / 2, bh, by, inner: pw - 54 };
     },
