@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mossu — nesting scale</title>
+<style>
+  html, body { margin: 0; background: #F5EEDB; font-family: Georgia, serif; color: #6B563A; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px 14px 24px; }
+  h1 { font-size: 20px; font-weight: normal; color: #7A6238; margin: 4px 0 2px; }
+  p.sub { font-size: 13px; margin: 0 0 12px; color: #9A8560; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 16px;
+           box-shadow: 0 6px 24px rgba(70,55,30,0.18); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mossu — Lumi's size, and they nest</h1>
+  <p class="sub">A round dome of a body, a big head right against the shoulder, two little feet. Mossu is Lumi's height and quicker on his feet; Lumi rides sunk into the dome, carried still — no bounce, no dangling feet.</p>
+  <canvas id="cv"></canvas>
+</div>
+
+<script src="v3/js/core/art.js"></script>
+<script src="v3/js/core/props.js"></script>
+<script src="v3/js/core/actors.js"></script>
+<script>
+(function () {
+  const GOL = window.GOL;
+  const { mix, shade, tint, alpha } = GOL.color;
+  const { blob } = GOL.paint;
+
+  const W = 1000, H = 580;
+  const ROW_BIG = 300, ROW_SMALL = 520;
+  const cv = document.getElementById('cv');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+
+  const P = GOL.PALETTES.kawthar;
+  const BODY = '#9DB584', BELLY = '#E6DEC2', RIM = '#6E8557';
+  const SPECK_A = '#D8CB96', SPECK_B = '#EFE6BE';
+  const TOE = '#C6BA90', EYE = '#3A3226';
+
+  const STEP = 8.2;          // quick, light-footed — he outpaces Lumi
+  const BELLY_Y = -5;        // belly clears the ground so the legs read
+  const SEAT_Y = -13;        // the back line
+  const LUMI_SEAT = -9;      // Lumi's feet — ON the back, not down beside it
+  const LUMI_X = -6;
+  const LUMI_H = 40, MOSSU_H = 45, COMBO_H = 49;   // measured heights
+
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a += 0x6D2B79F5; let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function gait(ph, walking) {
+    if (!walking) return { bob: 0, pitch: 0, headY: 0, headX: 0, sway: 0, swing: [0, 0], lift: [0, 0] };
+    const s0 = Math.sin(ph), s1 = Math.sin(ph + Math.PI);
+    return {
+      bob: -0.7 * Math.abs(s0),                       // light, not heaving
+      pitch: s0 * 0.012,
+      headY: -0.5 * Math.abs(Math.sin(ph - 0.45)),    // a short lag, not a lumber
+      headX: Math.sin(ph - 0.55) * 0.5,
+      sway: Math.sin(ph - 0.8) * 0.06,
+      swing: [s0 * 3.1, s1 * 3.1],                    // longer reach per step
+      lift: [Math.max(0, s0) * 3.2, Math.max(0, s1) * 3.2],
+    };
+  }
+
+  // ------------------------------------------------------------- Mossu ----
+  // No tail: the body stops in a rounded rump just behind the seat, and the
+  // head rides forward on a short neck.
+  function body(nod, hx) {
+    ctx.beginPath();
+    ctx.moveTo(-21, -19);                              // the rump's top
+    ctx.quadraticCurveTo(-17, -14, -9, SEAT_Y);        // over the back
+    ctx.quadraticCurveTo(-2, -13, 7, -17);             // the seat, then the shoulder
+    ctx.quadraticCurveTo(9, -23, 9 + hx * 0.5, -28);   // neck, back edge
+    ctx.quadraticCurveTo(9 + hx, -36, 15 + hx, -41 + nod);
+    ctx.quadraticCurveTo(22 + hx, -45 + nod, 28 + hx, -40 + nod);   // crown
+    ctx.quadraticCurveTo(33 + hx, -35 + nod, 31 + hx, -30 + nod);   // face
+    ctx.quadraticCurveTo(29 + hx, -26 + nod, 23 + hx, -26 + nod);   // muzzle underside
+    ctx.quadraticCurveTo(18 + hx, -26, 17 + hx * 0.5, -22);         // jaw into the neck
+    ctx.quadraticCurveTo(16, -17, 17, -12);
+    ctx.quadraticCurveTo(18, -8, 14, BELLY_Y);         // chest to the ground
+    ctx.quadraticCurveTo(2, BELLY_Y + 2, -12, BELLY_Y - 1);   // belly
+    ctx.quadraticCurveTo(-21, BELLY_Y - 3, -23, -12);  // the rounded rump
+    ctx.quadraticCurveTo(-24, -16, -21, -19);
+    ctx.closePath();
+  }
+
+  function drawLeg(g, i) {
+    const base = i === 0 ? -11 : 6;
+    const lx = base + g.swing[i], lift = g.lift[i];
+    ctx.fillStyle = shade(BODY, i === 0 ? 0.22 : 0.08);
+    ctx.beginPath();
+    ctx.moveTo(lx - 3.6, BELLY_Y + 2);
+    ctx.quadraticCurveTo(lx - 4.2, -1.6 - lift, lx, -1.3 - lift);
+    ctx.quadraticCurveTo(lx + 4.2, -1.6 - lift, lx + 3.6, BELLY_Y + 2);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = alpha(RIM, i === 0 ? 0.3 : 0.5);
+    ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.fillStyle = i === 0 ? shade(TOE, 0.15) : TOE;
+    for (const tx of [-2, 0.2, 2.4]) {
+      ctx.beginPath(); ctx.ellipse(lx + tx, -1.1 - lift, 1.2, 1, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function drawMossu(ctx, x, y, t, opts) {
+    opts = opts || {};
+    const f = opts.facing || 1, K = opts.scale || 1;
+    const walking = opts.walking !== false;
+    const ph = opts.phase != null ? opts.phase : t * STEP;
+    const g = gait(ph, walking);
+    const idle = Math.sin(t * 1.3) * 0.8;
+    const nod = g.headY + idle * 0.5, hx = g.headX;
+
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(f * K, K);
+
+    ctx.fillStyle = alpha('#3E5C42', 0.15);
+    ctx.beginPath(); ctx.ellipse(-3, 1.2, 19, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+    drawLeg(g, 0);                                   // far leg, behind
+
+    ctx.save();
+    ctx.translate(0, g.bob); ctx.rotate(g.pitch);
+
+    const grad = ctx.createLinearGradient(0, -46, 0, 0);
+    grad.addColorStop(0, tint(BODY, 0.26));
+    grad.addColorStop(0.45, BODY);
+    grad.addColorStop(1, shade(BODY, 0.12));
+    ctx.fillStyle = grad;
+    body(nod, hx); ctx.fill();
+
+    ctx.save();
+    body(nod, hx); ctx.clip();
+    blob(ctx, 22 + hx, -32 + nod, 8, alpha(shade(BODY, 0.14), 0.3));
+    blob(ctx, -16, -10, 9, alpha(shade(BODY, 0.14), 0.24));
+    ctx.fillStyle = alpha(BELLY, 0.8);
+    ctx.beginPath(); ctx.ellipse(-2, BELLY_Y - 1, 17, 4.5, -0.04, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha(BELLY, 0.55);
+    ctx.beginPath(); ctx.ellipse(26 + hx, -30 + nod, 4.5, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+    const r = rng(7);
+    for (let i = 0; i < 30; i++) {
+      const onHead = i < 12;
+      const sx = onHead ? 12 + hx + r() * 18 : -20 + r() * 28;
+      const sy = onHead ? -42 + r() * 15 + nod : -16 + r() * 10;
+      const rr = 0.55 + r() * 0.9;
+      ctx.fillStyle = alpha(r() < 0.5 ? SPECK_A : SPECK_B, 0.55 + r() * 0.35);
+      ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.75, r() * 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = alpha(RIM, 0.6);
+    ctx.lineWidth = 1.2; ctx.lineJoin = 'round';
+    body(nod, hx); ctx.stroke();
+
+    // face — big soft eye, nostril, wide smile
+    const ex = 22 + hx, ey = -35 + nod;
+    ctx.fillStyle = alpha('#FFFFFF', 0.5);
+    ctx.beginPath(); ctx.ellipse(ex, ey, 3.3, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = EYE;
+    ctx.beginPath(); ctx.ellipse(ex, ey, 2.7, 2.9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha('#FFFFFF', 0.95);
+    ctx.beginPath(); ctx.arc(ex + 0.9, ey - 1.1, 0.9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha(shade(BODY, 0.35), 0.7);
+    ctx.beginPath(); ctx.ellipse(30 + hx, -32 + nod, 0.7, 0.55, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = alpha(shade(BODY, 0.42), 0.85);
+    ctx.lineWidth = 1.1; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(30 + hx, -29 + nod);
+    ctx.quadraticCurveTo(26 + hx, -26 + nod, 22 + hx, -28 + nod);
+    ctx.stroke();
+
+    ctx.restore();
+    drawLeg(g, 1);                                   // near leg, in front
+    ctx.restore();
+    return g;
+  }
+
+  // Clip everything OUTSIDE Mossu's body, so a rider drawn afterwards shows
+  // only where it clears the silhouette: Lumi sits ON the back, its feet and
+  // the underside of the ball tucked away behind the contour.
+  function clipOutsideBody(ctx, x, y, t, opts) {
+    opts = opts || {};
+    const f = opts.facing || 1, K = opts.scale || 1;
+    const ph = opts.phase != null ? opts.phase : t * STEP;
+    const g = gait(ph, opts.walking !== false);
+    const idle = Math.sin(t * 1.3) * 0.8;
+    const nod = g.headY + idle * 0.5, hx = g.headX;
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(f * K, K);
+    ctx.translate(0, g.bob); ctx.rotate(g.pitch);
+    body(nod, hx);                    // begins the path itself…
+    ctx.rect(-400, -400, 800, 800);   // …so the outer rect is appended after
+    ctx.clip('evenodd');
+    ctx.rotate(-g.pitch); ctx.translate(0, -g.bob);   // the rider does not bob
+  }
+
+  // -------------------------------------------------------------- scene ---
+  function lumi(over) {
+    return Object.assign({
+      vx: 0, vy: 0, grounded: true, facing: 1, t: 0, idleT: 0,
+      blink: false, squashX: 1, squashY: 1, moving: false
+    }, over);
+  }
+
+  function combo(x, gy, t, scale, phase) {
+    const o = { scale, phase };
+    drawMossu(ctx, x, gy, t, o);
+    // The rider rides still — no walk bounce, no inherited rock — and is
+    // clipped to outside Mossu's outline, so the feet vanish behind the back
+    // and Lumi reads as sitting ON him rather than standing behind him.
+    clipOutsideBody(ctx, x, gy, t, o);
+    GOL.drawSprite(ctx, LUMI_X, LUMI_SEAT, lumi({ t: t + 1.4, facing: 1, moving: false }));
+    ctx.restore();
+  }
+
+  function grassBand(gy, h, scroll) {
+    const gg = ctx.createLinearGradient(0, gy, 0, gy + h);
+    gg.addColorStop(0, P.grass);
+    gg.addColorStop(0.3, P.grassDark);
+    gg.addColorStop(1, shade(P.soil || '#B99B72', 0.3));
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, gy, W, h);
+    ctx.fillStyle = alpha(P.grassLight, 0.5);
+    ctx.fillRect(0, gy, W, 3);
+    const off = ((scroll || 0) % 45 + 45) % 45;
+    for (let i = -1; i < 24; i++) {
+      const x = 24 + i * 45 - off, r2 = 6 + (((i + 24) * 7) % 5);
+      blob(ctx, x, gy + 2, r2, alpha(P.grassDark, 0.5));
+      blob(ctx, x + r2 * 0.7, gy + 1, r2 * 0.7, alpha(P.grass, 0.55));
+    }
+  }
+
+  function guide(gy, h, scale, label, x0, x1) {
+    const y = gy - h * scale;
+    ctx.save();
+    ctx.strokeStyle = alpha('#A8925F', 0.7);
+    ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = alpha('#7A6238', 0.95);
+    ctx.font = '12px Georgia, serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, x1 + 6, y + 4);
+    ctx.restore();
+  }
+
+  function draw(t) {
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    GOL.drawSky(ctx, W, H, P, t, 0);
+    for (const [hx, hr] of [[220, 95], [660, 110]]) {
+      blob(ctx, hx, ROW_BIG - 6, hr, alpha(P.hillFar, 0.7));
+    }
+    grassBand(ROW_BIG, 52, 0);
+
+    const S = 2.4;                       // same magnification for all three
+    ctx.save();
+    ctx.translate(120, ROW_BIG); ctx.scale(S, S);
+    GOL.drawSprite(ctx, 0, 0, lumi({ t, facing: 1, moving: true, vx: 120 }));
+    ctx.restore();
+    drawMossu(ctx, 420, ROW_BIG, t, { scale: S });
+    combo(760, ROW_BIG, t, S);
+
+    ctx.save();
+    ctx.strokeStyle = alpha('#A8925F', 0.75); ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+    for (const [h, x0] of [[LUMI_H, 60], [COMBO_H, 620]]) {
+      ctx.beginPath();
+      ctx.moveTo(x0, ROW_BIG - h * S); ctx.lineTo(960, ROW_BIG - h * S); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.fillStyle = alpha('#7A6238', 0.95);
+    ctx.font = '11px Georgia, serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Lumi, and Mossu', 958, ROW_BIG - LUMI_H * S - 4);
+    ctx.fillText('the pair', 958, ROW_BIG - COMBO_H * S - 4);
+    ctx.restore();
+
+    ctx.fillStyle = alpha('#5E4C30', 0.9);
+    ctx.font = '13px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Lumi', 120, ROW_BIG + 34);
+    ctx.fillText('Mossu', 420, ROW_BIG + 34);
+    ctx.fillText('nested — ~20% taller than either alone', 760, ROW_BIG + 34);
+
+    // in-game size, walking
+    grassBand(ROW_SMALL, 44, t * 62);
+    combo(300, ROW_SMALL, t, 1);
+    GOL.drawSprite(ctx, 420, ROW_SMALL, lumi({ t, facing: 1, moving: true, vx: 120 }));
+    drawMossu(ctx, 540, ROW_SMALL, t, { scale: 1 });
+    ctx.fillStyle = alpha('#5E4C30', 0.9);
+    ctx.fillText('true in-game size — the pair, Lumi, Mossu', 420, ROW_SMALL + 32);
+    ctx.restore();
+  }
+
+  let t0 = performance.now();
+  function tick() { draw((performance.now() - t0) / 1000); }
+  setInterval(tick, 50);
+  requestAnimationFrame(function loop() { tick(); requestAnimationFrame(loop); });
+})();
+</script>
+</body>
+</html>

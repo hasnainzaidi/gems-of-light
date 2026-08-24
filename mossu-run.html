@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mossu — cleaned up</title>
+<style>
+  html, body { margin:0; background:#F5EEDB; color:#4A4030;
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:16px 14px 28px; }
+  h1 { font-size:20px; font-weight:400; color:#7A6238; margin:4px 0 2px; }
+  p.sub { font-size:13px; color:#9A8560; margin:0 0 12px; }
+  canvas { display:block; width:100%; height:auto; border-radius:14px;
+           box-shadow:0 5px 20px rgba(70,55,30,.16); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mossu &amp; Lumi — cleaned up</h1>
+  <p class="sub">Still, side by side: carrying Lumi, and standing on his own. Below, the same two moving at true in-game size.</p>
+  <canvas id="cv"></canvas>
+</div>
+
+<script src="v3/js/core/art.js"></script>
+<script src="v3/js/core/props.js"></script>
+<script src="v3/js/core/actors.js"></script>
+<script>
+(function () {
+  const GOL = window.GOL;
+  const { alpha, shade, tint } = GOL.color;
+  const { blob } = GOL.paint;
+
+  // ======================================================== THE CHARACTER ==
+  // Mossu, with Lumi riding. (x, y) = the pair's feet on the ground.
+  // opts: { t, speed, facing, scale }  — speed is world px/sec of travel, and
+  // everything about the gait is derived from it, so the walk and the run are
+  // the same animation at different speeds rather than two hand-tuned poses.
+
+  const BODY = '#9DB584', BELLY = '#E6DEC2', RIM = '#6E8557', LEG = '#7E9A67';
+  const SPECK_A = '#D8CB96', SPECK_B = '#EFE6BE', TOE = '#C6BA90', EYE = '#3A3226';
+  // Lumi's own walk is 205 px/sec — GOL.PHYS.WALK in engine.js, which this
+  // page doesn't load — so for Mossu to actually be the quicker of the two,
+  // his run has to clear that.
+  const LUMI_WALK = 205;
+  const RUN_SPEED = 240;                 // what counts as "flat out"
+
+  // The silhouette, as anchor points only — the curve through them is
+  // generated, which is what smooths the kinks out of the hand-placed version.
+  // A head needs landmarks or it reads as the end of a sock: a domed crown,
+  // a dip behind the brow, a blunt muzzle, and a jaw corner that steps back
+  // to the throat. Those four give the skull a shape of its own.
+  // Tail → barrel → shoulder → neck → head → muzzle. The dip in the back that
+  // Lumi sits in comes from the shoulder disc riding a little lower, not from
+  // a dent drawn into an edge.
+  // The head needs landmarks or it reads as the end of a sock: a domed crown,
+  // a dip behind the brow, a blunt muzzle, and a jaw corner that steps back
+  // to the throat.
+  const OUTLINE = [
+    [-21, -16], [-8.5, -9], [7.5, -13.5],          // the back
+    [11.5, -27],                                    // nape
+    [13, -36],                                      // back of the skull
+    [19.5, -41],                                    // crown
+    [26, -39],                                      // brow — a dip after the crown
+    [31, -34.5],                                    // muzzle, rising over the nose
+    [32.5, -30],                                    // nose
+    [28, -26.5],                                    // lip, tucked under
+    [23.5, -26],                                    // jaw corner
+    [21, -19.5],                                    // throat
+    [19.5, -12], [15, -4],                          // chest into the belly
+    [-14.5, -2], [-24.5, -10],
+  ];
+
+  // Standing alone he needs a different posture, or the dipped back and
+  // forward-carried head read as an empty seat waiting to be sat on. The head
+  // comes up and back over the shoulders, and the saddle fills out into an
+  // ordinary rounded back.
+  const OUTLINE_ALONE = [
+    [-21, -16], [-9, -12], [6, -17.5],              // the back, rounded up
+    [10, -29],                                       // nape, more upright
+    [11, -38],
+    [17, -45],                                       // crown, carried high
+    [24, -44],
+    [29.5, -40],
+    [31.5, -35],                                     // nose, tipped up a little
+    [27.5, -31],
+    [22.5, -30],                                     // jaw
+    [20, -22],                                       // throat
+    [19.5, -12], [15, -4],
+    [-14.5, -2], [-24.5, -10],
+  ];
+  const FACE_RIDDEN = { x: 0, y: 0 };
+  const FACE_ALONE = { x: -2, y: -5.5 };             // the face travels with it
+
+  // A closed Catmull-Rom spline through the anchors, emitted as cubics.
+  function outlinePath(ctx, pts) {
+    const n = pts.length;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < n; i++) {
+      const p0 = pts[(i - 1 + n) % n], p1 = pts[i];
+      const p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+      ctx.bezierCurveTo(
+        p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6,
+        p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6,
+        p2[0], p2[1]);
+    }
+    ctx.closePath();
+  }
+
+  // A real walk cycle: the foot is planted for most of the cycle and travels
+  // BACKWARD at exactly the speed the body travels forward, then swings
+  // through the air to the front. That relationship is what stops the feet
+  // from skating, and it falls out of the stride length automatically.
+  // The gait follows Lumi's: the legs do not swing like pendulums, they are
+  // little stubs that lift and set down in turn. At this size a swinging limb
+  // reads as two chopsticks; a lifting stub reads as walking.
+  function gait(t, speed) {
+    const eff = Math.max(0, Math.min(1, speed / RUN_SPEED));
+    const cycles = 1.1 + 0.9 * eff;         // steps stay readable, as Lumi's do
+    const u = t * cycles;
+    const s = Math.sin(u * Math.PI * 2);
+    return {
+      u, eff,
+      lean: 15 * eff,                       // upright at rest, nose-down flat out
+      bob: -(0.5 + 1.6 * eff) * s * s,      // squared, so there's no cusp on landing
+      lift: 2 + 2.6 * eff,
+    };
+  }
+
+  const speck = (seed) => {
+    let a = seed >>> 0;
+    return () => {
+      a += 0x6D2B79F5; let x = a;
+      x = Math.imul(x ^ (x >>> 15), x | 1);
+      x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  // Four legs move on the diagonal, the way a real quadruped does: the hind
+  // leg on one side rises with the foreleg on the other. Two legs just
+  // alternate. `far` legs are drawn behind the body, `near` legs in front.
+  function legSet(count) {
+    if (count === 4) return [
+      { x: -10, ph: 0,       far: true,  s: -1 },   // hind, far side
+      { x: 8,   ph: Math.PI, far: true,  s: -1 },   // fore, far side
+      { x: -7,  ph: Math.PI, far: false, s: 1 },    // hind, near side
+      { x: 11,  ph: 0,       far: false, s: 1 },    // fore, near side
+    ];
+    return [
+      { x: -6, ph: 0,       far: true,  s: -1 },
+      { x: 6,  ph: Math.PI, far: false, s: 1 },
+    ];
+  }
+
+  // One stub, exactly the way drawSprite paints Lumi's: a rounded ellipse at a
+  // fixed spot under the body, tilted a touch, rising and falling in turn.
+  function drawLeg(ctx, g, L, leanRad) {
+    const lift = Math.max(0, Math.sin(g.u * Math.PI * 2 + L.ph)) * g.lift;
+    const col = L.far ? shade(LEG, 0.2) : LEG;
+    ctx.save();
+    ctx.translate(L.x, -3 - lift);
+    ctx.rotate(-leanRad);                    // stays upright under the leaning body
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 3.8, 5.2, L.s * 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.strokeStyle = alpha(shade(col, 0.32), 0.5);
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = L.far ? shade(TOE, 0.18) : TOE;
+    ctx.beginPath(); ctx.ellipse(0.4, 3.2, 2.1, 1.3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPair(ctx, x, y, opts) {
+    opts = opts || {};
+    const t = opts.t || 0, speed = opts.speed || 0;
+    const fdir = opts.facing || 1, K = opts.scale || 1;
+    const g = gait(t, speed);
+    const leanRad = g.lean * Math.PI / 180;
+    const legs = legSet(opts.legs || 2);
+    const rider = opts.rider !== false;
+    const shape = rider ? OUTLINE : OUTLINE_ALONE;
+    const fo = rider ? FACE_RIDDEN : FACE_ALONE;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(fdir * K, K);
+
+    // contact shadow — tightens as he lifts off
+    const lifted = Math.min(1, -g.bob / (0.5 + 1.6 * g.eff + 0.001));
+    ctx.fillStyle = alpha('#3E5C42', 0.17 - 0.05 * lifted);
+    ctx.beginPath();
+    ctx.ellipse(-2, 1.2, 21 - 2 * lifted, 4 - 0.8 * lifted, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.rotate(leanRad);                               // the body leans…
+    ctx.translate(0, g.bob);                           // …and bobs, legs and all
+
+    legs.filter((L) => L.far).forEach((L) => drawLeg(ctx, g, L, leanRad));
+
+    if (rider) {
+      // ---- the belly shadow Lumi settles onto
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath(); ctx.ellipse(-3.5, -4, 17, 4.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = BELLY; ctx.fill();
+      ctx.restore();
+
+      // ---- LUMI, the real drawSprite. Its own idle breathing is switched off
+      // (t held at 0) so the only rise and fall it has is Mossu's — they bounce
+      // on exactly the same beat instead of drifting against each other.
+      GOL.drawSprite(ctx, -6, -9, {
+        vx: 0, vy: 0, grounded: true, facing: 1, t: 0, idleT: 0,
+        blink: opts.blink || false, squashX: 1, squashY: 1, moving: false,
+      });
+    }
+
+    // ---- MOSSU's body, drawn over Lumi so the rider sits down inside it
+    const grad = ctx.createLinearGradient(0, -46, 0, 0);
+    grad.addColorStop(0, tint(BODY, 0.28));
+    grad.addColorStop(0.5, BODY);
+    grad.addColorStop(1, shade(BODY, 0.14));
+    outlinePath(ctx, shape);
+    ctx.fillStyle = grad; ctx.fill();
+
+    ctx.save();
+    outlinePath(ctx, shape); ctx.clip();
+    // soft washes for depth, and a shadow under the jaw so the head reads as
+    // its own mass rather than the end of the neck
+    blob(ctx, 23 + fo.x, -34 + fo.y, 9, alpha(tint(BODY, 0.32), 0.42));
+    blob(ctx, 24 + fo.x, -24 + fo.y, 6.5, alpha(shade(BODY, 0.24), 0.3));
+    blob(ctx, -14, -6, 10, alpha(shade(BODY, 0.16), 0.3));
+    blob(ctx, 2, -4, 12, alpha(shade(BODY, 0.12), 0.24));
+    // pale underside, and a soft bib down the throat onto the chest — the
+    // same trick the game's birds use to stop a front reading as flat
+    ctx.fillStyle = alpha(BELLY, 0.75);
+    ctx.beginPath(); ctx.ellipse(-2, -3, 15, 3.6, -0.03, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha(BELLY, 0.45);
+    ctx.beginPath();
+    ctx.ellipse(19 + fo.x * 0.4, -13, 5.4, 8, -0.12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = alpha(BELLY, 0.4);
+    ctx.beginPath();
+    ctx.ellipse(25.5 + fo.x, -26 + fo.y, 4.6, 4, -0.2, 0, Math.PI * 2); ctx.fill();
+    // gold speckling over the back and head
+    const r = speck(9);
+    for (let i = 0; i < 26; i++) {
+      const head = i < 11;
+      const sx = head ? 13 + fo.x + r() * 17 : -22 + r() * 30;
+      const sy = head ? -40 + fo.y + r() * 14 : -16 + r() * 11;
+      const rr = 0.5 + r() * 0.85;
+      ctx.fillStyle = alpha(r() < 0.5 ? SPECK_A : SPECK_B, 0.5 + r() * 0.35);
+      ctx.beginPath(); ctx.ellipse(sx, sy, rr, rr * 0.75, r() * 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = alpha(RIM, 0.6);
+    ctx.lineWidth = 1.15; ctx.lineJoin = 'round';
+    outlinePath(ctx, shape); ctx.stroke();
+
+    legs.filter((L) => !L.far).forEach((L) => drawLeg(ctx, g, L, leanRad));
+
+    if (rider) {
+      // ---- Lumi's near foot, hanging over the flank
+      ctx.fillStyle = '#E3B76F';
+      ctx.beginPath(); ctx.ellipse(2.5, -12, 4.5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = alpha(shade('#E3B76F', 0.3), 0.5);
+      ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    // ---- the face. One eye reads as a strict side profile, the way the
+    // game's birds and tortoise are drawn. Two reads as a three-quarter turn
+    // toward the viewer, the way Lumi is drawn — the far eye sits deeper and
+    // smaller because it is further away.
+    ctx.strokeStyle = alpha('#FFFFFF', 0.3);
+    ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(22 + fo.x, -35 + fo.y, 8.5, -2.3, -1.35); ctx.stroke();
+
+    const twoEyed = (opts.eyes || 1) === 2;
+    const eyes = (twoEyed
+      ? [{ x: 20, y: -34, r: 1 }, { x: 28, y: -32.5, r: 0.78 }]
+      : [{ x: 21.5, y: -34, r: 1 }]
+    ).map((e) => ({ x: e.x + fo.x, y: e.y + fo.y, r: e.r }));
+    eyes.forEach((e) => {
+      ctx.fillStyle = alpha('#FFFFFF', 0.5);
+      ctx.beginPath(); ctx.ellipse(e.x, e.y, 3.4 * e.r, 3.6 * e.r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = EYE;
+      ctx.beginPath(); ctx.ellipse(e.x, e.y, 2.7 * e.r, 2.9 * e.r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = alpha('#FFFFFF', 0.95);
+      ctx.beginPath(); ctx.arc(e.x + 1 * e.r, e.y - 1.1 * e.r, 1 * e.r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.x - 1.1 * e.r, e.y + 1.1 * e.r, 0.45 * e.r, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // blush, the same warm dab Lumi wears — one either side on a turned face
+    ctx.fillStyle = alpha('#F0A987', 0.32);
+    ctx.beginPath();
+    ctx.ellipse((twoEyed ? 30.5 : 27) + fo.x, -29 + fo.y, 2.5, 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (twoEyed) {
+      ctx.beginPath();
+      ctx.ellipse(17 + fo.x, -30.5 + fo.y, 2.1, 1.4, 0, 0, Math.PI * 2); ctx.fill();
+    } else {
+      // a nostril only helps when the snout is seen side-on; Lumi has none
+      ctx.fillStyle = alpha(shade(BODY, 0.4), 0.55);
+      ctx.beginPath();
+      ctx.ellipse(30.5 + fo.x, -31.5 + fo.y, 0.75, 0.6, 0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // a soft smile, centred below the eyes rather than off on the muzzle
+    ctx.strokeStyle = alpha(shade(BODY, 0.5), 0.8);
+    ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc((twoEyed ? 24 : 25) + fo.x, -30.5 + fo.y, 4, 0.22 * Math.PI, 0.78 * Math.PI);
+    ctx.stroke();
+
+    ctx.restore();                                     // out of lean + bob
+    ctx.restore();
+  }
+
+  // ================================================================ scene ==
+  const W = 1040, H = 620;
+  const cv = document.getElementById('cv');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+  const P = GOL.PALETTES.kawthar;
+
+  const STILL_GY = 300;
+  const ROWS = [
+    { gy: 545, speed: 240, scale: 1, legs: 4, eyes: 2, offset: 300,
+      label: 'in-game size, moving — Mossu at a run, Lumi walking at her own pace' },
+  ];
+
+  // The ground stays put; the characters travel across it. Anything that
+  // scrolls the world under a walker reads as a treadmill.
+  function band(gy, h) {
+    const g = ctx.createLinearGradient(0, gy, 0, gy + h);
+    g.addColorStop(0, P.grass);
+    g.addColorStop(0.3, P.grassDark);
+    g.addColorStop(1, shade(P.soil || '#B99B72', 0.3));
+    ctx.fillStyle = g; ctx.fillRect(0, gy, W, h);
+    ctx.fillStyle = alpha(P.grassLight, 0.5); ctx.fillRect(0, gy, W, 3);
+    const step = 46;
+    for (let i = -1; i < W / step + 2; i++) {
+      const x = i * step, r = 6 + ((i + 40) * 7) % 5;
+      blob(ctx, x, gy + 2, r, alpha(P.grassDark, 0.5));
+      blob(ctx, x + r * 0.7, gy + 1, r * 0.7, alpha(P.grass, 0.55));
+    }
+  }
+
+  // where a walker has got to, wrapping off one edge and back on the other
+  const LAP = W + 260;
+  function travelX(t, speed, scale, offset) {
+    const d = (t * speed * scale + (offset || 0)) % LAP;
+    return -140 + (d < 0 ? d + LAP : d);
+  }
+
+  function draw(t) {
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    GOL.drawSky(ctx, W, H, P, t, 0);
+    for (const [hx, hr] of [[240, 105], [760, 120]]) {
+      blob(ctx, hx, STILL_GY - 6, hr, alpha(P.hillFar, 0.65));
+    }
+
+    // ---- the still pair: carrying, and standing on his own
+    band(STILL_GY, 70);
+    drawPair(ctx, 300, STILL_GY, { t: 0, speed: 0, scale: 3, legs: 4, eyes: 2 });
+    drawPair(ctx, 760, STILL_GY, { t: 0, speed: 0, scale: 3, legs: 4, eyes: 2, rider: false });
+    ctx.fillStyle = alpha('#4A4030', 0.85);
+    ctx.font = '13px Georgia, serif'; ctx.textAlign = 'center';
+    ctx.fillText('carrying Lumi', 300, STILL_GY + 34);
+    ctx.fillText('on his own — head up, back rounded out', 760, STILL_GY + 34);
+
+    ROWS.forEach((row, i) => {
+      band(row.gy, 40);
+      const blink = (t % 4.3) < 0.12;
+      drawPair(ctx, travelX(t, row.speed, row.scale, row.offset), row.gy, {
+        t, speed: row.speed, scale: row.scale, legs: row.legs, eyes: row.eyes, blink,
+      });
+      // Mossu trotting along riderless behind them, then Lumi walking at her
+      // own speed — she falls steadily behind, which is the point
+      drawPair(ctx, travelX(t, row.speed, row.scale, row.offset - 150), row.gy, {
+        t, speed: row.speed, scale: row.scale, legs: row.legs, eyes: row.eyes,
+        rider: false, blink,
+      });
+      GOL.drawSprite(ctx, travelX(t, LUMI_WALK, 1, row.offset - 330), row.gy, {
+        vx: 120, vy: 0, grounded: true, facing: 1, t, idleT: 0,
+        blink, squashX: 1, squashY: 1, moving: true,
+      });
+      ctx.fillStyle = alpha('#4A4030', 0.85);
+      ctx.font = '13px Georgia, serif'; ctx.textAlign = 'left';
+      ctx.fillText(row.label, 16, row.gy + 22);
+    });
+    ctx.restore();
+  }
+
+  // One driver at a time. requestAnimationFrame is the smooth one because it
+  // lands on the compositor's beat; the interval is only a watchdog for frames
+  // that throttle rAF. Letting both paint freely samples time unevenly, which
+  // is itself a source of judder.
+  const t0 = performance.now();
+  let lastPaint = 0;
+  function tick() {
+    lastPaint = performance.now();
+    draw((lastPaint - t0) / 1000);
+  }
+  requestAnimationFrame(function loop() { tick(); requestAnimationFrame(loop); });
+  setInterval(() => { if (performance.now() - lastPaint > 120) tick(); }, 60);
+})();
+</script>
+</body>
+</html>

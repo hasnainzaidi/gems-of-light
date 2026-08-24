@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shape lab — Lumi &amp; Mossu</title>
+<style>
+  :root {
+    --paper:#F2EAD6; --card:#FBF6E7; --ink:#463D2B; --soft:#8A7B5E;
+    --rule:#C9A961; --sage:#7E9A67; --sel:#C46A4E; --lumi:#C9932F;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--paper); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .app { display:grid; grid-template-columns:140px 1fr 226px; gap:10px;
+         height:100vh; padding:10px; }
+  .panel { background:var(--card); border-radius:12px; padding:10px;
+           box-shadow:0 3px 14px rgba(70,55,30,.13); overflow-y:auto; }
+  h2 { font-size:.66rem; letter-spacing:.16em; text-transform:uppercase;
+       color:var(--soft); margin:.9em 0 .45em; font-weight:400; }
+  h2:first-child { margin-top:0; }
+  button { font:inherit; font-size:.79rem; color:var(--ink); background:#F5EEDA;
+    border:1px solid #DCCEA6; border-radius:7px; padding:5px 7px; cursor:pointer;
+    width:100%; text-align:left; margin-bottom:4px; }
+  button:hover { background:#EFE4C6; }
+  button.on { background:var(--sage); color:#FFF9E8; border-color:var(--sage); }
+  button:focus-visible { outline:2px solid var(--sel); outline-offset:1px; }
+  .row { display:flex; gap:4px; }
+  .sw { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+  .sw i { display:block; aspect-ratio:1; border-radius:5px; cursor:pointer;
+          border:2px solid transparent; }
+  .sw i.on { border-color:var(--sel); }
+  label.f { display:flex; align-items:center; justify-content:space-between;
+            font-size:.75rem; color:var(--soft); margin-bottom:3px; gap:6px; }
+  label.f input { width:66px; font:inherit; font-size:.75rem; padding:2px 4px;
+    border:1px solid #DCCEA6; border-radius:5px; background:#FFF; color:var(--ink);
+    font-variant-numeric:tabular-nums; }
+  .layers { font-size:.74rem; }
+  .layers .lay { padding:3px 5px; border-radius:5px; cursor:pointer;
+                 display:flex; align-items:center; gap:5px; }
+  .layers .lay:hover { background:#F0E7CE; }
+  .layers .lay.on { background:var(--sage); color:#FFF9E8; }
+  .layers .lay .tag { font-size:.6rem; letter-spacing:.06em; text-transform:uppercase;
+                      padding:0 4px; border-radius:3px; background:rgba(126,154,103,.22); }
+  .layers .lay.lumi .tag { background:rgba(201,147,47,.24); }
+  .layers .lay .nm { flex:1; }
+  .layers .lay .chip { width:11px; height:11px; border-radius:3px;
+                       border:1px solid rgba(70,55,30,.2); }
+  canvas { display:block; width:100%; height:100%; border-radius:12px;
+           background:#FBF6E7; touch-action:none; }
+  .stage { position:relative; background:var(--card); border-radius:12px;
+           box-shadow:0 3px 14px rgba(70,55,30,.13); overflow:hidden; }
+  .hint { font-size:.7rem; color:var(--soft); line-height:1.45; }
+  textarea { width:100%; height:130px; font-family:ui-monospace,Menlo,monospace;
+    font-size:.6rem; border:1px solid #DCCEA6; border-radius:7px; padding:6px;
+    background:#FFF; color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="panel">
+    <h2>Add shape</h2>
+    <div id="tools"></div>
+    <h2>Colour</h2>
+    <div class="sw" id="swatches"></div>
+    <h2>Motion</h2>
+    <button id="btnPlay">Play run</button>
+    <label class="f"><span>lean</span><input id="lean" type="number" step="1" value="-14"></label>
+    <label class="f"><span>speed</span><input id="speed" type="number" step="0.5" value="8"></label>
+    <h2>Show</h2>
+    <div id="toggles"></div>
+    <h2>File</h2>
+    <button id="btnCode">Get code</button>
+    <button id="btnSave">Export JSON</button>
+    <button id="btnLoad">Import JSON</button>
+    <button id="btnReset">Reset both</button>
+  </div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="panel">
+    <h2>Selected</h2>
+    <div id="insp"><p class="hint">Nothing selected. Click a shape on the canvas.</p></div>
+    <h2>Depth <span class="hint">(top of list = nearest)</span></h2>
+    <div class="layers" id="layers"></div>
+    <h2>Keys</h2>
+    <p class="hint">
+      drag to move &middot; arrows nudge (shift = 10)<br>
+      <b>[</b> / <b>]</b> one step back / forward<br>
+      <b>D</b> duplicate &middot; <b>Delete</b> remove<br>
+      <b>Cmd/Ctrl+Z</b> undo
+    </p>
+  </div>
+</div>
+
+<script src="v3/js/core/art.js"></script>
+<script src="v3/js/core/props.js"></script>
+<script src="v3/js/core/actors.js"></script>
+<script>
+(function () {
+  const GOL = window.GOL;
+  const { alpha, shade } = GOL.color;
+  const SCHEMA = 4;
+
+  const PAL = [
+    ['mossu body','#9DB584'], ['body light','#B4C79C'], ['body dark','#7E9A67'],
+    ['belly','#E6DEC2'],      ['cream','#F3EDD8'],
+    ['lumi body','#FFF1CC'],  ['lumi shade','#F3D492'], ['lumi leg','#E3B76F'],
+    ['gold rim','#D9A44A'],   ['gold fleck','#D8CB96'],
+    ['leaf','#77B368'],       ['leaf light','#A3D488'], ['stem','#6DA84E'],
+    ['eye','#4A3B2A'],        ['white','#FFFFFF'],
+    ['blush','#F0A987'],      ['mouth','#8A6B4F'],      ['toe','#C6BA90'],
+    ['rim green','#6E8557'],  ['shadow','#3E5C42'],
+  ];
+  const SHAPES = [
+    ['ellipse','Ellipse'], ['circle','Circle'], ['capsule','Capsule'],
+    ['leaf','Leaf'], ['arc','Arc line'], ['dot','Dot'],
+  ];
+
+  // ------------------------------------------------- the starting pair ----
+  const MOSSU_PTS = [
+    [-21,-19],[-9,-13],[7,-17],[9,-28],[15,-41],[28,-40],[31,-30],
+    [23,-26],[17,-22],[17,-12],[14,-5],[-12,-6],[-23,-12],
+  ];
+  const MOSSU_CTRLS = [
+    [-17,-14],[-2,-13],[9,-23],[9,-36],[22,-45],[33,-35],[29,-26],
+    [18,-26],[16,-17],[18,-8],[2,-3],[-21,-8],[-24,-16],
+  ];
+  const cp = (a) => a.map((p) => p.slice());
+
+  // Lumi, broken into the parts drawSprite paints. Feet at the origin, so the
+  // whole group sits wherever you drag it.
+  function lumiParts(ox, oy) {
+    const m = (o) => Object.assign({ g:'lumi', rot:0, a:1, lw:0 }, o,
+      { x:(o.x || 0) + ox, y:(o.y || 0) + oy });
+    return [
+      m({ name:'leg (far)',  type:'ellipse', x:-6.5, y:-3, rx:4.2, ry:5.5, fill:'#E3B76F', m:'none' }),
+      m({ name:'leg (near)', type:'ellipse', x:6.5,  y:-3, rx:4.2, ry:5.5, fill:'#E3B76F', m:'none' }),
+      m({ name:'body',       type:'circle',  x:0, y:-17, rx:17, ry:17, fill:'#FFF1CC', lw:2 }),
+      m({ name:'underglow',  type:'ellipse', x:0, y:-9,  rx:13, ry:7,  fill:'#F3D492', a:0.55 }),
+      m({ name:'stem',       type:'capsule', x:0, y:-36, rx:1, ry:3, fill:'#6DA84E' }),
+      m({ name:'leaf (far)', type:'leaf', x:-4, y:-39.5, rx:4.6, ry:2.6, rot:-40, fill:'#77B368' }),
+      m({ name:'leaf (near)',type:'leaf', x:4,  y:-39.5, rx:4.6, ry:2.6, rot:40,  fill:'#A3D488' }),
+      m({ name:'eye (far)',  type:'ellipse', x:-1.2, y:-19.5, rx:2.5, ry:3.4, fill:'#4A3B2A' }),
+      m({ name:'eye (near)', type:'ellipse', x:9.6,  y:-19.5, rx:2.5, ry:3.4, fill:'#4A3B2A' }),
+      m({ name:'glint (far)',  type:'dot', x:-0.3, y:-20.6, rx:0.95, ry:0.95, fill:'#FFFFFF' }),
+      m({ name:'glint (near)', type:'dot', x:10.5, y:-20.6, rx:0.95, ry:0.95, fill:'#FFFFFF' }),
+      m({ name:'cheek (far)',  type:'ellipse', x:-5.3, y:-15, rx:2.6, ry:1.7, fill:'#F0A987', a:0.4 }),
+      m({ name:'cheek (near)', type:'ellipse', x:13.7, y:-15, rx:2.6, ry:1.7, fill:'#F0A987', a:0.4 }),
+      m({ name:'smile', type:'arc', x:4.2, y:-15.1, rx:3.2, ry:3.2, fill:'#8A6B4F', a:0.75, lw:1.4 }),
+    ];
+  }
+
+  function DEFAULT() {
+    return [
+      {"g":"mossu","rot":0,"a":0.8,"lw":0,"name":"belly","type":"ellipse","x":-3.5,"y":-4,"rx":17,"ry":4.5,"fill":"#E6DEC2","m":"body"},
+      {"g":"mossu","rot":0,"a":1,"lw":2,"name":"leg (far)","type":"capsule","x":-7.5,"y":-2,"rx":4,"ry":5,"fill":"#7E9A67","m":"legA","up":true},
+      {"g":"lumi","rot":0,"a":1,"lw":2,"name":"body","type":"circle","x":-6,"y":-26,"rx":17,"ry":17,"fill":"#FFF1CC","m":"none"},
+      {"g":"lumi","rot":0,"a":0.55,"lw":0,"name":"underglow","type":"ellipse","x":-4,"y":-13,"rx":10,"ry":2.8,"fill":"#F3D492","m":"none"},
+      {"g":"lumi","rot":0,"a":1,"lw":0,"name":"stem","type":"capsule","x":-6,"y":-45,"rx":1,"ry":3,"fill":"#6DA84E","m":"none"},
+      {"g":"lumi","rot":-40,"a":1,"lw":0,"name":"leaf (far)","type":"leaf","x":-10,"y":-48.5,"rx":4.6,"ry":2.6,"fill":"#77B368","m":"none"},
+      {"g":"lumi","rot":40,"a":1,"lw":0,"name":"leaf (near)","type":"leaf","x":-2,"y":-48.5,"rx":4.6,"ry":2.6,"fill":"#A3D488","m":"none"},
+      {"g":"lumi","rot":0,"a":1,"lw":0,"name":"eye (near)","type":"ellipse","x":1,"y":-34,"rx":2.5,"ry":3.4,"fill":"#4A3B2A","m":"none"},
+      {"g":"lumi","rot":0,"a":1,"lw":0,"name":"glint (near)","type":"dot","x":1.5,"y":-32.5,"rx":0.95,"ry":0.95,"fill":"#FFFFFF","m":"none"},
+      {"g":"lumi","rot":0,"a":0.75,"lw":1.4,"name":"smile","type":"arc","x":6.5,"y":-24.1,"rx":3.2,"ry":3.2,"fill":"#8A6B4F","m":"none"},
+      {"g":"mossu","rot":0,"a":1,"lw":2,"name":"body outline","type":"path","x":-1.5,"y":2,"fill":"#9DB584","pts":[[-19.5,-18],[-7,-11],[9,-15.5],[13,-29.5],[16.5,-41],[28,-40],[31,-30],[23,-26],[19,-19.5],[17.5,-11.5],[13.5,-5.5],[-13,-4],[-23,-12]],"ctrls":[[-14,-13],[4,-11],[12.5,-23.5],[12.5,-36],[22,-45],[33,-35],[29,-26],[20.5,-23.5],[18,-15.5],[16,-8.5],[2,-3],[-21,-8],[-24,-16]],"m":"body"},
+      {"g":"lumi","rot":0,"a":1,"lw":0,"name":"leg (near)","type":"ellipse","x":2.5,"y":-12,"rx":4.5,"ry":3.5,"fill":"#E3B76F","m":"none"},
+      {"g":"mossu","rot":0,"a":1,"lw":2,"name":"leg (near)","type":"capsule","x":2.5,"y":-2,"rx":4,"ry":5,"fill":"#7E9A67","m":"legB","up":true},
+      {"g":"mossu","rot":0,"a":0.5,"lw":0,"name":"eye white","type":"circle","x":20.5,"y":-33,"rx":3.3,"ry":3.5,"fill":"#FFFFFF","m":"body"},
+      {"g":"mossu","rot":0,"a":1,"lw":0,"name":"eye","type":"circle","x":20.5,"y":-33,"rx":2.7,"ry":2.9,"fill":"#4A3B2A","m":"body"},
+      {"g":"mossu","rot":0,"a":0.95,"lw":0,"name":"glint","type":"dot","x":21.5,"y":-34,"rx":0.9,"ry":0.9,"fill":"#FFFFFF","m":"body"},
+      {"g":"mossu","rot":0,"a":0.85,"lw":1.2,"name":"smile","type":"arc","x":24.5,"y":-27,"rx":4,"ry":3,"fill":"#6E8557","m":"body"},
+    ];
+  }
+
+  // -------------------------------------------------------------- state ----
+  let shapes = [], sel = -1, selPt = null, tool = null, colour = '#9DB584';
+  let lean = -14, speed = 8, playing = false, clock = 0;
+  const show = { grid:true, ghost:false, guides:true, group:true };
+  const undoStack = [];
+
+  try {
+    const d = JSON.parse(localStorage.getItem('gol.shapeLab.v' + SCHEMA));
+    shapes = d.shapes;
+    if (d.lean != null) lean = d.lean;
+    if (d.speed != null) speed = d.speed;
+  } catch (e) { shapes = DEFAULT(); }
+  if (!Array.isArray(shapes) || !shapes.length) shapes = DEFAULT();
+
+  const persist = () =>
+    localStorage.setItem('gol.shapeLab.v' + SCHEMA,
+      JSON.stringify({ shapes, lean, speed }));
+  function pushUndo() {
+    undoStack.push(JSON.stringify(shapes));
+    if (undoStack.length > 80) undoStack.shift();
+  }
+  function undo() {
+    const s = undoStack.pop(); if (!s) return;
+    shapes = JSON.parse(s);
+    sel = Math.min(sel, shapes.length - 1); selPt = null;
+    refresh();
+  }
+  const refresh = () => { buildLayers(); buildInsp(); paint(); };
+
+  // ------------------------------------------------------------- canvas ----
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  let ZOOM = 4, W = 0, H = 0, groundY = 0, originX = 0;
+
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    originX = W * 0.44; groundY = H * 0.74;
+    paint();
+  }
+  const toScreen = (wx, wy) => [originX + wx * ZOOM, groundY + wy * ZOOM];
+  const toWorld = (sx, sy) => [(sx - originX) / ZOOM, (sy - groundY) / ZOOM];
+
+  // ------------------------------------------------------------ drawing ----
+  function pathFor(s) {
+    ctx.beginPath();
+    if (s.type === 'path') {
+      const p = s.pts, c = s.ctrls;
+      ctx.moveTo(p[0][0], p[0][1]);
+      for (let i = 0; i < p.length; i++) {
+        const nx = p[(i + 1) % p.length];
+        ctx.quadraticCurveTo(c[i][0], c[i][1], nx[0], nx[1]);
+      }
+      ctx.closePath();
+    } else if (s.type === 'capsule') {
+      const rx = Math.abs(s.rx), ry = Math.abs(s.ry);
+      ctx.moveTo(-rx, -ry + rx);
+      ctx.quadraticCurveTo(-rx, -ry, 0, -ry);
+      ctx.quadraticCurveTo(rx, -ry, rx, -ry + rx);
+      ctx.lineTo(rx, ry - rx);
+      ctx.quadraticCurveTo(rx, ry, 0, ry);
+      ctx.quadraticCurveTo(-rx, ry, -rx, ry - rx);
+      ctx.closePath();
+    } else if (s.type === 'leaf') {
+      const rx = Math.abs(s.rx), ry = Math.abs(s.ry);
+      ctx.moveTo(-rx, 0);
+      ctx.quadraticCurveTo(0, -ry, rx, 0);
+      ctx.quadraticCurveTo(0, ry, -rx, 0);
+      ctx.closePath();
+    } else {
+      ctx.ellipse(0, 0, Math.abs(s.rx), Math.abs(s.ry), 0, 0, Math.PI * 2);
+    }
+  }
+
+  function drawShape(s, counter) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    if (counter) ctx.rotate(counter);          // cancel the lean: stays upright
+    ctx.rotate((s.rot || 0) * Math.PI / 180);
+    ctx.globalAlpha = s.a == null ? 1 : s.a;
+    if (s.type === 'arc') {
+      ctx.strokeStyle = s.fill; ctx.lineWidth = s.lw || 1.4; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, Math.abs(s.rx), Math.abs(s.ry), 0, 0.15 * Math.PI, 0.85 * Math.PI);
+      ctx.stroke();
+    } else {
+      pathFor(s);
+      ctx.fillStyle = s.fill; ctx.fill();
+      if (s.lw > 0) {
+        ctx.strokeStyle = alpha(shade(s.fill, 0.3), 0.55);
+        ctx.lineWidth = 1.2; ctx.lineJoin = 'round'; ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  // Per-shape motion while the run is playing. Legs swing and lift out of
+  // phase; the rest of Mossu rides a small body bob; the rider stays still.
+  function motionFor(s) {
+    if (!playing || !s.m || s.m === 'none') return null;
+    const ph = clock * speed;
+    if (s.m === 'legA' || s.m === 'legB') {
+      const k = Math.sin(ph + (s.m === 'legB' ? Math.PI : 0));
+      return { dx: k * 6, dy: -Math.max(0, k) * 5 };
+    }
+    return { dx: 0, dy: -Math.abs(Math.sin(ph)) * 1.5 };
+  }
+
+  // Everything tilts together about the ground contact, so a forward lean
+  // reads as running rather than as the body sliding off its feet.
+  function drawAll() {
+    ctx.save();
+    const leanRad = lean * Math.PI / 180;
+    if (lean) ctx.rotate(-leanRad);
+    shapes.forEach((s) => {
+      // legs and anything else marked upright stay perpendicular to the
+      // ground while the body tips forward over them
+      const counter = s.up ? leanRad : 0;
+      const m = motionFor(s);
+      if (!m) { drawShape(s, counter); return; }
+      ctx.save(); ctx.translate(m.dx, m.dy); drawShape(s, counter); ctx.restore();
+    });
+    ctx.restore();
+  }
+
+  function paint() {
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#FBF6E7'; ctx.fillRect(0, 0, W, H);
+
+    if (show.grid) {
+      ctx.strokeStyle = 'rgba(160,140,95,.15)'; ctx.lineWidth = 1;
+      const step = 48 * ZOOM;
+      for (let x = originX % step; x < W; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = groundY % step; y < H; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+    }
+    ctx.strokeStyle = 'rgba(126,154,103,.85)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+
+    if (show.guides) {
+      ctx.save();
+      ctx.setLineDash([5, 4]); ctx.lineWidth = 1;
+      [[40, 'rgba(201,147,47,.6)', 'Lumi (40)'],
+       [50, 'rgba(160,140,95,.5)', '+25% (50)']].forEach(([h, col, label]) => {
+        const y = groundY - h * ZOOM;
+        ctx.strokeStyle = col;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(122,98,56,.9)'; ctx.font = '11px Georgia, serif';
+        ctx.textAlign = 'left'; ctx.fillText(label, 8, y - 4);
+      });
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    if (show.ghost) {
+      ctx.save();
+      ctx.translate(originX, groundY); ctx.scale(ZOOM, ZOOM);
+      ctx.globalAlpha = 0.15; ctx.fillStyle = '#6E8557';
+      refBody(); ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.translate(originX, groundY); ctx.scale(ZOOM, ZOOM);
+    drawAll();
+    ctx.restore();
+
+    drawHandles();
+    drawPreview();
+
+    // proof-of-life: if this counter isn't climbing, the loop is being
+    // throttled by the frame rather than the animation being wrong
+    if (playing) {
+      ctx.fillStyle = 'rgba(122,98,56,.75)';
+      ctx.font = '11px ui-monospace, Menlo, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('run · frame ' + frames + ' · phase ' +
+                   (clock * speed).toFixed(1), 10, H - 10);
+    }
+    ctx.restore();
+  }
+
+  function refBody() {
+    ctx.beginPath();
+    ctx.moveTo(MOSSU_PTS[0][0], MOSSU_PTS[0][1]);
+    for (let i = 0; i < MOSSU_PTS.length; i++) {
+      const nx = MOSSU_PTS[(i + 1) % MOSSU_PTS.length];
+      ctx.quadraticCurveTo(MOSSU_CTRLS[i][0], MOSSU_CTRLS[i][1], nx[0], nx[1]);
+    }
+    ctx.closePath();
+  }
+
+  function bboxOf(s) {
+    if (s.type !== 'path') return [Math.abs(s.rx), Math.abs(s.ry), 0, 0];
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    s.pts.forEach(([px, py]) => {
+      x0 = Math.min(x0, px); x1 = Math.max(x1, px);
+      y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    });
+    return [(x1 - x0) / 2, (y1 - y0) / 2, (x0 + x1) / 2, (y0 + y1) / 2];
+  }
+
+  function drawHandles() {
+    if (sel < 0 || sel >= shapes.length) return;
+    const s = shapes[sel];
+    if (s.type === 'path') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(196,106,78,.45)'; ctx.lineWidth = 1;
+      for (let i = 0; i < s.pts.length; i++) {
+        const [ax, ay] = toScreen(s.x + s.pts[i][0], s.y + s.pts[i][1]);
+        const nx = s.pts[(i + 1) % s.pts.length];
+        const [bx, by] = toScreen(s.x + nx[0], s.y + nx[1]);
+        const [hx, hy] = toScreen(s.x + s.ctrls[i][0], s.y + s.ctrls[i][1]);
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hx, hy); ctx.lineTo(bx, by); ctx.stroke();
+      }
+      s.ctrls.forEach((c, i) => {
+        const [hx, hy] = toScreen(s.x + c[0], s.y + c[1]);
+        const on = selPt && selPt.kind === 'ctrl' && selPt.i === i;
+        ctx.beginPath(); ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = on ? '#C46A4E' : '#FFF9E8'; ctx.fill();
+        ctx.strokeStyle = '#C46A4E'; ctx.lineWidth = 1.4; ctx.stroke();
+      });
+      s.pts.forEach((p, i) => {
+        const [ax, ay] = toScreen(s.x + p[0], s.y + p[1]);
+        const on = selPt && selPt.kind === 'anchor' && selPt.i === i;
+        ctx.fillStyle = on ? '#7E9A67' : '#C46A4E';
+        ctx.fillRect(ax - 4.5, ay - 4.5, 9, 9);
+        ctx.strokeStyle = '#FFF9E8'; ctx.lineWidth = 1.2;
+        ctx.strokeRect(ax - 4.5, ay - 4.5, 9, 9);
+      });
+      ctx.restore();
+      return;
+    }
+    const [cx, cy] = toScreen(s.x, s.y);
+    const rx = Math.abs(s.rx) * ZOOM, ry = Math.abs(s.ry) * ZOOM;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate((s.rot || 0) * Math.PI / 180);
+    ctx.strokeStyle = 'rgba(196,106,78,.9)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]); ctx.strokeRect(-rx, -ry, rx * 2, ry * 2);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#C46A4E';
+    ctx.fillRect(rx - 4, ry - 4, 8, 8);
+    ctx.beginPath(); ctx.arc(0, -ry - 16, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(196,106,78,.7)';
+    ctx.beginPath(); ctx.moveTo(0, -ry); ctx.lineTo(0, -ry - 11); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPreview() {
+    const pw = 156, ph = 116, px = W - pw - 12, py = 12;
+    ctx.save();
+    ctx.fillStyle = 'rgba(233,241,222,.95)';
+    ctx.strokeStyle = 'rgba(160,140,95,.45)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 9); ctx.fill(); ctx.stroke();
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 9); ctx.clip();
+    const gy = py + ph - 26;
+    ctx.strokeStyle = 'rgba(126,154,103,.7)';
+    ctx.beginPath(); ctx.moveTo(px, gy); ctx.lineTo(px + pw, gy); ctx.stroke();
+    ctx.translate(px + pw * 0.44, gy);
+    drawAll();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(122,98,56,.85)';
+    ctx.font = '10px Georgia, serif'; ctx.textAlign = 'center';
+    ctx.fillText('in-game size', px + pw / 2, py + ph - 7);
+    ctx.restore();
+  }
+
+  // -------------------------------------------------------- interaction ----
+  let drag = null;
+  function hit(wx, wy) {
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const s = shapes[i];
+      const [hw, hh, ox, oy] = bboxOf(s);
+      const a = -(s.rot || 0) * Math.PI / 180;
+      const dx = wx - s.x - ox, dy = wy - s.y - oy;
+      const lx = dx * Math.cos(a) - dy * Math.sin(a);
+      const ly = dx * Math.sin(a) + dy * Math.cos(a);
+      if (Math.abs(lx) <= hw + 1 && Math.abs(ly) <= hh + 1) return i;
+    }
+    return -1;
+  }
+  function pointAt(mx, my) {
+    if (sel < 0 || shapes[sel].type !== 'path') return null;
+    const s = shapes[sel];
+    for (let i = 0; i < s.pts.length; i++) {
+      const [ax, ay] = toScreen(s.x + s.pts[i][0], s.y + s.pts[i][1]);
+      if (Math.hypot(mx - ax, my - ay) < 9) return { kind:'anchor', i };
+    }
+    for (let i = 0; i < s.ctrls.length; i++) {
+      const [cx, cy] = toScreen(s.x + s.ctrls[i][0], s.y + s.ctrls[i][1]);
+      if (Math.hypot(mx - cx, my - cy) < 8) return { kind:'ctrl', i };
+    }
+    return null;
+  }
+  function handleAt(mx, my) {
+    if (sel < 0 || shapes[sel].type === 'path') return null;
+    const s = shapes[sel];
+    const [cx, cy] = toScreen(s.x, s.y);
+    const a = (s.rot || 0) * Math.PI / 180;
+    const rx = Math.abs(s.rx) * ZOOM, ry = Math.abs(s.ry) * ZOOM;
+    const pt = (lx, ly) => [cx + lx * Math.cos(a) - ly * Math.sin(a),
+                            cy + lx * Math.sin(a) + ly * Math.cos(a)];
+    const [sx, sy] = pt(rx, ry);
+    if (Math.hypot(mx - sx, my - sy) < 10) return 'scale';
+    const [rxx, ryy] = pt(0, -ry - 16);
+    if (Math.hypot(mx - rxx, my - ryy) < 10) return 'rotate';
+    return null;
+  }
+
+  cv.addEventListener('pointerdown', (e) => {
+    cv.setPointerCapture(e.pointerId);
+    const r = cv.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const [wx, wy] = toWorld(mx, my);
+
+    if (tool) {
+      pushUndo();
+      const g = sel >= 0 ? shapes[sel].g : 'mossu';
+      shapes.push({
+        g, name:tool, type:tool, x:Math.round(wx), y:Math.round(wy), rot:0,
+        rx: tool === 'capsule' ? 4 : tool === 'dot' ? 2 : 8,
+        ry: tool === 'capsule' ? 7 : tool === 'leaf' ? 3.5 : tool === 'dot' ? 2 : 8,
+        fill:colour, a:1, lw: tool === 'dot' ? 0 : 2,
+      });
+      sel = shapes.length - 1; selPt = null;
+      setTool(null); persist(); refresh();
+      return;
+    }
+
+    const p = pointAt(mx, my);
+    if (p) {
+      pushUndo(); selPt = p;
+      const s = shapes[sel];
+      const src = p.kind === 'anchor' ? s.pts[p.i] : s.ctrls[p.i];
+      drag = { mode:'pt', wx, wy, from:{ x:src[0], y:src[1] } };
+      buildInsp(); paint(); return;
+    }
+    const h = handleAt(mx, my);
+    if (h) {
+      pushUndo();
+      drag = { mode:h, wx, wy, from:Object.assign({}, shapes[sel]) };
+      return;
+    }
+
+    const i = hit(wx, wy);
+    if (i !== sel) selPt = null;
+    sel = i;
+    if (i >= 0) {
+      pushUndo();
+      const g = shapes[i].g;
+      const members = show.group ? shapes.filter((s) => s.g === g) : [shapes[i]];
+      drag = { mode:'move', wx, wy,
+               members: members.map((s) => ({ s, x:s.x, y:s.y })) };
+    }
+    refresh();
+  });
+
+  cv.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const r = cv.getBoundingClientRect();
+    const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top);
+    const dx = wx - drag.wx, dy = wy - drag.wy;
+    const s = shapes[sel];
+    if (drag.mode === 'move') {
+      drag.members.forEach((m) => {
+        m.s.x = Math.round((m.x + dx) * 2) / 2;
+        m.s.y = Math.round((m.y + dy) * 2) / 2;
+      });
+    } else if (drag.mode === 'pt') {
+      const t = selPt.kind === 'anchor' ? s.pts[selPt.i] : s.ctrls[selPt.i];
+      t[0] = Math.round((drag.from.x + dx) * 2) / 2;
+      t[1] = Math.round((drag.from.y + dy) * 2) / 2;
+    } else if (drag.mode === 'scale') {
+      s.rx = Math.max(0.5, Math.round((drag.from.rx + dx) * 10) / 10);
+      s.ry = Math.max(0.5, Math.round((drag.from.ry + dy) * 10) / 10);
+    } else if (drag.mode === 'rotate') {
+      s.rot = Math.round(Math.atan2(wy - s.y, wx - s.x) * 180 / Math.PI + 90);
+    }
+    buildInsp(); paint();
+  });
+  ['pointerup', 'pointercancel'].forEach((ev) =>
+    cv.addEventListener(ev, () => { if (drag) { drag = null; persist(); } }));
+
+  function step(dir) {
+    const j = sel + dir;
+    if (j < 0 || j >= shapes.length) return;
+    const [s] = shapes.splice(sel, 1); shapes.splice(j, 0, s); sel = j;
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+    if (sel < 0) return;
+    const s = shapes[sel], d = e.shiftKey ? 10 : 1;
+    const nudge = (ax, ay) => {
+      const g = s.g;
+      (show.group ? shapes.filter((n) => n.g === g) : [s]).forEach((n) => { n.x += ax; n.y += ay; });
+    };
+    if (e.key === 'ArrowLeft') { pushUndo(); nudge(-d, 0); }
+    else if (e.key === 'ArrowRight') { pushUndo(); nudge(d, 0); }
+    else if (e.key === 'ArrowUp') { pushUndo(); nudge(0, -d); }
+    else if (e.key === 'ArrowDown') { pushUndo(); nudge(0, d); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') { pushUndo(); shapes.splice(sel, 1); sel = -1; selPt = null; }
+    else if (e.key === '[') { pushUndo(); step(-1); }
+    else if (e.key === ']') { pushUndo(); step(1); }
+    else if (e.key.toLowerCase() === 'd') {
+      pushUndo();
+      shapes.splice(sel + 1, 0, JSON.parse(JSON.stringify(
+        Object.assign({}, s, { x:s.x + 4, y:s.y + 4 }))));
+      sel += 1;
+    } else return;
+    e.preventDefault(); persist(); refresh();
+  });
+
+  // -------------------------------------------------------------- panels ---
+  const toolsEl = document.getElementById('tools');
+  SHAPES.forEach(([t, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label; b.dataset.t = t;
+    b.onclick = () => setTool(tool === t ? null : t);
+    toolsEl.appendChild(b);
+  });
+  function setTool(t) {
+    tool = t;
+    [...toolsEl.children].forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+    cv.style.cursor = t ? 'crosshair' : 'default';
+  }
+
+  const swEl = document.getElementById('swatches');
+  PAL.forEach(([name, hex]) => {
+    const i = document.createElement('i');
+    i.style.background = hex; i.title = name; i.dataset.hex = hex;
+    i.onclick = () => {
+      colour = hex;
+      [...swEl.children].forEach((n) => n.classList.toggle('on', n.dataset.hex === hex));
+      if (sel >= 0) { pushUndo(); shapes[sel].fill = hex; persist(); refresh(); }
+    };
+    swEl.appendChild(i);
+  });
+  swEl.firstChild.classList.add('on');
+
+  const togEl = document.getElementById('toggles');
+  [['group','Move whole character'], ['grid','Grid & tiles'],
+   ['guides','Height guides'], ['ghost','Trace old Mossu']].forEach(([k, label]) => {
+    const b = document.createElement('button');
+    b.textContent = label; b.classList.toggle('on', show[k]);
+    b.onclick = () => { show[k] = !show[k]; b.classList.toggle('on', show[k]); paint(); };
+    togEl.appendChild(b);
+  });
+
+  const leanEl = document.getElementById('lean');
+  const speedEl = document.getElementById('speed');
+  leanEl.value = lean; speedEl.value = speed;
+  leanEl.oninput = () => { lean = parseFloat(leanEl.value) || 0; persist(); paint(); };
+  speedEl.oninput = () => { speed = parseFloat(speedEl.value) || 0; persist(); };
+  // The phase comes from the wall clock, and repaints are driven by BOTH a
+  // timer and requestAnimationFrame. Embedded panes and artifact frames
+  // throttle one or the other, so whichever survives keeps the run moving —
+  // and because the phase is time-based, a throttled frame still shows the
+  // correct pose rather than a stalled one.
+  const playBtn = document.getElementById('btnPlay');
+  let timer = null, t0 = 0, frames = 0;
+  function tick() {
+    if (!playing) return;
+    clock = (performance.now() - t0) / 1000;
+    frames++;
+    paint();
+  }
+  function rafTick() { if (!playing) return; tick(); requestAnimationFrame(rafTick); }
+  playBtn.onclick = () => {
+    playing = !playing;
+    playBtn.classList.toggle('on', playing);
+    playBtn.textContent = playing ? 'Stop' : 'Play run';
+    if (timer) { clearInterval(timer); timer = null; }
+    if (playing) {
+      t0 = performance.now(); frames = 0;
+      timer = setInterval(tick, 40);
+      requestAnimationFrame(rafTick);
+    } else { paint(); }
+  };
+
+  const inspEl = document.getElementById('insp');
+  function field(label, val, stepv, cb) {
+    const l = document.createElement('label');
+    l.className = 'f';
+    l.innerHTML = '<span>' + label + '</span>';
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.value = val; inp.step = stepv;
+    inp.oninput = () => { pushUndo(); cb(parseFloat(inp.value) || 0); persist(); paint(); };
+    l.appendChild(inp); return l;
+  }
+  function mkBtn(txt, fn) {
+    const b = document.createElement('button');
+    b.textContent = txt;
+    b.onclick = () => { pushUndo(); fn(); persist(); refresh(); };
+    return b;
+  }
+
+  function buildInsp() {
+    inspEl.innerHTML = '';
+    if (sel < 0 || sel >= shapes.length) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.innerHTML = 'Nothing selected.<br><br>Click any part of either character. ' +
+        'With <b>Move whole character</b> on, dragging moves everything in that group.';
+      inspEl.appendChild(p); return;
+    }
+    const s = shapes[sel];
+    const t = document.createElement('p');
+    t.className = 'hint';
+    t.innerHTML = '<b>' + (s.name || s.type) + '</b> &middot; ' + s.g +
+      (s.type === 'path'
+        ? '<br>Squares move the edge; circles bend the curve into the next square.'
+        : '');
+    inspEl.appendChild(t);
+
+    if (s.type === 'path') {
+      if (selPt && selPt.kind === 'anchor') {
+        const pt = s.pts[selPt.i];
+        inspEl.appendChild(field('point x', pt[0], 0.5, (v) => pt[0] = v));
+        inspEl.appendChild(field('point y', pt[1], 0.5, (v) => pt[1] = v));
+      }
+      inspEl.appendChild(mkBtn('Add point after', () => {
+        const i = selPt && selPt.kind === 'anchor' ? selPt.i : s.pts.length - 1;
+        const a = s.pts[i], b = s.pts[(i + 1) % s.pts.length], c = s.ctrls[i];
+        s.pts.splice(i + 1, 0, [(a[0] + 2 * c[0] + b[0]) / 4, (a[1] + 2 * c[1] + b[1]) / 4]);
+        s.ctrls.splice(i, 1, [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2],
+                             [(c[0] + b[0]) / 2, (c[1] + b[1]) / 2]);
+        selPt = { kind:'anchor', i:i + 1 };
+      }));
+      if (selPt && selPt.kind === 'anchor' && s.pts.length > 3) {
+        inspEl.appendChild(mkBtn('Remove this point', () => {
+          s.pts.splice(selPt.i, 1); s.ctrls.splice(selPt.i, 1); selPt = null;
+        }));
+      }
+    } else {
+      inspEl.appendChild(field('x', s.x, 0.5, (v) => s.x = v));
+      inspEl.appendChild(field('y', s.y, 0.5, (v) => s.y = v));
+      inspEl.appendChild(field('width', s.rx, 0.5, (v) => s.rx = v));
+      inspEl.appendChild(field('height', s.ry, 0.5, (v) => s.ry = v));
+      inspEl.appendChild(field('rotate', s.rot || 0, 1, (v) => s.rot = v));
+    }
+    inspEl.appendChild(field('opacity', s.a == null ? 1 : s.a, 0.05, (v) => s.a = v));
+    inspEl.appendChild(field('outline', s.lw == null ? 2 : s.lw, 1, (v) => s.lw = v));
+
+    const ml = document.createElement('label');
+    ml.className = 'f';
+    ml.innerHTML = '<span>moves as</span>';
+    const msel = document.createElement('select');
+    msel.style.cssText = 'font:inherit;font-size:.75rem;padding:2px;border:1px solid #DCCEA6;' +
+                         'border-radius:5px;background:#FFF;color:inherit;width:86px';
+    [['none','still'], ['body','with body'], ['legA','leg A'], ['legB','leg B']]
+      .forEach(([v, label]) => {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = label;
+        if ((s.m || 'none') === v) o.selected = true;
+        msel.appendChild(o);
+      });
+    msel.onchange = () => { pushUndo(); s.m = msel.value; persist(); paint(); };
+    ml.appendChild(msel);
+    inspEl.appendChild(ml);
+
+    const ul = document.createElement('label');
+    ul.className = 'f';
+    ul.innerHTML = '<span>stay upright</span>';
+    const ubox = document.createElement('input');
+    ubox.type = 'checkbox'; ubox.checked = !!s.up;
+    ubox.style.width = 'auto';
+    ubox.onchange = () => { pushUndo(); s.up = ubox.checked; persist(); paint(); };
+    ul.appendChild(ubox);
+    inspEl.appendChild(ul);
+
+    const row = document.createElement('div'); row.className = 'row';
+    row.appendChild(mkBtn('back', () => step(-1)));
+    row.appendChild(mkBtn('forward', () => step(1)));
+    inspEl.appendChild(row);
+    inspEl.appendChild(mkBtn(
+      s.g === 'lumi' ? 'Move behind Lumi' : 'Move behind the rider', () => {
+        const first = shapes.findIndex((n) => n.g === 'lumi');
+        if (first < 0 || sel === first) return;
+        const [m] = shapes.splice(sel, 1);
+        shapes.splice(shapes.findIndex((n) => n.g === 'lumi'), 0, m);
+        sel = shapes.indexOf(m);
+      }));
+    inspEl.appendChild(mkBtn('Move in front of the rider', () => {
+      let last = -1;
+      shapes.forEach((n, i) => { if (n.g === 'lumi') last = i; });
+      if (last < 0) return;
+      const [m] = shapes.splice(sel, 1);
+      let l2 = -1; shapes.forEach((n, i) => { if (n.g === 'lumi') l2 = i; });
+      shapes.splice(l2 + 1, 0, m); sel = shapes.indexOf(m);
+    }));
+    inspEl.appendChild(mkBtn('Duplicate', () => {
+      shapes.splice(sel + 1, 0, JSON.parse(JSON.stringify(
+        Object.assign({}, s, { x:s.x + 4, y:s.y + 4 })))); sel += 1;
+    }));
+    inspEl.appendChild(mkBtn('Delete', () => { shapes.splice(sel, 1); sel = -1; selPt = null; }));
+  }
+
+  const layersEl = document.getElementById('layers');
+  function buildLayers() {
+    layersEl.innerHTML = '';
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const s = shapes[i];
+      const d = document.createElement('div');
+      d.className = 'lay' + (s.g === 'lumi' ? ' lumi' : '') + (i === sel ? ' on' : '');
+      const tag = document.createElement('span');
+      tag.className = 'tag'; tag.textContent = s.g === 'lumi' ? 'L' : 'M';
+      const nm = document.createElement('span');
+      nm.className = 'nm'; nm.textContent = s.name || s.type;
+      const chip = document.createElement('span');
+      chip.className = 'chip'; chip.style.background = s.fill;
+      d.appendChild(tag); d.appendChild(nm); d.appendChild(chip);
+      d.onclick = () => { sel = i; selPt = null; refresh(); };
+      layersEl.appendChild(d);
+    }
+  }
+
+  // -------------------------------------------------------------- output ---
+  function emit() {
+    const n = (v) => Math.round(v * 100) / 100;
+    const L = [];
+    L.push('// Lumi & Mossu — composed in the shape lab.');
+    L.push('// Drawn back-to-front; the rider sits wherever its layers fall.');
+    L.push('function drawPair(ctx, x, y, opts) {');
+    L.push('  opts = opts || {};');
+    L.push('  const f = opts.facing || 1, K = opts.scale || 1;');
+    L.push('  ctx.save();');
+    L.push('  ctx.translate(x, y); ctx.scale(f * K, K);');
+    if (lean) L.push('  ctx.rotate(' + (-lean) + ' * Math.PI / 180);   // forward lean');
+    let lastG = null;
+    shapes.forEach((s) => {
+      if (s.g !== lastG) { L.push(''); L.push('  // ---- ' + s.g + ' ----'); lastG = s.g; }
+      if (s.m && s.m !== 'none') L.push('  // moves as: ' + s.m);
+      L.push('  ctx.save();');
+      L.push('  ctx.translate(' + n(s.x) + ', ' + n(s.y) + ');' +
+             (s.up && lean ? ' ctx.rotate(' + lean + ' * Math.PI / 180);   // upright' : '') +
+             (s.rot ? ' ctx.rotate(' + n(s.rot) + ' * Math.PI / 180);' : ''));
+      if (s.a != null && s.a < 1) L.push('  ctx.globalAlpha = ' + n(s.a) + ';');
+      const rx = n(Math.abs(s.rx)), ry = n(Math.abs(s.ry));
+      if (s.type === 'path') {
+        const p = s.pts, c = s.ctrls;
+        L.push('  ctx.beginPath();');
+        L.push('  ctx.moveTo(' + n(p[0][0]) + ', ' + n(p[0][1]) + ');');
+        for (let i = 0; i < p.length; i++) {
+          const nx = p[(i + 1) % p.length];
+          L.push('  ctx.quadraticCurveTo(' + n(c[i][0]) + ', ' + n(c[i][1]) +
+                 ', ' + n(nx[0]) + ', ' + n(nx[1]) + ');');
+        }
+        L.push('  ctx.closePath();');
+      } else if (s.type === 'arc') {
+        L.push('  ctx.strokeStyle = \'' + s.fill + '\'; ctx.lineWidth = ' + (s.lw || 1.4) + '; ctx.lineCap = \'round\';');
+        L.push('  ctx.beginPath();');
+        L.push('  ctx.ellipse(0, 0, ' + rx + ', ' + ry + ', 0, 0.15 * Math.PI, 0.85 * Math.PI);');
+        L.push('  ctx.stroke();');
+      } else if (s.type === 'capsule') {
+        L.push('  ctx.beginPath();');
+        L.push('  ctx.moveTo(' + (-rx) + ', ' + n(-ry + Math.abs(s.rx)) + ');');
+        L.push('  ctx.quadraticCurveTo(' + (-rx) + ', ' + (-ry) + ', 0, ' + (-ry) + ');');
+        L.push('  ctx.quadraticCurveTo(' + rx + ', ' + (-ry) + ', ' + rx + ', ' + n(-ry + Math.abs(s.rx)) + ');');
+        L.push('  ctx.lineTo(' + rx + ', ' + n(ry - Math.abs(s.rx)) + ');');
+        L.push('  ctx.quadraticCurveTo(' + rx + ', ' + ry + ', 0, ' + ry + ');');
+        L.push('  ctx.quadraticCurveTo(' + (-rx) + ', ' + ry + ', ' + (-rx) + ', ' + n(ry - Math.abs(s.rx)) + ');');
+        L.push('  ctx.closePath();');
+      } else if (s.type === 'leaf') {
+        L.push('  ctx.beginPath();');
+        L.push('  ctx.moveTo(' + (-rx) + ', 0);');
+        L.push('  ctx.quadraticCurveTo(0, ' + (-ry) + ', ' + rx + ', 0);');
+        L.push('  ctx.quadraticCurveTo(0, ' + ry + ', ' + (-rx) + ', 0);');
+        L.push('  ctx.closePath();');
+      } else {
+        L.push('  ctx.beginPath();');
+        L.push('  ctx.ellipse(0, 0, ' + rx + ', ' + ry + ', 0, 0, Math.PI * 2);');
+      }
+      if (s.type !== 'arc') {
+        L.push('  ctx.fillStyle = \'' + s.fill + '\'; ctx.fill();');
+        if (s.lw > 0) {
+          L.push('  ctx.strokeStyle = alpha(shade(\'' + s.fill + '\', 0.3), 0.55);');
+          L.push('  ctx.lineWidth = 1.2; ctx.lineJoin = \'round\'; ctx.stroke();');
+        }
+      }
+      L.push('  ctx.restore();');
+    });
+    L.push('');
+    L.push('  ctx.restore();');
+    L.push('}');
+    return L.join('\n');
+  }
+
+  function showText(v, onChange) {
+    const ta = document.createElement('textarea');
+    ta.value = v || '';
+    if (onChange) { ta.placeholder = 'Paste JSON, then click away'; ta.onchange = () => onChange(ta); }
+    inspEl.innerHTML = ''; inspEl.appendChild(ta);
+    if (!onChange) { ta.select(); try { document.execCommand('copy'); } catch (e) {} }
+  }
+  document.getElementById('btnCode').onclick = () => showText(emit());
+  document.getElementById('btnSave').onclick = () => showText(JSON.stringify({ shapes, lean, speed }));
+  document.getElementById('btnLoad').onclick = () => showText('', (ta) => {
+    try {
+      const d = JSON.parse(ta.value);
+      pushUndo(); shapes = d.shapes;
+      if (d.lean != null) { lean = d.lean; leanEl.value = lean; }
+      if (d.speed != null) { speed = d.speed; speedEl.value = speed; }
+      sel = -1; selPt = null; persist(); refresh();
+    } catch (e) { ta.value = 'Could not read that JSON.'; }
+  });
+  document.getElementById('btnReset').onclick = () => {
+    pushUndo(); shapes = DEFAULT(); lean = -14; leanEl.value = -14;
+    sel = -1; selPt = null; persist(); refresh();
+  };
+
+  window.addEventListener('resize', resize);
+  buildLayers(); buildInsp(); resize();
+})();
+</script>
+</body>
+</html>

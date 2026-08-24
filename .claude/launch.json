@@ -4,14 +4,42 @@
     {
       "name": "gems-static",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8437"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8437"
+      ],
       "port": 8437
     },
     {
       "name": "gems-static-alt",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8438"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8438"
+      ],
       "port": 8438
+    },
+    {
+      "name": "gems-static-alt2",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8439"
+      ],
+      "port": 8439
+    },
+    {
+      "name": "gems-sketch-lab",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "exec python3 -m http.server \"$PORT\""
+      ],
+      "port": 8441,
+      "autoPort": true
     }
   ]
 }
