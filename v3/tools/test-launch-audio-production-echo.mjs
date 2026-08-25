@@ -48,8 +48,7 @@ assert.equal(run.GOL.V3.echo, 'off', 'leaving debug did not disable ambient echo
 run = load('?lab=20&echo=world', {});
 assert.equal(run.GOL.V3.echo, 'world', 'the explicit lab experiment was lost');
 
-const row = "{ label: 'ambient echo', opts: ['off', 'near', 'world']";
-assert.ok(ui.includes(`...(GOL.DEBUG\n          ? [${row}`), 'ambient echo is not guarded by debug in settings');
-assert.equal((ui.match(/label: 'ambient echo'/g) || []).length, 1, 'ambient echo leaked through another settings row');
+assert.equal((ui.match(/label: 'ambient echo'/g) || []).length, 0,
+  'the retired title Settings UI still exposes ambient echo');
 
 console.log('✓ production ignores and migrates stale echo; debug/lab remains explicit');
