@@ -224,14 +224,14 @@
       }
     },
     // Play one ayah. Always eventually calls onend (never blocks the child).
-    playVerse(surahId, n, onend) {
+    playVerse(surahId, n, onend, opts) {
       if (GOL.EXPERIENCE && !GOL.EXPERIENCE.recitation) {
         if (onend) setTimeout(onend, 0);
         return null;
       }
       this.stopSpeak(); // narration always yields to the Qur'an
       this.stopRecitation();
-      return this._verse(surahId, n, onend, false);
+      return this._verse(surahId, n, onend, false, opts);
     },
     // A soft, distant hearing of an ayah — the world gently calling the
     // child toward its gem. Quieter than a recitation and never allowed
@@ -245,7 +245,7 @@
     },
     // The raw player. inSeq skips the stop/unduck so a running surah
     // recitation can call it verse after verse without ending itself.
-    _verse(surahId, n, onend, inSeq) {
+    _verse(surahId, n, onend, inSeq, opts) {
       const rec = this._reciter();
       const key = this.key(surahId, n);
       const el = this._verseAudio();
@@ -274,6 +274,15 @@
       };
       let triedRemote = false;
       const onEnded = () => finish();
+      // A few otherwise healthy source files retain a measurable silent tail.
+      // Callers may opt a single playback into an audible endpoint; all other
+      // recitations continue to rely on the media element's natural `ended`.
+      const endAt = opts && Number.isFinite(opts.endAt) ? Math.max(0, opts.endAt) : null;
+      const onTimeUpdate = () => {
+        if (endAt == null || el.currentTime < endAt) return;
+        el.pause();
+        finish();
+      };
       const onError = () => {
         // local miss or a stalled load: fall back to the streaming reciter
         // ONCE, and actually resume playback on it — otherwise the fallback
@@ -291,10 +300,12 @@
       el._detach = () => {
         el.removeEventListener('ended', onEnded);
         el.removeEventListener('error', onError);
+        if (endAt != null) el.removeEventListener('timeupdate', onTimeUpdate);
         el._detach = null;
       };
       el.addEventListener('ended', onEnded);
       el.addEventListener('error', onError);
+      if (endAt != null) el.addEventListener('timeupdate', onTimeUpdate);
       el.muted = this.muted;
       el.volume = 1;
       el.src = rec.local + key + '.mp3';

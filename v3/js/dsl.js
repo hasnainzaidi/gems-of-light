@@ -14,10 +14,21 @@
       gems: [], props: [], creatures: [], waterfalls: [],
       seeds: [], pads: [], moverDefs: [], gallops: [], occluders: [], blossomPos: null,
       memoryPos: null, lightboxes: [],
+      groundBloomRow: h, groundBloomSpan: 0,
       startPos: null, campfirePos: null, doorPos: null,
       set(x, y, v) { if (x >= 0 && x < w && y >= 0 && y < h) tiles[y * w + x] = v; },
       get(x, y) { return x < 0 || x >= w || y < 0 || y >= h ? 0 : tiles[y * w + x]; },
-      ground(x0, x1, top) { for (let x = x0; x <= x1; x++) for (let y = top; y < h; y++) this.set(x, y, 1); return b; },
+      ground(x0, x1, top) {
+        const span = x1 - x0 + 1;
+        // The widest declared ground run is the world's base soil. Later
+        // block/slab calls may shape the route but cannot redefine a flowerbed.
+        if (span > this.groundBloomSpan) {
+          this.groundBloomRow = top;
+          this.groundBloomSpan = span;
+        }
+        for (let x = x0; x <= x1; x++) for (let y = top; y < h; y++) this.set(x, y, 1);
+        return b;
+      },
       carve(x0, x1, y0, y1) { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) this.set(x, y, 0); return b; },
       water(x0, x1, top) {
         top = top == null ? 13 : top;
@@ -88,8 +99,15 @@
       },
       // a raft drifting steadily downstream (x0 → x1), then slipping back to
       // begin again — end its run AT a bank so riders simply step off
-      raft(x0, x1, row, speed) {
-        this.moverDefs.push({ kind: 'raft', x0: (x0 + 0.5) * TILE, x1: (x1 + 0.5) * TILE, y: (row + 0.4) * TILE, hw: 56, speed: speed || 64 });
+      raft(x0, x1, row, speed, opts) {
+        const def = { kind: 'raft', x0: (x0 + 0.5) * TILE, x1: (x1 + 0.5) * TILE, y: (row + 0.4) * TILE, hw: 56, speed: speed || 64 };
+        // Most ferries begin at their left bank. A level may instead stage one
+        // just beyond the approaching camera and send it toward that bank, so
+        // the child sees it arrive without watching a whole empty crossing.
+        if (opts && Number.isFinite(opts.startX)) def.startX = (opts.startX + 0.5) * TILE;
+        if (opts && opts.startDir === -1) def.startDir = -1;
+        if (opts && Number.isFinite(opts.wakeX)) def.wakeX = (opts.wakeX + 0.5) * TILE;
+        this.moverDefs.push(def);
         return b;
       },
       // a flat stretch where moving east feels like wind at the child's back
@@ -138,8 +156,33 @@
   }
   GOL.makeBuilder = makeBuilder;
 
+  // Flowers belong to the world's base soil: the widest authored ground run.
+  // Slabs, raised boxes and stepping stones are play geometry, while water
+  // and air are not planting beds.
+  function findGroundBloomRow(b) {
+    if (b.groundBloomSpan > 0) return b.groundBloomRow;
+    const rows = new Map();
+    for (let x = 0; x < b.w; x++) {
+      const s = b.surface(x);
+      if (s >= b.h || b.get(x, s) !== 1) continue;
+      rows.set(s, (rows.get(s) || 0) + 1);
+    }
+    let row = b.h, count = 0;
+    for (const [candidate, n] of rows) {
+      if (n > count) { row = candidate; count = n; }
+    }
+    return row;
+  }
+
+  function groundBloomSurface(b, x, row) {
+    const s = b.surface(x);
+    if (s !== row || s >= b.h || b.get(x, s) !== 1) return b.h;
+    if (s > 0 && b.get(x, s - 1) !== 0) return b.h;
+    return s;
+  }
+
   // Sprinkle grass tufts, flowers and the occasional butterfly on walkable tops.
-  function decorate(b, seed, density) {
+  function decorate(b, seed, density, groundBloomRow) {
     const r = GOL.rng(seed);
     for (let x = 1; x < b.w - 1; x++) {
       const s = b.surface(x);
@@ -148,13 +191,17 @@
       if (r() < (density || 0.16)) {
         const roll = r();
         if (roll < 0.45) b.props.push({ type: 'tuft', x: (x + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 3) });
-        else if (roll < 0.75) b.props.push({ type: 'flowers', x: (x + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 3) });
+        else if (roll < 0.75 && groundBloomSurface(b, x, groundBloomRow) < b.h) {
+          b.props.push({ type: 'flowers', x: (x + 0.5) * TILE, y: groundBloomRow * TILE, v: Math.floor(r() * 3) });
+        }
         else if (roll < 0.9) b.props.push({ type: 'bush', x: (x + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 3) });
         else b.creatures.push({ type: 'butterfly', x: (x + 0.5) * TILE, y: (s - 2.2) * TILE, homeX: (x + 0.5) * TILE, homeY: (s - 2.2) * TILE, phase: r() * 7, t: 0, colA: ['#F0C878', '#E8896B', '#C9A8E0'][Math.floor(r() * 3)], colB: '#F7EFDA' });
       }
     }
   }
   GOL.decorate = decorate;
+  GOL.findGroundBloomRow = findGroundBloomRow;
+  GOL.groundBloomSurface = groundBloomSurface;
 
   // Prototype registry: p<N>.js files add themselves here.
   GOL.PROTOTYPES = {};
@@ -163,7 +210,17 @@
   GOL.buildPrototype = function (def) {
     const b = makeBuilder(def.w, def.h);
     def.build(b);
-    decorate(b, 1000 + def.id * 77, def.density != null ? def.density : 0.15);
+    const groundBloomRow = findGroundBloomRow(b);
+    // Authored flower props obey the same contract as restoration blooms.
+    // Invalid flowers are omitted instead of being teleported to unrelated
+    // scenery elsewhere in the level.
+    b.props = b.props.filter((p) => {
+      if (p.type !== 'flowers') return true;
+      const x = Math.floor(p.x / TILE);
+      const s = groundBloomSurface(b, x, groundBloomRow);
+      return s < b.h && p.y === s * TILE;
+    });
+    decorate(b, 1000 + def.id * 77, def.density != null ? def.density : 0.15, groundBloomRow);
     const surahId = GOL.V3.surah || def.surahId;
     const surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
     if (surah && surah.verses.length !== b.gems.length && typeof console !== 'undefined') {
@@ -197,9 +254,15 @@
       drawLandmark: def.drawLandmark || null,
       flock: def.flock ? Object.assign({}, def.flock) : null,
       bloomScale: def.bloomScale,
+      // One global garden rule: flowers only grow from the base soil.
+      groundBloomsOnly: true,
+      groundBloomRow,
       bloomBanks: Array.isArray(def.bloomBanks) ? def.bloomBanks.map((r) => r.slice()) : null,
       bloomAhead: def.bloomAhead ? Object.assign({}, def.bloomAhead) : null,
       gemFx: def.gemFx ? Object.assign({}, def.gemFx) : null,
+      // Optional audible endpoints for individual gem recitations whose
+      // source files contain a verified terminal-silence tail.
+      verseEndAt: def.verseEndAt ? Object.assign({}, def.verseEndAt) : null,
       // Debug-lab metadata. These are inert for ordinary worlds, but let a
       // long-surah experiment reuse a real recipe without touching that
       // world's progress or changing the shared adventure/shrine contract.

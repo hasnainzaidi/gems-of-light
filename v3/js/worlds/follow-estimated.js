@@ -427,10 +427,13 @@
         { text: "أَنْعَمْتَ", from: 2.34, to: 3.44 },
         { text: "عَلَيْهِمْ", from: 3.44, to: 4.67 },
         { text: "غَيْرِ", from: 4.67, to: 5.46 },
-        { text: "ٱلْمَغْضُوبِ", from: 5.46, to: 7.14 },
-        { text: "عَلَيْهِمْ", from: 7.14, to: 8.37 },
-        { text: "وَلَا", from: 8.37, to: 9.30 },
-        { text: "ٱلضَّآلِّينَ", from: 9.30, to: 13.27 }
+        // The generic letter estimate underweighted the six-count final
+        // cadence. Keep this tail aligned to the shipped Alafasy recording:
+        // ad-daalleen owns the long held vowel and closing recitation tail.
+        { text: "ٱلْمَغْضُوبِ", from: 5.46, to: 6.68 },
+        { text: "عَلَيْهِمْ", from: 6.68, to: 7.35 },
+        { text: "وَلَا", from: 7.35, to: 7.90 },
+        { text: "ٱلضَّآلِّينَ", from: 7.90, to: 13.27 }
       ]
     }
   };
@@ -540,7 +543,7 @@
   // quraish (surah 106)
   GOL.WORD_FOLLOW.alafasy[106] = {
     provenance: "ESTIMATED (mora-weighted, unvalidated) from local alafasy mp3 durations; refine by ear",
-    audioDurations: [4.6498, 8.8816, 5.982, 13.5837],
+    audioDurations: [4.6498, 8.8816, 5.982, 13.4932],
     verses: {
       1: [
         { text: "لِإِيلَـٰفِ", from: 0.00, to: 2.49 },
@@ -565,7 +568,7 @@
         { text: "جُوعٍ", from: 5.59, to: 6.93 },
         { text: "وَءَامَنَهُم", from: 6.93, to: 9.68 },
         { text: "مِّنْ", from: 9.68, to: 10.61 },
-        { text: "خَوْفٍۭ", from: 10.61, to: 13.58 }
+        { text: "خَوْفٍۭ", from: 10.61, to: 12.69 }
       ]
     }
   };
@@ -808,6 +811,64 @@
       11: [
         { text: "نَارٌ", from: 0.00, to: 1.68 },
         { text: "حَامِيَةٌۢ", from: 1.68, to: 5.07 }
+      ]
+    }
+  };
+
+  // tin (surah 95)
+  GOL.WORD_FOLLOW.alafasy[95] = {
+    provenance: "ESTIMATED (mora-weighted, unvalidated) from local alafasy mp3 durations; refine by ear",
+    audioDurations: [4.7414, 4.0767, 4.7857, 8.6852, 6.957, 10.5316, 6.0368, 8.3722],
+    verses: {
+      1: [
+        { text: "وَٱلتِّينِ", from: 0.00, to: 2.03 },
+        { text: "وَٱلزَّيْتُونِ", from: 2.03, to: 4.74 }
+      ],
+      2: [
+        { text: "وَطُورِ", from: 0.00, to: 1.87 },
+        { text: "سِينِينَ", from: 1.87, to: 4.08 }
+      ],
+      3: [
+        { text: "وَهَـٰذَا", from: 0.00, to: 1.68 },
+        { text: "ٱلْبَلَدِ", from: 1.68, to: 3.00 },
+        { text: "ٱلْأَمِينِ", from: 3.00, to: 4.79 }
+      ],
+      4: [
+        { text: "لَقَدْ", from: 0.00, to: 0.90 },
+        { text: "خَلَقْنَا", from: 0.90, to: 2.64 },
+        { text: "ٱلْإِنسَـٰنَ", from: 2.64, to: 4.67 },
+        { text: "فِىٓ", from: 4.67, to: 5.51 },
+        { text: "أَحْسَنِ", from: 5.51, to: 6.71 },
+        { text: "تَقْوِيمٍ", from: 6.71, to: 8.69 }
+      ],
+      5: [
+        { text: "ثُمَّ", from: 0.00, to: 0.98 },
+        { text: "رَدَدْنَـٰهُ", from: 0.98, to: 3.10 },
+        { text: "أَسْفَلَ", from: 3.10, to: 4.55 },
+        { text: "سَـٰفِلِينَ", from: 4.55, to: 6.96 }
+      ],
+      6: [
+        { text: "إِلَّا", from: 0.00, to: 0.90 },
+        { text: "ٱلَّذِينَ", from: 0.90, to: 2.20 },
+        { text: "ءَامَنُوا۟", from: 2.20, to: 3.88 },
+        { text: "وَعَمِلُوا۟", from: 3.88, to: 5.56 },
+        { text: "ٱلصَّـٰلِحَـٰتِ", from: 5.56, to: 7.21 },
+        { text: "فَلَهُمْ", from: 7.21, to: 8.01 },
+        { text: "أَجْرٌ", from: 8.01, to: 8.61 },
+        { text: "غَيْرُ", from: 8.61, to: 9.37 },
+        { text: "مَمْنُونٍ", from: 9.37, to: 10.53 }
+      ],
+      7: [
+        { text: "فَمَا", from: 0.00, to: 1.10 },
+        { text: "يُكَذِّبُكَ", from: 1.10, to: 2.99 },
+        { text: "بَعْدُ", from: 2.99, to: 3.86 },
+        { text: "بِٱلدِّينِ", from: 3.86, to: 6.04 }
+      ],
+      8: [
+        { text: "أَلَيْسَ", from: 0.00, to: 1.74 },
+        { text: "ٱللَّهُ", from: 1.74, to: 3.44 },
+        { text: "بِأَحْكَمِ", from: 3.44, to: 5.26 },
+        { text: "ٱلْحَـٰكِمِينَ", from: 5.26, to: 8.37 }
       ]
     }
   };

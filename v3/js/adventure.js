@@ -100,7 +100,7 @@
     ctx.restore();
     return true;
   }  const adventure = {
-    t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null,
+    t: 0, L: null, P: null, endP: null, atlas: null, strips: null, strips2: null, stripsDpr: null,
     sprites: null, player: null, cam: null, fx: null,
     found: [], paused: false, escDown: false, scale: 1,
     stoneTiles: null, waterRects: null, terrain: null,
@@ -172,7 +172,7 @@
       this.pads = L.pads.map((p) => ({ x: p.x, y: p.y, squish: 0, sqV: 0 }));
       this.movers = L.moverDefs.map((m) => {
         if (m.kind === 'h') return { kind: 'h', x0: m.x0, x1: m.x1, x: (m.x0 + m.x1) / 2, y: m.y, hw: m.hw, speed: m.speed, phase: m.phase, dx: 0, dip: 0, t: 0 };
-        if (m.kind === 'raft') return { kind: 'raft', x0: m.x0, x1: m.x1, x: m.x0, y: m.y, hw: m.hw, speed: m.speed, dx: 0, dip: 0, t: 0 };
+        if (m.kind === 'raft') return { kind: 'raft', x0: m.x0, x1: m.x1, x: Number.isFinite(m.startX) ? m.startX : m.x0, y: m.y, hw: m.hw, speed: m.speed, dir: m.startDir === -1 ? -1 : 1, wakeX: m.wakeX, waiting: Number.isFinite(m.wakeX), dx: 0, dip: 0, t: 0 };
         return { kind: 'v', x: m.x, y0: m.y0, y1: m.y1, y: (m.y0 + m.y1) / 2, hw: m.hw, speed: m.speed, phase: m.phase, dx: 0, dip: 0, t: 0 };
       });
       // foreground curtains that soften when the wanderer steps behind them
@@ -233,13 +233,7 @@
       const tilePal = this.endP ? GOL.lerpPal(this.P, this.endP, 0.5) : this.P;
       this.atlas = GOL.buildTileAtlas(tilePal, 7 + L.id * 13);
       this.sprites = GOL.buildPropSprites(tilePal, 31 + L.id * 7);
-      const mkStrips = (P, s) => ({
-        far: GOL.buildHillStrip(1400, 260, { seed: s + 1, base: 150, amp: 40, color: P.hillFar, mist: P.mist, trees: 11, treeColor: GOL.color.shade(P.hillFar, 0.22) }),
-        mid: GOL.buildHillStrip(1150, 230, { seed: s + 2, base: 118, amp: 50, color: P.hillMid, mist: P.mist, trees: 8, treeColor: GOL.color.shade(P.hillMid, 0.2) }),
-        near: GOL.buildHillStrip(950, 205, { seed: s + 3, base: 90, amp: 46, color: P.hillNear, mist: P.mist, trees: 0 })
-      });
-      this.strips = mkStrips(this.P, 100 + L.id * 11);
-      this.strips2 = this.endP ? mkStrips(this.endP, 100 + L.id * 11) : null;
+      this.rebuildHillStrips();
 
       // the ababil flock (P.2): a pool of ambient birds wheeling around the
       // world-space anchor. Deterministic per-bird orbits (no per-frame
@@ -424,12 +418,59 @@
       this.sprites = null;
       this.strips = null;
       this.strips2 = null;
+      this.stripsDpr = null;
+    },
+
+    hillStripDpr() {
+      // Keep this in lockstep with boot's main-canvas DPR ceiling.
+      return Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    },
+
+    rebuildHillStrips() {
+      const L = this.L;
+      const dpr = this.hillStripDpr();
+      const mkStrips = (P, s) => ({
+        far: GOL.buildHillStrip(1400, 260, { pixelRatio: dpr, seed: s + 1, base: 150, amp: 40, color: P.hillFar, mist: P.mist, trees: 11, treeColor: GOL.color.shade(P.hillFar, 0.22) }),
+        mid: GOL.buildHillStrip(1150, 230, { pixelRatio: dpr, seed: s + 2, base: 118, amp: 50, color: P.hillMid, mist: P.mist, trees: 8, treeColor: GOL.color.shade(P.hillMid, 0.2) }),
+        near: GOL.buildHillStrip(950, 205, { pixelRatio: dpr, seed: s + 3, base: 90, amp: 46, color: P.hillNear, mist: P.mist, trees: 0 })
+      });
+      const seed = 100 + L.id * 11;
+      this.strips = mkStrips(this.P, seed);
+      this.strips2 = this.endP ? mkStrips(this.endP, seed) : null;
+      // DPR is part of the cache identity: moving between displays replaces,
+      // rather than stretches, the old backing canvases.
+      this.stripsDpr = dpr;
+    },
+
+    ensureHillStrips() {
+      if (!this.strips || this.stripsDpr !== this.hillStripDpr()) this.rebuildHillStrips();
+    },
+
+    gemBandLayout(W, H) {
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      const z = GOL.touchZones(W, H);
+      const gapL = z.stick.x + z.stick.r + 16;
+      const gapR = z.jump.x - z.jump.r - 16;
+      // This is HUD space, deliberately independent of camera/world Y. The
+      // band follows a climb smoothly because it stays in the same quiet lane
+      // between the controls instead of lagging below the moving viewport.
+      // The clamp also keeps the whole 52px panel clear of the top safe area
+      // on unusually short views.
+      const bandY = Math.max(sa.t + 8,
+        Math.min(z.stick.y - 26, H - sa.b - 60));
+      return {
+        cx: (gapL + gapR) / 2,
+        y: bandY,
+        starY: bandY - 15,
+        maxW: Math.max(120, gapR - gapL)
+      };
     },
 
     // ------------------------------------------------------------ update --
     update(dt, W, H) {
       this.t += dt;
       this.welcomeT = Math.max(0, this.welcomeT - dt);
+      this.ensureHillStrips();
       const L = this.L;
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       // Height fits `rows` tile-rows; width would otherwise spill to whatever
@@ -493,6 +534,14 @@
 
       for (const m of this.movers) {
         m.t += dt;
+        if (m.waiting) {
+          if (this.player.x < m.wakeX) {
+            m.dx = 0;
+            m.dip = Math.max(0, m.dip - dt * 2.2);
+            continue;
+          }
+          m.waiting = false;
+        }
         if (m.kind === 'h') {
           const mid = (m.x0 + m.x1) / 2, amp = (m.x1 - m.x0) / 2;
           const nx = mid + Math.sin(m.t * m.speed * Math.PI * 2 + m.phase) * amp;
@@ -758,12 +807,13 @@
           // she settles: a soft halo of light blooms as her eyes close
           this.fx.spawn('ring', pl.x, pl.y - 18, { color: '#FFF3C4', size: 30 });
           for (let k = 0; k < 6; k++) this.fx.spawn('sparkle', pl.x + GOL.rnd(-16, 16), pl.y - 18 + GOL.rnd(-10, 10), { color: k % 2 ? '#FFE9A8' : '#FFF6DC' });
+          const endAt = this.L.verseEndAt && this.L.verseEndAt[gp.ayah];
           const audio = GOL.audio.playVerse(this.L.surahId, gp.ayah, () => {
             if (this.gemPause !== gp) return;
             this.gemPause = null;
             // let the script fade out gently as wandering resumes
             if (this.glowAr) this.glowAr.dur = Math.min(this.glowAr.dur, this.glowAr.t + 0.9);
-          });
+          }, Number.isFinite(endAt) ? { endAt } : null);
           // dur is a ceiling only — the script really ends with the ayah above
           const verse = this.L.surah.verses.find((v) => v.n === gp.ayah);
           if (verse && GOL.EXPERIENCE.arabic && GOL.V3.arabic) {
@@ -797,6 +847,17 @@
       }
     },
 
+    // Resolve a legal flower bed on the world's base soil. Raised slabs,
+    // roofs, small terrain boxes, stepping stones and water are never beds.
+    bloomSurface(x) {
+      const L = this.L;
+      const s = L.surface(x);
+      if (s !== L.groundBloomRow || s >= L.h) return L.h;
+      if (L.tiles[s * L.w + x] !== 1) return L.h;
+      if (s > 0 && L.tiles[(s - 1) * L.w + x] !== 0) return L.h;
+      return s;
+    },
+
     // restoration: a few flowers and butterflies bloom around (or ahead of) a gem
     bloomAround(x, opts = {}) {
       const L = this.L;
@@ -808,7 +869,7 @@
       for (const dx of sweep) {
         const cx = tx + dx;
         if (cx < 1 || cx >= L.w - 1) continue;
-        const s = L.surface(cx);
+        const s = this.bloomSurface(cx);
         if (s >= L.h) continue;
         if (planted < 3 * scale && Math.random() < 0.8) {
           L.props.push({ type: 'flowers', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(Math.random() * 3), born: this.t });
@@ -833,12 +894,12 @@
       for (const range of this.L.bloomBanks || []) {
         const xs = [];
         for (let x = Math.max(1, Math.ceil(range[0])); x <= Math.min(this.L.w - 2, Math.floor(range[1])); x++) {
-          if (this.L.surface(x) < this.L.h) xs.push(x);
+          if (this.bloomSurface(x) < this.L.h) xs.push(x);
         }
         if (!xs.length) continue;
         const count = 2 + (Math.random() < 0.5 ? 1 : 0);
         for (let i = 0; i < count; i++) {
-          const x = xs[Math.floor(Math.random() * xs.length)], s = this.L.surface(x);
+          const x = xs[Math.floor(Math.random() * xs.length)], s = this.bloomSurface(x);
           this.L.props.push({ type: 'flowers', x: (x + 0.5) * TILE, y: s * TILE, v: Math.floor(Math.random() * 3), born: this.t });
         }
       }
@@ -1278,7 +1339,7 @@
       if (extra <= 0) return;
       const cols = [];
       for (let x = 1; x < L.w - 1; x++) {
-        const s = L.surface(x);
+        const s = this.bloomSurface(x);
         if (s >= L.h) continue;
         if (L.tiles[s * L.w + x] !== 1) continue;         // grassy ground only
         if (L.tiles[(s - 1) * L.w + x] !== 0) continue;   // open sky above
@@ -1288,7 +1349,7 @@
       const r = GOL.rng(9000 + L.id * 31); // fixed per level → prefix grows
       for (let i = 0; i < extra; i++) {
         const cx = cols[Math.floor(r() * cols.length)];
-        const s = L.surface(cx);
+        const s = this.bloomSurface(cx);
         if (r() < 0.62) L.props.push({ type: 'flowers', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 3) });
         else L.props.push({ type: 'tuft', x: (cx + 0.5) * TILE, y: s * TILE, v: Math.floor(r() * 2) });
       }
@@ -1670,40 +1731,28 @@
       // Its X is derived from touchZones so band and controls can never collide,
       // and the band windows itself for long surahs.
       //
-      // Its Y is PINNED TO THE WORLD, not the screen (fixed 2026-07-14 §10): the
-      // band sits a fixed distance above the world's lowest edge, so it rests in
-      // its bottom slot only while the camera is on its bottom clamp (player
-      // grounded). When a jump pans the camera up, the subterranean soil — and
-      // the band with it — slides down off-screen instead of chasing the child
-      // and hiding the landing. Some airtime it simply isn't visible; that's the
-      // deal we accept for a tracker that never obscures play.
+      // Its Y follows the viewport, not the world's bottom edge. That keeps the
+      // end-of-level drawer present during tall climbs while its narrow control-
+      // lane placement remains clear of the child and the phone safe areas.
       if (this.phase === 'roam' || this.phase === 'ember') {
-        const z = GOL.touchZones(W, H);
-        const gapL = z.stick.x + z.stick.r + 16;      // inner edge of the thumbstick
-        const gapR = z.jump.x - z.jump.r - 16;        // inner edge of the jump button
-        const bandCx = (gapL + gapR) / 2;
-        const bandMax = Math.max(120, gapR - gapL);
-        const worldBottomY = (L.h * TILE - cam.y) * this.scale; // screen y of the world's lowest edge
-        const bandY = worldBottomY - (H - z.stick.y) - 26;      // = z.stick.y-26 exactly when the camera is clamped
-        const starY = bandY - 15;                     // camp-progress pips ride just above
-        if (bandY - 22 > H) { /* slid fully below the view — nothing to draw */ }
-        else if (GOL.EXPERIENCE.shrine && L.campShrines && L.campShrines.length) {
+        const band = this.gemBandLayout(W, H);
+        if (GOL.EXPERIENCE.shrine && L.campShrines && L.campShrines.length) {
           const start = this.campDone === 0 ? 1 : L.campShrines[this.campDone - 1].afterAyah + 1;
           const end = this.campDone < L.campShrines.length
             ? L.campShrines[this.campDone].afterAyah : L.gems.length;
           const foundHere = this.found.filter((a) => a >= start && a <= end).map((a) => a - start);
-          GOL.drawHudBand(ctx, bandCx, bandY, end - start + 1, foundHere, t, bandMax);
+          GOL.drawHudBand(ctx, band.cx, band.y, end - start + 1, foundHere, t, band.maxW);
           const totalCamps = L.campShrines.length + 1;
-          const sx = bandCx - (totalCamps - 1) * 15;
+          const sx = band.cx - (totalCamps - 1) * 15;
           for (let i = 0; i < totalCamps; i++) {
-            GOL.star8Path(ctx, sx + i * 30, starY, 6.5, Math.PI / 8);
+            GOL.star8Path(ctx, sx + i * 30, band.starY, 6.5, Math.PI / 8);
             ctx.fillStyle = i < this.campDone ? '#FFF6DC' : alpha('#FFF6DC', 0.22);
             ctx.fill();
             ctx.strokeStyle = alpha('#D9A44A', i < this.campDone ? 0.9 : 0.35);
             ctx.lineWidth = 1.2; ctx.stroke();
           }
         } else {
-          GOL.drawHudBand(ctx, bandCx, bandY, L.gems.length, this.found.map((a) => a - 1), t, bandMax);
+          GOL.drawHudBand(ctx, band.cx, band.y, L.gems.length, this.found.map((a) => a - 1), t, band.maxW);
         }
       }
       for (const b of this.buttons || []) {

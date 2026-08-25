@@ -293,8 +293,16 @@
   // Tileable parallax hills, pre-rendered once per level. Summed integer-cycle
   // sines keep the left and right edges continuous.
   function buildHillStrip(W, H, opts) {
-    const c = makeCanvas(W, H);
+    // Offscreen canvases do not inherit the main canvas's DPR transform. Keep
+    // the strip's world size separate from its retina backing-store size, and
+    // match boot's 2x ceiling to bound the six-strip end-palette worst case.
+    const pixelRatio = Math.min(2, Math.max(1, opts.pixelRatio || 1));
+    const c = makeCanvas(W * pixelRatio, H * pixelRatio);
+    c.golWidth = W;
+    c.golHeight = H;
+    c.golPixelRatio = pixelRatio;
     const ctx = c.getContext('2d');
+    ctx.scale(pixelRatio, pixelRatio);
     const r = mulberry32(opts.seed);
     const ks = [1, 2, 3, 5].map((k) => ({
       k, amp: (opts.amp * (0.5 + r() * 0.8)) / k, ph: r() * Math.PI * 2
@@ -349,10 +357,14 @@
 
   // Draw a tileable strip with parallax offset, anchored to a horizon line.
   function drawStrip(ctx, strip, camX, factor, y, viewW) {
-    const w = strip.width;
+    const w = strip.golWidth || strip.width;
+    const h = strip.golHeight || strip.height;
     let off = (-camX * factor) % w;
     if (off > 0) off -= w;
-    for (let x = off; x < viewW; x += w) ctx.drawImage(strip, Math.round(x), Math.round(y));
+    for (let x = off; x < viewW; x += w) {
+      ctx.drawImage(strip, 0, 0, strip.width, strip.height,
+        Math.round(x), Math.round(y), w, h);
+    }
   }
   GOL.buildHillStrip = buildHillStrip;
   GOL.drawStrip = drawStrip;
