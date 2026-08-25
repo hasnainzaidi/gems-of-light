@@ -32,6 +32,12 @@
   // enough that stepping straight through a flower stays silent, short
   // enough that a real stop still answers promptly (playtest 2026-08-12)
   const ARRIVE_GRACE = 0.5;
+  // Generated title clips normally end about 0.45s after the spoken name.
+  // Kawthar's current file has 2.85s of dead tail and Tin's has 1.43s;
+  // do not make the child wait through either to enter. Keep these asset-
+  // specific exceptions beside the dwell policy so replacing a clip can
+  // remove its limit cleanly.
+  const TITLE_VOICE_LIMITS = { kawthar: 1.75, tin: 1.75 };
   // camera/hero preserved across a world visit (state itself re-reads the save)
   let returnState = null;
   // session memory for arrival celebrations: which regions were awake and
@@ -83,6 +89,86 @@
   function circlePoint(root, id) {
     const c = requireElement(root, id, 'circle');
     return { x: parseFloat(c.getAttribute('cx')), y: parseFloat(c.getAttribute('cy')) };
+  }
+
+  // The artist map is deliberately a flat SVG, so its orchard trees do not
+  // have hand-maintained ids. Recognise only the top-level tree groups (one
+  // trunk plus a circular canopy), then restore painter's-order depth within
+  // each island. This keeps the rear row behind the front row even when the
+  // generated SVG happens to emit the trees in a different order.
+  function mapTreeInfo(node) {
+    if (!node || node.localName.toLowerCase() !== 'g' || node.id === 'over' || /^water-/.test(node.id)) return null;
+    const children = Array.from(node.children);
+    const trunk = children.find((child) => child.localName.toLowerCase() === 'rect');
+    const canopy = children.filter((child) => child.localName.toLowerCase() === 'circle');
+    const ground = children.find((child) => child.localName.toLowerCase() === 'ellipse' && child.hasAttribute('cy'));
+    if (!trunk || canopy.length < 3 || !ground) return null;
+    return {
+      node,
+      x: parseFloat(ground.getAttribute('cx')),
+      y: parseFloat(ground.getAttribute('cy'))
+    };
+  }
+
+  function normalizeMapTreeDepth(root, hearts) {
+    const trees = Array.from(root.children).map(mapTreeInfo).filter(Boolean);
+    const byIsland = Array.from({ length: hearts.length }, () => []);
+    for (const tree of trees) {
+      let nearest = 0, best = Infinity;
+      for (let i = 0; i < hearts.length; i++) {
+        const d = (tree.x - hearts[i].x) ** 2 + (tree.y - hearts[i].y) ** 2;
+        if (d < best) { best = d; nearest = i; }
+      }
+      byIsland[nearest].push(tree);
+    }
+    for (const islandTrees of byIsland) {
+      if (islandTrees.length < 2) continue;
+      const sorted = islandTrees.slice().sort((a, b) => a.y - b.y || a.x - b.x);
+      const markers = islandTrees.map(({ node }) => {
+        const marker = root.ownerDocument.createComment('map-tree-depth');
+        node.replaceWith(marker);
+        return marker;
+      });
+      markers.forEach((marker, i) => marker.replaceWith(sorted[i].node));
+    }
+  }
+
+  // The little in-ground flower planters are emitted after the whole orchard
+  // in the flat artist SVG. Put each one behind any lower (nearer) tree on the
+  // same island. Trees have already been sorted above, so inserting planters
+  // into that order cannot disturb their back-to-front relationship.
+  function mapPlanterInfo(node) {
+    if (!node || node.localName.toLowerCase() !== 'g' || node.id) return null;
+    const children = Array.from(node.children);
+    const ellipses = children.filter((child) => child.localName.toLowerCase() === 'ellipse');
+    const flowers = children.filter((child) => child.localName.toLowerCase() === 'circle');
+    if (children.length !== 13 || ellipses.length !== 8 || flowers.length !== 5) return null;
+    const ground = ellipses[0];
+    if (!ground.hasAttribute('cx') || !ground.hasAttribute('cy')) return null;
+    return {
+      node,
+      x: parseFloat(ground.getAttribute('cx')),
+      y: parseFloat(ground.getAttribute('cy'))
+    };
+  }
+
+  function normalizeMapPlanterDepth(root, hearts) {
+    const trees = Array.from(root.children).map(mapTreeInfo).filter(Boolean);
+    const planters = Array.from(root.children).map(mapPlanterInfo).filter(Boolean).sort((a, b) => a.y - b.y || a.x - b.x);
+    const islandOf = (item) => {
+      let nearest = 0, best = Infinity;
+      for (let i = 0; i < hearts.length; i++) {
+        const d = (item.x - hearts[i].x) ** 2 + (item.y - hearts[i].y) ** 2;
+        if (d < best) { best = d; nearest = i; }
+      }
+      return nearest;
+    };
+    const treeIslands = trees.map(islandOf);
+    for (const planter of planters) {
+      const island = islandOf(planter);
+      const frontTree = trees.find((tree, i) => treeIslands[i] === island && tree.y > planter.y);
+      if (frontTree) frontTree.node.before(planter.node);
+    }
   }
 
   function samplePath(path, step) {
@@ -162,6 +248,9 @@
       const walkSamples = samplePath(requireElement(root, 'walk', 'path'), 3);
       root.removeAttribute('style');
       root.remove();
+
+      normalizeMapTreeDepth(root, hearts);
+      normalizeMapPlanterDepth(root, hearts);
 
       const base = root.cloneNode(true);
       requireElement(base, 'over', 'g').remove();
@@ -357,6 +446,7 @@
       this.waypoints = null;
       this.stepCool = 0;
       this._clearDwell();
+      this.spotAnnouncement = null;
       this.startAnchorS = null;
       this.heroArrived = true; // no arrival event on scene entry/return
       loadAsset().then((map) => {
@@ -446,9 +536,11 @@
         }
         this.spotInfo.push(row);
       }
-      // the breathing star: the next world of the natural journey
+      // The breathing star is the furthest normal open destination. A
+      // grown-up-opened garden uses this exact same gold-star state; it is
+      // not a separate practice tier.
       const seq = GOL.orderedWorlds ? GOL.orderedWorlds() : [];
-      const next = seq.find((w) => w.build && !GOL.worldDone(w.n));
+      const next = seq.filter((w) => w.build && !GOL.worldDone(w.n) && GOL.worldOpen(w.n)).pop();
       if (next) {
         for (let ri = 0; ri < REGIONS.length && !this.star; ri++) {
           for (let j = 0; j < REGIONS[ri].count; j++) {
@@ -563,22 +655,18 @@
         ((GOL.EXPERIENCE.progression === 'all-open' || GOL.DEBUG) && sp.open)));
     },
 
-    // A practice door: a surah a grown-up opened on the map that the natural
-    // journey has not reached yet — open, not yet bloomed, and not the star.
-    // These sit BEYOND the breathing star, so they get their own way in (a tap
-    // or the walk buttons carry her past the unsolved blooms between). Debug and
-    // all-open already make every open world a door, so this is real play only.
-    isPracticeDoor(ri, j) {
+    // If several destinations were opened by a grown-up, each is the same
+    // ordinary gold-star door. `star` remains the current/furthest focus;
+    // these additional stars stay directly reachable too.
+    isOpenStar(ri, j) {
       if (GOL.DEBUG || GOL.EXPERIENCE.progression === 'all-open') return false;
       const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
       return !!(sp && sp.open && !sp.done &&
         !(this.star && this.star.ri === ri && this.star.j === j));
     },
 
-    // How far along the walk she may travel in normal play: to the breathing
-    // star, or — when a grown-up has opened a later surah for practice — out to
-    // that opened spot, past the unsolved blooms between (a practice door is a
-    // real destination, not a wall she gets stuck on).
+    // How far along the walk she may travel in normal play: to every standard
+    // open destination, including one selected by a grown-up.
     furthestReachS() {
       let maxS = this.star ? this.spotS[this.star.ri][this.star.j] : this.map.walkSamples.len;
       if (this.spotInfo) {
@@ -621,7 +709,7 @@
     },
 
     // Walk the trail to a reachable spot, entering when she arrives (motion
-    // belongs to the path). A grown-up's practice door uses this to speed-run
+    // belongs to the path). Any additional open star uses this to speed-run
     // there, gliding straight past the unsolved blooms between.
     walkToSpot(ri, j) {
       if (!this.map || !this.hero || this.ceremony) return;
@@ -638,7 +726,7 @@
     },
 
     // A spot is a door when its world is built AND open in the real save
-    // (natural progression or parent-opened practice). Home inside the
+    // (natural progression or parent-opened). Home inside the
     // world leads back here — GOL.homeScene is the map now.
     enterWorld(ri, j) {
       const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
@@ -688,10 +776,10 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           if (Math.abs(this.hero.s - this.spotS[ri][j]) > 2) continue;
           const sp = this.spotInfo[ri][j];
-          // a finished bloom or a grown-up's practice door both hesitate
+          // a finished bloom or any additional open star both hesitate
           // visibly, then open — even on a still-sleeping island (a journey
           // resequence can move a done world onto one; it stays hers)
-          if (this.isDoor(sp) || this.isPracticeDoor(ri, j)) {
+          if (this.isDoor(sp) || this.isOpenStar(ri, j)) {
             this._beginDwell(ri, j, ARRIVE_GRACE);
             return;
           }
@@ -709,20 +797,40 @@
     // pass-through stays silent; a deliberate tap on the flower (grace 0)
     // speaks at once. The door opens the moment the clip finishes — each
     // name clip already carries its own 0.45s tail, so nothing feels cut.
+    _announcementFor(ri, j, beginVisit) {
+      const key = ri + '-' + j;
+      if (!this.spotAnnouncement || this.spotAnnouncement.key !== key ||
+          (beginVisit && this.spotAnnouncement.announced && !this.dwell)) {
+        this.spotAnnouncement = { key, announced: false, primed: false };
+      }
+      return this.spotAnnouncement;
+    },
+
     _beginDwell(ri, j, grace) {
       if (this.dwell && this.dwell.ri === ri && this.dwell.j === j) return;
       this._clearDwell();
-      this.dwell = { t: 0, ri, j, grace: grace || 0, spoke: false, wait: null, speech: null };
+      this.dwell = {
+        t: 0, ri, j, grace: grace || 0, spoke: false, wait: null, speech: null,
+        announcement: this._announcementFor(ri, j, false)
+      };
       if (!(grace > 0)) this._dwellSpeak(this.dwell);
     },
 
     _dwellSpeak(d) {
       d.spoke = true;
+      // Approach and landing may both observe one visit; only one may speak.
+      if (d.announcement.announced) {
+        d.wait = 0;
+        return;
+      }
+      d.announcement.announced = true;
       const sp = this.spotInfo && this.spotInfo[d.ri] && this.spotInfo[d.ri][d.j];
       const surah = sp && GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
       if (surah && GOL.EXPERIENCE.recitation && GOL.audio && GOL.audio.speak) {
         const id = 'surah-' + surah.slug;
         GOL.audio.preloadVoice([id]);
+        d.speechLimit = TITLE_VOICE_LIMITS[surah.slug] || null;
+        d.speechElapsed = 0;
         d.speech = GOL.audio.speak(id, () => {
           if (this.dwell === d) d.wait = 0;
         });
@@ -739,15 +847,39 @@
       this.dwell = null;
     },
 
+    _advanceDwell(dt) {
+      if (!this.dwell || this.ceremony) return false;
+      const d = this.dwell;
+      d.t += dt;
+      if (!d.spoke && d.t >= d.grace) this._dwellSpeak(d);
+      if (d.speech && d.speechLimit != null) {
+        d.speechElapsed += dt;
+        if (d.speechElapsed >= d.speechLimit) {
+          // End only this map-owned line; never silence a newer narrator.
+          if (GOL.audio && GOL.audio.stopSpeakIf) GOL.audio.stopSpeakIf(d.speech);
+          d.speech = null;
+          d.wait = 0;
+        }
+      }
+      if (d.wait == null) return false;
+      d.wait -= dt;
+      if (d.wait > 0) return false;
+      this.dwell = null;
+      this.enterWorld(d.ri, d.j);
+      return true;
+    },
+
     // iOS grants media playback to elements played DURING a gesture. The tap
     // that starts a walk primes the destination's title clip, so the arrival
     // — seconds later, outside any gesture — is allowed to speak it.
     _primeSpotVoice(ri, j) {
-      const sp = this.spotInfo && this.spotInfo[ri] && this.spotInfo[ri][j];
-      const surah = sp && GOL.surahForWorld ? GOL.surahForWorld(sp.n) : null;
-      if (surah && GOL.EXPERIENCE.recitation && GOL.audio && GOL.audio.primeVoice) {
-        GOL.audio.primeVoice('surah-' + surah.slug);
-      }
+      const sp = this.spotInfo?.[ri]?.[j];
+      const surah = sp && GOL.surahForWorld?.(sp.n);
+      if (!surah || !GOL.EXPERIENCE.recitation || !GOL.audio?.primeVoice) return;
+      const a = this._announcementFor(ri, j, true);
+      if (a.primed) return;
+      a.primed = true;
+      GOL.audio.primeVoice('surah-' + surah.slug);
     },
     _primeVoiceAtS(s) {
       if (!this.spotS) return;
@@ -775,7 +907,7 @@
         for (let j = 0; j < REGIONS[ri].count; j++) {
           const sp = this.spotInfo[ri][j];
           const b = this.map.spots[ri][j];
-          const openHere = this.isDoor(sp) || this.isPracticeDoor(ri, j);
+          const openHere = this.isDoor(sp) || this.isOpenStar(ri, j);
           if (openHere && GOL.dist(pos.x, pos.y, b.x, b.y) < 40) {
             this._beginDwell(ri, j);
             return;
@@ -785,6 +917,14 @@
     },
 
     mapScale(H) { return clamp(H / 393, 0.88, 1.12); },
+
+    // Match the neighboring map back button exactly: a 22px visible circle
+    // with the same 31px forgiving touch target. The hold gate is unchanged.
+    grownButton(W, H) {
+      if (!GOL.EXPERIENCE.grownups || this.firstFocus()) return null;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      return { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 22, hitR: 31 };
+    },
 
     // Touch walk buttons (r4.1 verdict): simple back/forward along the
     // trail, bottom-right, touch only — no full joystick.
@@ -942,15 +1082,14 @@
       // too fleeting to hold it. A quiet star at top-left, beside the back
       // arrow, that opens only on a patient ~1s press-and-hold. A plain tap
       // just pulses; the hold gate keeps children out gently.
-      const gb = (this.grownBtn = (!GOL.EXPERIENCE.grownups || firstFocus)
-        ? null : { x: sa.l + 40 + 58, y: sa.t * 0.5 + 34, r: 15 });
+      const gb = (this.grownBtn = this.grownButton(W, H));
       if (gb) {
         let holding = false;
         for (const [, p] of GOL.Input.pointers) {
-          if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
+          if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.hitR) { holding = true; break; }
         }
         for (const tap of GOL.Input.taps) {
-          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.r + 14) this.grownPulse = 1;
+          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.hitR) this.grownPulse = 1;
         }
         this.grownHold = holding ? Math.min(1, (this.grownHold || 0) + dt) : Math.max(0, (this.grownHold || 0) - dt * 2.2);
         this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
@@ -984,8 +1123,7 @@
         if (dir && arrived && this.stepCool <= 0 && this.waypoints) {
           // Debug and all-open lift the star's cap so a grown-up can step to
           // any built world along the whole trail; normal play stops at the
-          // next star — or, if a grown-up opened a later surah for practice,
-          // walks on past the unsolved blooms to reach that opened spot.
+          // next star — including a farther destination opened by a grown-up.
           const maxS = (this.star && !GOL.DEBUG && GOL.EXPERIENCE.progression !== 'all-open')
             ? this.furthestReachS()
             : this.map.walkSamples.len;
@@ -1026,19 +1164,7 @@
       // before anything is heard), then speaks, holds while the name plays,
       // and opens the door the moment the voice finishes (or after the old
       // one-second hesitation when there is no voice at all).
-      if (this.dwell && !this.ceremony) {
-        const d = this.dwell;
-        d.t += dt;
-        if (!d.spoke && d.t >= d.grace) this._dwellSpeak(d);
-        if (d.wait != null) {
-          d.wait -= dt;
-          if (d.wait <= 0) {
-            this.dwell = null;
-            this.enterWorld(d.ri, d.j);
-            return;
-          }
-        }
-      }
+      if (this._advanceDwell(dt)) return;
 
       const drag = GOL.Input.drag;
       // NB: the install ribbon is deliberately NOT excluded here. Excluding a
@@ -1048,7 +1174,7 @@
       // it moves <12px, so it never scrolls; only a real drag-from-ribbon does.
       const dragOnBtns = drag && (
         (walkBtnsNow && walkBtnsNow.some((b) => GOL.dist(drag.startX, drag.startY, b.x, b.y) < b.r + 10)) ||
-        (gb && GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.r + 14));
+        (gb && GOL.dist(drag.startX, drag.startY, gb.x, gb.y) < gb.hitR));
       if (drag && !this.ceremony && !dragOnBtns) {
         if (this.dragPrev && this.dragPrev.id === drag.id) {
           // rail scroll: project the drag onto the trail's local direction
@@ -1110,7 +1236,7 @@
         }
       }
       // a plain tap on the grown-ups star only pulses — it opens on hold
-      if (gb && GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.r + 14) { this.grownPulse = 1; return; }
+      if (gb && GOL.dist(clickAt.x, clickAt.y, gb.x, gb.y) < gb.hitR) { this.grownPulse = 1; return; }
       if (!firstFocus && GOL.dist(clickAt.x, clickAt.y, sa.l + 40, sa.t * 0.5 + 34) < 31) {
         GOL.go('title');
         return;
@@ -1151,12 +1277,12 @@
           return;
         }
       }
-      // a grown-up's practice door: tap to speed-run there along the trail,
-      // past the unsolved blooms between — it opens on arrival (like the star)
+      // Any additional open gold star can be tapped directly; it opens on
+      // arrival exactly like the focused star.
       if (this.hero) {
         for (let ri = 0; ri < REGIONS.length; ri++) {
           for (let j = 0; j < REGIONS[ri].count; j++) {
-            if (!this.isPracticeDoor(ri, j)) continue;
+            if (!this.isOpenStar(ri, j)) continue;
             const b = this.map.spots[ri][j];
             if (GOL.dist(wx, wy, b.x, b.y) <= 34) {
               this.walkToSpot(ri, j);
@@ -1299,19 +1425,11 @@
               ctx.lineWidth = 2.5;
               ctx.beginPath(); ctx.arc(s.x, s.y - 6, 22 + Math.sin(this.t * 2.2) * 2, 0, TAU); ctx.stroke();
             }
-          } else if (isStar) {
+          } else if (isStar || this.isOpenStar(ri, j)) {
             const b = 0.72 + 0.28 * Math.sin(this.t * 2.4);
             GOL.star8Path(ctx, s.x, s.y - 7, 11 + b * 2 + pulse * 2, Math.PI / 8);
             ctx.fillStyle = alpha('#F0C878', 0.35 + b * 0.34); ctx.fill();
             ctx.strokeStyle = alpha('#B98A3E', 0.9); ctx.lineWidth = 2; ctx.stroke();
-          } else if (this.isPracticeDoor(ri, j)) {
-            // a grown-up opened this surah for practice: a green open-door
-            // star, gentler than the golden journey star — an invitation to
-            // go, not "the next step". Drawn even on a still-sleeping island.
-            const b = 0.6 + 0.4 * Math.sin(this.t * 2 + j);
-            GOL.star8Path(ctx, s.x, s.y - 7, 10 + b * 2, Math.PI / 8);
-            ctx.fillStyle = alpha('#BFE0A6', 0.28 + b * 0.28); ctx.fill();
-            ctx.strokeStyle = alpha('#6DA84E', 0.85); ctx.lineWidth = 2; ctx.stroke();
           } else if (awake) {
             // a bud: built-but-waiting stirs; a still-growing key sleeps soft
             drawBud(ctx, s.x, s.y, sp ? 0.82 : 0.5);

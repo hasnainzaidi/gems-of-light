@@ -34,31 +34,26 @@ vm.runInContext(fs.readFileSync(path.resolve(here, '../js/shrine.js'), 'utf8'), 
 assert.equal(GOL.orderedWorlds()[0].key, 'fatiha');
 assert.equal(GOL.currentWorld(), 8);
 
-// A grown-up may open W2 before W1 is earned, but that is practice access.
+// A grown-up may open W2 before the earlier journey is earned. It is the same
+// standard destination and Wisdom Tree reward as a naturally reached world.
 GOL.store.data.opened.push(114);
 assert.equal(GOL.worldOpen(2), true);
-assert.equal(GOL.worldPracticeOnly(2), true);
+assert.equal(GOL.worldPracticeOnly(2), false);
+const afterNas = GOL.orderedWorlds()[GOL.orderedWorlds().findIndex((w) => w.n === 2) + 1];
+assert.ok(afterNas && afterNas.build, 'test needs a built downstream world after An-Nas');
+assert.equal(GOL.worldProgressOpen(afterNas.n), false, 'downstream world opened before An-Nas was earned');
 
 Object.assign(shrine, {
-  practiceOnly: true, surahId: 114, firstTry: 6, missTotal: 0,
+  worldN: 2, storeId: 114, surahId: 114, firstTry: 6, missTotal: 0,
   listens: 6, runHints: 0, totalSockets: 6,
   stanzaRanges: [{ start: 0, len: 6 }], _debugAccel: false
 });
 shrine.finishRun();
-assert.equal(GOL.store.data.grand[114], undefined, 'practice awarded a Grand Gem');
-assert.equal(states.get(114).completed, undefined, 'practice marked journey completion');
-assert.equal(stamps.length, 0, 'practice emitted a Grand Gem stamp');
-assert.equal(states.get(114).shrineRuns.length, 1, 'practice knowledge telemetry was lost');
-
-// Once the complete built journey prefix is genuinely earned, W2 is naturally
-// reached and may award normally. (Al-Fatiha now precedes file-number W1.)
-GOL.store.data.grand[1] = 1;
-GOL.store.data.grand[113] = 1;
-assert.equal(GOL.worldPracticeOnly(2), false);
-Object.assign(shrine, { practiceOnly: false, firstTry: 6 });
-shrine.finishRun();
-assert.ok(GOL.store.data.grand[114]);
-assert.equal(states.get(114).completed, true);
+assert.ok(GOL.store.data.grand[114], 'parent-opened Wisdom Tree withheld the Grand Gem');
+assert.equal(states.get(114).completed, true, 'parent-opened completion was not canonical');
 assert.equal(stamps.at(-1), 'v3grandGem');
+assert.equal(states.get(114).shrineRuns.length, 1, 'knowledge telemetry was lost');
+assert.equal(GOL.worldProgressOpen(afterNas.n), true,
+  'earning the parent-opened Grand Gem did not reveal the downstream world');
 
-console.log('✓ parent-opened practice stays separate from Grand Gem progression');
+console.log('✓ parent-opened worlds use standard Grand Gem progression');

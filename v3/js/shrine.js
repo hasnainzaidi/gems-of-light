@@ -98,7 +98,6 @@
       }
       this.longMode = (def && def.longMode) || null;
       this.storeId = (def && def.labSaveKey) || surahId;
-      this.practiceOnly = !!(this.worldN && GOL.worldPracticeOnly && GOL.worldPracticeOnly(this.worldN));
       this.surah = window.GOL_DATA.surahs.find((s) => s.id === surahId);
       this.surahId = surahId;
       this.P = GOL.PALETTES[palKey];
@@ -335,7 +334,7 @@
           for (const tap of GOL.Input.taps) {
             if (!tap.ui && this.bloomT > 3.6) {
               tap.ui = true;
-              GOL.go(GOL.homeScene || 'title', this.practiceOnly ? undefined : { celebrate: this.worldN });
+              GOL.go(GOL.homeScene || 'title', this.worldN ? { celebrate: this.worldN } : undefined);
               return;
             }
           }
@@ -360,15 +359,10 @@
       const st = GOL.store.level(this.storeId || this.surahId);
       const d = GOL.store.data;
       d.grand = d.grand || {};
-      let first = false;
-      if (!this.practiceOnly) {
-        first = !d.grand[this.storeId || this.surahId];
-        d.grand[this.storeId || this.surahId] = Date.now();
-        st.completed = true;
-      }
+      const first = !d.grand[this.storeId || this.surahId];
+      d.grand[this.storeId || this.surahId] = Date.now();
+      st.completed = true;
       if (this.longMode === 'night-camps') st.campReplayActive = false;
-      // Practice is still real learning, so its knowledge telemetry remains
-      // useful; only the progression reward and completion stamp are withheld.
       st.shrineDone = (st.shrineDone || 0) + 1;
       st.shrineFirstTry = Math.max(st.shrineFirstTry || 0, this.firstTry);
       // debug-accelerated or debug-assisted runs are meaningless — never record them
@@ -383,7 +377,7 @@
         if (st.shrineRuns.length > 20) st.shrineRuns.splice(0, st.shrineRuns.length - 20);
       }
       GOL.store.save();
-      if (!this.practiceOnly) GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
+      GOL.stamp(first ? 'v3grandGem' : 'v3grandGemAgain');
     },
 
     // the gems for one stanza arrive as themselves (gathered in the open),
@@ -806,7 +800,7 @@
           GOL.drawGem(ctx, g.x, g.y, Math.max(2, 13 * shrink), GOL.GEMS[(g.ayah - 1) % 7], t, { phase: g.phase, glow: 0.8 });
         }
       }
-      if (this.phase === 'done' && !this.practiceOnly) {
+      if (this.phase === 'done') {
         const k = GOL.ease.out(this.grandK);
         const gy = lay.treeY - 60 - k * 8 + Math.sin(t * 1.4) * 5;
         GOL.drawGem(ctx, lay.treeX, gy, 14 + 30 * k, GRAND, t, { phase: 0.5 });

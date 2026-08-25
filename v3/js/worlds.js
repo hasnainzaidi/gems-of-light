@@ -78,7 +78,14 @@
   };
   GOL.worldEarned = function (n) {
     const w = GOL.WORLDS3[n - 1];
-    return !!(w && GOL.store.data.grand && GOL.store.data.grand[w.surahId]);
+    if (!w || !GOL.store || !GOL.store.data) return false;
+    const d = GOL.store.data;
+    if (d.grand && d.grand[w.surahId]) return true;
+    // Early builds recorded a finished world on its level row before the
+    // Grand-Gem ledger became the journey's canonical unlock source. Those
+    // saves must open the same next bloom without asking the child to replay.
+    const st = d.levels && d.levels[w.surahId];
+    return !!(st && st.completed);
   };
   GOL.knownSurahHandoff = function (ids) {
     const seq = GOL.orderedWorlds().filter((w) => w.build && w.surahId != null);
@@ -140,8 +147,16 @@
       slot >= 0 && slot < ob.placementFrontier);
   };
 
-  // Natural journey access, deliberately separate from a grown-up's practice
-  // override. Only this path may award a progression Grand Gem.
+  GOL.worldParentOpened = function (n) {
+    const w = GOL.WORLDS3[n - 1];
+    return !!(w && w.surahId != null && GOL.store && GOL.store.data &&
+      GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
+  };
+
+  // Every ordinary completion is a journey anchor. This matters when a
+  // grown-up starts the child farther along the trail: once that garden's
+  // Grand Gem is earned, the next garden opens normally without requiring
+  // the child to back-fill earlier surahs first.
   GOL.worldProgressOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
@@ -149,24 +164,25 @@
     const seq = GOL.orderedWorlds();
     const i = seq.findIndex((x) => x.n === n);
     for (let j = i - 1; j >= 0; j--) {
+      if (GOL.worldEarned(seq[j].n)) return true;
       if (seq[j].build && !GOL.worldDone(seq[j].n)) return false;
     }
     return true; // every built world before it is complete (or none exists)
   };
   // A world is playable when naturally reached OR explicitly opened by a
-  // grown-up. The latter is practice access, not fabricated journey progress.
+  // grown-up. Both routes lead to the same child-facing world and reward.
   GOL.worldOpen = function (n) {
     const w = GOL.WORLDS3[n - 1];
     if (!w) return false;
     if (GOL.EXPERIENCE && GOL.EXPERIENCE.progression === 'all-open') return !!w.build;
     if (GOL.DEBUG) return true; // the lab: every grown world is playable
     if (GOL.worldProgressOpen(n)) return true;
-    return !!(w.surahId != null && GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
+    return GOL.worldParentOpened(n);
   };
+  // Kept as a compatibility hook for older callers. Parent-opened worlds are
+  // no longer second-class practice runs: their Wisdom Tree earns normally.
   GOL.worldPracticeOnly = function (n) {
-    const w = GOL.WORLDS3[n - 1];
-    return !!(w && !GOL.worldProgressOpen(n) && w.surahId != null &&
-      GOL.store.data.opened && GOL.store.data.opened.includes(w.surahId));
+    return false;
   };
   GOL.worldDone = function (n) {
     return GOL.worldEarned(n) || GOL.worldPriorKnown(n);
@@ -194,6 +210,20 @@
       }
     };
     let changed = false;
+    // Repair the split completion schema used by early/mobile saves. Runtime
+    // reads already accept the level-row evidence above; this one-time sweep
+    // restores the canonical Grand-Gem ledger for every later reader too.
+    if (!d.migrations.completionEvidence20260824) {
+      d.grand = d.grand || {};
+      for (const w of GOL.WORLDS3.filter((x) => x && x.build && x.surahId != null)) {
+        const st = d.levels && d.levels[w.surahId];
+        if (!d.grand[w.surahId] && st && st.completed) {
+          d.grand[w.surahId] = st.completedAt || st.lastPlayed || Date.now();
+        }
+      }
+      d.migrations.completionEvidence20260824 = true;
+      changed = true;
+    }
     for (const flag of ['resequence20260714', 'kursiInsert20260716', 'resequence20260810']) {
       if (d.migrations[flag]) continue;
       sweep();

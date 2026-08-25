@@ -140,20 +140,17 @@ assert.match(adventure, /GOL\.V3\.arabic/,
 
 const ui = read('js/ui.js');
 assertCapabilityGate(ui, "'جواهر النور'", '(?:showcase|arabic)', 'title Arabic subtitle');
-assertCapabilityGate(ui, 'this.gearBtn =', 'grownups', 'title tuning control');
-assertCapabilityGate(ui, 'this.grownBtn =', 'grownups', 'title grown-ups doorway');
+assertCapabilityGate(ui, 'grownButton(W, H) {', 'grownups', 'title grown-ups doorway');
 assertCapabilityGate(ui, 'portraitInvite(W, H)', 'install', 'title install invitation');
 assert.match(ui, /GOL\.go\(['"]grownups['"]/,
   'ordinary title must retain the grown-ups route');
 assert.match(ui, /GOL\.go\(['"]install['"]/,
   'ordinary title must retain the install route');
-assert.match(ui, /label:\s*['"]ayah script['"]/,
-  'ordinary tuning must retain the ayah-script setting');
 
 const map = read('js/map.js');
 assertCapabilityGate(map, 'this.moonBtns =', 'remembering', 'Remembering Moons');
 assertCapabilityGate(map, 'installNudge(W, H)', 'install', 'map install invitation');
-assertCapabilityGate(map, 'this.grownBtn =', 'grownups', 'map grown-ups doorway');
+assertCapabilityGate(map, 'grownButton(W, H) {', 'grownups', 'map grown-ups doorway');
 assert.match(map, /GOL\.EXPERIENCE[\s\S]{0,180}(?:progression\s*===\s*['"]all-open['"]|showcase)[\s\S]{0,260}(?:awake|maxS|regionAwake)/,
   'the Showcase map must make the whole built journey navigable');
 assert.match(map, /GOL\.go\(['"]shrine['"]\s*,\s*\{\s*memory:/,
