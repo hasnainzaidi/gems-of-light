@@ -1,14 +1,11 @@
 // World Thirteen — Al-Fil · The Birds
 // Protection fills the sky. This is the most kid-delightful world of the wave:
 // every gathered ayah adds wings, until the whole air is alive with a wheeling
-// flock (the ababil, Wave-P engine hook) turning around one still, distant
-// elephant-shaped rock on the far horizon. Nothing is scary — the flock is joy,
-// the rock is only quiet background sky-scenery. A gentle cozy-garden stroll:
-// a bird-bath clearing, a rise into open sky, a shallow pond, a low terrace,
-// and the fifth gem waiting right under the flock's anchor.
+// flock (the ababil, Wave-P engine hook). A gentle cozy-garden stroll: a
+// bird-bath clearing, a rise into open sky, a shallow pond, a low terrace, and
+// the fifth gem waiting right under the flock's anchor.
 (function () {
   const GOL = window.GOL;
-  const TILE = GOL.TILE;
 
   GOL.registerWorld(13, {
     id: 23, key: 'fil', name: 'the birds',
@@ -22,61 +19,6 @@
     // the journey's end: birds grow with collection, wheeling around this point.
     flock: { x: 70, y: 4, max: 26 },
 
-    // ── The elephant rock ──────────────────────────────────────────────────
-    // A SMALL distant shape in the sky band: a far hill that happens to hold
-    // an elephant's gentle silhouette — one domed back, a small head bump, a
-    // soft dropped trunk on the left. ~2.8 tiles wide, ~1.7 tall, seated into
-    // a pale far-hill shoulder at rows ~7.5–9.3: well left-and-below the sun
-    // glow at the upper right and clearly behind the walkable ground. Hazed
-    // into the distance like the far hills. Still and constant — no prog.
-    drawLandmark(ctx, t, P, L) {
-      const C = GOL.color;
-      const cx = 70 * TILE;          // over the far third, beneath the flock anchor
-      const baseY = 7.5 * TILE;      // the silhouette's underside, high in the sky
-      const hw = 1.4 * TILE;         // half-width — ~2.8 tiles across in all
-      // a hazy far-grey drawn FROM the palette (never a hardcoded dark)
-      const grey = C.mix(P.hillFar, '#8C8C86', 0.62);
-
-      ctx.save();
-
-      // A broad, low-contrast shoulder joins the silhouette to the horizon.
-      // Its wide base and palette-matched haze keep it distant scenery rather
-      // than suggesting a narrow pillar or a reachable platform.
-      const shoulderY = 9.3 * TILE;
-      const shoulder = C.mix(grey, P.hillFar, 0.36);
-      ctx.fillStyle = C.alpha(shoulder, 0.52);
-      ctx.beginPath();
-      ctx.moveTo(cx - 2.35 * TILE, shoulderY);
-      ctx.quadraticCurveTo(cx - 1.55 * TILE, 8.25 * TILE,
-                           cx - hw * 0.78, baseY - 2);
-      ctx.lineTo(cx + hw * 0.82, baseY - 2);
-      ctx.quadraticCurveTo(cx + 1.55 * TILE, 8.2 * TILE,
-                           cx + 2.45 * TILE, shoulderY);
-      ctx.closePath();
-      ctx.fill();
-
-      // three quadratic curves, right to left: back dome → head bump → trunk
-      ctx.beginPath();
-      ctx.moveTo(cx + hw, baseY);                                    // rear base
-      ctx.quadraticCurveTo(cx + hw * 0.35, 5.75 * TILE,              // the domed back
-                           cx - hw * 0.10, 6.15 * TILE);             // dip at the neck
-      ctx.quadraticCurveTo(cx - hw * 0.35, 5.95 * TILE,              // small head bump
-                           cx - hw * 0.58, 6.35 * TILE);             // down to the brow
-      ctx.quadraticCurveTo(cx - hw * 0.98, 6.70 * TILE,              // the trunk drops
-                           cx - hw, 7.35 * TILE);                    // softly to its tip
-      ctx.lineTo(cx - hw * 0.8, baseY);                              // under the trunk
-      ctx.closePath();                                               // along the base
-      ctx.fillStyle = C.alpha(grey, 0.52);
-      ctx.fill();
-
-      // a faint mist wash over its lower third, so it sits behind the air the
-      // way the far hills do
-      ctx.clip();
-      ctx.fillStyle = C.alpha(P.mist, 0.28);
-      ctx.fillRect(cx - hw - 2, baseY - 0.55 * TILE, hw * 2 + 4, 0.55 * TILE + 2);
-      ctx.restore();
-    },
-
     build(b) {
       b.ground(0, 85, 13);
 
@@ -84,7 +26,9 @@
       // No opening flowered mound — the world opens on its own image: a still
       // fountain with two friendly birds already down ON THE GROUND beside it,
       // the first wings, close at hand. The first gem shines low over the flat.
-      b.prop('fountain', 8);
+      // The renderer's lower tray reaches 13px below its anchor; lift it so
+      // the tray meets the soil instead of painting across its front face.
+      b.prop('fountain', 8, { y: b.surface(8) * GOL.TILE - 13 });
       b.prop('flowers', 5, { v: 1 }).prop('bush', 14, { v: 2 });
       b.creature('bird', 6, 12).creature('bird', 10, 12);
       b.gem(1, 12, 11);
@@ -104,7 +48,7 @@
       b.stone(37).stone(39);
       b.block(43, 45, 12, 12);
       b.gem(3, 44, 10);
-      b.prop('flowers', 34, { v: 2 }).prop('palm', 46);
+      b.prop('flowers', 34, { v: 2 });
       b.seed(31, 11).seed(34, 11);
       b.seedArc(36, 11, 40, 11, 4, 1); // over the water
       b.seed(42, 11);
@@ -117,8 +61,8 @@
       b.seed(47, 11).seed(50, 11).seed(50, 9);
 
       // ── BEAT 4 · THE LOW TERRACE (ayah 4) ────────────────────────────────
-      // A gentle two-step terrace; the fourth gem rests atop it, the elephant
-      // rock now clear on the horizon ahead and the sky beginning to fill.
+      // A gentle two-step terrace; the fourth gem rests atop it as the sky
+      // begins to fill.
       b.block(56, 58, 12, 12);
       b.block(60, 63, 11, 12);
       b.gem(4, 60, 9);
@@ -139,7 +83,7 @@
       b.campfire(78);
       b.door(82);
       b.prop('lantern', 76).prop('olive', 84, { v: 1 });
-      b.seed(74, 11).seed(76, 11);
+      b.seed(74, 11); // final seed stays clear of the campfire trigger
 
       b.start(3);
       b.seedRun(4, 10, 2);

@@ -184,7 +184,7 @@
       b.seedArc(78, 11, 83, 11, 4, 1.8);     // foot of the rise
       b.seedArc(84, 10, 91, 10, 5, 1.8);     // up the long shoulder
       b.seedArc(92, 9, 100, 9, 6, 1.8);      // toward the scales
-      b.seedRun(102, 114, 2);                // across the summit meadow
+      b.seedRun(102, 106, 2);                // summit meadow, ending before the fire
 
       // ── THE MOTHS ───────────────────────────────────────────────────
       // Six pale moth-butterflies wander the hush — the surah's fluttering

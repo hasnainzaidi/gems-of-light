@@ -169,7 +169,7 @@
       b.seedArc(5, 11, 14, 10, 6, 0.8);
       b.seedArc(16, 10, 31, 9, 8, 0.7);
       b.seedArc(34, 9, 48, 9, 8, 1.2);
-      b.seedArc(50, 9, 57, 9, 5, 1.0);
+      b.seed(50, 9); // the trail ends before the campfire trigger
 
       // The homecoming: everything moving RIGHT, toward the opening gate.
       // Birds drift down the road, tortoises walk it in file, butterflies

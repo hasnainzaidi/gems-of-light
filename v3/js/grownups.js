@@ -14,6 +14,34 @@
   const INK = GOL.INK, INK_SOFT = GOL.INK_SOFT, GOLD = GOL.GOLD;
   const GREEN = '#3E8E4A';
   const CREAM = '#F5EDD4';
+  const PUBLIC_SITE = 'https://playgemsoflight.com';
+
+  // Public legal pages belong in the system browser, not inside the game's
+  // full-screen WebView. Capacitor's Browser plugin is preferred when a shell
+  // provides it; today's lightweight iOS shell uses WKWebView's supported
+  // target=_blank route, which hands the absolute HTTPS URL to Safari. The
+  // same anchor opens a normal new tab in a web browser/PWA without replacing
+  // the running game, so there is always an obvious way back.
+  function openPublicLink(href) {
+    if (href.indexOf('mailto:') === 0) {
+      window.location.href = href;
+      return;
+    }
+
+    const url = new URL(href, PUBLIC_SITE).href;
+    const browser = window.Capacitor && window.Capacitor.Plugins &&
+      window.Capacitor.Plugins.Browser;
+    if (browser && typeof browser.open === 'function') {
+      browser.open({ url });
+      return;
+    }
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer external';
+    anchor.click();
+  }
 
   // "today / yesterday / N days ago / —" from an epoch-ms timestamp
   function relDay(ms) {
@@ -62,6 +90,9 @@
   }
 
   const grownups = {
+    // Unlike the child-facing play scenes, this is a phone settings page: a
+    // grown-up should be able to read and operate it without rotating first.
+    ownsPortrait: true,
     t: 0, scroll: 0, buttons: [], access: null,
     dragPrev: null, dragMoved: false,
 
@@ -149,15 +180,33 @@
     layout(W, H) {
       const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       const L = sa.l, R = W - sa.r;
-      const titleY = 24 + sa.t * 0.5;
-      const px = L + 16, pw = (R - L) - 32;
-      const panelTop = titleY + 40;
-      // Reserve a real finger-height footer row instead of placing tiny text
-      // links against the screen edge. The labels stay visually quiet; their
-      // invisible hit rectangles are a full 44px high.
-      const footerY = H - 24 - sa.b * 0.5;
-      const legalY = footerY;
-      const reassuranceY = legalY - 34;
+      const portrait = H > W;
+      // Leave the portrait navigation corner clear, including the iPhone's
+      // sensor housing. Landscape keeps the compact header used today.
+      const titleY = portrait ? Math.max(72, 44 + sa.t) : 24 + sa.t * 0.5;
+      // Treat the journey list as one readable selector rather than a sheet
+      // stretched across every available pixel. Portrait keeps comfortable
+      // phone gutters; landscape caps the line length and centres the panel.
+      const usableW = R - L;
+      const panelMargin = portrait ? 20 : 16;
+      const panelMaxW = portrait ? 430 : 640;
+      const pw = Math.min(usableW - panelMargin * 2, panelMaxW);
+      const px = (L + R - pw) / 2;
+      // Keep the selector visibly grouped with its heading. The subtitle sits
+      // at titleY + 20, leaving 22px/18px before the panel in portrait/landscape.
+      const panelTop = titleY + (portrait ? 42 : 38);
+      // The three public links are real phone controls, not tiny footer text.
+      // Keep a full 44px target for each one and place the whole row above the
+      // device's bottom safe area (home indicator in portrait or landscape).
+      const legalH = 44;
+      const legalGap = 8;
+      const legalWidths = [84, 80, 84];
+      const legalTotalW = legalWidths.reduce((sum, w) => sum + w, 0) + legalGap * 2;
+      const legalTop = H - sa.b - 12 - legalH;
+      const legalY = legalTop + legalH / 2;
+      const footerY = legalY;
+      const copyrightY = legalTop - 12;
+      const reassuranceY = copyrightY - (portrait ? 28 : 18);
       // a grown-up on a phone browser gets a quiet "add to home screen" line
       // just above the footer; installed players (standalone) don't need it
       const showInstall = !GOL.isStandalone();
@@ -166,16 +215,17 @@
         : null;
       const panelBottom = installLink ? installLink.y - 8 : reassuranceY - 12;
       const panelH = Math.max(80, panelBottom - panelTop);
+      let legalX = (L + R - legalTotalW) / 2;
       const legalLinks = [
-        { label: 'Company', href: '/company/', x: (L + R) / 2 - 2, y: legalY - 22, w: 62, h: 44 },
-        { label: 'Privacy', href: '/privacy/', x: (L + R) / 2 + 60, y: legalY - 22, w: 56, h: 44 },
-        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: (L + R) / 2 + 116, y: legalY - 22, w: 58, h: 44 }
+        { label: 'Company', href: '/company/', x: legalX, y: legalY - 22, w: 84, h: 44 },
+        { label: 'Privacy', href: '/privacy/', x: legalX += legalWidths[0] + legalGap, y: legalY - 22, w: 80, h: 44 },
+        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: legalX += legalWidths[1] + legalGap, y: legalY - 22, w: 84, h: 44 }
       ];
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;
       const worlds = (GOL.orderedWorlds ? GOL.orderedWorlds() : (GOL.WORLDS3 || []).filter(Boolean))
         .filter((w) => w.build && w.surahId != null); // only surahs a child can play
-      const rH = 50;
+      const rH = portrait ? 62 : 50;
       const maxScroll = Math.max(0, worlds.length * rH - viewH);
       const scroll = Math.max(0, Math.min(maxScroll, this.scroll || 0));
 
@@ -189,7 +239,7 @@
         const hit = { x: tx - 92, y: y + 4, w: toggleW + 92, h: rH - 8 };
         return { w, i, y, reached, opened, tx, ty, toggleW, toggleH, hit };
       });
-      return { px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, reassuranceY, legalY, legalLinks, rH, rows, maxScroll, scroll, installLink };
+      return { portrait, px, pw, ix, iw, titleY, panelTop, panelH, viewTop, viewH, footerY, reassuranceY, copyrightY, legalY, legalLinks, rH, rows, maxScroll, scroll, installLink };
     },
 
     update(dt, W, H) {
@@ -239,7 +289,7 @@
         if (clickAt.x >= link.x && clickAt.x <= link.x + link.w &&
             clickAt.y >= link.y && clickAt.y <= link.y + link.h) {
           GOL.audio.sfx('tap');
-          window.location.href = link.href;
+          openPublicLink(link.href);
           return;
         }
       }
@@ -272,7 +322,9 @@
 
       const cx = (sa.l + (W - sa.r)) / 2;
       GOL.text(ctx, "Your child's journey", cx, lay.titleY, { size: 19, weight: '800', color: CREAM });
-      GOL.text(ctx, 'each surah they have learned — and any you want to open on the map',
+      GOL.text(ctx, lay.portrait
+        ? 'surahs learned — and any you open on the map'
+        : 'each surah they have learned — and any you want to open on the map',
         cx, lay.titleY + 20, { size: 11.5, weight: '600', color: alpha(CREAM, 0.6), shadow: false });
 
       // the list panel
@@ -320,7 +372,9 @@
         const name = surah ? surah.englishName : ('world ' + w.n);
         GOL.text(ctx, name, nx, mid - 8, { size: 15, weight: '800', color: INK, align: 'left', shadow: false });
         let status = priorKnown ? 'already knew' : (done ? 'completed' : (visited ? 'in progress' : 'not started yet'));
-        const when = relDay(st && st.lastPlayed);
+        // Dates are useful detail on a wide page, but in portrait they make
+        // the status collide with the map control instead of adding clarity.
+        const when = lay.portrait ? '' : relDay(st && st.lastPlayed);
         if (when && (done || visited)) status += ' · last played ' + when;
         const meaning = surah && surah.meaningName ? surah.meaningName + ' · ' : '';
         GOL.text(ctx, meaning + status, nx, mid + 9,
@@ -372,13 +426,23 @@
       }
 
       // footer reassurance and public publisher identity
-      GOL.text(ctx, 'Turn a switch on to let your child reach that surah on the map. Everything stays on this device.',
-        cx, lay.reassuranceY, { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
-      GOL.text(ctx, '© 2026 Ashna Holdings, LLC  ·', cx - 8, lay.legalY,
-        { size: 10, weight: '600', color: alpha(CREAM, 0.58), align: 'right', shadow: false });
+      if (lay.portrait) {
+        GOL.text(ctx, 'Turn a switch on to open that surah on the map.', cx, lay.reassuranceY - 7,
+          { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
+        GOL.text(ctx, 'Everything stays on this device.', cx, lay.reassuranceY + 7,
+          { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
+      } else {
+        GOL.text(ctx, 'Turn a switch on to let your child reach that surah on the map. Everything stays on this device.',
+          cx, lay.reassuranceY, { size: 10.5, weight: '600', color: alpha(CREAM, 0.5), shadow: false });
+      }
+      GOL.text(ctx, '© 2026 Ashna Holdings, LLC', cx, lay.copyrightY,
+        { size: 10, weight: '600', color: alpha(CREAM, 0.58), shadow: false });
       for (const link of lay.legalLinks) {
-        GOL.text(ctx, link.label, link.x + link.w / 2, lay.legalY,
-          { size: 10, weight: '800', color: '#EBCB86', shadow: false });
+        GOL.roundRect(ctx, link.x, link.y, link.w, link.h, link.h / 2);
+        ctx.fillStyle = alpha(CREAM, 0.08); ctx.fill();
+        ctx.strokeStyle = alpha('#EBCB86', 0.46); ctx.lineWidth = 1; ctx.stroke();
+        GOL.text(ctx, link.label, link.x + link.w / 2, link.y + link.h / 2,
+          { size: 11.5, weight: '800', color: '#EBCB86', shadow: false });
       }
 
       // home button

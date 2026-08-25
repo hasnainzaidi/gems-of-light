@@ -118,7 +118,7 @@
       // second low rise
       b.block(39, 45, 12, 12);
       b.gem(4, 42, 10);
-      b.prop('bush', 44, { v: 2 });
+      b.prop('bush', 43, { v: 2 });
 
       // the shallow dip — two soft shoulders with a hollow between them; the
       // one bright star of the night waits here, straight above a bounce.
@@ -140,7 +140,10 @@
       b.prop('cypress', 85, { v: 1 });
 
       b.gem(9, 92, 11); // the last segment — the arc now full overhead
-      b.prop('bush', 90, { v: 2 });
+      // Variant 2's leftmost canopy extends beyond its sprite canvas and reads
+      // as a hard vertical crop here; variant 1 keeps the same soft silhouette
+      // beside the final gem without the visibly chopped edge.
+      b.prop('bush', 90, { v: 1 });
 
       // the earned resting place and the shrine door, on flat open night ground
       b.campfire(97);
@@ -163,12 +166,14 @@
       b.seedRun(74, 82, 1);
       b.seed(82, 11);
       b.seedRun(84, 92, 1);
-      b.seedRun(94, 100, 1);              // across the resting clearing
+      // The resting clearing stays seed-free: reaching it begins recitation.
 
       // ── THE GUARDED SLEEPERS ──────────────────────────────────────────────
-      // One tortoise curled asleep (range 0), the two roosting birds on the
-      // wall, and pale moth-butterflies gathered at each box of light.
-      b.creature('tortoise', 48, null, { range: 0 });
+      // One tortoise ambles only across the three-tile shoulder at x47–49.
+      // A stationary range left its walking legs cycling in place; this short
+      // patrol keeps that animation honest without letting it float over the
+      // lower ground on either side of the shoulder.
+      b.creature('tortoise', 48, null, { range: 24 });
       // feet on the wall top (row 13), so creature row is 12 — row 11 left
       // them hovering a tile above their roost
       b.creature('bird', 25, 12).creature('bird', 27, 12);

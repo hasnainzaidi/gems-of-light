@@ -191,8 +191,7 @@
       b.campfire(84);
       b.prop('flowers', 86, { v: 1 });
       b.door(89);
-      b.seed(80, 6).seed(82, 5);
-      b.seedRun(85, 88, 2);
+      b.seed(80, 6); // final seed remains collectible before the ceremony
 
       // ambient life through the orchard
       b.creature('butterfly', 17, 8).creature('butterfly', 47, 6)

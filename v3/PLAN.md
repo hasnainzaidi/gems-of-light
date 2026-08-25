@@ -1173,3 +1173,19 @@ in six playtest-gated waves; Wave 0 = content pipeline).
   already falls back to the default for an unknown saved reciter, and
   the tuning-panel picker builds itself from the registry. v1/v2 never
   referenced Basit.
+- **IOS LIVE-PLAYTEST FIX WAVE (accepted 2026-08-24, Hasnain):** the full
+  authoritative verdict list and per-fix verification live in `issues.md`.
+  Release blockers fixed: migrated Al-Fatiha completion now repairs the
+  Grand-Gem ledger and opens Al-Ikhlas; a parent-opened world is a standard
+  gold journey world whose Wisdom Tree earns its Grand Gem and continues
+  progression. The wave also resolves parent-page portrait/accessibility and
+  external links, title/map safe-area controls, one-announcement map entry and
+  silent-tail caps, retina hill rendering, viewport-following gem HUD,
+  Al-Fatiha/At-Tin read-along timing, and the approved per-world art/play
+  findings. Global enforced audits now cover base-soil-only flowers, in-bounds
+  bush sprites, campfire seed clearance, flush fountain support, map tree
+  depth, and Masad-only palms. Two observations remain deliberately
+  investigation-only: the An-Nas memory stone and Al-Qadr's apparent second
+  horizon. Machine verdict before integration: all 20 world checks and every
+  `tools/test-*.mjs` contract green; staging iPhone playtest is the final visual
+  confirmation.

@@ -83,21 +83,26 @@
 
     // -- bush
     S.bush = [0, 1, 2].map((v) => {
-      const w = 92, h = 56;
+      // The outer blobs can reach ten pixels beyond the old 92px canvas.
+      // Keep transparent breathing room around them: a clipped blob becomes a
+      // conspicuous hard vertical edge wherever the bush is placed. Shifting
+      // every painted mark by the same padding and anchoring at the new centre
+      // preserves the bush's exact world-space position and apparent scale.
+      const padX = 12, w = 92 + padX * 2, h = 56;
       const c = makeCanvas(w, h);
       const x = c.getContext('2d');
       const r = GOL.rng(seed + 313 + v * 17);
       const gy = h - 4;
       for (let i = 0; i < 6; i++) {
-        const bx = 14 + i * 12 + (r() - 0.5) * 8;
+        const bx = padX + 14 + i * 12 + (r() - 0.5) * 8;
         const rad = 12 + r() * 8;
         blob(x, bx, gy - 10 - r() * 10, rad, i % 2 ? P.leaf : shade(P.leaf, 0.12));
       }
-      dabs(x, 10, 8, w - 20, 22, alpha(P.leafLight, 0.8), 7, seed + v * 5, 2.5, 5);
+      dabs(x, padX + 10, 8, 72, 22, alpha(P.leafLight, 0.8), 7, seed + v * 5, 2.5, 5);
       if (v === 2) { // berries
         const rr = GOL.rng(seed + 99);
         x.fillStyle = '#E8896B';
-        for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(16 + rr() * 60, gy - 12 - rr() * 14, 2.4, 0, Math.PI * 2); x.fill(); }
+        for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(padX + 16 + rr() * 60, gy - 12 - rr() * 14, 2.4, 0, Math.PI * 2); x.fill(); }
       }
       c._anchor = { x: w / 2, y: gy + 2 };
       return c;

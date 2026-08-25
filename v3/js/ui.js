@@ -61,7 +61,10 @@
   GOL.muteButton = function (W) {
     const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
     return {
-      x: W - 40 - sa.r, y: 40 + sa.t * 0.5, r: 30,
+      // Keep the complete 60px touch circle below the status/battery rail.
+      // Using the full top inset (rather than half) leaves the same quiet
+      // 10px gutter that the right edge already has.
+      x: W - 40 - sa.r, y: 40 + sa.t, r: 30,
       icon: () => (GOL.store.data.settings.muted ? 'soundOff' : 'sound'),
       fn: () => {
         const s = GOL.store.data.settings;
@@ -222,7 +225,7 @@
   }
 
   const title = {
-    t: 0, fx: null, bd: null, buttons: [], settingsOpen: false, celebrateN: 0, celebrateT: 0,
+    t: 0, fx: null, bd: null, buttons: [], celebrateN: 0, celebrateT: 0,
     // the title paints its own portrait composition — boot.js's sideways
     // curtain stays out of this scene (rotating here opens the journey map)
     ownsPortrait: true,
@@ -247,7 +250,6 @@
       // { proceed:true } to do the same. Installed (standalone) skips straight
       // to the rotate nudge — its window is already full-screen.
       this.portraitProceed = !GOL.EXPERIENCE.install || this.childMode || !!(params && params.proceed);
-      this.settingsOpen = false;
       // coming home with a new Grand Gem: its world disc celebrates
       this.celebrateN = (params && params.celebrate) || 0;
       this.celebrateT = this.celebrateN ? 3.2 : 0;
@@ -287,82 +289,17 @@
       GOL.roundRect(ctx, justBtn.x, justBtn.y, justBtn.w, justBtn.h, justBtn.h / 2); ctx.stroke();
       GOL.text(ctx, 'Just play', cx, justBtn.y + justBtn.h / 2, { size: 16, weight: '800', color: '#7A5A24', shadow: false });
     },
-    // The tuning rows and their segmented option buttons. One source of
-    // geometry, used by both hit-testing and drawing.
-    settingsSegs(W, H) {
-      // The reciter picker only earns a row when there is a choice to make.
-      // Since 2026-08-15 Mishary is the sole shipped voice, so the row hides
-      // itself; add a second entry to GOL.RECITERS and it comes straight back.
-      const reciterKeys = Object.keys(GOL.RECITERS || {});
-      const rows = [
-        ...(reciterKeys.length > 1
-          ? [{ label: 'reciter', opts: reciterKeys, get: () => GOL.V3.reciter, set: (v) => { GOL.V3.reciter = v; } }]
-          : []),
-        // The timed ambient ayah failed its child playtest (it read as random
-        // or duplicated recitation). Keep the experiment reachable in debug,
-        // never on an ordinary parent/settings surface.
-        ...(GOL.DEBUG
-          ? [{ label: 'ambient echo', opts: ['off', 'near', 'world'], get: () => GOL.V3.echo, set: (v) => { GOL.V3.echo = v; } }]
-          : []),
-        { label: 'ayah script', opts: ['off', 'on'], get: () => (GOL.V3.arabic ? 'on' : 'off'), set: (v) => { GOL.V3.arabic = (v === 'on'); } },
-        // 'camera' drives the horizontal FOV cap (columns of world shown), the
-        // lever that actually matters on a wide phone: near = zoomed in / bigger
-        // detail, wide = more world. On iPad (~15 cols) only 'near' binds.
-        { label: 'camera', opts: ['near', 'mid', 'wide'], get: () => (GOL.V3.maxCols <= 15 ? 'near' : GOL.V3.maxCols >= 17 ? 'wide' : 'mid'), set: (v) => { GOL.V3.maxCols = v === 'near' ? 14 : v === 'wide' ? 18 : 16; } },
-        // 'headroom' = empty sky above the sprite, fine steps in the low range.
-        // Low values let the bottom clamp anchor the frame (sprite higher, less
-        // dead sky — best for jumping scenes); higher values float in more sky.
-        // The numbers are the seat fraction (·50 = highest sprite / least sky).
-        { label: 'headroom', opts: ['50', '54', '58', '62', '66'],
-          get: () => { const v = GOL.V3.groundBias; return v <= 0.52 ? '50' : v <= 0.56 ? '54' : v <= 0.60 ? '58' : v <= 0.64 ? '62' : '66'; },
-          set: (v) => { GOL.V3.groundBias = { '50': 0.50, '54': 0.54, '58': 0.58, '62': 0.62, '66': 0.66 }[v]; } },
-        // the on-device door into debug (no URL editing on a phone) — persists
-        // until switched off; ?debug=1 still wins as an explicit override
-        { label: 'debug', opts: ['off', 'on'], get: () => (GOL.DEBUG ? 'on' : 'off'), set: (v) => { GOL.DEBUG = (v === 'on'); if (GOL.applyDebug) GOL.applyDebug(); } }
-      ];
-      const pw = Math.min(400, W - 60);
-      const px = W / 2 - pw / 2;
-      const rowH = 44;
-      // the panel grows with the row count; keep it fully on-screen on short
-      // landscape phones (e.g. 852x393) while leaving the taller-screen look
-      const panelH = 44 + rows.length * rowH + 24;
-      const top = Math.min(H * 0.28, H - panelH - 10);
-      const out = [];
-      rows.forEach((row, ri) => {
-        const ry = top + 44 + ri * rowH;
-        const segAreaX = px + pw * 0.4;
-        const segAreaW = pw * 0.52;
-        const sw = (segAreaW - (row.opts.length - 1) * 6) / row.opts.length;
-        row.opts.forEach((opt, oi) => {
-          out.push({
-            x: segAreaX + oi * (sw + 6), y: ry - 15, w: sw, h: 30,
-            opt, active: row.get() === opt,
-            set: () => { row.set(opt); if (GOL.saveV3cfg) GOL.saveV3cfg(); }
-          });
-        });
-        row._lx = px + 18; row._ly = ry;
-      });
-      return { rows, out, pw, px, top, rowH };
-    },
-    drawSettings(ctx, W, H) {
-      ctx.fillStyle = 'rgba(34,53,42,0.5)';
-      ctx.fillRect(0, 0, W, H);
-      const s = this.settingsSegs(W, H);
-      const panelH = 44 + s.rows.length * s.rowH + 24;
-      GOL.drawPanel(ctx, s.px, s.top, s.pw, panelH, { radius: 20 });
-      GOL.text(ctx, 'tuning', W / 2, s.top + 24, { size: 15, weight: '800', color: GOL.INK });
-      for (const row of s.rows) {
-        GOL.text(ctx, row.label, row._lx, row._ly, { size: 12.5, weight: '700', color: GOL.INK_SOFT, align: 'left' });
-      }
-      for (const seg of s.out) {
-        GOL.roundRect(ctx, seg.x, seg.y, seg.w, seg.h, 9);
-        ctx.fillStyle = seg.active ? 'rgba(185,138,62,0.9)' : 'rgba(120,104,70,0.14)';
-        ctx.fill();
-        ctx.strokeStyle = seg.active ? 'rgba(185,138,62,0.95)' : 'rgba(150,128,84,0.4)';
-        ctx.lineWidth = 1.4; ctx.stroke();
-        GOL.text(ctx, seg.opt, seg.x + seg.w / 2, seg.y + seg.h / 2, { size: 11.5, weight: '800', color: seg.active ? '#FFF8E8' : GOL.INK_SOFT });
-      }
-      GOL.text(ctx, 'tap a chip to change it · tap outside to close', W / 2, s.top + panelH - 13, { size: 10.5, weight: '600', color: GOL.INK_SOFT });
+    // One shared shape for painting and input. Keep the complete touch target
+    // inside the usable phone rectangle, with extra room below for the label.
+    grownButton(W, H) {
+      if (!GOL.EXPERIENCE.grownups) return null;
+      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
+      return {
+        x: W - sa.r - 42,
+        y: H - sa.b - 58,
+        r: 25,
+        hitR: 36
+      };
     },
     update(dt, W, H) {
       this.t += dt;
@@ -384,47 +321,30 @@
       this.splashFade = art ? Math.min(1, (this.splashFade || 0) + dt * 2.5) : 0;
       this.fx.update(dt);
       if (Math.random() < dt * 3) this.fx.spawn('mote', Math.random() * W, H * (0.3 + Math.random() * 0.5), {});
-      const sa = GOL.SAFE || { l: 0, r: 0, t: 0, b: 0 };
       this.buttons = [Object.assign({}, GOL.muteButton(W))];
-      this.gearBtn = (!GOL.EXPERIENCE.grownups || this.childMode) ? null : { x: 40 + sa.l, y: 40 + sa.t * 0.5, r: 30, iconName: 'sliders', fn: () => { this.settingsOpen = !this.settingsOpen; } };
-      this.grownBtn = GOL.EXPERIENCE.grownups ? { x: W - 30 - sa.r, y: H - 40 - sa.b * 0.5, r: 15 } : null;
+      this.grownBtn = this.grownButton(W, H);
       // The numbered prototype shelf was retired with the ten-prototype lab
       // (its lanterns are the old game language). Debug now audits the REAL
       // journey: tap through to the map, where every built world is openable
       // (map.js gives debug free reign — see regionAwake / the debug walk cap
       // and tap/enter paths). Prototype labs stay reachable by URL (?proto=N).
       this.protoBtns = [];
-      // the tuning panel owns all input while it is open
-      if (this.settingsOpen && this.gearBtn) {
-        const segs = this.settingsSegs(W, H).out;
-        for (const tap of GOL.Input.taps) {
-          if (tap.ui) continue;
-          tap.ui = true;
-          if (GOL.dist(tap.x, tap.y, this.gearBtn.x, this.gearBtn.y) < this.gearBtn.r) { GOL.audio.sfx('tap'); this.settingsOpen = false; break; }
-          const seg = segs.find((s) => tap.x >= s.x && tap.x <= s.x + s.w && tap.y >= s.y && tap.y <= s.y + s.h);
-          if (seg) { GOL.audio.sfx('tap'); seg.set(); }
-          else this.settingsOpen = false; // a tap outside closes it
-        }
-        return;
-      }
-      // the grown-ups doorway: a quiet star, bottom-right, that opens only on
-      // a patient press-and-hold (~1s). A plain tap just pulses — this keeps
-      // children out gently, the way v1's hold-the-star did.
+      // The labeled star is deliberately separate from the main tap-anywhere
+      // doorway, but it should explain itself through placement and open on the
+      // familiar tap gesture. Requiring an undisclosed hold made it look inert.
       if (this.grownBtn) {
         const gb = this.grownBtn;
-        let holding = false;
-        for (const [, p] of GOL.Input.pointers) {
-          if (GOL.dist(p.x, p.y, gb.x, gb.y) < gb.r + 14) { holding = true; break; }
-        }
         for (const tap of GOL.Input.taps) {
           if (tap.ui) continue;
-          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.r + 14) { tap.ui = true; this.grownPulse = 1; }
+          if (GOL.dist(tap.x, tap.y, gb.x, gb.y) < gb.hitR) {
+            tap.ui = true;
+            GOL.audio.unlock();
+            GOL.audio.sfx('unlockLevel');
+            GOL.go('grownups');
+            return;
+          }
         }
-        this.grownHold = holding ? Math.min(1, (this.grownHold || 0) + dt) : Math.max(0, (this.grownHold || 0) - dt * 2.2);
-        this.grownPulse = Math.max(0, (this.grownPulse || 0) - dt * 2.5);
-        if (this.grownHold >= 1) { this.grownHold = 0; GOL.audio.sfx('unlockLevel'); GOL.go('grownups'); return; }
       }
-      if (this.gearBtn && GOL.hitButtons(GOL.Input.taps, [this.gearBtn])) return;
       if (GOL.hitButtons(GOL.Input.taps, this.buttons)) return;
       if (GOL.hitButtons(GOL.Input.taps, this.protoBtns || [])) return;
       // the portrait "add to home screen" card: the card body opens the full
@@ -517,28 +437,19 @@
         if (!this.childMode) GOL.text(ctx, 'tap anywhere to begin', W / 2, H * 0.91, { size: 16, weight: '700', color: alpha('#FFFFFF', 0.55 + 0.4 * pulse) });
       }
       for (const b of this.buttons) GOL.drawButton(ctx, b.x, b.y, 22, b.icon ? b.icon() : b.iconName);
-      if (this.gearBtn) GOL.drawButton(ctx, this.gearBtn.x, this.gearBtn.y, 22, 'sliders');
-      // the grown-ups doorway: a small quiet star, held to open
+      // the grown-ups doorway: a quiet, full-size circular tap target
       if (this.grownBtn) {
         const gb = this.grownBtn;
-        const gp = this.grownHold || 0;
-        if (this.grownPulse > 0) {
-          ctx.strokeStyle = alpha('#FFE9A8', 0.45 * this.grownPulse);
-          ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 6 + (1 - this.grownPulse) * 7, 0, Math.PI * 2); ctx.stroke();
-        }
-        GOL.star8Path(ctx, gb.x, gb.y, gb.r * 0.62, Math.PI / 8 + t * 0.12);
-        ctx.fillStyle = alpha('#FAF4E0', 0.42 + 0.14 * Math.sin(t * 1.4));
+        ctx.fillStyle = alpha('#273C35', 0.72);
+        ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = alpha('#FFE9A8', 0.72);
+        ctx.lineWidth = 1.8; ctx.stroke();
+        GOL.star8Path(ctx, gb.x, gb.y, gb.r * 0.68, Math.PI / 8 + t * 0.12);
+        ctx.fillStyle = alpha('#FAF4E0', 0.78 + 0.12 * Math.sin(t * 1.4));
         ctx.fill();
-        ctx.strokeStyle = alpha(GOLD, 0.6);
-        ctx.lineWidth = 1.3; ctx.stroke();
-        if (gp > 0.01) {
-          ctx.strokeStyle = alpha('#FFE9A8', 0.9);
-          ctx.lineWidth = 2.4; ctx.lineCap = 'round';
-          ctx.beginPath(); ctx.arc(gb.x, gb.y, gb.r + 5, -Math.PI / 2, -Math.PI / 2 + gp * Math.PI * 2); ctx.stroke();
-          ctx.lineCap = 'butt';
-        }
-        if (!this.childMode) GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 13, { size: 10, weight: '700', color: alpha('#FFFFFF', 0.5), shadow: false });
+        ctx.strokeStyle = alpha(GOLD, 0.9);
+        ctx.lineWidth = 1.5; ctx.stroke();
+        if (!this.childMode) GOL.text(ctx, 'for grown-ups', gb.x, gb.y + gb.r + 14, { size: 11.5, weight: '700', color: alpha('#FFFFFF', 0.78), shadow: false });
       }
       // Keep engine diagnostics out of the child's first impression. They are
       // still useful in an explicit debug session alongside the DEBUG badge.
@@ -546,7 +457,6 @@
         const st = GOL.audio.ctx ? GOL.audio.ctx.state : 'off';
         GOL.text(ctx, 'v3 · sound ' + st + ' · echo ' + GOL.V3.echo, 12 + (GOL.SAFE ? GOL.SAFE.l : 0), H - 12, { size: 10, weight: '600', color: 'rgba(255,255,255,0.45)', align: 'left', shadow: false });
       }
-      if (this.settingsOpen && !GOL.EXPERIENCE.showcase) this.drawSettings(ctx, W, H);
       GOL.drawVignette(ctx, W, H, 0.12);
     }
   };

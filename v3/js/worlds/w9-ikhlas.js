@@ -144,8 +144,7 @@
       b.seedRun(31, 41, 2);                   // across to the monument's foot
       b.seedRun(43, 57, 2);                   // the still stretch past ayah 3
       b.seedArc(58, 11, 66, 9, 6, 1.2);       // arcing up the crescent to ayah 4
-      b.seed(68, 10).seed(70, 11);            // down the crescent's far side
-      b.seedRun(71, 79, 2);                   // into the lit clearing
+      b.seed(68, 10);                          // down the crescent, before the fire
 
       // The only life here: two butterflies. No tortoise, no birdsong —
       // silence is the luxury this world keeps.
