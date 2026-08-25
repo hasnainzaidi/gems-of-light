@@ -211,15 +211,15 @@
       // just above the footer; installed players (standalone) don't need it
       const showInstall = !GOL.isStandalone();
       const installLink = showInstall
-        ? { cx: (L + R) / 2, cy: reassuranceY - 25, x: L + 10, y: reassuranceY - 47, w: R - L - 20, h: 44 }
+        ? { cx: (L + R) / 2, cy: reassuranceY - 25, x: (L + R) / 2 - 150, y: reassuranceY - 47, w: 300, h: 44 }
         : null;
       const panelBottom = installLink ? installLink.y - 8 : reassuranceY - 12;
       const panelH = Math.max(80, panelBottom - panelTop);
       let legalX = (L + R - legalTotalW) / 2;
       const legalLinks = [
-        { label: 'Company', href: '/company/', x: legalX, y: legalTop, w: legalWidths[0], h: legalH },
-        { label: 'Privacy', href: '/privacy/', x: legalX += legalWidths[0] + legalGap, y: legalTop, w: legalWidths[1], h: legalH },
-        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: legalX += legalWidths[1] + legalGap, y: legalTop, w: legalWidths[2], h: legalH }
+        { label: 'Company', href: '/company/', x: legalX, y: legalY - 22, w: 84, h: 44 },
+        { label: 'Privacy', href: '/privacy/', x: legalX += legalWidths[0] + legalGap, y: legalY - 22, w: 80, h: 44 },
+        { label: 'Contact', href: 'mailto:developer@playgemsoflight.com', x: legalX += legalWidths[1] + legalGap, y: legalY - 22, w: 84, h: 44 }
       ];
       const ix = px + 24, iw = pw - 48;
       const viewTop = panelTop + 12, viewH = panelH - 24;

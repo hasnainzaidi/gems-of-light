@@ -8,11 +8,19 @@ const source = fs.readFileSync(new URL('../js/grownups.js', import.meta.url), 'u
 let scene;
 const openedAnchors = [];
 const location = { href: 'capacitor://localhost/v3/' };
+const makeNode = (tag) => ({
+  tag, children: [], style: {}, href: '', target: '', rel: '',
+  appendChild(child) { this.children.push(child); },
+  replaceChildren() { this.children = []; }, remove() {}, setAttribute() {},
+  addEventListener() {},
+  click() { if (tag === 'a' && this.target === '_blank') openedAnchors.push({ ...this }); }
+});
 const document = {
+  getElementById() { return null; },
+  head: { appendChild() {} },
+  body: { appendChild() {} },
   createElement(tag) {
-    assert.equal(tag, 'a');
-    const anchor = { href: '', target: '', rel: '', click() { openedAnchors.push({ ...anchor }); } };
-    return anchor;
+    return makeNode(tag);
   }
 };
 const GOL = {

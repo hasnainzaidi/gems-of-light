@@ -12,6 +12,18 @@ const worlds = Array.from({ length: 12 }, (_, i) => ({
   n: i + 1, surahId: i, build() {}
 }));
 let wentHome = false;
+const makeNode = (tag) => ({
+  tag, children: [], style: {},
+  appendChild(child) { this.children.push(child); },
+  replaceChildren() { this.children = []; }, remove() {}, setAttribute() {},
+  addEventListener() {}
+});
+const document = {
+  getElementById() { return null; },
+  head: { appendChild() {} },
+  body: { appendChild() {} },
+  createElement: makeNode
+};
 const GOL = {
   color: { alpha: (c) => c }, INK: '#000', INK_SOFT: '#555', GOLD: '#fc0',
   SAFE: { l: 0, r: 0, t: 47, b: 34 },
@@ -31,7 +43,7 @@ const GOL = {
   registerScene: (_name, value) => { scene = value; }
 };
 
-vm.runInNewContext(source, { window: { GOL }, console }, { filename: 'grownups.js' });
+vm.runInNewContext(source, { window: { GOL }, document, console }, { filename: 'grownups.js' });
 assert.ok(scene, 'grown-ups scene registers');
 assert.equal(scene.ownsPortrait, true, 'scene opts out of the rotate curtain');
 
