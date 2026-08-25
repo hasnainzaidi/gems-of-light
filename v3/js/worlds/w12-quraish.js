@@ -19,6 +19,9 @@
     palette: 'quraishWinter', endPalette: 'quraysh',
     w: 100, h: 16,
     density: 0.13,
+    // Verse 4's shipped Alafasy file retains ~0.80s below -45 dB after the
+    // recitation ends. Release the gem hold at the measured audible endpoint.
+    verseEndAt: { 4: 12.69 },
 
     // THE HOUSE — a quiet cube of warm stone at x≈92, drawn behind the props so
     // the caravan's life gathers in front of it. A single gold band near its
@@ -118,10 +121,12 @@
 
       // ========================= THE WIDE REACH (x 48–66) ==================
       // The caravan's great crossing: a broad channel ferried bank-to-bank on
-      // a raft that rides one row above the water and lands at each shore. The
-      // third gem waits over mid-channel, gathered from the deck.
+      // a raft that rides one row above the water and lands at each shore. It
+      // begins just beyond the approaching phone view and glides back to the
+      // near bank, appearing promptly without crossing the whole reach empty.
+      // The third gem waits over mid-channel, gathered from the deck.
       b.water(48, 65, 13);
-      b.raft(49, 64, 12);
+      b.raft(49, 64, 12, 144, { startX: 59, startDir: -1, wakeX: 46 });
       b.gem(3, 57, 11);
       b.prop('olive', 46).prop('flowers', 44, { v: 1 });
 
@@ -137,13 +142,12 @@
        .prop('olive', 76).prop('fruit', 79, { v: 2 });
       b.creature('bird', 73);
 
-      // The caravan rest — a wall and lantern, and two tortoises walking east
-      // in file: the caravan itself, ambient, plodding home. The fourth gem
-      // rests at the wayside.
+      // The caravan rest — a wall, lantern, and one grounded tortoise whose
+      // bounded patrol keeps its visible leg shuffle tied to actual movement.
+      // The fourth gem rests at the wayside.
       b.gem(4, 80, 11);
       b.prop('lantern', 78).prop('wall', 82, { n: 3 }).prop('flowers', 83, { v: 1 });
       b.creature('tortoise', 84, null, { range: 46, dir: 1, facing: 1 });
-      b.creature('tortoise', 86, null, { range: 46, dir: 1, facing: 1 });
 
       // ========================= THE HOUSE & THE REST =====================
       // The campfire at the House's door; the shrine door a few steps on, the
@@ -160,7 +164,7 @@
       b.seed(30, 11).seed(34, 8).seed(41, 11); // over the ridge crown
       b.seedArc(48, 11, 65, 11, 7, 1.6);   // the whole wide reach
       b.seed(67, 11).seed(67, 9);          // the landing and its secret
-      b.seedRun(70, 86, 2);                // into summer, toward the House
+      b.seedRun(70, 84, 2);                // toward the House, clear of the fire
     }
   });
 })();

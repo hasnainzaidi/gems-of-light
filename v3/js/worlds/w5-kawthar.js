@@ -49,19 +49,19 @@
       b.blossom(40, 6);
       b.seed(40, 11).seed(40, 9);
 
-      // THE FAR RISE — one low fountain terrace holds the final gem. From its
-      // crest the path pours directly into the hawd-like resting clearing.
+      // THE FAR RISE — a low terrace holds the final gem. From its crest the
+      // path pours directly into the hawd-like resting clearing.
       b.block(44, 48, 12, 12);
       b.gem(3, 46, 10);
-      b.prop('fountain', 46).prop('flowers', 43, { v: 1 })
-       .prop('flowers', 49, { v: 2 });
+      b.prop('flowers', 43, { v: 1 });
 
-      // THE HAWD — a second fountain dresses the earned campfire. The old
+      // THE HAWD — a fountain dresses the earned campfire. The old
       // unaimed memory setting remains quiet scenery beside it; the door waits
       // well beyond the fire on the same broad, open bank.
       b.slab(51, 51, 12);
       b.memory(51);
-      b.prop('fountain', 54).prop('lantern', 56);
+      b.prop('fountain', 54, { y: b.surface(54) * GOL.TILE - 13 })
+       .prop('lantern', 56);
       b.campfire(58);
       b.door(64);
       b.prop('flowers', 52, { v: 1 }).prop('cypress', 62)
@@ -73,8 +73,8 @@
       b.seedArc(4, 11, 12, 11, 5, 1);   // first stepping-stone crossing
       b.seedRun(13, 23, 2);             // bank walk
       b.seedArc(24, 11, 40, 11, 7, 1); // ferry reach
-      b.seed(43, 10).seed(46, 9);       // far rise and fountain gem
-      b.seedRun(49, 56, 2);             // hawd approach
+      b.seed(43, 10).seed(46, 9);       // far rise and final gem
+      b.seedRun(49, 53, 2);             // hawd approach, clear before the fire
 
       b.creature('bird', 15).creature('bird', 47).creature('bird', 61);
     }

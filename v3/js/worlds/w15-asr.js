@@ -78,7 +78,7 @@
       b.seedArc(16, 11, 22, 9, 5, 1.5); // rising to the sundial terrace
       b.seed(26, 9).seed(28, 9).seed(31, 9); // across the crest, past the sundial
       b.seedArc(34, 10, 42, 11, 6, 0); // the slow descent into the light
-      b.seedArc(43, 11, 48, 9, 5, 1.5); // up onto the sunset headland
+      b.seedArc(43, 11, 44, 9, 2, 0); // stop before the campfire ceremony
 
       // Creatures: butterflies only, warm golden-hour tones — no tortoise,
       // no bird; the stillness is part of the beauty.

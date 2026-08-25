@@ -16,7 +16,7 @@
       // a flowered mound with the first gem
       b.block(10, 13, 12, 12);
       b.gem(1, 11, 10);
-      b.prop('olive', 7).prop('flowers', 5).prop('bush', 14, { v: 1 });
+      b.prop('olive', 7).prop('flowers', 5).prop('bush', 15, { v: 1 });
 
       // two easy garden steps up to the second
       b.slab(18, 20, 11).slab(22, 24, 9);
@@ -45,7 +45,7 @@
       // A low eastward rise gives the restored gardens one quiet overlook:
       // flowers underfoot, the broken dawn behind, and one waking bird.
       b.slab(61, 63, 11).slab(64, 67, 10);
-      b.prop('flowers', 66, { v: 2 });
+      b.prop('flowers', 68, { v: 2 });
 
       // the campfire clearing, and the shrine door beyond it
       b.campfire(73);

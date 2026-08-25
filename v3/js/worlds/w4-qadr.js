@@ -157,7 +157,7 @@
       b.seed(7, 39);  // a first spark by the trailhead
       b.seed(10, 10); // on the high left buttress
       b.seed(12, 6);  // the last rung
-      b.seed(16, 4);  // cresting the summit under stars
+      b.seed(13, 4);  // cresting the summit, clear of the campfire trigger
 
       // Three moon-springs give the climb life: matching carved emitters feed
       // every fall; shallow catch pools receive the left and centre shafts,

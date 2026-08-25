@@ -140,7 +140,7 @@
       b.seedArc(130, 9, 137, 8, 8, 0.5);
       b.seedRun(139, 144, 1);
       b.seed(145, 11).seed(145, 9);
-      b.seedRun(146, 150, 1);
+      b.seedRun(146, 148, 1); // end before the campfire can begin
 
       // Eastward waking: birds begin only after the shelters start, and the
       // first ambient butterflies wait until the garden has become abundant.

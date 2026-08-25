@@ -39,7 +39,7 @@
       // 2 — a quiet garden fountain waits under the second, cooler veil.
       b.occluder(19, 25, 5, 12, '#75705C');
       b.gem(2, 22, 11);
-      b.prop('fountain', 23)
+      b.prop('fountain', 23, { y: b.surface(23) * GOL.TILE - 13 })
        .prop('flowers', 20, { v: 1 }).prop('lantern', 25);
 
       b.stoneBlock(28, 30, 11, 12);
@@ -113,7 +113,7 @@
       b.seedArc(56, 11, 57, 11, 2, 0.6);        // over heap 4 (top row 12)
       b.seedRun(59, 66, 2);
       b.seedArc(67, 10, 68, 10, 2, 0.7);        // over heap 5 (top row 11)
-      b.seedRun(70, 90, 2);                      // through the open finale
+      b.seedRun(70, 82, 2);                      // open finale, clear of the fire
 
       // Ambient life beyond the two veiled pockets: sparse butterflies and a
       // couple of birds drifting over the unveiled garden.
